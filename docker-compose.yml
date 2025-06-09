@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    container_name: dea-postgres
+    environment:
+      POSTGRES_USER: dea_user
+      POSTGRES_PASSWORD: dea_password
+      POSTGRES_DB: dea_madrid
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

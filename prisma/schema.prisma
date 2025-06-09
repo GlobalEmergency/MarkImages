@@ -1,0 +1,63 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model DeaRecord {
+  id                    Int      @id @default(autoincrement())
+  horaInicio           DateTime
+  horaFinalizacion     DateTime
+  correoElectronico    String
+  nombre               String
+  numeroProvisionalDea Int
+  tipoEstablecimiento  String
+  titularidadLocal     String
+  usoLocal             String
+  titularidad          String
+  propuestaDenominacion String
+  tipoVia              String
+  nombreVia            String
+  numeroVia            String?
+  complementoDireccion String?
+  codigoPostal         Int
+  distrito             String
+  latitud              Float
+  longitud             Float
+  horarioApertura      String
+  aperturaLunesViernes Int
+  cierreLunesViernes   Int
+  aperturaSabados      Int
+  cierreSabados        Int
+  aperturaDomingos     Int
+  cierreDomingos       Int
+  vigilante24h         String
+  foto1                String?
+  foto2                String?
+  descripcionAcceso    String?
+  comentarioLibre      String?
+  gmTipoVia            String?
+  gmNombreVia          String?
+  gmNumero             String?
+  gmCp                 String?
+  gmDistrito           String?
+  gmLat                Float?
+  gmLon                Float?
+  defTipoVia           String?
+  defNombreVia         String?
+  defNumero            String?
+  defCp                String?
+  defDistrito          String?
+  defLat               Float?
+  defLon               Float?
+  defCodDea            String?
+
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("dea_records")
+}
