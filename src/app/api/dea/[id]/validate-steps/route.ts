@@ -1,0 +1,171 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { stepValidationService } from '@/services/stepValidationService';
+import { addressValidationService } from '@/services/addressValidationService';
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const deaRecordId = parseInt(params.id);
+    
+    if (isNaN(deaRecordId)) {
+      return NextResponse.json(
+        { success: false, error: 'ID de registro inválido' },
+        { status: 400 }
+      );
+    }
+
+    // Inicializar validación paso a paso
+    const result = await stepValidationService.initializeStepValidation(deaRecordId);
+    
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: 400 }
+      );
+    }
+
+    // Si es el paso 1, también obtener las opciones de direcciones
+    if (result.progress.currentStep === 1) {
+      // Obtener datos del registro para hacer la búsqueda
+      const { PrismaClient } = await import('@prisma/client');
+      const prisma = new PrismaClient();
+      
+      const record = await prisma.deaRecord.findUnique({
+        where: { id: deaRecordId }
+      });
+      
+      if (record) {
+        const searchResult = await addressValidationService.validateAddressInOrder(
+          record.tipoVia,
+          record.nombreVia,
+          record.numeroVia,
+          record.codigoPostal.toString(),
+          record.distrito,
+          { lat: record.latitud, lng: record.longitud }
+        );
+        
+        return NextResponse.json({
+          success: true,
+          data: {
+            progress: result.progress,
+            step1Data: {
+              searchResult: {
+                ...searchResult.step1_officialSearch,
+                step2_verification: searchResult.step2_verification
+              },
+              originalRecord: {
+                tipoVia: record.tipoVia,
+                nombreVia: record.nombreVia,
+                numeroVia: record.numeroVia,
+                complementoDireccion: record.complementoDireccion,
+                codigoPostal: record.codigoPostal,
+                distrito: record.distrito,
+                latitud: record.latitud,
+                longitud: record.longitud
+              },
+              message: result.message
+            }
+          }
+        });
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        progress: result.progress,
+        message: result.message
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en validación por pasos:', error);
+    return NextResponse.json(
+      { success: false, error: 'Error interno del servidor' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const deaRecordId = parseInt(params.id);
+    const body = await request.json();
+    
+    if (isNaN(deaRecordId)) {
+      return NextResponse.json(
+        { success: false, error: 'ID de registro inválido' },
+        { status: 400 }
+      );
+    }
+
+    const { step, data } = body;
+
+    let result;
+
+    switch (step) {
+      case 1:
+        result = await stepValidationService.executeStep1(
+          deaRecordId,
+          data.selectedAddress
+        );
+        break;
+        
+      case 2:
+        result = await stepValidationService.executeStep2(
+          deaRecordId,
+          data.confirmedPostalCode
+        );
+        break;
+        
+      case 3:
+        result = await stepValidationService.executeStep3(
+          deaRecordId,
+          data.confirmedDistrict
+        );
+        break;
+        
+      case 4:
+        result = await stepValidationService.executeStep4(
+          deaRecordId,
+          data.confirmedCoordinates
+        );
+        break;
+        
+      default:
+        return NextResponse.json(
+          { success: false, error: 'Paso de validación inválido' },
+          { status: 400 }
+        );
+    }
+
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        progress: result.progress,
+        nextStep: result.nextStep,
+        message: result.message,
+        isComplete: result.progress.isComplete
+      }
+    });
+
+  } catch (error) {
+    console.error('Error ejecutando paso de validación:', error);
+    return NextResponse.json(
+      { success: false, error: 'Error interno del servidor' },
+      { status: 500 }
+    );
+  }
+}

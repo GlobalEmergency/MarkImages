@@ -1,21 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { DeaRepository } from '@/repositories/deaRepository'
+
+const deaRepository = new DeaRepository();
 
 export async function GET(
 	request: NextRequest,
 	{ params }: { params: { id: string } }
 ) {
 	try {
-		const record = await prisma.deaRecord.findUnique({
-			where: { id: parseInt(params.id) }
-		})
-		if (!record) {
-			return NextResponse.json({ error: 'Registro no encontrado' }, { status: 404 })
+		const id = parseInt(params.id);
+
+		if (isNaN(id)) {
+			return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
 		}
-		return NextResponse.json(record)
-	} catch (_error) {
-		console.log(_error);
-		return NextResponse.json({ error: 'Error al obtener registro' }, { status: 500 })
+
+		const record = await deaRepository.findById(id);
+
+		if (!record) {
+			return NextResponse.json({ error: 'Registro no encontrado' }, { status: 404 });
+		}
+
+		return NextResponse.json(record);
+	} catch (error) {
+		console.error(`Error fetching DEA record ${params.id}:`, error);
+		return NextResponse.json({ error: 'Error al obtener registro' }, { status: 500 });
 	}
 }
 
@@ -24,15 +32,25 @@ export async function PUT(
 	{ params }: { params: { id: string } }
 ) {
 	try {
-		const data = await request.json()
-		const record = await prisma.deaRecord.update({
-			where: { id: parseInt(params.id) },
-			data
-		})
-		return NextResponse.json(record)
-	} catch (_error) {
-		console.log(_error);
-		return NextResponse.json({ error: 'Error al actualizar registro' }, { status: 500 })
+		const id = parseInt(params.id);
+
+		if (isNaN(id)) {
+			return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
+		}
+
+		// Verificar que el registro existe
+		const existingRecord = await deaRepository.findById(id);
+		if (!existingRecord) {
+			return NextResponse.json({ error: 'Registro no encontrado' }, { status: 404 });
+		}
+
+		const data = await request.json();
+		const record = await deaRepository.update(id, data);
+
+		return NextResponse.json(record);
+	} catch (error) {
+		console.error(`Error updating DEA record ${params.id}:`, error);
+		return NextResponse.json({ error: 'Error al actualizar registro' }, { status: 500 });
 	}
 }
 
@@ -41,12 +59,22 @@ export async function DELETE(
 	{ params }: { params: { id: string } }
 ) {
 	try {
-		await prisma.deaRecord.delete({
-			where: { id: parseInt(params.id) }
-		})
-		return NextResponse.json({ message: 'Registro eliminado' })
-	} catch (_error) {
-		console.log(_error);
-		return NextResponse.json({ error: 'Error al eliminar registro' }, { status: 500 })
+		const id = parseInt(params.id);
+
+		if (isNaN(id)) {
+			return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
+		}
+
+		// Verificar que el registro existe
+		const existingRecord = await deaRepository.findById(id);
+		if (!existingRecord) {
+			return NextResponse.json({ error: 'Registro no encontrado' }, { status: 404 });
+		}
+
+		const record = await deaRepository.delete(id);
+		return NextResponse.json({ success: true, deletedRecord: record });
+	} catch (error) {
+		console.error(`Error deleting DEA record ${params.id}:`, error);
+		return NextResponse.json({ error: 'Error al eliminar registro' }, { status: 500 });
 	}
 }

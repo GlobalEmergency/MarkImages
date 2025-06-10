@@ -59,5 +59,160 @@ model DeaRecord {
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
+  // Relaciones
+  verificationSessions VerificationSession[]
+  deaCodes            DeaCode[]
+
   @@map("dea_records")
+}
+
+model VerificationSession {
+  id                    Int      @id @default(autoincrement())
+  deaRecordId           Int      @map("dea_record_id")
+  status                String   @default("in_progress")
+  currentStep           String   @default("dea_info") @map("current_step")
+  originalImageUrl      String?  @map("original_image_url")
+  croppedImageUrl       String?  @map("cropped_image_url")
+  processedImageUrl     String?  @map("processed_image_url")
+  secondImageUrl        String?  @map("second_image_url")
+  secondCroppedImageUrl String?  @map("second_cropped_image_url")
+  secondProcessedImageUrl String? @map("second_processed_image_url")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  completedAt           DateTime? @map("completed_at")
+
+  // Relaciones
+  deaRecord        DeaRecord        @relation(fields: [deaRecordId], references: [id])
+  arrowMarkers     ArrowMarker[]
+  processedImages  ProcessedImage[]
+
+  @@map("verification_sessions")
+}
+
+model ArrowMarker {
+  id                    Int      @id @default(autoincrement())
+  verificationSessionId Int      @map("verification_session_id")
+  imageNumber           Int      @map("image_number")
+  startX                Float    @map("start_x")
+  startY                Float    @map("start_y")
+  endX                  Float    @map("end_x")
+  endY                  Float    @map("end_y")
+  arrowColor            String   @default("#dc2626") @map("arrow_color")
+  arrowWidth            Int      @default(40) @map("arrow_width")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  // Relaciones
+  verificationSession VerificationSession @relation(fields: [verificationSessionId], references: [id])
+
+  @@map("arrow_markers")
+}
+
+model ProcessedImage {
+  id                    Int      @id @default(autoincrement())
+  verificationSessionId Int      @map("verification_session_id")
+  originalFilename      String   @map("original_filename")
+  processedFilename     String   @map("processed_filename")
+  imageType             String   @map("image_type")
+  fileSize              Int      @map("file_size")
+  dimensions            String
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  // Relaciones
+  verificationSession VerificationSession @relation(fields: [verificationSessionId], references: [id])
+
+  @@map("processed_images")
+}
+
+// Tablas para datos oficiales del Ayuntamiento de Madrid
+model MadridAddress {
+  id                  Int      @id @default(autoincrement())
+  codVia              Int      @map("cod_via")
+  viaClase            String?  @map("via_clase")
+  viaPar              String?  @map("via_par")
+  viaNombre           String?  @map("via_nombre")
+  viaNombreAcentos    String?  @map("via_nombre_acentos")
+  claseApp            String?  @map("clase_app")
+  numero              String?
+  calificador         String?
+  tipoNdp             String?  @map("tipo_ndp")
+  codNdp              String?  @map("cod_ndp")
+  distrito            Int?
+  barrio              Int?
+  codPostal           String?  @map("cod_postal")
+  utmxEd              Float?   @map("utmx_ed")
+  utmyEd              Float?   @map("utmy_ed")
+  utmxEtrs            Float?   @map("utmx_etrs")
+  utmyEtrs            Float?   @map("utmy_etrs")
+  latitud             Float?
+  longitud            Float?
+  anguloRotulacion    Float?   @map("angulo_rotulacion")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  @@index([distrito])
+  @@index([codPostal])
+  @@index([viaNombreAcentos])
+  @@index([latitud, longitud])
+  @@index([codVia])
+  @@map("madrid_addresses")
+}
+
+model MadridStreet {
+  id                      Int      @id @default(autoincrement())
+  codVia                  Int      @unique @map("cod_via")
+  viaClase                String?  @map("via_clase")
+  viaPar                  String?  @map("via_par")
+  viaNombre               String?  @map("via_nombre")
+  viaNombreAcentos        String?  @map("via_nombre_acentos")
+  codViaComienza          Int?     @map("cod_via_comienza")
+  claseComienza           String?  @map("clase_comienza")
+  particulaComienza       String?  @map("particula_comienza")
+  nombreComienza          String?  @map("nombre_comienza")
+  nombreAcentosComienza   String?  @map("nombre_acentos_comienza")
+  codViaTermina           Int?     @map("cod_via_termina")
+  claseTermina            String?  @map("clase_termina")
+  particulaTermina        String?  @map("particula_termina")
+  nombreTermina           String?  @map("nombre_termina")
+  nombreAcentosTermina    String?  @map("nombre_acentos_termina")
+  createdAt               DateTime @default(now()) @map("created_at")
+
+  @@index([codVia])
+  @@index([viaNombreAcentos])
+  @@map("madrid_streets")
+}
+
+model MadridStreetDistrict {
+  id                Int      @id @default(autoincrement())
+  codVia            Int      @map("cod_via")
+  viaClase          String?  @map("via_clase")
+  viaPar            String?  @map("via_par")
+  viaNombre         String?  @map("via_nombre")
+  viaNombreAcentos  String?  @map("via_nombre_acentos")
+  distrito          Int?
+  imparMin          String?  @map("impar_min")
+  imparMax          String?  @map("impar_max")
+  parMin            String?  @map("par_min")
+  parMax            String?  @map("par_max")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@index([codVia])
+  @@index([distrito])
+  @@map("madrid_street_districts")
+}
+
+model DeaCode {
+  id              Int      @id @default(autoincrement())
+  distrito        Int
+  codigoPostal    String   @map("codigo_postal")
+  secuencial      Int
+  codigoCompleto  String   @unique @map("codigo_completo")
+  deaRecordId     Int?     @map("dea_record_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relación con DeaRecord
+  deaRecord       DeaRecord? @relation(fields: [deaRecordId], references: [id])
+
+  @@unique([distrito, secuencial])
+  @@index([distrito])
+  @@index([codigoCompleto])
+  @@map("dea_codes")
 }
