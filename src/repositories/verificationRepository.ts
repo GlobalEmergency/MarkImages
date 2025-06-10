@@ -5,10 +5,13 @@ export interface IVerificationRepository {
   findAll(): Promise<VerificationSession[]>;
   findById(id: number): Promise<VerificationSession | null>;
   findByDeaRecordId(deaRecordId: number): Promise<VerificationSession | null>;
+  findByDeaRecordIdForValidation(deaRecordId: number): Promise<VerificationSession | null>;
   create(data: Omit<VerificationSession, 'id' | 'createdAt' | 'updatedAt'>): Promise<VerificationSession>;
   update(id: number, data: Partial<VerificationSession>): Promise<VerificationSession>;
   updateStep(id: number, step: VerificationStep): Promise<VerificationSession>;
   updateStatus(id: number, status: VerificationStatus): Promise<VerificationSession>;
+  updateStepData(id: number, stepData: any): Promise<VerificationSession>;
+  createOrUpdateForValidation(deaRecordId: number, stepData: any, currentStep?: string): Promise<VerificationSession>;
   delete(id: number): Promise<VerificationSession>;
   findPendingVerifications(): Promise<VerificationSession[]>;
 }
@@ -51,6 +54,23 @@ export class VerificationRepository implements IVerificationRepository {
         arrowMarkers: true,
         processedImages: true
       }
+    });
+
+    return session ? this.mapToVerificationSession(session) : null;
+  }
+
+  async findByDeaRecordIdForValidation(deaRecordId: number): Promise<VerificationSession | null> {
+    const session = await prisma.verificationSession.findFirst({
+      where: { 
+        deaRecordId,
+        currentStep: 'data_validation'
+      },
+      include: {
+        deaRecord: true,
+        arrowMarkers: true,
+        processedImages: true
+      },
+      orderBy: { updatedAt: 'desc' }
     });
 
     return session ? this.mapToVerificationSession(session) : null;
@@ -140,6 +160,52 @@ export class VerificationRepository implements IVerificationRepository {
     return this.mapToVerificationSession(session);
   }
 
+  async updateStepData(id: number, stepData: any): Promise<VerificationSession> {
+    const session = await prisma.verificationSession.update({
+      where: { id },
+      data: { stepData },
+      include: {
+        deaRecord: true,
+        arrowMarkers: true,
+        processedImages: true
+      }
+    });
+
+    return this.mapToVerificationSession(session);
+  }
+
+  async createOrUpdateForValidation(deaRecordId: number, stepData: any, currentStep?: string): Promise<VerificationSession> {
+    // Buscar sesión existente para validación
+    const existingSession = await prisma.verificationSession.findFirst({
+      where: { 
+        deaRecordId,
+        currentStep: 'data_validation'
+      }
+    });
+
+    if (existingSession) {
+      // Actualizar sesión existente
+      return this.updateStepData(existingSession.id, stepData);
+    } else {
+      // Crear nueva sesión
+      const session = await prisma.verificationSession.create({
+        data: {
+          deaRecordId,
+          status: 'in_progress',
+          currentStep: currentStep || 'data_validation',
+          stepData
+        },
+        include: {
+          deaRecord: true,
+          arrowMarkers: true,
+          processedImages: true
+        }
+      });
+
+      return this.mapToVerificationSession(session);
+    }
+  }
+
   async delete(id: number): Promise<VerificationSession> {
     const session = await prisma.verificationSession.delete({
       where: { id },
@@ -175,6 +241,7 @@ export class VerificationRepository implements IVerificationRepository {
       deaRecordId: session.deaRecordId,
       status: session.status as VerificationStatus,
       currentStep: session.currentStep as VerificationStep,
+      stepData: session.stepData,
       originalImageUrl: session.originalImageUrl,
       croppedImageUrl: session.croppedImageUrl,
       processedImageUrl: session.processedImageUrl,

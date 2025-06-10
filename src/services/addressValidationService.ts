@@ -294,6 +294,10 @@ export class AddressValidationService {
         result.coordinatesComparison.isWithinAcceptableRange = distanceMeters <= 100;
         result.coordinatesComparison.needsReview = distanceMeters > 100;
       }
+    } else {
+      // Log para debug cuando no hay coordenadas oficiales
+      console.log(`⚠️ No hay coordenadas oficiales para la dirección: ${officialData.tipoVia} ${officialData.nombreVia} ${officialData.numeroVia || ''}`);
+      result.coordinatesComparison.needsReview = true;
     }
     
     return result;

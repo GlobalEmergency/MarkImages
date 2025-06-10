@@ -5,6 +5,7 @@ export interface VerificationSession {
   deaRecordId: number;
   status: VerificationStatus;
   currentStep: VerificationStep;
+  stepData?: any; // JSON data for step-by-step validation progress
   originalImageUrl?: string;
   croppedImageUrl?: string;
   processedImageUrl?: string;
@@ -14,7 +15,7 @@ export interface VerificationSession {
   createdAt: string;
   updatedAt: string;
   completedAt?: string;
-  deaRecord?: import('./index').DeaRecord;
+  deaRecord?: any;
   arrowMarkers?: ArrowMarker[];
   processedImages?: ProcessedImage[];
 }

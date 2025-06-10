@@ -5,13 +5,7 @@ import {
   CheckCircle, 
   AlertTriangle, 
   XCircle, 
-  MapPin, 
-  Mail,
-  Building,
-  Navigation,
   Loader2,
-  ArrowRight,
-  ArrowLeft,
   SkipForward
 } from 'lucide-react';
 
@@ -266,64 +260,39 @@ export default function StepByStepValidation({
       <div className="space-y-4">
         <div className="bg-yellow-50 p-4 rounded-lg">
           <h4 className="font-semibold text-yellow-800 mb-2">
-            Información del DEA - Verificación de Datos
+            Verificar Código Postal
           </h4>
           
           <div className="space-y-3">
             <div className="bg-white p-3 rounded border">
-              <div className="text-sm space-y-2">
-                <div>
-                  <strong>Código Postal Oficial:</strong> 
-                  <span className="ml-2 font-mono text-blue-600">{step1Address.codigoPostal}</span>
+              <div className="text-sm space-y-3">
+                {/* Mostrar código postal del usuario original */}
+                {step1Data?.originalRecord && (
+                  <div className="p-3 bg-gray-50 rounded border">
+                    <div className="font-medium text-gray-800 mb-2">Código Postal del Usuario:</div>
+                    <div className="font-mono text-lg text-gray-700">
+                      {step1Data.originalRecord.codigoPostal}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="p-3 bg-blue-50 rounded border">
+                  <div className="font-medium text-blue-800 mb-2">Código Postal Oficial:</div>
+                  <div className="font-mono text-lg text-blue-600">
+                    {step1Address.codigoPostal}
+                  </div>
                 </div>
                 
-                {/* Mostrar información de coordenadas y distancia si está disponible */}
-                {step1Data?.searchResult?.step2_verification?.coordinatesComparison && (
-                  <div className="mt-3 p-3 bg-blue-50 rounded border">
-                    <div className="font-medium text-blue-800 mb-2">Comparación de Coordenadas</div>
-                    
-                    {step1Data.searchResult.step2_verification.coordinatesComparison.userCoordinates && (
-                      <div className="text-xs space-y-1">
-                        <div>
-                          <strong>Coordenadas del Usuario:</strong>
-                          <div className="font-mono ml-4">
-                            Lat: {step1Data.searchResult.step2_verification.coordinatesComparison.userCoordinates.lat.toFixed(6)}<br/>
-                            Lng: {step1Data.searchResult.step2_verification.coordinatesComparison.userCoordinates.lng.toFixed(6)}
-                          </div>
-                        </div>
-                        
-                        {step1Data.searchResult.step2_verification.coordinatesComparison.officialCoordinates && (
-                          <div>
-                            <strong>Coordenadas Oficiales:</strong>
-                            <div className="font-mono ml-4">
-                              Lat: {step1Data.searchResult.step2_verification.coordinatesComparison.officialCoordinates.lat.toFixed(6)}<br/>
-                              Lng: {step1Data.searchResult.step2_verification.coordinatesComparison.officialCoordinates.lng.toFixed(6)}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {step1Data.searchResult.step2_verification.coordinatesComparison.distanceInMeters !== null && (
-                          <div className="mt-2 p-2 bg-white rounded border">
-                            <div className="flex items-center">
-                              {step1Data.searchResult.step2_verification.coordinatesComparison.isWithinAcceptableRange ? (
-                                <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                              ) : (
-                                <AlertTriangle className="w-4 h-4 text-yellow-500 mr-2" />
-                              )}
-                              <div>
-                                <strong>Distancia:</strong> {Math.round(step1Data.searchResult.step2_verification.coordinatesComparison.distanceInMeters)}m
-                                <div className="text-xs text-gray-600">
-                                  {step1Data.searchResult.step2_verification.coordinatesComparison.isWithinAcceptableRange 
-                                    ? 'Dentro del rango aceptable (≤100m)' 
-                                    : 'Fuera del rango aceptable (>100m) - Requiere revisión'
-                                  }
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                {/* Mostrar comparación si son diferentes */}
+                {step1Data?.originalRecord && step1Data.originalRecord.codigoPostal !== step1Address.codigoPostal && (
+                  <div className="p-3 bg-yellow-50 rounded border border-yellow-200">
+                    <div className="flex items-center text-yellow-800">
+                      <AlertTriangle className="w-4 h-4 mr-2" />
+                      <span className="font-medium">Los códigos postales no coinciden</span>
+                    </div>
+                    <div className="text-sm text-yellow-700 mt-1">
+                      Se recomienda usar el código postal oficial: <strong>{step1Address.codigoPostal}</strong>
+                    </div>
                   </div>
                 )}
                 

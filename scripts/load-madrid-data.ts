@@ -153,8 +153,8 @@ class MadridDataLoader {
         utmyEd: row.UTMY_ED ? parseFloat(row.UTMY_ED.replace(',', '.')) : null,
         utmxEtrs: row.UTMX_ETRS ? parseFloat(row.UTMX_ETRS.replace(',', '.')) : null,
         utmyEtrs: row.UTMY_ETRS ? parseFloat(row.UTMY_ETRS.replace(',', '.')) : null,
-        latitud: row.LATITUD ? this.parseCoordinate(row.LATITUD) : null,
-        longitud: row.LONGITUD ? this.parseCoordinate(row.LONGITUD) : null,
+        latitud: row.LATITUD ? this.parseCoordinate(row.LATITUD) : (row.UTMX_ETRS && row.UTMY_ETRS ? this.utmToLatLng(parseFloat(row.UTMX_ETRS.replace(',', '.')), parseFloat(row.UTMY_ETRS.replace(',', '.')))?.lat : null),
+        longitud: row.LONGITUD ? this.parseCoordinate(row.LONGITUD) : (row.UTMX_ETRS && row.UTMY_ETRS ? this.utmToLatLng(parseFloat(row.UTMX_ETRS.replace(',', '.')), parseFloat(row.UTMY_ETRS.replace(',', '.')))?.lng : null),
         anguloRotulacion: row.ANGULO_ROTULACION ? parseFloat(row.ANGULO_ROTULACION.replace(',', '.')) : null,
       }));
 
@@ -189,6 +189,76 @@ class MadridDataLoader {
       return decimal;
     } catch {
       console.warn(`Error parseando coordenada: ${coord}`);
+      return null;
+    }
+  }
+
+  /**
+   * Convierte coordenadas UTM (ETRS89) a latitud/longitud (WGS84)
+   * Zona UTM 30N para Madrid
+   */
+  private utmToLatLng(utmX: number, utmY: number): { lat: number; lng: number } | null {
+    try {
+      // Parámetros para UTM Zona 30N (ETRS89)
+      const a = 6378137.0; // Semi-eje mayor WGS84
+      const f = 1 / 298.257223563; // Aplanamiento WGS84
+      const k0 = 0.9996; // Factor de escala
+      const e = Math.sqrt(2 * f - f * f); // Primera excentricidad
+      const e1sq = e * e / (1 - e * e); // Segunda excentricidad al cuadrado
+      const n = f / (2 - f);
+      
+      // Origen de la zona UTM 30N
+      const falseEasting = 500000;
+      const falseNorthing = 0;
+      const lonOrigin = -3 * Math.PI / 180; // Meridiano central zona 30N (-3°)
+      
+      // Ajustar coordenadas
+      const x = utmX - falseEasting;
+      const y = utmY - falseNorthing;
+      
+      // Calcular M (distancia meridional)
+      const M = y / k0;
+      
+      // Calcular latitud de pie (footprint latitude)
+      const mu = M / (a * (1 - e * e / 4 - 3 * e * e * e * e / 64 - 5 * Math.pow(e, 6) / 256));
+      
+      const e1 = (1 - Math.sqrt(1 - e * e)) / (1 + Math.sqrt(1 - e * e));
+      const J1 = (3 * e1 / 2 - 27 * Math.pow(e1, 3) / 32);
+      const J2 = (21 * e1 * e1 / 16 - 55 * Math.pow(e1, 4) / 32);
+      const J3 = (151 * Math.pow(e1, 3) / 96);
+      const J4 = (1097 * Math.pow(e1, 4) / 512);
+      
+      const fp = mu + J1 * Math.sin(2 * mu) + J2 * Math.sin(4 * mu) + J3 * Math.sin(6 * mu) + J4 * Math.sin(8 * mu);
+      
+      // Calcular parámetros para la conversión final
+      const C1 = e1sq * Math.cos(fp) * Math.cos(fp);
+      const T1 = Math.tan(fp) * Math.tan(fp);
+      const R1 = a * (1 - e * e) / Math.pow(1 - e * e * Math.sin(fp) * Math.sin(fp), 1.5);
+      const N1 = a / Math.sqrt(1 - e * e * Math.sin(fp) * Math.sin(fp));
+      const D = x / (N1 * k0);
+      
+      // Calcular latitud
+      const Q1 = N1 * Math.tan(fp) / R1;
+      const Q2 = (D * D / 2);
+      const Q3 = (5 + 3 * T1 + 10 * C1 - 4 * C1 * C1 - 9 * e1sq) * Math.pow(D, 4) / 24;
+      const Q4 = (61 + 90 * T1 + 298 * C1 + 45 * T1 * T1 - 1.6 * e1sq - 3 * C1 * C1) * Math.pow(D, 6) / 720;
+      
+      const lat = fp - Q1 * (Q2 - Q3 + Q4);
+      
+      // Calcular longitud
+      const Q5 = D;
+      const Q6 = (1 + 2 * T1 + C1) * Math.pow(D, 3) / 6;
+      const Q7 = (5 - 2 * C1 + 28 * T1 - 3 * C1 * C1 + 8 * e1sq + 24 * T1 * T1) * Math.pow(D, 5) / 120;
+      
+      const lng = lonOrigin + (Q5 - Q6 + Q7) / Math.cos(fp);
+      
+      // Convertir de radianes a grados
+      return {
+        lat: lat * 180 / Math.PI,
+        lng: lng * 180 / Math.PI
+      };
+    } catch (error) {
+      console.warn(`Error convirtiendo UTM a Lat/Lng: ${error}`);
       return null;
     }
   }

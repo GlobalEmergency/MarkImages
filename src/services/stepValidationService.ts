@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { addressValidationService, OfficialAddressData } from './addressValidationService';
+import { verificationRepository, IVerificationRepository } from '@/repositories/verificationRepository';
+import { VerificationStep } from '@/types/verification';
 
 const prisma = new PrismaClient();
 
@@ -494,25 +496,37 @@ export class StepValidationService {
     }
     
     // Analizar coordenadas
-    const distance = this.calculateDistance(
-      record.latitud,
-      record.longitud,
-      officialAddress.latitud || record.latitud,
-      officialAddress.longitud || record.longitud
-    );
-    
-    const coordinatesValid = distance < 0.05; // 50 metros
-    if (coordinatesValid) {
-      steps.push({
-        stepNumber: 4,
-        title: 'Verificar Coordenadas',
-        status: 'skipped',
-        required: false,
-        skipReason: `Coordenadas válidas (${Math.round(distance * 1000)}m de diferencia)`
-      });
-      messages.push(`✅ Coordenadas válidas (${Math.round(distance * 1000)}m)`);
-      skippedSteps++;
+    if (officialAddress.latitud && officialAddress.longitud) {
+      const distance = this.calculateDistance(
+        record.latitud,
+        record.longitud,
+        officialAddress.latitud,
+        officialAddress.longitud
+      );
+      
+      const coordinatesValid = distance < 0.05; // 50 metros
+      if (coordinatesValid) {
+        steps.push({
+          stepNumber: 4,
+          title: 'Verificar Coordenadas',
+          status: 'skipped',
+          required: false,
+          skipReason: `Coordenadas válidas (${Math.round(distance * 1000)}m de diferencia)`
+        });
+        messages.push(`✅ Coordenadas válidas (${Math.round(distance * 1000)}m)`);
+        skippedSteps++;
+      } else {
+        steps.push({
+          stepNumber: 4,
+          title: 'Verificar Coordenadas',
+          status: nextStep === 5 ? 'current' : 'pending',
+          required: true
+        });
+        if (nextStep === 5) nextStep = 4;
+        messages.push(`⚠️ Coordenadas requieren verificación (${Math.round(distance * 1000)}m de diferencia)`);
+      }
     } else {
+      // No hay coordenadas oficiales disponibles, requiere verificación manual
       steps.push({
         stepNumber: 4,
         title: 'Verificar Coordenadas',
@@ -520,7 +534,7 @@ export class StepValidationService {
         required: true
       });
       if (nextStep === 5) nextStep = 4;
-      messages.push(`⚠️ Coordenadas requieren verificación (${Math.round(distance * 1000)}m de diferencia)`);
+      messages.push(`⚠️ Coordenadas requieren verificación manual (sin coordenadas oficiales de referencia)`);
     }
     
     const totalSteps = 4 - skippedSteps;
@@ -605,21 +619,35 @@ export class StepValidationService {
   }
   
   /**
-   * Guarda el progreso de validación (en memoria por ahora, se puede extender a BD)
+   * Guarda el progreso de validación usando VerificationRepository
    */
   private async saveStepProgress(progress: StepValidationProgress): Promise<void> {
-    // Por ahora guardamos en memoria, se puede extender para guardar en BD
-    // await prisma.validationProgress.upsert(...)
-    console.log('Guardando progreso:', progress);
+    try {
+      await verificationRepository.createOrUpdateForValidation(
+        progress.deaRecordId,
+        progress,
+        'data_validation'
+      );
+    } catch (error) {
+      console.error('Error guardando progreso de validación:', error);
+      throw error;
+    }
   }
   
   /**
-   * Obtiene el progreso de validación
+   * Obtiene el progreso de validación usando VerificationRepository
    */
   private async getStepProgress(deaRecordId: number): Promise<StepValidationProgress | null> {
-    // Por ahora retornamos null, se puede extender para leer de BD
-    // return await prisma.validationProgress.findUnique(...)
-    return null;
+    try {
+      const session = await verificationRepository.findByDeaRecordIdForValidation(deaRecordId);
+      if (session && session.stepData) {
+        return session.stepData as StepValidationProgress;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error obteniendo progreso de validación:', error);
+      return null;
+    }
   }
   
   /**

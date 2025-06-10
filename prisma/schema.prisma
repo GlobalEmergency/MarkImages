@@ -71,6 +71,7 @@ model VerificationSession {
   deaRecordId           Int      @map("dea_record_id")
   status                String   @default("in_progress")
   currentStep           String   @default("dea_info") @map("current_step")
+  stepData              Json?    @map("step_data")
   originalImageUrl      String?  @map("original_image_url")
   croppedImageUrl       String?  @map("cropped_image_url")
   processedImageUrl     String?  @map("processed_image_url")
@@ -123,80 +124,156 @@ model ProcessedImage {
   @@map("processed_images")
 }
 
-// Tablas para datos oficiales del Ayuntamiento de Madrid
-model MadridAddress {
-  id                  Int      @id @default(autoincrement())
-  codVia              Int      @map("cod_via")
-  viaClase            String?  @map("via_clase")
-  viaPar              String?  @map("via_par")
-  viaNombre           String?  @map("via_nombre")
-  viaNombreAcentos    String?  @map("via_nombre_acentos")
-  claseApp            String?  @map("clase_app")
-  numero              String?
-  calificador         String?
-  tipoNdp             String?  @map("tipo_ndp")
-  codNdp              String?  @map("cod_ndp")
-  distrito            Int?
-  barrio              Int?
-  codPostal           String?  @map("cod_postal")
-  utmxEd              Float?   @map("utmx_ed")
-  utmyEd              Float?   @map("utmy_ed")
-  utmxEtrs            Float?   @map("utmx_etrs")
-  utmyEtrs            Float?   @map("utmy_etrs")
-  latitud             Float?
-  longitud            Float?
-  anguloRotulacion    Float?   @map("angulo_rotulacion")
-  createdAt           DateTime @default(now()) @map("created_at")
+// =====================================================
+// ESTRUCTURA OPTIMIZADA - SISTEMA DE DIRECCIONES MADRID
+// =====================================================
 
-  @@index([distrito])
-  @@index([codPostal])
-  @@index([viaNombreAcentos])
-  @@index([latitud, longitud])
-  @@index([codVia])
-  @@map("madrid_addresses")
+// 1. TABLA: DISTRITOS
+model Distrito {
+  id                 Int      @id @default(autoincrement())
+  codigoDistrito     Int      @unique @map("codigo_distrito")
+  codigoTexto        String   @map("codigo_texto")
+  nombre             String
+  nombreNormalizado  String   @map("nombre_normalizado") // Para búsquedas sin acentos
+  shapeLength        Float?   @map("shape_length")
+  shapeArea          Float?   @map("shape_area")
+  fechaAlta          DateTime? @map("fecha_alta")
+  fechaBaja          DateTime? @map("fecha_baja")
+  observaciones      String?
+  createdAt          DateTime @default(now()) @map("created_at")
+  
+  // Relaciones
+  barrios            Barrio[]
+  viaRangos          ViaRangoNumeracion[]
+  direcciones        Direccion[]
+  
+  @@index([codigoDistrito])
+  @@index([nombreNormalizado])
+  @@map("distritos")
 }
 
-model MadridStreet {
-  id                      Int      @id @default(autoincrement())
-  codVia                  Int      @unique @map("cod_via")
-  viaClase                String?  @map("via_clase")
-  viaPar                  String?  @map("via_par")
-  viaNombre               String?  @map("via_nombre")
-  viaNombreAcentos        String?  @map("via_nombre_acentos")
-  codViaComienza          Int?     @map("cod_via_comienza")
-  claseComienza           String?  @map("clase_comienza")
-  particulaComienza       String?  @map("particula_comienza")
-  nombreComienza          String?  @map("nombre_comienza")
-  nombreAcentosComienza   String?  @map("nombre_acentos_comienza")
-  codViaTermina           Int?     @map("cod_via_termina")
-  claseTermina            String?  @map("clase_termina")
-  particulaTermina        String?  @map("particula_termina")
-  nombreTermina           String?  @map("nombre_termina")
-  nombreAcentosTermina    String?  @map("nombre_acentos_termina")
-  createdAt               DateTime @default(now()) @map("created_at")
-
-  @@index([codVia])
-  @@index([viaNombreAcentos])
-  @@map("madrid_streets")
+// 2. TABLA: BARRIOS
+model Barrio {
+  id                    Int      @id @default(autoincrement())
+  distritoId            Int      @map("distrito_id")
+  codigoBarrio          Int      @map("codigo_barrio")
+  codigoDistritoBarrio  Int      @unique @map("codigo_distrito_barrio")
+  numeroBarrio          Int      @map("numero_barrio")
+  nombre                String
+  nombreNormalizado     String   @map("nombre_normalizado")
+  nombreMayuscula       String   @map("nombre_mayuscula")
+  shapeLength           Float?   @map("shape_length")
+  shapeArea             Float?   @map("shape_area")
+  fechaAlta             DateTime? @map("fecha_alta")
+  fechaBaja             DateTime? @map("fecha_baja")
+  createdAt             DateTime @default(now()) @map("created_at")
+  
+  // Relaciones
+  distrito              Distrito @relation(fields: [distritoId], references: [id], onDelete: Cascade)
+  viaRangos             ViaRangoNumeracion[]
+  direcciones           Direccion[]
+  
+  @@index([distritoId, codigoBarrio])
+  @@index([nombreNormalizado])
+  @@map("barrios")
 }
 
-model MadridStreetDistrict {
+// 3. TABLA: VIAS (CALLES, AVENIDAS, ETC.)
+model Via {
+  id                    Int      @id @default(autoincrement())
+  codigoVia             Int      @unique @map("codigo_via")
+  claseVia              String   @map("clase_via") // CALLE, AVENIDA, PLAZA, etc.
+  particula             String?  // DE, DEL, etc.
+  nombre                String
+  nombreConAcentos      String   @map("nombre_con_acentos")
+  nombreNormalizado     String   @map("nombre_normalizado") // Sin acentos, mayúsculas
+  
+  // Información de conectividad
+  codigoViaInicio       Int?     @map("codigo_via_inicio")
+  claseInicio           String?  @map("clase_inicio")
+  particulaInicio       String?  @map("particula_inicio")
+  nombreInicio          String?  @map("nombre_inicio")
+  codigoViaFin          Int?     @map("codigo_via_fin")
+  claseFin              String?  @map("clase_fin")
+  particulaFin          String?  @map("particula_fin")
+  nombreFin             String?  @map("nombre_fin")
+  
+  createdAt             DateTime @default(now()) @map("created_at")
+  
+  // Relaciones
+  rangosNumeracion      ViaRangoNumeracion[]
+  direcciones           Direccion[]
+  
+  @@index([codigoVia])
+  @@index([claseVia])
+  @@index([nombreNormalizado])
+  @@index([codigoViaInicio])
+  @@index([codigoViaFin])
+  @@map("vias")
+}
+
+// 4. TABLA: RANGOS DE NUMERACIÓN POR VÍA, DISTRITO Y BARRIO
+model ViaRangoNumeracion {
   id                Int      @id @default(autoincrement())
-  codVia            Int      @map("cod_via")
-  viaClase          String?  @map("via_clase")
-  viaPar            String?  @map("via_par")
-  viaNombre         String?  @map("via_nombre")
-  viaNombreAcentos  String?  @map("via_nombre_acentos")
-  distrito          Int?
-  imparMin          String?  @map("impar_min")
-  imparMax          String?  @map("impar_max")
-  parMin            String?  @map("par_min")
-  parMax            String?  @map("par_max")
+  viaId             Int      @map("via_id")
+  distritoId        Int      @map("distrito_id")
+  barrioId          Int?     @map("barrio_id")
+  numeroImparMin    Int?     @map("numero_impar_min")
+  numeroImparMax    Int?     @map("numero_impar_max")
+  numeroParMin      Int?     @map("numero_par_min")
+  numeroParMax      Int?     @map("numero_par_max")
   createdAt         DateTime @default(now()) @map("created_at")
+  
+  // Relaciones
+  via               Via      @relation(fields: [viaId], references: [id], onDelete: Cascade)
+  distrito          Distrito @relation(fields: [distritoId], references: [id])
+  barrio            Barrio?  @relation(fields: [barrioId], references: [id])
+  
+  @@index([viaId, distritoId])
+  @@index([numeroImparMin, numeroImparMax])
+  @@index([numeroParMin, numeroParMax])
+  @@index([viaId, distritoId, barrioId])
+  @@map("via_rangos_numeracion")
+}
 
-  @@index([codVia])
-  @@index([distrito])
-  @@map("madrid_street_districts")
+// 5. TABLA PRINCIPAL: DIRECCIONES CON COORDENADAS GEOGRÁFICAS
+model Direccion {
+  id                    Int      @id @default(autoincrement())
+  viaId                 Int      @map("via_id")
+  distritoId            Int      @map("distrito_id")
+  barrioId              Int?     @map("barrio_id")
+  
+  // Información de la dirección
+  claseAplicacion       String?  @map("clase_aplicacion") // NUMERO, KILOMETRO
+  numero                Int?
+  calificador           String?  // BIS, DUPLICADO, etc.
+  tipoPunto             String?  @map("tipo_punto") // PARCELA, EDIFICIO, etc.
+  codigoPunto           Int?     @map("codigo_punto")
+  codigoPostal          String?  @map("codigo_postal")
+  
+  // Coordenadas geográficas (FUNDAMENTAL para búsquedas espaciales)
+  latitud               Float    // Convertido de formato DMS
+  longitud              Float    // Convertido de formato DMS
+  utmXEtrs              Float?   @map("utm_x_etrs") // Coordenadas UTM ETRS89
+  utmYEtrs              Float?   @map("utm_y_etrs")
+  utmXEd                Float?   @map("utm_x_ed") // Coordenadas UTM ED50
+  utmYEd                Float?   @map("utm_y_ed")
+  anguloRotulacion      Float?   @map("angulo_rotulacion")
+  
+  createdAt             DateTime @default(now()) @map("created_at")
+  
+  // Relaciones
+  via                   Via      @relation(fields: [viaId], references: [id])
+  distrito              Distrito @relation(fields: [distritoId], references: [id])
+  barrio                Barrio?  @relation(fields: [barrioId], references: [id])
+  
+  // ÍNDICES CRÍTICOS PARA RENDIMIENTO
+  @@index([viaId, numero])
+  @@index([distritoId, barrioId])
+  @@index([codigoPostal])
+  @@index([latitud, longitud]) // Índice espacial básico
+  @@index([viaId, distritoId, numero, codigoPostal])
+  @@map("direcciones")
 }
 
 model DeaCode {
