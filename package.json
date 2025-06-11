@@ -9,7 +9,9 @@
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "load-madrid-data": "tsx scripts/load-madrid-data.ts"
+    "load-madrid-data": "tsx scripts/load-madrid-data.ts",
+    "test": "tsx tests/validation-system.test.ts",
+    "test:validation": "tsx tests/validation-system.test.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.9.0",

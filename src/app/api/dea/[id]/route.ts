@@ -5,10 +5,11 @@ const deaRepository = new DeaRepository();
 
 export async function GET(
 	request: NextRequest,
-	{ params }: { params: { id: string } }
+	{ params }: { params: Promise<{ id: string }> }
 ) {
 	try {
-		const id = parseInt(params.id);
+		const { id: idParam } = await params;
+		const id = parseInt(idParam);
 
 		if (isNaN(id)) {
 			return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
@@ -22,17 +23,18 @@ export async function GET(
 
 		return NextResponse.json(record);
 	} catch (error) {
-		console.error(`Error fetching DEA record ${params.id}:`, error);
+		console.error(`Error fetching DEA record:`, error);
 		return NextResponse.json({ error: 'Error al obtener registro' }, { status: 500 });
 	}
 }
 
 export async function PUT(
 	request: NextRequest,
-	{ params }: { params: { id: string } }
+	{ params }: { params: Promise<{ id: string }> }
 ) {
 	try {
-		const id = parseInt(params.id);
+		const { id: idParam } = await params;
+		const id = parseInt(idParam);
 
 		if (isNaN(id)) {
 			return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
@@ -49,17 +51,18 @@ export async function PUT(
 
 		return NextResponse.json(record);
 	} catch (error) {
-		console.error(`Error updating DEA record ${params.id}:`, error);
+		console.error(`Error updating DEA record:`, error);
 		return NextResponse.json({ error: 'Error al actualizar registro' }, { status: 500 });
 	}
 }
 
 export async function DELETE(
 	request: NextRequest,
-	{ params }: { params: { id: string } }
+	{ params }: { params: Promise<{ id: string }> }
 ) {
 	try {
-		const id = parseInt(params.id);
+		const { id: idParam } = await params;
+		const id = parseInt(idParam);
 
 		if (isNaN(id)) {
 			return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
@@ -74,7 +77,7 @@ export async function DELETE(
 		const record = await deaRepository.delete(id);
 		return NextResponse.json({ success: true, deletedRecord: record });
 	} catch (error) {
-		console.error(`Error deleting DEA record ${params.id}:`, error);
+		console.error(`Error deleting DEA record:`, error);
 		return NextResponse.json({ error: 'Error al eliminar registro' }, { status: 500 });
 	}
 }

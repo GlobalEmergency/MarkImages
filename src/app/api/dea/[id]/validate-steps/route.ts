@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stepValidationService } from '@/services/stepValidationService';
-import { addressValidationService } from '@/services/addressValidationService';
+import { newMadridValidationService } from '@/services/newMadridValidationService';
+import { AddressSearchResult } from '@/types/address';
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const deaRecordId = parseInt(params.id);
+    const { id } = await params;
+    const deaRecordId = parseInt(id);
     
     if (isNaN(deaRecordId)) {
       return NextResponse.json(
@@ -37,23 +39,38 @@ export async function GET(
       });
       
       if (record) {
-        const searchResult = await addressValidationService.validateAddressInOrder(
+        const validationResult = await newMadridValidationService.validateAddress(
           record.tipoVia,
           record.nombreVia,
-          record.numeroVia,
+          record.numeroVia || undefined,
           record.codigoPostal.toString(),
           record.distrito,
-          { lat: record.latitud, lng: record.longitud }
+          { latitude: record.latitud, longitude: record.longitud }
         );
         
+        // Mapear el primer resultado para el frontend
+        const mapAddressForFrontend = (address: AddressSearchResult) => ({
+          tipoVia: address.claseVia,
+          nombreVia: address.nombreViaAcentos,
+          numeroVia: address.numero,
+          codigoPostal: address.codigoPostal,
+          distrito: address.distrito,
+          latitud: address.latitud,
+          longitud: address.longitud,
+          confidence: address.confidence
+        });
+
         return NextResponse.json({
           success: true,
           data: {
             progress: result.progress,
             step1Data: {
               searchResult: {
-                ...searchResult.step1_officialSearch,
-                step2_verification: searchResult.step2_verification
+                found: validationResult.searchResult.isValid,
+                officialData: validationResult.searchResult.suggestions.length > 0 ? 
+                  mapAddressForFrontend(validationResult.searchResult.suggestions[0]) : null,
+                alternatives: validationResult.searchResult.suggestions.slice(1).map(mapAddressForFrontend),
+                exactMatch: validationResult.searchResult.matchType === 'exact'
               },
               originalRecord: {
                 tipoVia: record.tipoVia,
@@ -91,10 +108,11 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const deaRecordId = parseInt(params.id);
+    const { id } = await params;
+    const deaRecordId = parseInt(id);
     const body = await request.json();
     
     if (isNaN(deaRecordId)) {

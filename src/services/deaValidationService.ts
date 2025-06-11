@@ -1,14 +1,15 @@
 import { madridGeocodingService, GeographicValidation } from './madridGeocodingService';
 import { textNormalizationService, NormalizationResult } from './textNormalizationService';
 import { deaCodeService, DeaCodeGeneration } from './deaCodeService';
-import { addressValidationService, OrderedAddressValidation } from './addressValidationService';
+import { newMadridValidationService } from './newMadridValidationService';
+import { ComprehensiveAddressValidation } from '../types/address';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 export interface DeaValidationResult {
   id: number;
-  orderedAddressValidation: OrderedAddressValidation;
+  newAddressValidation: ComprehensiveAddressValidation;
   geographic: {
     originalData: {
       tipoVia: string;
@@ -70,18 +71,45 @@ export class DeaValidationService {
     // Extraer número del distrito (ej: "2. Arganzuela" -> 2)
     const distritoNumero = this.extractDistrictNumber(record.distrito);
     
-    // PASO 1: Validación ordenada de direcciones (nuevo flujo)
-    const orderedAddressValidation = await addressValidationService.validateAddressInOrder(
-      record.tipoVia,
-      record.nombreVia,
-      record.numeroVia,
-      record.codigoPostal.toString(),
-      record.distrito
-    );
+    // Validación usando el nuevo sistema optimizado
+    let newAddressValidation: ComprehensiveAddressValidation;
+    try {
+      newAddressValidation = await newMadridValidationService.validateAddress(
+        record.tipoVia,
+        record.nombreVia,
+        record.numeroVia || undefined,
+        record.codigoPostal.toString(),
+        record.distrito,
+        { latitude: record.latitud, longitude: record.longitud }
+      );
+    } catch (error) {
+      console.error('Error en nueva validación de direcciones:', error);
+      // Crear una validación básica en caso de error
+      newAddressValidation = {
+        searchResult: {
+          isValid: false,
+          confidence: 0,
+          matchType: 'exact',
+          suggestions: [],
+          errors: ['Error en validación de direcciones'],
+          warnings: []
+        },
+        validationDetails: {
+          streetName: { input: record.nombreVia, needsCorrection: false, similarity: 0 },
+          streetType: { input: record.tipoVia, needsCorrection: false },
+          streetNumber: { input: record.numeroVia || '', needsCorrection: false, inValidRange: false },
+          postalCode: { input: record.codigoPostal.toString(), needsCorrection: false },
+          district: { input: record.distrito, needsCorrection: false },
+          coordinates: { input: { latitude: record.latitud, longitude: record.longitud }, needsReview: false }
+        },
+        overallStatus: 'invalid',
+        recommendedActions: ['Revisar dirección manualmente']
+      };
+    }
 
     const result: DeaValidationResult = {
       id: deaRecordId,
-      orderedAddressValidation,
+      newAddressValidation,
       geographic: {
         originalData: {
           tipoVia: record.tipoVia,

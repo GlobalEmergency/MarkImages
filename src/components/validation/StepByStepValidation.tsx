@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   CheckCircle, 
   AlertTriangle, 
@@ -8,6 +8,208 @@ import {
   Loader2,
   SkipForward
 } from 'lucide-react';
+
+// Declarar tipos para Leaflet
+declare global {
+  interface Window {
+    L: any;
+  }
+}
+
+interface CoordinatesMapProps {
+  userCoordinates: { lat: number; lng: number };
+  officialCoordinates: { lat?: number; lng?: number };
+  distance: number;
+  formatDistance: (distance: number) => string;
+}
+
+function CoordinatesMap({ userCoordinates, officialCoordinates, distance, formatDistance }: CoordinatesMapProps) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!mapRef.current || !officialCoordinates.lat || !officialCoordinates.lng) return;
+
+    // Función para cargar Leaflet
+    const loadLeaflet = () => {
+      return new Promise<void>((resolve) => {
+        if (window.L) {
+          resolve();
+          return;
+        }
+
+        // Cargar CSS de Leaflet
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(link);
+
+        // Cargar JS de Leaflet
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.onload = () => resolve();
+        document.head.appendChild(script);
+      });
+    };
+
+    // Función para inicializar el mapa
+    const initMap = async () => {
+      try {
+        await loadLeaflet();
+
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.remove();
+        }
+
+        const L = window.L;
+        
+        // Calcular centro
+        const centerLat = (userCoordinates.lat + (officialCoordinates.lat || 0)) / 2;
+        const centerLng = (userCoordinates.lng + (officialCoordinates.lng || 0)) / 2;
+
+        // Crear el mapa
+        const map = L.map(mapRef.current).setView([centerLat, centerLng], 15);
+        mapInstanceRef.current = map;
+
+        // Añadir capa de OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Crear iconos personalizados
+        const userIcon = L.divIcon({
+          className: 'custom-div-icon',
+          html: `<div style="
+            background-color: #e74c3c; 
+            color: white; 
+            width: 30px; 
+            height: 30px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: bold; 
+            font-size: 14px; 
+            border: 3px solid white; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          ">U</div>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
+        });
+
+        const officialIcon = L.divIcon({
+          className: 'custom-div-icon',
+          html: `<div style="
+            background-color: #3498db; 
+            color: white; 
+            width: 30px; 
+            height: 30px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: bold; 
+            font-size: 14px; 
+            border: 3px solid white; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          ">O</div>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
+        });
+
+        // Añadir marcadores
+        const userMarker = L.marker([userCoordinates.lat, userCoordinates.lng], { icon: userIcon })
+          .addTo(map)
+          .bindPopup(`<b>Coordenadas del Usuario</b><br/>Lat: ${userCoordinates.lat.toFixed(6)}<br/>Lng: ${userCoordinates.lng.toFixed(6)}`);
+
+        const officialMarker = L.marker([officialCoordinates.lat!, officialCoordinates.lng!], { icon: officialIcon })
+          .addTo(map)
+          .bindPopup(`<b>Coordenadas Oficiales</b><br/>Lat: ${officialCoordinates.lat!.toFixed(6)}<br/>Lng: ${officialCoordinates.lng!.toFixed(6)}`);
+
+        // Añadir línea conectora
+        const latlngs = [
+          [userCoordinates.lat, userCoordinates.lng],
+          [officialCoordinates.lat, officialCoordinates.lng]
+        ];
+
+        const polyline = L.polyline(latlngs, {
+          color: '#666',
+          weight: 3,
+          opacity: 0.8,
+          dashArray: '10, 5'
+        }).addTo(map);
+
+        // Ajustar vista para incluir ambos marcadores
+        const group = new L.featureGroup([userMarker, officialMarker, polyline]);
+        map.fitBounds(group.getBounds().pad(0.1));
+
+        // Añadir control de distancia
+        const distanceControl = L.control({ position: 'bottomleft' });
+        distanceControl.onAdd = function() {
+          const div = L.DomUtil.create('div', 'distance-info');
+          div.style.cssText = 'background: rgba(255,255,255,0.95); padding: 8px; border-radius: 4px; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: 1px solid #ccc;';
+          div.innerHTML = `
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+              <div style="width: 12px; height: 12px; background: #e74c3c; border-radius: 50%; margin-right: 6px; border: 2px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.3);"></div>
+              <span style="font-weight: 500;">Usuario</span>
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+              <div style="width: 12px; height: 12px; background: #3498db; border-radius: 50%; margin-right: 6px; border: 2px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.3);"></div>
+              <span style="font-weight: 500;">Oficial</span>
+            </div>
+            <div style="border-top: 1px solid #ddd; padding-top: 4px; font-weight: bold; color: #666;">
+              📏 ${formatDistance(distance)}
+            </div>
+          `;
+          return div;
+        };
+        distanceControl.addTo(map);
+
+      } catch (error) {
+        console.error('Error inicializando mapa:', error);
+        if (mapRef.current) {
+          mapRef.current.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">Error cargando el mapa</div>';
+        }
+      }
+    };
+
+    initMap();
+
+    // Cleanup
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [userCoordinates, officialCoordinates, distance, formatDistance]);
+
+  return (
+    <div className="mt-4 p-4 bg-gray-50 rounded border">
+      <div className="font-medium text-gray-800 mb-3 flex items-center">
+        <span className="text-lg mr-2">🗺️</span>
+        Visualización de Coordenadas
+      </div>
+      <div 
+        ref={mapRef}
+        className="bg-white rounded border"
+        style={{ height: '300px', width: '100%' }}
+      />
+      
+      {/* Información adicional del mapa */}
+      <div className="mt-3 text-center text-sm text-gray-600">
+        <div className="flex items-center justify-center space-x-4">
+          <span>🔴 Coordenadas del Usuario</span>
+          <span>🔵 Coordenadas Oficiales</span>
+          <span>📏 Distancia: {formatDistance(distance)}</span>
+        </div>
+        <div className="mt-1 text-xs text-gray-500">
+          Mapa interactivo con marcadores nativos de OpenStreetMap. Haz clic en los marcadores para ver detalles.
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface ValidationStep {
   stepNumber: 1 | 2 | 3 | 4;
@@ -17,6 +219,46 @@ interface ValidationStep {
   skipReason?: string;
 }
 
+interface AddressData {
+  tipoVia: string;
+  nombreVia: string;
+  numeroVia?: string;
+  codigoPostal: string;
+  distrito: number;
+  latitud?: number;
+  longitud?: number;
+  confidence?: number;
+}
+
+interface OriginalRecord {
+  tipoVia: string;
+  nombreVia: string;
+  numeroVia?: string;
+  complementoDireccion?: string;
+  codigoPostal: string;
+  distrito: string;
+  latitud: number;
+  longitud: number;
+}
+
+interface Step1Data {
+  searchResult: {
+    found: boolean;
+    officialData?: AddressData;
+    alternatives: AddressData[];
+    exactMatch?: boolean;
+  };
+  originalRecord?: OriginalRecord;
+  message?: string;
+}
+
+interface CurrentStepData {
+  customPostalCode?: string;
+  customDistrict?: number;
+  customLat?: number;
+  customLng?: number;
+}
+
 interface StepValidationProgress {
   deaRecordId: number;
   currentStep: number;
@@ -24,7 +266,7 @@ interface StepValidationProgress {
   steps: ValidationStep[];
   stepData: {
     step1?: {
-      selectedAddress: any;
+      selectedAddress: AddressData;
       userConfirmed: boolean;
       timestamp: Date;
     };
@@ -67,8 +309,8 @@ export default function StepByStepValidation({
   const [progress, setProgress] = useState<StepValidationProgress | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [step1Data, setStep1Data] = useState<any>(null);
-  const [currentStepData, setCurrentStepData] = useState<any>({});
+  const [step1Data, setStep1Data] = useState<Step1Data | null>(null);
+  const [currentStepData, setCurrentStepData] = useState<CurrentStepData>({});
 
   useEffect(() => {
     initializeValidation();
@@ -90,14 +332,14 @@ export default function StepByStepValidation({
       } else {
         setError(data.error || 'Error inicializando validación');
       }
-    } catch (err) {
+    } catch {
       setError('Error de conexión');
     } finally {
       setLoading(false);
     }
   };
 
-  const executeStep = async (stepNumber: number, stepData: any) => {
+  const executeStep = async (stepNumber: number, stepData: Record<string, unknown>) => {
     setLoading(true);
     setError(null);
     
@@ -125,7 +367,7 @@ export default function StepByStepValidation({
       } else {
         setError(data.error || 'Error ejecutando paso');
       }
-    } catch (err) {
+    } catch {
       setError('Error de conexión');
     } finally {
       setLoading(false);
@@ -191,7 +433,7 @@ export default function StepByStepValidation({
                     <div><strong>Dirección:</strong> {searchResult.officialData.tipoVia} {searchResult.officialData.nombreVia} {searchResult.officialData.numeroVia}</div>
                     <div><strong>Código Postal:</strong> {searchResult.officialData.codigoPostal}</div>
                     <div><strong>Distrito:</strong> {searchResult.officialData.distrito}</div>
-                    <div><strong>Confianza:</strong> {(searchResult.officialData.confidence * 100).toFixed(1)}%</div>
+                    <div><strong>Confianza:</strong> {((searchResult.officialData.confidence || 0) * 100).toFixed(1)}%</div>
                     {searchResult.officialData.latitud && searchResult.officialData.longitud && (
                       <div className="mt-2 p-2 bg-blue-50 rounded">
                         <div><strong>Coordenadas Oficiales:</strong></div>
@@ -216,12 +458,12 @@ export default function StepByStepValidation({
                 <div>
                   <h5 className="font-medium text-gray-700 mb-2">Alternativas disponibles:</h5>
                   <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {searchResult.alternatives.map((alt: any, index: number) => (
-                      <div key={index} className="bg-yellow-50 p-2 rounded border">
+                    {searchResult.alternatives.map((alt: AddressData, altIndex: number) => (
+                      <div key={altIndex} className="bg-yellow-50 p-2 rounded border">
                         <div className="text-sm">
                           <div><strong>Dirección:</strong> {alt.tipoVia} {alt.nombreVia} {alt.numeroVia}</div>
                           <div><strong>CP:</strong> {alt.codigoPostal} | <strong>Distrito:</strong> {alt.distrito}</div>
-                          <div><strong>Confianza:</strong> {(alt.confidence * 100).toFixed(1)}%</div>
+                          <div><strong>Confianza:</strong> {((alt.confidence || 0) * 100).toFixed(1)}%</div>
                         </div>
                         <button
                           onClick={() => executeStep(1, { selectedAddress: alt })}
@@ -398,6 +640,69 @@ export default function StepByStepValidation({
     const step1Address = progress?.stepData.step1?.selectedAddress;
     if (!step1Address) return null;
 
+    // Calcular distancia entre coordenadas del usuario y oficiales
+    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+      const R = 6371; // Radio de la Tierra en km
+      const dLat = (lat2 - lat1) * (Math.PI / 180);
+      const dLon = (lon2 - lon1) * (Math.PI / 180);
+      
+      const a = 
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    };
+
+    const formatDistance = (distanceKm: number): string => {
+      if (distanceKm < 0.001) {
+        return `${Math.round(distanceKm * 1000000)} mm`;
+      } else if (distanceKm < 1) {
+        return `${Math.round(distanceKm * 1000)} m`;
+      } else {
+        return `${distanceKm.toFixed(2)} km`;
+      }
+    };
+
+    const getDistanceAlert = (distanceKm: number) => {
+      if (distanceKm < 0.05) { // Menos de 50m
+        return {
+          color: 'green',
+          icon: '✅',
+          message: 'Las coordenadas son muy precisas'
+        };
+      } else if (distanceKm < 0.2) { // Menos de 200m
+        return {
+          color: 'yellow',
+          icon: '⚠️',
+          message: 'Diferencia moderada en las coordenadas'
+        };
+      } else {
+        return {
+          color: 'red',
+          icon: '🚨',
+          message: 'Las coordenadas difieren significativamente'
+        };
+      }
+    };
+
+    const userCoordinates = step1Data?.originalRecord ? {
+      lat: step1Data.originalRecord.latitud,
+      lng: step1Data.originalRecord.longitud
+    } : null;
+
+    const officialCoordinates = {
+      lat: step1Address.latitud,
+      lng: step1Address.longitud
+    };
+
+    const distance = userCoordinates && officialCoordinates.lat && officialCoordinates.lng 
+      ? calculateDistance(userCoordinates.lat, userCoordinates.lng, officialCoordinates.lat, officialCoordinates.lng)
+      : null;
+
+    const distanceAlert = distance ? getDistanceAlert(distance) : null;
+
     return (
       <div className="space-y-4">
         <div className="bg-green-50 p-4 rounded-lg">
@@ -405,64 +710,142 @@ export default function StepByStepValidation({
             Verificar Coordenadas
           </h4>
           
-          <div className="space-y-3">
-            <div className="bg-white p-3 rounded border">
-              <div className="text-sm space-y-2">
-                <div>
-                  <strong>Coordenadas Oficiales:</strong>
-                </div>
-                <div className="ml-4 font-mono text-blue-600">
-                  Lat: {step1Address.latitud?.toFixed(6) || 'No disponible'}<br/>
-                  Lng: {step1Address.longitud?.toFixed(6) || 'No disponible'}
-                </div>
-                <div className="text-gray-600">
-                  ¿Confirma que estas coordenadas son correctas?
+          <div className="space-y-4">
+            {/* Comparación de Coordenadas */}
+            <div className="bg-white p-4 rounded border">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Coordenadas del Usuario */}
+                {userCoordinates && (
+                  <div className="p-3 bg-gray-50 rounded border">
+                    <div className="font-medium text-gray-800 mb-2 flex items-center">
+                      <span className="text-blue-500 mr-2">👤</span>
+                      Coordenadas del Usuario:
+                    </div>
+                    <div className="font-mono text-sm text-gray-700">
+                      <div>Lat: {userCoordinates.lat.toFixed(6)}</div>
+                      <div>Lng: {userCoordinates.lng.toFixed(6)}</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Coordenadas Oficiales */}
+                <div className="p-3 bg-blue-50 rounded border">
+                  <div className="font-medium text-blue-800 mb-2 flex items-center">
+                    <span className="text-blue-500 mr-2">🏛️</span>
+                    Coordenadas Oficiales:
+                  </div>
+                  <div className="font-mono text-sm text-blue-700">
+                    <div>Lat: {officialCoordinates.lat?.toFixed(6) || 'No disponible'}</div>
+                    <div>Lng: {officialCoordinates.lng?.toFixed(6) || 'No disponible'}</div>
+                  </div>
                 </div>
               </div>
+
+              {/* Información de Distancia */}
+              {distance !== null && distanceAlert && (
+                <div className={`mt-4 p-3 rounded border ${
+                  distanceAlert.color === 'green' ? 'bg-green-50 border-green-200' :
+                  distanceAlert.color === 'yellow' ? 'bg-yellow-50 border-yellow-200' :
+                  'bg-red-50 border-red-200'
+                }`}>
+                  <div className={`flex items-center ${
+                    distanceAlert.color === 'green' ? 'text-green-800' :
+                    distanceAlert.color === 'yellow' ? 'text-yellow-800' :
+                    'text-red-800'
+                  }`}>
+                    <span className="text-lg mr-2">{distanceAlert.icon}</span>
+                    <div>
+                      <div className="font-semibold">
+                        📏 Distancia: {formatDistance(distance)}
+                      </div>
+                      <div className="text-sm mt-1">
+                        {distanceAlert.message}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Mapa Visual de Coordenadas */}
+              {userCoordinates && officialCoordinates.lat && officialCoordinates.lng && (
+                <CoordinatesMap 
+                  userCoordinates={userCoordinates}
+                  officialCoordinates={officialCoordinates}
+                  distance={distance || 0}
+                  formatDistance={formatDistance}
+                />
+              )}
+
+              {/* Pregunta de Confirmación */}
+              <div className="mt-4 text-gray-600">
+                ¿Confirma que estas coordenadas son correctas?
+              </div>
               
-              <div className="mt-3 flex space-x-2">
-                <button
-                  onClick={() => executeStep(4, { 
-                    confirmedCoordinates: { 
-                      lat: step1Address.latitud || 0, 
-                      lng: step1Address.longitud || 0 
-                    } 
-                  })}
-                  disabled={loading}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-                >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar'}
-                </button>
-                
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    step="0.000001"
-                    placeholder="Latitud"
-                    value={currentStepData.customLat || ''}
-                    onChange={(e) => setCurrentStepData(prev => ({ ...prev, customLat: parseFloat(e.target.value) }))}
-                    className="px-3 py-2 border rounded text-sm w-32"
-                  />
-                  <input
-                    type="number"
-                    step="0.000001"
-                    placeholder="Longitud"
-                    value={currentStepData.customLng || ''}
-                    onChange={(e) => setCurrentStepData(prev => ({ ...prev, customLng: parseFloat(e.target.value) }))}
-                    className="px-3 py-2 border rounded text-sm w-32"
-                  />
+              {/* Botones de Acción */}
+              <div className="mt-4 space-y-3">
+                <div className="flex space-x-2">
                   <button
                     onClick={() => executeStep(4, { 
                       confirmedCoordinates: { 
-                        lat: currentStepData.customLat, 
-                        lng: currentStepData.customLng 
+                        lat: officialCoordinates.lat || 0, 
+                        lng: officialCoordinates.lng || 0 
                       } 
                     })}
-                    disabled={loading || !currentStepData.customLat || !currentStepData.customLng}
-                    className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
+                    disabled={loading}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
                   >
-                    Usar estas
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar Coordenadas Oficiales'}
                   </button>
+                  
+                  {userCoordinates && (
+                    <button
+                      onClick={() => executeStep(4, { 
+                        confirmedCoordinates: { 
+                          lat: userCoordinates.lat, 
+                          lng: userCoordinates.lng 
+                        } 
+                      })}
+                      disabled={loading}
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Mantener Coordenadas del Usuario'}
+                    </button>
+                  )}
+                </div>
+                
+                {/* Coordenadas Personalizadas */}
+                <div className="border-t pt-3">
+                  <div className="text-sm text-gray-600 mb-2">O ingrese coordenadas personalizadas:</div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      step="0.000001"
+                      placeholder="Latitud"
+                      value={currentStepData.customLat || ''}
+                      onChange={(e) => setCurrentStepData(prev => ({ ...prev, customLat: parseFloat(e.target.value) }))}
+                      className="px-3 py-2 border rounded text-sm w-32"
+                    />
+                    <input
+                      type="number"
+                      step="0.000001"
+                      placeholder="Longitud"
+                      value={currentStepData.customLng || ''}
+                      onChange={(e) => setCurrentStepData(prev => ({ ...prev, customLng: parseFloat(e.target.value) }))}
+                      className="px-3 py-2 border rounded text-sm w-32"
+                    />
+                    <button
+                      onClick={() => executeStep(4, { 
+                        confirmedCoordinates: { 
+                          lat: currentStepData.customLat, 
+                          lng: currentStepData.customLng 
+                        } 
+                      })}
+                      disabled={loading || !currentStepData.customLat || !currentStepData.customLng}
+                      className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 text-sm"
+                    >
+                      Usar Personalizadas
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

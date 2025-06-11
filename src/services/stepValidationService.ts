@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
-import { addressValidationService, OfficialAddressData } from './addressValidationService';
-import { verificationRepository, IVerificationRepository } from '@/repositories/verificationRepository';
-import { VerificationStep } from '@/types/verification';
+import { newMadridValidationService } from './newMadridValidationService';
+import { verificationRepository } from '@/repositories/verificationRepository';
+import { AddressSearchResult } from '@/types/address';
 
 const prisma = new PrismaClient();
 
@@ -21,7 +21,7 @@ export interface StepValidationProgress {
   steps: ValidationStep[];
   stepData: {
     step1?: {
-      selectedAddress: OfficialAddressData;
+      selectedAddress: AddressSearchResult;
       userConfirmed: boolean;
       timestamp: Date;
     };
@@ -135,7 +135,7 @@ export class StepValidationService {
    */
   async executeStep1(
     deaRecordId: number,
-    selectedAddress?: OfficialAddressData
+    selectedAddress?: AddressSearchResult
   ): Promise<StepValidationResult> {
     try {
       const record = await prisma.deaRecord.findUnique({
@@ -150,20 +150,21 @@ export class StepValidationService {
         };
       }
       
-      let officialAddress: OfficialAddressData | null = selectedAddress || null;
+      let officialAddress: AddressSearchResult | null = selectedAddress || null;
       
       // Si no se proporciona dirección, buscar automáticamente
       if (!officialAddress) {
-        const searchResult = await addressValidationService.validateAddressInOrder(
+        const validationResult = await newMadridValidationService.validateAddress(
           record.tipoVia,
           record.nombreVia,
-          record.numeroVia,
+          record.numeroVia || undefined,
           record.codigoPostal.toString(),
-          record.distrito
+          record.distrito,
+          { latitude: record.latitud, longitude: record.longitud }
         );
         
-        if (searchResult.step1_officialSearch.found && searchResult.step1_officialSearch.officialData) {
-          officialAddress = searchResult.step1_officialSearch.officialData;
+        if (validationResult.searchResult.isValid && validationResult.searchResult.suggestions.length > 0) {
+          officialAddress = validationResult.searchResult.suggestions[0];
         } else {
           return {
             success: false,
@@ -428,7 +429,7 @@ export class StepValidationService {
    */
   private analyzeRequiredSteps(
     record: any,
-    officialAddress: OfficialAddressData
+    officialAddress: AddressSearchResult
   ): {
     steps: ValidationStep[];
     nextStep: number;
@@ -654,13 +655,13 @@ export class StepValidationService {
    * Aplica los resultados de validación al registro DEA
    */
   private async applyValidationResults(progress: StepValidationProgress): Promise<void> {
-    const updateData: any = {};
+    const updateData: Record<string, any> = {};
     
     if (progress.stepData.step1) {
       const addr = progress.stepData.step1.selectedAddress;
-      updateData.defTipoVia = addr.tipoVia;
+      updateData.defTipoVia = addr.claseVia;
       updateData.defNombreVia = addr.nombreVia;
-      updateData.defNumero = addr.numeroVia;
+      updateData.defNumero = addr.numero;
     }
     
     if (progress.stepData.step2) {
