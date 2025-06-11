@@ -176,11 +176,11 @@ class OptimizedMadridDataLoader {
         nombre: row.VIA_NOMBRE || '',
         nombreConAcentos: row.VIA_NOMBRE_ACENTOS || row.VIA_NOMBRE || '',
         nombreNormalizado: this.normalizeText(row.VIA_NOMBRE_ACENTOS || row.VIA_NOMBRE || ''),
-        codigoViaInicio: row.COD_VIA_COMIENZA ? parseInt(row.COD_VIA_COMIENZA) : null,
+        codigoViaInicio: row.COD_VIA_COMIENZA ? parseInt(row.COD_VIA_COMIENZA) || null : null,
         claseInicio: row.CLASE_COMIENZA || null,
         particulaInicio: row.PARTICULA_COMIENZA || null,
         nombreInicio: row.NOMBRE_COMIENZA || null,
-        codigoViaFin: row.COD_VIA_TERMINA ? parseInt(row.COD_VIA_TERMINA) : null,
+        codigoViaFin: row.COD_VIA_TERMINA ? parseInt(row.COD_VIA_TERMINA) || null : null,
         claseFin: row.CLASE_TERMINA || null,
         particulaFin: row.PARTICULA_TERMINA || null,
         nombreFin: row.NOMBRE_TERMINA || null,
@@ -244,10 +244,10 @@ class OptimizedMadridDataLoader {
           viaId,
           distritoId,
           barrioId,
-          numeroImparMin: row.IMPAR_MIN ? parseInt(row.IMPAR_MIN) : null,
-          numeroImparMax: row.IMPAR_MAX ? parseInt(row.IMPAR_MAX) : null,
-          numeroParMin: row.PAR_MIN ? parseInt(row.PAR_MIN) : null,
-          numeroParMax: row.PAR_MAX ? parseInt(row.PAR_MAX) : null,
+          numeroImparMin: row.IMPAR_MIN ? parseInt(row.IMPAR_MIN) || null : null,
+          numeroImparMax: row.IMPAR_MAX ? parseInt(row.IMPAR_MAX) || null : null,
+          numeroParMin: row.PAR_MIN ? parseInt(row.PAR_MIN) || null : null,
+          numeroParMax: row.PAR_MAX ? parseInt(row.PAR_MAX) || null : null,
         };
       }).filter(item => item !== null);
 
@@ -343,10 +343,10 @@ class OptimizedMadridDataLoader {
           distritoId,
           barrioId,
           claseAplicacion: row.CLASE_APP || null,
-          numero: row.NUMERO ? parseInt(row.NUMERO) : null,
+          numero: row.NUMERO ? parseInt(row.NUMERO) || null : null,
           calificador: row.CALIFICADOR || null,
           tipoPunto: row.TIPO_NDP || null,
-          codigoPunto: row.COD_NDP ? parseInt(row.COD_NDP) : null,
+          codigoPunto: row.COD_NDP ? parseInt(row.COD_NDP) || null : null,
           codigoPostal: row.COD_POSTAL || null,
           latitud,
           longitud,
@@ -468,8 +468,22 @@ class OptimizedMadridDataLoader {
   }
 
   private async parseCSV(filePath: string): Promise<CSVRow[]> {
-    // Leer con encoding latin1 para caracteres especiales españoles
-    let content = fs.readFileSync(filePath, 'latin1');
+    // Intentar diferentes encodings para cada archivo
+    let content: string;
+    
+    try {
+      // Primero intentar UTF-8
+      content = fs.readFileSync(filePath, 'utf8');
+      
+      // Verificar si hay caracteres de encoding incorrecto (como �)
+      if (content.includes('�') || content.includes('Ã')) {
+        console.log(`⚠️ Detectado encoding incorrecto en UTF-8 para ${path.basename(filePath)}, intentando latin1...`);
+        content = fs.readFileSync(filePath, 'latin1');
+      }
+    } catch {
+      console.log(`⚠️ Error leyendo con UTF-8, intentando latin1 para ${path.basename(filePath)}...`);
+      content = fs.readFileSync(filePath, 'latin1');
+    }
     
     // Remover BOM si existe
     if (content.charCodeAt(0) === 0xEF && content.charCodeAt(1) === 0xBB && content.charCodeAt(2) === 0xBF) {
