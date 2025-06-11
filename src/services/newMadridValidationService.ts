@@ -678,12 +678,48 @@ export class NewMadridValidationService {
     originalCriteria: AddressSearchCriteria,
     foundResults: AddressSearchResult[]
   ): AddressSearchResult[] {
-    return foundResults.map(result => {
+    const requestedNumber = originalCriteria.streetNumber ? parseInt(originalCriteria.streetNumber) : null;
+    
+    // Primero ordenar por proximidad al número solicitado si hay número
+    if (requestedNumber) {
+      foundResults.sort((a, b) => {
+        const distanceA = a.numero ? Math.abs(a.numero - requestedNumber) : 999;
+        const distanceB = b.numero ? Math.abs(b.numero - requestedNumber) : 999;
+        return distanceA - distanceB;
+      });
+    }
+    
+    return foundResults.map((result, index) => {
       // Crear una copia del resultado para modificar
       const correctedResult = { ...result };
       
-      // Aumentar confianza si encontramos la vía correcta
-      correctedResult.confidence = Math.min(1.0, result.confidence + 0.2);
+      // Calcular confianza base
+      let confidence = result.confidence;
+      
+      // PENALIZACIÓN POR DISCREPANCIA DE NÚMEROS
+      if (requestedNumber && result.numero && requestedNumber !== result.numero) {
+        const difference = Math.abs(requestedNumber - result.numero);
+        // Penalización progresiva: 5% por cada número de diferencia, máximo 40%
+        const penalty = Math.min(0.4, difference * 0.05);
+        confidence = Math.max(0.1, confidence - penalty);
+      }
+      
+      // DIFERENCIACIÓN POR POSICIÓN EN RESULTADOS
+      if (index > 0) {
+        // Reducir confianza por posición: 3% menos por cada posición después de la primera
+        const positionPenalty = index * 0.03;
+        confidence = Math.max(0.1, confidence - positionPenalty);
+      }
+      
+      // BONIFICACIÓN POR COINCIDENCIA EXACTA DE NÚMERO
+      if (requestedNumber && result.numero && requestedNumber === result.numero) {
+        confidence = Math.min(1.0, confidence + 0.1); // 10% bonus por número exacto
+      }
+      
+      // Aumentar confianza base si encontramos la vía correcta (pero menos que antes)
+      confidence = Math.min(1.0, confidence + 0.1);
+      
+      correctedResult.confidence = confidence;
       
       return correctedResult;
     });
@@ -697,6 +733,23 @@ export class NewMadridValidationService {
     correctedResult: AddressSearchResult
   ): string[] {
     const warnings: string[] = [];
+    
+    // WARNING ESPECÍFICO PARA NÚMEROS DE CALLE
+    if (originalCriteria.streetNumber && correctedResult.numero) {
+      const requestedNumber = parseInt(originalCriteria.streetNumber);
+      if (!isNaN(requestedNumber) && requestedNumber !== correctedResult.numero) {
+        const difference = Math.abs(requestedNumber - correctedResult.numero);
+        if (difference === 1 || difference === 2) {
+          warnings.push(`Número de calle cercano encontrado: solicitado ${requestedNumber}, encontrado ${correctedResult.numero} (diferencia: ${difference})`);
+        } else if (difference <= 10) {
+          warnings.push(`Número de calle diferente: solicitado ${requestedNumber}, encontrado ${correctedResult.numero} (diferencia: ${difference})`);
+        } else {
+          warnings.push(`Número de calle muy diferente: solicitado ${requestedNumber}, encontrado ${correctedResult.numero} (diferencia: ${difference})`);
+        }
+      }
+    } else if (originalCriteria.streetNumber && !correctedResult.numero) {
+      warnings.push(`Número de calle solicitado (${originalCriteria.streetNumber}) no encontrado en la dirección oficial`);
+    }
     
     if (originalCriteria.postalCode && correctedResult.codigoPostal && 
         originalCriteria.postalCode !== correctedResult.codigoPostal) {

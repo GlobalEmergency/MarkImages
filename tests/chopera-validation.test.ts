@@ -163,6 +163,147 @@ async function testChoperaValidation() {
 
   console.log('');
 
+  // Test 4: Caso problemático - Paseo De la Chopera 4 → Sistema devuelve 2
+  totalTests++;
+  console.log('📍 Test 4: Caso problemático - Número 4 vs 2 (confianza inflada)');
+
+  try {
+    const result = await newMadridValidationService.validateAddress(
+      'Paseo',
+      'De la Chopera',
+      '4',
+      '28045',
+      '2. Arganzuela',
+      {
+        latitude: 40.395397,
+        longitude: -3.701414
+      }
+    );
+
+    let problemDetected = false;
+    const bestMatch = result.searchResult.suggestions[0];
+
+    // Verificar si el sistema devuelve un número diferente con alta confianza
+    if (bestMatch && bestMatch.numero && bestMatch.numero !== 4) {
+      console.log(`   ⚠️  Sistema devuelve número ${bestMatch.numero} en lugar de 4`);
+      
+      // La confianza NO debería ser 100% cuando hay discrepancia de números
+      if (result.searchResult.confidence >= 0.95) {
+        console.log(`   ❌ PROBLEMA: Confianza demasiado alta (${(result.searchResult.confidence * 100).toFixed(1)}%) para número incorrecto`);
+        problemDetected = true;
+      } else {
+        console.log(`   ✅ Confianza apropiada (${(result.searchResult.confidence * 100).toFixed(1)}%) para número incorrecto`);
+      }
+
+      // Debería haber warnings sobre la discrepancia
+      const hasNumberWarning = result.searchResult.warnings.some(warning => 
+        warning.toLowerCase().includes('número') || warning.toLowerCase().includes('numero')
+      );
+      
+      if (!hasNumberWarning) {
+        console.log('   ❌ PROBLEMA: No hay warning sobre discrepancia de números');
+        problemDetected = true;
+      } else {
+        console.log('   ✅ Warning apropiado sobre discrepancia de números');
+      }
+
+      // El estado debería ser 'needs_review' no 'valid'
+      if (result.overallStatus === 'valid') {
+        console.log('   ❌ PROBLEMA: Estado "valid" cuando debería ser "needs_review"');
+        problemDetected = true;
+      } else {
+        console.log(`   ✅ Estado apropiado: ${result.overallStatus}`);
+      }
+    }
+
+    if (!problemDetected) {
+      console.log('✅ ÉXITO: Sistema maneja apropiadamente la discrepancia de números');
+      passedTests++;
+    } else {
+      console.log('❌ FALLO: Sistema tiene problemas con validación de números');
+    }
+
+  } catch (error) {
+    console.log('❌ Error en Test 4:', error instanceof Error ? error.message : String(error));
+  }
+
+  console.log('');
+
+  // Test 5: Caso problemático - Paseo De la Chopera 71 → Múltiples alternativas con 100% confianza
+  totalTests++;
+  console.log('📍 Test 5: Caso problemático - Múltiples alternativas con confianza inflada');
+
+  try {
+    const result = await newMadridValidationService.validateAddress(
+      'Paseo',
+      'De la Chopera',
+      '71',
+      '28045',
+      '2. Arganzuela',
+      {
+        latitude: 40.391872,
+        longitude: -3.695722
+      }
+    );
+
+    let problemDetected = false;
+    const suggestions = result.searchResult.suggestions;
+
+    if (suggestions.length > 1) {
+      console.log(`   📊 Encontradas ${suggestions.length} alternativas`);
+      
+      // Verificar si todas las alternativas tienen confianza muy alta
+      const highConfidenceCount = suggestions.filter(s => s.confidence >= 0.95).length;
+      
+      if (highConfidenceCount === suggestions.length && suggestions.length > 1) {
+        console.log(`   ❌ PROBLEMA: Todas las ${suggestions.length} alternativas tienen confianza ≥95%`);
+        problemDetected = true;
+        
+        // Mostrar las alternativas problemáticas
+        suggestions.forEach((suggestion, index) => {
+          console.log(`     ${index + 1}. Número ${suggestion.numero || 'N/A'} - Confianza: ${(suggestion.confidence * 100).toFixed(1)}%`);
+        });
+      } else {
+        console.log('   ✅ Confianzas diferenciadas apropiadamente');
+      }
+
+      // El número exacto (71) debería tener mayor confianza que números cercanos
+      const exactMatch = suggestions.find(s => s.numero === 71);
+      const otherNumbers = suggestions.filter(s => s.numero !== 71);
+      
+      if (exactMatch && otherNumbers.length > 0) {
+        const hasHigherConfidence = otherNumbers.every(other => exactMatch.confidence > other.confidence);
+        
+        if (!hasHigherConfidence) {
+          console.log('   ❌ PROBLEMA: Número exacto (71) no tiene mayor confianza que alternativas');
+          problemDetected = true;
+        } else {
+          console.log('   ✅ Número exacto tiene mayor confianza que alternativas');
+        }
+      }
+
+      // Debería identificar necesidad de revisión cuando hay múltiples opciones similares
+      if (result.overallStatus === 'valid' && suggestions.length > 2) {
+        console.log('   ❌ PROBLEMA: Estado "valid" con múltiples alternativas similares');
+        problemDetected = true;
+      } else {
+        console.log(`   ✅ Estado apropiado: ${result.overallStatus}`);
+      }
+    }
+
+    if (!problemDetected) {
+      console.log('✅ ÉXITO: Sistema maneja apropiadamente múltiples alternativas');
+      passedTests++;
+    } else {
+      console.log('❌ FALLO: Sistema tiene problemas con múltiples alternativas');
+    }
+
+  } catch (error) {
+    console.log('❌ Error en Test 5:', error instanceof Error ? error.message : String(error));
+  }
+
+  console.log('');
+
   // Resumen final
   console.log('🎯 Resumen de pruebas de Chopera:');
   console.log(`✅ Pruebas exitosas: ${passedTests}/${totalTests}`);
@@ -174,6 +315,7 @@ async function testChoperaValidation() {
     return true;
   } else {
     console.log('⚠️  Algunas pruebas fallaron. El sistema puede tener problemas con "De la Chopera"');
+    console.log('🔧 Problemas identificados que requieren corrección en el algoritmo de confianza');
     return false;
   }
 }

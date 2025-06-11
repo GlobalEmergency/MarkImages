@@ -60,6 +60,28 @@ async function testNewValidationSystem() {
         postalCode: '28009',
         district: '4'
       }
+    },
+    {
+      name: 'Test 6: Caso problemático Chopera 4 → 2',
+      params: {
+        streetType: 'Paseo',
+        streetName: 'De la Chopera',
+        streetNumber: '4',
+        postalCode: '28045',
+        district: '2. Arganzuela',
+        coordinates: { latitude: 40.395397, longitude: -3.701414 }
+      }
+    },
+    {
+      name: 'Test 7: Caso problemático Chopera 71 → múltiples alternativas',
+      params: {
+        streetType: 'Paseo',
+        streetName: 'De la Chopera',
+        streetNumber: '71',
+        postalCode: '28045',
+        district: '2. Arganzuela',
+        coordinates: { latitude: 40.391872, longitude: -3.695722 }
+      }
     }
   ];
 
