@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { 
-  CheckCircle, 
-  AlertTriangle, 
-  XCircle, 
+import {
+  CheckCircle,
+  AlertTriangle,
+  XCircle,
   Loader2,
   SkipForward
 } from 'lucide-react';
@@ -12,7 +12,7 @@ import {
 // Declarar tipos para Leaflet
 declare global {
   interface Window {
-    L: any;
+    L: Record<string, unknown>;
   }
 }
 
@@ -25,7 +25,7 @@ interface CoordinatesMapProps {
 
 function CoordinatesMap({ userCoordinates, officialCoordinates, distance, formatDistance }: CoordinatesMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
+  const mapInstanceRef = useRef<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     if (!mapRef.current || !officialCoordinates.lat || !officialCoordinates.lng) return;
@@ -57,12 +57,12 @@ function CoordinatesMap({ userCoordinates, officialCoordinates, distance, format
       try {
         await loadLeaflet();
 
-        if (mapInstanceRef.current) {
-          mapInstanceRef.current.remove();
+        if (mapInstanceRef.current && typeof mapInstanceRef.current === 'object' && 'remove' in mapInstanceRef.current) {
+          (mapInstanceRef.current as { remove: () => void }).remove();
         }
 
-        const L = window.L;
-        
+        const L = window.L as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
         // Calcular centro
         const centerLat = (userCoordinates.lat + (officialCoordinates.lat || 0)) / 2;
         const centerLng = (userCoordinates.lng + (officialCoordinates.lng || 0)) / 2;
@@ -177,8 +177,8 @@ function CoordinatesMap({ userCoordinates, officialCoordinates, distance, format
 
     // Cleanup
     return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
+      if (mapInstanceRef.current && typeof mapInstanceRef.current === 'object' && 'remove' in mapInstanceRef.current) {
+        (mapInstanceRef.current as any).remove(); // eslint-disable-line @typescript-eslint/no-explicit-any
         mapInstanceRef.current = null;
       }
     };
@@ -190,12 +190,12 @@ function CoordinatesMap({ userCoordinates, officialCoordinates, distance, format
         <span className="text-lg mr-2">🗺️</span>
         Visualización de Coordenadas
       </div>
-      <div 
+      <div
         ref={mapRef}
         className="bg-white rounded border"
         style={{ height: '300px', width: '100%' }}
       />
-      
+
       {/* Información adicional del mapa */}
       <div className="mt-3 text-center text-sm text-gray-600">
         <div className="flex items-center justify-center space-x-4">
@@ -302,9 +302,9 @@ interface StepByStepValidationProps {
   onComplete?: (progress: StepValidationProgress) => void;
 }
 
-export default function StepByStepValidation({ 
-  deaRecordId, 
-  onComplete 
+export default function StepByStepValidation({
+  deaRecordId,
+  onComplete
 }: StepByStepValidationProps) {
   const [progress, setProgress] = useState<StepValidationProgress | null>(null);
   const [loading, setLoading] = useState(false);
@@ -312,18 +312,14 @@ export default function StepByStepValidation({
   const [step1Data, setStep1Data] = useState<Step1Data | null>(null);
   const [currentStepData, setCurrentStepData] = useState<CurrentStepData>({});
 
-  useEffect(() => {
-    initializeValidation();
-  }, [deaRecordId]);
-
   const initializeValidation = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch(`/api/dea/${deaRecordId}/validate-steps`);
       const data = await response.json();
-      
+
       if (data.success) {
         setProgress(data.data.progress);
         if (data.data.step1Data) {
@@ -339,10 +335,15 @@ export default function StepByStepValidation({
     }
   };
 
+  useEffect(() => {
+    initializeValidation();
+  }, [deaRecordId]);
+
+
   const executeStep = async (stepNumber: number, stepData: Record<string, unknown>) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch(`/api/dea/${deaRecordId}/validate-steps`, {
         method: 'POST',
@@ -354,13 +355,13 @@ export default function StepByStepValidation({
           data: stepData
         })
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         setProgress(data.data.progress);
         setCurrentStepData({});
-        
+
         if (data.data.isComplete) {
           onComplete?.(data.data.progress);
         }
@@ -406,15 +407,15 @@ export default function StepByStepValidation({
     if (!step1Data?.searchResult) return null;
 
     const { searchResult } = step1Data;
-    
+
     return (
       <div className="space-y-4">
         <div className="bg-blue-50 p-4 rounded-lg">
           <h4 className="font-semibold text-blue-800 mb-2">
             Confirme la dirección oficial encontrada
           </h4>
-          
-          
+
+
           {searchResult.found ? (
             <div className="space-y-3">
               {searchResult.officialData && (
@@ -438,7 +439,7 @@ export default function StepByStepValidation({
                       <div className="mt-2 p-2 bg-blue-50 rounded">
                         <div><strong>Coordenadas Oficiales:</strong></div>
                         <div className="font-mono text-xs">
-                          Lat: {searchResult.officialData.latitud.toFixed(6)}, 
+                          Lat: {searchResult.officialData.latitud.toFixed(6)},
                           Lng: {searchResult.officialData.longitud.toFixed(6)}
                         </div>
                       </div>
@@ -453,7 +454,7 @@ export default function StepByStepValidation({
                   </button>
                 </div>
               )}
-              
+
               {searchResult.alternatives.length > 0 && (
                 <div>
                   <h5 className="font-medium text-gray-700 mb-2">Alternativas disponibles:</h5>
@@ -504,7 +505,7 @@ export default function StepByStepValidation({
           <h4 className="font-semibold text-yellow-800 mb-2">
             Verificar Código Postal
           </h4>
-          
+
           <div className="space-y-3">
             <div className="bg-white p-3 rounded border">
               <div className="text-sm space-y-3">
@@ -517,14 +518,14 @@ export default function StepByStepValidation({
                     </div>
                   </div>
                 )}
-                
+
                 <div className="p-3 bg-blue-50 rounded border">
                   <div className="font-medium text-blue-800 mb-2">Código Postal Oficial:</div>
                   <div className="font-mono text-lg text-blue-600">
                     {step1Address.codigoPostal}
                   </div>
                 </div>
-                
+
                 {/* Mostrar comparación si son diferentes */}
                 {step1Data?.originalRecord && step1Data.originalRecord.codigoPostal !== step1Address.codigoPostal && (
                   <div className="p-3 bg-yellow-50 rounded border border-yellow-200">
@@ -537,12 +538,12 @@ export default function StepByStepValidation({
                     </div>
                   </div>
                 )}
-                
+
                 <div className="text-gray-600">
                   ¿Confirma que este es el código postal correcto?
                 </div>
               </div>
-              
+
               <div className="mt-3 flex space-x-2">
                 <button
                   onClick={() => executeStep(2, { confirmedPostalCode: step1Address.codigoPostal })}
@@ -551,7 +552,7 @@ export default function StepByStepValidation({
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar'}
                 </button>
-                
+
                 <div className="flex items-center space-x-2">
                   <input
                     type="text"
@@ -587,19 +588,19 @@ export default function StepByStepValidation({
           <h4 className="font-semibold text-purple-800 mb-2">
             Verificar Distrito
           </h4>
-          
+
           <div className="space-y-3">
             <div className="bg-white p-3 rounded border">
               <div className="text-sm space-y-2">
                 <div>
-                  <strong>Distrito Oficial:</strong> 
+                  <strong>Distrito Oficial:</strong>
                   <span className="ml-2 font-mono text-blue-600">{step1Address.distrito}</span>
                 </div>
                 <div className="text-gray-600">
                   ¿Confirma que este es el distrito correcto?
                 </div>
               </div>
-              
+
               <div className="mt-3 flex space-x-2">
                 <button
                   onClick={() => executeStep(3, { confirmedDistrict: step1Address.distrito })}
@@ -608,12 +609,13 @@ export default function StepByStepValidation({
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar'}
                 </button>
-                
+
                 <div className="flex items-center space-x-2">
                   <select
                     value={currentStepData.customDistrict || ''}
                     onChange={(e) => setCurrentStepData(prev => ({ ...prev, customDistrict: parseInt(e.target.value) }))}
                     className="px-3 py-2 border rounded text-sm"
+                    aria-label="Seleccionar distrito"
                   >
                     <option value="">Seleccionar distrito</option>
                     {Array.from({ length: 21 }, (_, i) => i + 1).map(num => (
@@ -645,12 +647,12 @@ export default function StepByStepValidation({
       const R = 6371; // Radio de la Tierra en km
       const dLat = (lat2 - lat1) * (Math.PI / 180);
       const dLon = (lon2 - lon1) * (Math.PI / 180);
-      
-      const a = 
+
+      const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
         Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
         Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      
+
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c;
     };
@@ -697,7 +699,7 @@ export default function StepByStepValidation({
       lng: step1Address.longitud
     };
 
-    const distance = userCoordinates && officialCoordinates.lat && officialCoordinates.lng 
+    const distance = userCoordinates && officialCoordinates.lat && officialCoordinates.lng
       ? calculateDistance(userCoordinates.lat, userCoordinates.lng, officialCoordinates.lat, officialCoordinates.lng)
       : null;
 
@@ -709,7 +711,7 @@ export default function StepByStepValidation({
           <h4 className="font-semibold text-green-800 mb-2">
             Verificar Coordenadas
           </h4>
-          
+
           <div className="space-y-4">
             {/* Comparación de Coordenadas */}
             <div className="bg-white p-4 rounded border">
@@ -768,7 +770,7 @@ export default function StepByStepValidation({
 
               {/* Mapa Visual de Coordenadas */}
               {userCoordinates && officialCoordinates.lat && officialCoordinates.lng && (
-                <CoordinatesMap 
+                <CoordinatesMap
                   userCoordinates={userCoordinates}
                   officialCoordinates={officialCoordinates}
                   distance={distance || 0}
@@ -780,30 +782,30 @@ export default function StepByStepValidation({
               <div className="mt-4 text-gray-600">
                 ¿Confirma que estas coordenadas son correctas?
               </div>
-              
+
               {/* Botones de Acción */}
               <div className="mt-4 space-y-3">
                 <div className="flex space-x-2">
                   <button
-                    onClick={() => executeStep(4, { 
-                      confirmedCoordinates: { 
-                        lat: officialCoordinates.lat || 0, 
-                        lng: officialCoordinates.lng || 0 
-                      } 
+                    onClick={() => executeStep(4, {
+                      confirmedCoordinates: {
+                        lat: officialCoordinates.lat || 0,
+                        lng: officialCoordinates.lng || 0
+                      }
                     })}
                     disabled={loading}
                     className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar Coordenadas Oficiales'}
                   </button>
-                  
+
                   {userCoordinates && (
                     <button
-                      onClick={() => executeStep(4, { 
-                        confirmedCoordinates: { 
-                          lat: userCoordinates.lat, 
-                          lng: userCoordinates.lng 
-                        } 
+                      onClick={() => executeStep(4, {
+                        confirmedCoordinates: {
+                          lat: userCoordinates.lat,
+                          lng: userCoordinates.lng
+                        }
                       })}
                       disabled={loading}
                       className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
@@ -812,7 +814,7 @@ export default function StepByStepValidation({
                     </button>
                   )}
                 </div>
-                
+
                 {/* Coordenadas Personalizadas */}
                 <div className="border-t pt-3">
                   <div className="text-sm text-gray-600 mb-2">O ingrese coordenadas personalizadas:</div>
@@ -834,11 +836,11 @@ export default function StepByStepValidation({
                       className="px-3 py-2 border rounded text-sm w-32"
                     />
                     <button
-                      onClick={() => executeStep(4, { 
-                        confirmedCoordinates: { 
-                          lat: currentStepData.customLat, 
-                          lng: currentStepData.customLng 
-                        } 
+                      onClick={() => executeStep(4, {
+                        confirmedCoordinates: {
+                          lat: currentStepData.customLat,
+                          lng: currentStepData.customLng
+                        }
                       })}
                       disabled={loading || !currentStepData.customLat || !currentStepData.customLng}
                       className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 text-sm"
@@ -920,10 +922,10 @@ export default function StepByStepValidation({
             {progress.isComplete ? 'Completado' : `Paso ${progress.currentStep} de ${progress.totalSteps}`}
           </span>
         </div>
-        
+
         {/* Barra de Progreso */}
         <div className="space-y-3">
-          {progress.steps.map((step, index) => (
+          {progress.steps.map((step) => (
             <div key={step.stepNumber} className="flex items-center space-x-3">
               {getStepIcon(step)}
               <div className="flex-1">
@@ -993,7 +995,7 @@ export default function StepByStepValidation({
               {progress.steps.find(s => s.stepNumber === progress.currentStep)?.title}
             </h4>
           </div>
-          
+
           {renderCurrentStep()}
         </div>
       )}

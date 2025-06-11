@@ -146,6 +146,12 @@ export const calculateDistance = (
 	return R * c
 }
 
+/**
+ * Note: The following functions have been commented out as they're not currently used in the application.
+ * They are preserved for potential future use but removed from the bundle to optimize performance.
+ */
+
+/*
 export const findNearestDea = (
 	userLat: number,
 	userLng: number,
@@ -211,3 +217,4 @@ export const downloadCSV = (records: DeaRecord[], filename: string = 'dea-record
 		document.body.removeChild(link)
 	}
 }
+*/

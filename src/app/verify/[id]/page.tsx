@@ -102,6 +102,7 @@ export default function VerificationPage({ params }: VerificationPageProps) {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleCropChange = (_cropData: CropData) => {
     // This function is kept for compatibility with ImageCropper component
     // The cropData is handled directly in handleCropComplete
@@ -128,7 +129,7 @@ export default function VerificationPage({ params }: VerificationPageProps) {
 
       const updatedSession = await response.json();
       setSession(updatedSession);
-      
+
       // Avanzar al siguiente paso
       await updateStep(VerificationStep.ARROW_PLACEMENT_1);
     } catch (err) {
@@ -158,7 +159,7 @@ export default function VerificationPage({ params }: VerificationPageProps) {
 
       const updatedSession = await response.json();
       setSession(updatedSession);
-      
+
       // Avanzar al siguiente paso - validación de segunda imagen
       await updateStep(VerificationStep.IMAGE_VALIDATION_2);
     } catch (err) {
@@ -221,7 +222,7 @@ export default function VerificationPage({ params }: VerificationPageProps) {
 
       const updatedSession = await response.json();
       setSession(updatedSession);
-      
+
       // Avanzar al siguiente paso
       await updateStep(VerificationStep.ARROW_PLACEMENT_2);
     } catch (err) {
@@ -247,7 +248,7 @@ export default function VerificationPage({ params }: VerificationPageProps) {
 
       const updatedSession = await response.json();
       setSession(updatedSession);
-      
+
       // Avanzar al paso de revisión
       await updateStep(VerificationStep.REVIEW);
     } catch (err) {
@@ -257,10 +258,10 @@ export default function VerificationPage({ params }: VerificationPageProps) {
 
   const getStepProgress = () => {
     if (!session) return { current: 0, total: 0, percentage: 0 };
-    
+
     const steps = Object.keys(VERIFICATION_STEPS_CONFIG);
     const currentIndex = steps.indexOf(session.currentStep);
-    
+
     return {
       current: currentIndex + 1,
       total: steps.length,
@@ -272,7 +273,7 @@ export default function VerificationPage({ params }: VerificationPageProps) {
     if (!session) return null;
 
     const stepConfig = VERIFICATION_STEPS_CONFIG[session.currentStep];
-    
+
     switch (session.currentStep) {
       case VerificationStep.DATA_VALIDATION:
         return (
@@ -334,7 +335,7 @@ export default function VerificationPage({ params }: VerificationPageProps) {
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-bold mb-4">Recortar Imagen</h2>
             <p className="text-gray-600 mb-6">
-              Selecciona el área cuadrada de la imagen que quieres conservar. 
+              Selecciona el área cuadrada de la imagen que quieres conservar.
               Arrastra para mover la selección y usa las esquinas para redimensionar.
             </p>
             {session.originalImageUrl ? (
@@ -460,7 +461,7 @@ export default function VerificationPage({ params }: VerificationPageProps) {
             <p className="text-gray-600 mb-6">
               Revisa ambas imágenes procesadas antes de guardar
             </p>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {/* Primera imagen */}
               <div className="space-y-3">
@@ -521,8 +522,8 @@ export default function VerificationPage({ params }: VerificationPageProps) {
               <div className="text-blue-700 text-sm space-y-1">
                 <p>• Primera imagen: {session.processedImageUrl ? 'Procesada correctamente' : 'Pendiente'}</p>
                 <p>• Segunda imagen: {
-                  session.secondProcessedImageUrl ? 'Procesada correctamente' : 
-                  session.secondImageUrl ? 'Validada pero no procesada' : 
+                  session.secondProcessedImageUrl ? 'Procesada correctamente' :
+                  session.secondImageUrl ? 'Validada pero no procesada' :
                   'No disponible'
                 }</p>
                 {session.deaRecord && (
@@ -608,7 +609,7 @@ export default function VerificationPage({ params }: VerificationPageProps) {
               Cancelar
             </button>
           </div>
-          
+
           {/* Progress Bar */}
           <div className="bg-white rounded-lg p-4 shadow-sm">
             <div className="flex items-center justify-between mb-2">

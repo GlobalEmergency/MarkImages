@@ -78,16 +78,16 @@ export class ProcessedImageRepository implements IProcessedImageRepository {
     return image ? this.mapToProcessedImage(image) : null;
   }
 
-  private mapToProcessedImage(image: any): ProcessedImage {
+  private mapToProcessedImage(image: Record<string, unknown>): ProcessedImage {
     return {
-      id: image.id,
-      verificationSessionId: image.verificationSessionId,
-      originalFilename: image.originalFilename,
-      processedFilename: image.processedFilename,
+      id: image.id as number,
+      verificationSessionId: image.verificationSessionId as number,
+      originalFilename: image.originalFilename as string,
+      processedFilename: image.processedFilename as string,
       imageType: image.imageType as ImageType,
-      fileSize: image.fileSize,
-      dimensions: image.dimensions,
-      createdAt: image.createdAt.toISOString()
+      fileSize: image.fileSize as number,
+      dimensions: image.dimensions as string,
+      createdAt: (image.createdAt as Date).toISOString()
     };
   }
 }

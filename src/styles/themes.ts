@@ -1,6 +1,6 @@
 // styles/themes.ts
 
-import { EstablecimientoTheme, TipoEstablecimiento } from '@/types'
+import { EstablecimientoTheme } from '@/types'
 
 export const establecimientoThemes: Record<string, EstablecimientoTheme> = {
 	'Centro educativo': {

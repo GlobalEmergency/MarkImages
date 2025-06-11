@@ -64,6 +64,7 @@ export interface DeaModalProps {
 	record: DeaRecord | null
 	isOpen: boolean
 	onClose: () => void
+	onSave: (record: DeaRecord) => Promise<void>
 }
 
 export interface EstablecimientoTheme {

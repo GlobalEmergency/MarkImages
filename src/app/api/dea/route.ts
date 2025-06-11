@@ -1,25 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { DeaRepository } from '@/repositories/deaRepository'
+import { NextRequest } from 'next/server'
+import ServiceProvider from '@/services/serviceProvider'
+import { handleApiError, createSuccessResponse } from '@/utils/apiUtils'
 
-const deaRepository = new DeaRepository();
+// Get the DEA service from the service provider
+const deaService = ServiceProvider.getDeaService();
 
+/**
+ * GET handler for retrieving all DEA records
+ */
 export async function GET() {
 	try {
-		const records = await deaRepository.findAll()
-		return NextResponse.json(records)
+		const records = await deaService.getAllRecords()
+		return createSuccessResponse(records)
 	} catch (error) {
-		console.error('Error fetching DEA records:', error);
-		return NextResponse.json({ error: 'Error al obtener registros' }, { status: 500 })
+		return handleApiError(error, 'Error al obtener registros')
 	}
 }
 
+/**
+ * POST handler for creating a new DEA record
+ */
 export async function POST(request: NextRequest) {
 	try {
 		const data = await request.json()
-		const record = await deaRepository.create(data)
-		return NextResponse.json(record, { status: 201 })
+		const record = await deaService.createRecord(data)
+		return createSuccessResponse(record, 201)
 	} catch (error) {
-		console.error('Error creating DEA record:', error);
-		return NextResponse.json({ error: 'Error al crear registro' }, { status: 500 })
+		return handleApiError(error, 'Error al crear registro')
 	}
 }

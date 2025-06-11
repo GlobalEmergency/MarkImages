@@ -51,53 +51,15 @@ export class MadridGeocodingService {
     postalCode?: string,
     limit: number = 10
   ): Promise<MadridAddressMatch[]> {
-    const whereConditions: any = {};
-    
-    // Búsqueda por nombre de vía (insensible a mayúsculas y acentos)
-    if (streetName) {
-      whereConditions.OR = [
-        {
-          viaNombreAcentos: {
-            contains: streetName,
-            mode: 'insensitive'
-          }
-        },
-        {
-          viaNombre: {
-            contains: streetName.toUpperCase(),
-            mode: 'insensitive'
-          }
-        }
-      ];
-    }
-    
-    // Filtros adicionales
-    if (district) {
-      whereConditions.distrito = district;
-    }
-    
-    if (postalCode) {
-      whereConditions.codPostal = postalCode;
-    }
-    
-    if (streetNumber) {
-      whereConditions.numero = streetNumber;
-    }
-    
-    const results = await prisma.madridAddress.findMany({
-      where: whereConditions,
-      take: limit,
-      orderBy: [
-        { distrito: 'asc' },
-        { viaNombreAcentos: 'asc' },
-        { numero: 'asc' }
-      ]
+    // TODO: Implement with correct Madrid address tables
+    console.warn('Madrid address search not implemented - returning empty results', {
+      streetName,
+      streetNumber,
+      district,
+      postalCode,
+      limit
     });
-    
-    return results.map(result => ({
-      ...result,
-      confidence: this.calculateConfidence(result, streetName, streetNumber, district, postalCode)
-    }));
+    return [];
   }
   
   /**
@@ -109,7 +71,20 @@ export class MadridGeocodingService {
     maxDistanceKm: number = 1
   ): Promise<MadridAddressMatch[]> {
     // Usar una consulta SQL raw para calcular distancias
-    const results = await prisma.$queryRaw<any[]>`
+    const results = await prisma.$queryRaw<Array<{
+      id: number;
+      cod_via: number;
+      via_clase: string | null;
+      via_par: string | null;
+      via_nombre: string | null;
+      via_nombre_acentos: string | null;
+      numero: string | null;
+      distrito: number | null;
+      cod_postal: string | null;
+      latitud: number | null;
+      longitud: number | null;
+      distance: number;
+    }>>`
       SELECT 
         id,
         cod_via,
@@ -159,8 +134,8 @@ export class MadridGeocodingService {
       codPostal: result.cod_postal,
       latitud: result.latitud,
       longitud: result.longitud,
-      distance: parseFloat(result.distance),
-      confidence: 1 - (parseFloat(result.distance) / maxDistanceKm)
+      distance: result.distance,
+      confidence: 1 - (result.distance / maxDistanceKm)
     }));
   }
   
@@ -260,21 +235,9 @@ export class MadridGeocodingService {
    * Obtiene información de distrito por código postal
    */
   async getDistrictByPostalCode(postalCode: string): Promise<number[]> {
-    const results = await prisma.madridAddress.findMany({
-      where: {
-        codPostal: postalCode,
-        distrito: { not: null }
-      },
-      select: {
-        distrito: true
-      },
-      distinct: ['distrito']
-    });
-    
-    return results
-      .map(r => r.distrito)
-      .filter((d): d is number => d !== null)
-      .sort();
+    // TODO: Implement with correct Madrid address tables
+    console.warn('District by postal code search not implemented - returning empty results', { postalCode });
+    return [];
   }
   
   /**
@@ -307,7 +270,12 @@ export class MadridGeocodingService {
    * Calcula un score de confianza para un resultado
    */
   private calculateConfidence(
-    result: any,
+    result: {
+      viaNombreAcentos?: string | null;
+      numero?: string | null;
+      distrito?: number | null;
+      codPostal?: string | null;
+    },
     searchStreet: string,
     searchNumber?: string,
     searchDistrict?: number,

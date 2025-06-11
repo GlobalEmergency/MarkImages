@@ -69,18 +69,18 @@ export class ArrowMarkerRepository implements IArrowMarkerRepository {
     });
   }
 
-  private mapToArrowMarker(marker: any): ArrowMarker {
+  private mapToArrowMarker(marker: Record<string, unknown>): ArrowMarker {
     return {
-      id: marker.id,
-      verificationSessionId: marker.verificationSessionId,
-      imageNumber: marker.imageNumber,
-      startX: marker.startX,
-      startY: marker.startY,
-      endX: marker.endX,
-      endY: marker.endY,
-      arrowColor: marker.arrowColor,
-      arrowWidth: marker.arrowWidth,
-      createdAt: marker.createdAt.toISOString()
+      id: marker.id as number,
+      verificationSessionId: marker.verificationSessionId as number,
+      imageNumber: marker.imageNumber as number,
+      startX: marker.startX as number,
+      startY: marker.startY as number,
+      endX: marker.endX as number,
+      endY: marker.endY as number,
+      arrowColor: marker.arrowColor as string,
+      arrowWidth: marker.arrowWidth as number,
+      createdAt: (marker.createdAt as Date).toISOString()
     };
   }
 }

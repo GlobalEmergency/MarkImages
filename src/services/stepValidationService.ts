@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { newMadridValidationService } from './newMadridValidationService';
 import { verificationRepository } from '@/repositories/verificationRepository';
 import { AddressSearchResult } from '@/types/address';
+import { DeaRecord } from '@/types/index';
 
 const prisma = new PrismaClient();
 
@@ -11,7 +12,7 @@ export interface ValidationStep {
   status: 'pending' | 'current' | 'completed' | 'skipped';
   required: boolean;
   skipReason?: string;
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 export interface StepValidationProgress {
@@ -428,7 +429,7 @@ export class StepValidationService {
    * Analiza qué pasos son necesarios basándose en la dirección confirmada
    */
   private analyzeRequiredSteps(
-    record: any,
+    record: DeaRecord | Record<string, unknown>,
     officialAddress: AddressSearchResult
   ): {
     steps: ValidationStep[];
@@ -450,7 +451,9 @@ export class StepValidationService {
     const messages: string[] = [];
     
     // Analizar código postal
-    const postalCodeMatches = record.codigoPostal.toString() === officialAddress.codigoPostal;
+    const recordCodigoPostal = typeof record.codigoPostal === 'number' ? record.codigoPostal : 
+                               typeof record.codigoPostal === 'string' ? parseInt(record.codigoPostal, 10) : 0;
+    const postalCodeMatches = recordCodigoPostal.toString() === officialAddress.codigoPostal;
     if (postalCodeMatches) {
       steps.push({
         stepNumber: 2,
@@ -469,11 +472,12 @@ export class StepValidationService {
         required: true
       });
       if (nextStep === 5) nextStep = 2;
-      messages.push(`⚠️ Código postal requiere confirmación: ${record.codigoPostal} → ${officialAddress.codigoPostal}`);
+      messages.push(`⚠️ Código postal requiere confirmación: ${recordCodigoPostal} → ${officialAddress.codigoPostal}`);
     }
     
     // Analizar distrito
-    const userDistrictNumber = this.extractDistrictNumber(record.distrito);
+    const recordDistrito = typeof record.distrito === 'string' ? record.distrito : '';
+    const userDistrictNumber = this.extractDistrictNumber(recordDistrito);
     const districtMatches = userDistrictNumber === officialAddress.distrito;
     if (districtMatches) {
       steps.push({
@@ -493,14 +497,17 @@ export class StepValidationService {
         required: true
       });
       if (nextStep === 5) nextStep = 3;
-      messages.push(`⚠️ Distrito requiere confirmación: ${record.distrito} → ${officialAddress.distrito}`);
+      messages.push(`⚠️ Distrito requiere confirmación: ${recordDistrito} → ${officialAddress.distrito}`);
     }
     
     // Analizar coordenadas
+    const recordLatitud = typeof record.latitud === 'number' ? record.latitud : 0;
+    const recordLongitud = typeof record.longitud === 'number' ? record.longitud : 0;
+    
     if (officialAddress.latitud && officialAddress.longitud) {
       const distance = this.calculateDistance(
-        record.latitud,
-        record.longitud,
+        recordLatitud,
+        recordLongitud,
         officialAddress.latitud,
         officialAddress.longitud
       );
@@ -626,7 +633,7 @@ export class StepValidationService {
     try {
       await verificationRepository.createOrUpdateForValidation(
         progress.deaRecordId,
-        progress,
+        progress as unknown as Record<string, unknown>,
         'data_validation'
       );
     } catch (error) {
@@ -642,7 +649,7 @@ export class StepValidationService {
     try {
       const session = await verificationRepository.findByDeaRecordIdForValidation(deaRecordId);
       if (session && session.stepData) {
-        return session.stepData as StepValidationProgress;
+        return session.stepData as unknown as StepValidationProgress;
       }
       return null;
     } catch (error) {
@@ -655,7 +662,7 @@ export class StepValidationService {
    * Aplica los resultados de validación al registro DEA
    */
   private async applyValidationResults(progress: StepValidationProgress): Promise<void> {
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, unknown> = {};
     
     if (progress.stepData.step1) {
       const addr = progress.stepData.step1.selectedAddress;

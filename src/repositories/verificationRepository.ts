@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import type { VerificationSession, VerificationStatus, VerificationStep } from '@/types/verification';
+import type { VerificationSession, VerificationStatus, VerificationStep, ImageType } from '@/types/verification';
 
 export interface IVerificationRepository {
   findAll(): Promise<VerificationSession[]>;
@@ -10,13 +10,89 @@ export interface IVerificationRepository {
   update(id: number, data: Partial<VerificationSession>): Promise<VerificationSession>;
   updateStep(id: number, step: VerificationStep): Promise<VerificationSession>;
   updateStatus(id: number, status: VerificationStatus): Promise<VerificationSession>;
-  updateStepData(id: number, stepData: any): Promise<VerificationSession>;
-  createOrUpdateForValidation(deaRecordId: number, stepData: any, currentStep?: string): Promise<VerificationSession>;
+  updateStepData(id: number, stepData: Record<string, unknown>): Promise<VerificationSession>;
+  createOrUpdateForValidation(deaRecordId: number, stepData: Record<string, unknown>, currentStep?: string): Promise<VerificationSession>;
   delete(id: number): Promise<VerificationSession>;
   findPendingVerifications(): Promise<VerificationSession[]>;
 }
 
 export class VerificationRepository implements IVerificationRepository {
+  private mapToVerificationSession(session: Record<string, unknown>): VerificationSession {
+    return {
+      id: session.id as number,
+      deaRecordId: session.deaRecordId as number,
+      status: session.status as VerificationStatus,
+      currentStep: session.currentStep as VerificationStep,
+      stepData: session.stepData as Record<string, unknown> | undefined,
+      originalImageUrl: (session.originalImageUrl as string) || undefined,
+      croppedImageUrl: (session.croppedImageUrl as string) || undefined,
+      processedImageUrl: (session.processedImageUrl as string) || undefined,
+      secondImageUrl: (session.secondImageUrl as string) || undefined,
+      secondCroppedImageUrl: (session.secondCroppedImageUrl as string) || undefined,
+      secondProcessedImageUrl: (session.secondProcessedImageUrl as string) || undefined,
+      createdAt: (session.createdAt as Date).toISOString(),
+      updatedAt: (session.updatedAt as Date).toISOString(),
+      completedAt: session.completedAt ? (session.completedAt as Date).toISOString() : undefined,
+      deaRecord: session.deaRecord ? {
+        id: (session.deaRecord as Record<string, unknown>).id as number,
+        horaInicio: ((session.deaRecord as Record<string, unknown>).horaInicio as Date).toISOString(),
+        horaFinalizacion: ((session.deaRecord as Record<string, unknown>).horaFinalizacion as Date).toISOString(),
+        correoElectronico: (session.deaRecord as Record<string, unknown>).correoElectronico as string,
+        nombre: (session.deaRecord as Record<string, unknown>).nombre as string,
+        numeroProvisionalDea: (session.deaRecord as Record<string, unknown>).numeroProvisionalDea as number,
+        tipoEstablecimiento: (session.deaRecord as Record<string, unknown>).tipoEstablecimiento as string,
+        titularidadLocal: (session.deaRecord as Record<string, unknown>).titularidadLocal as string,
+        usoLocal: (session.deaRecord as Record<string, unknown>).usoLocal as string,
+        titularidad: (session.deaRecord as Record<string, unknown>).titularidad as string,
+        propuestaDenominacion: (session.deaRecord as Record<string, unknown>).propuestaDenominacion as string,
+        tipoVia: (session.deaRecord as Record<string, unknown>).tipoVia as string,
+        nombreVia: (session.deaRecord as Record<string, unknown>).nombreVia as string,
+        numeroVia: ((session.deaRecord as Record<string, unknown>).numeroVia as string) || undefined,
+        complementoDireccion: ((session.deaRecord as Record<string, unknown>).complementoDireccion as string) || undefined,
+        codigoPostal: (session.deaRecord as Record<string, unknown>).codigoPostal as number,
+        distrito: (session.deaRecord as Record<string, unknown>).distrito as string,
+        latitud: (session.deaRecord as Record<string, unknown>).latitud as number,
+        longitud: (session.deaRecord as Record<string, unknown>).longitud as number,
+        horarioApertura: (session.deaRecord as Record<string, unknown>).horarioApertura as string,
+        aperturaLunesViernes: (session.deaRecord as Record<string, unknown>).aperturaLunesViernes as number,
+        cierreLunesViernes: (session.deaRecord as Record<string, unknown>).cierreLunesViernes as number,
+        aperturaSabados: (session.deaRecord as Record<string, unknown>).aperturaSabados as number,
+        cierreSabados: (session.deaRecord as Record<string, unknown>).cierreSabados as number,
+        aperturaDomingos: (session.deaRecord as Record<string, unknown>).aperturaDomingos as number,
+        cierreDomingos: (session.deaRecord as Record<string, unknown>).cierreDomingos as number,
+        vigilante24h: (session.deaRecord as Record<string, unknown>).vigilante24h as string,
+        foto1: ((session.deaRecord as Record<string, unknown>).foto1 as string) || undefined,
+        foto2: ((session.deaRecord as Record<string, unknown>).foto2 as string) || undefined,
+        descripcionAcceso: ((session.deaRecord as Record<string, unknown>).descripcionAcceso as string) || undefined,
+        comentarioLibre: ((session.deaRecord as Record<string, unknown>).comentarioLibre as string) || undefined,
+        createdAt: ((session.deaRecord as Record<string, unknown>).createdAt as Date).toISOString(),
+        updatedAt: ((session.deaRecord as Record<string, unknown>).updatedAt as Date).toISOString()
+      } : undefined,
+      arrowMarkers: (session.arrowMarkers as Record<string, unknown>[])?.map((marker) => ({
+        id: marker.id as number,
+        verificationSessionId: marker.verificationSessionId as number,
+        imageNumber: marker.imageNumber as number,
+        startX: marker.startX as number,
+        startY: marker.startY as number,
+        endX: marker.endX as number,
+        endY: marker.endY as number,
+        arrowColor: marker.arrowColor as string,
+        arrowWidth: marker.arrowWidth as number,
+        createdAt: (marker.createdAt as Date).toISOString()
+      })),
+      processedImages: (session.processedImages as Record<string, unknown>[])?.map((image) => ({
+        id: image.id as number,
+        verificationSessionId: image.verificationSessionId as number,
+        originalFilename: image.originalFilename as string,
+        processedFilename: image.processedFilename as string,
+        imageType: image.imageType as ImageType,
+        fileSize: image.fileSize as number,
+        dimensions: image.dimensions as string,
+        createdAt: (image.createdAt as Date).toISOString()
+      }))
+    };
+  }
+
   async findAll(): Promise<VerificationSession[]> {
     const sessions = await prisma.verificationSession.findMany({
       include: {
@@ -82,12 +158,13 @@ export class VerificationRepository implements IVerificationRepository {
         deaRecordId: data.deaRecordId,
         status: data.status,
         currentStep: data.currentStep,
-        originalImageUrl: data.originalImageUrl,
-        croppedImageUrl: data.croppedImageUrl,
-        processedImageUrl: data.processedImageUrl,
-        secondImageUrl: data.secondImageUrl,
-        secondCroppedImageUrl: data.secondCroppedImageUrl,
-        secondProcessedImageUrl: data.secondProcessedImageUrl,
+        stepData: data.stepData ? JSON.parse(JSON.stringify(data.stepData)) : null,
+        originalImageUrl: data.originalImageUrl || null,
+        croppedImageUrl: data.croppedImageUrl || null,
+        processedImageUrl: data.processedImageUrl || null,
+        secondImageUrl: data.secondImageUrl || null,
+        secondCroppedImageUrl: data.secondCroppedImageUrl || null,
+        secondProcessedImageUrl: data.secondProcessedImageUrl || null,
         completedAt: data.completedAt ? new Date(data.completedAt) : null
       },
       include: {
@@ -105,6 +182,7 @@ export class VerificationRepository implements IVerificationRepository {
     
     if (data.status) updateData.status = data.status;
     if (data.currentStep) updateData.currentStep = data.currentStep;
+    if (data.stepData !== undefined) updateData.stepData = data.stepData ? JSON.parse(JSON.stringify(data.stepData)) : null;
     if (data.originalImageUrl !== undefined) updateData.originalImageUrl = data.originalImageUrl;
     if (data.croppedImageUrl !== undefined) updateData.croppedImageUrl = data.croppedImageUrl;
     if (data.processedImageUrl !== undefined) updateData.processedImageUrl = data.processedImageUrl;
@@ -160,10 +238,10 @@ export class VerificationRepository implements IVerificationRepository {
     return this.mapToVerificationSession(session);
   }
 
-  async updateStepData(id: number, stepData: any): Promise<VerificationSession> {
+  async updateStepData(id: number, stepData: Record<string, unknown>): Promise<VerificationSession> {
     const session = await prisma.verificationSession.update({
       where: { id },
-      data: { stepData },
+      data: { stepData: JSON.parse(JSON.stringify(stepData)) },
       include: {
         deaRecord: true,
         arrowMarkers: true,
@@ -174,7 +252,7 @@ export class VerificationRepository implements IVerificationRepository {
     return this.mapToVerificationSession(session);
   }
 
-  async createOrUpdateForValidation(deaRecordId: number, stepData: any, currentStep?: string): Promise<VerificationSession> {
+  async createOrUpdateForValidation(deaRecordId: number, stepData: Record<string, unknown>, currentStep?: string): Promise<VerificationSession> {
     // Buscar sesión existente para validación
     const existingSession = await prisma.verificationSession.findFirst({
       where: { 
@@ -193,7 +271,7 @@ export class VerificationRepository implements IVerificationRepository {
           deaRecordId,
           status: 'in_progress',
           currentStep: currentStep || 'data_validation',
-          stepData
+          stepData: JSON.parse(JSON.stringify(stepData))
         },
         include: {
           deaRecord: true,
@@ -233,48 +311,6 @@ export class VerificationRepository implements IVerificationRepository {
     });
 
     return sessions.map(this.mapToVerificationSession);
-  }
-
-  private mapToVerificationSession(session: any): VerificationSession {
-    return {
-      id: session.id,
-      deaRecordId: session.deaRecordId,
-      status: session.status as VerificationStatus,
-      currentStep: session.currentStep as VerificationStep,
-      stepData: session.stepData,
-      originalImageUrl: session.originalImageUrl,
-      croppedImageUrl: session.croppedImageUrl,
-      processedImageUrl: session.processedImageUrl,
-      secondImageUrl: session.secondImageUrl,
-      secondCroppedImageUrl: session.secondCroppedImageUrl,
-      secondProcessedImageUrl: session.secondProcessedImageUrl,
-      createdAt: session.createdAt.toISOString(),
-      updatedAt: session.updatedAt.toISOString(),
-      completedAt: session.completedAt?.toISOString(),
-      deaRecord: session.deaRecord,
-      arrowMarkers: session.arrowMarkers?.map((marker: any) => ({
-        id: marker.id,
-        verificationSessionId: marker.verificationSessionId,
-        imageNumber: marker.imageNumber,
-        startX: marker.startX,
-        startY: marker.startY,
-        endX: marker.endX,
-        endY: marker.endY,
-        arrowColor: marker.arrowColor,
-        arrowWidth: marker.arrowWidth,
-        createdAt: marker.createdAt.toISOString()
-      })),
-      processedImages: session.processedImages?.map((image: any) => ({
-        id: image.id,
-        verificationSessionId: image.verificationSessionId,
-        originalFilename: image.originalFilename,
-        processedFilename: image.processedFilename,
-        imageType: image.imageType,
-        fileSize: image.fileSize,
-        dimensions: image.dimensions,
-        createdAt: image.createdAt.toISOString()
-      }))
-    };
   }
 }
 

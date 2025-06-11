@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Activity } from 'lucide-react'
 import type { DeaRecord } from '@/types'
 import { filterRecords, getUniqueTypes } from '@/utils/helpers'
@@ -28,20 +28,29 @@ export default function Home() {
     const [searchTerm, setSearchTerm] = useState('')
     const [filterType, setFilterType] = useState('')
 
-    const filteredRecords = filterRecords(records, searchTerm, filterType)
-    const uniqueTypes = getUniqueTypes(records)
+    // Memoize derived values to prevent unnecessary recalculations
+    const filteredRecords = useMemo(() =>
+        filterRecords(records, searchTerm, filterType),
+        [records, searchTerm, filterType]
+    )
 
-    const handleView = (record: DeaRecord) => {
+    const uniqueTypes = useMemo(() =>
+        getUniqueTypes(records),
+        [records]
+    )
+
+    /**
+     * Opens the modal with the selected record for viewing or editing
+     */
+    const handleOpenRecordModal = useCallback((record: DeaRecord) => {
         setSelectedRecord(record)
         setModalOpen(true)
-    }
+    }, [])
 
-    const handleEdit = (record: DeaRecord) => {
-        setSelectedRecord(record)
-        setModalOpen(true)
-    }
-
-    const handleDelete = async (id: number) => {
+    /**
+     * Handles record deletion with confirmation
+     */
+    const handleDelete = useCallback(async (id: number) => {
         if (window.confirm('¿Está seguro de que desea eliminar este registro?')) {
             try {
                 await deleteRecord(id)
@@ -50,14 +59,20 @@ export default function Home() {
                 console.error('Error al eliminar el registro:', error)
             }
         }
-    }
+    }, [deleteRecord, refreshRecords])
 
-    const handleCloseModal = () => {
+    /**
+     * Closes the modal and resets the selected record
+     */
+    const handleCloseModal = useCallback(() => {
         setSelectedRecord(null)
         setModalOpen(false)
-    }
+    }, [])
 
-    const handleSaveRecord = async (record: DeaRecord) => {
+    /**
+     * Saves a record (create or update) and refreshes the list
+     */
+    const handleSaveRecord = useCallback(async (record: DeaRecord) => {
         try {
             if (record.id) {
                 await updateRecord(record.id, record)
@@ -69,7 +84,7 @@ export default function Home() {
         } catch (error) {
             console.error('Error al guardar el registro:', error)
         }
-    }
+    }, [createRecord, updateRecord, refreshRecords, handleCloseModal])
 
     if (loading) return <LoadingScreen />
 
@@ -97,9 +112,9 @@ export default function Home() {
 
                 <SearchFilters
                     searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
+                    onSearchChange={setSearchTerm}
                     filterType={filterType}
-                    setFilterType={setFilterType}
+                    onFilterChange={setFilterType}
                     uniqueTypes={uniqueTypes}
                 />
 
@@ -125,9 +140,9 @@ export default function Home() {
                             <DeaCard
                                 key={record.id}
                                 record={record}
-                                onEdit={() => handleEdit(record)}
+                                onEdit={() => handleOpenRecordModal(record)}
                                 onDelete={() => handleDelete(record.id)}
-                                onView={() => handleView(record)}
+                                onView={() => handleOpenRecordModal(record)}
                             />
                         ))}
 
@@ -140,13 +155,12 @@ export default function Home() {
                 </div>
             </div>
 
-            {modalOpen && (
-                <DeaModal
-                    record={selectedRecord}
-                    onClose={handleCloseModal}
-                    onSave={handleSaveRecord}
-                />
-            )}
+            <DeaModal
+                record={selectedRecord}
+                isOpen={modalOpen}
+                onClose={handleCloseModal}
+                onSave={handleSaveRecord}
+            />
         </main>
     )
 }

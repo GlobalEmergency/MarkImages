@@ -3,7 +3,7 @@
  * como aparece en el frontend
  */
 
-import { newMadridValidationService } from './src/services/newMadridValidationService';
+import { newMadridValidationService } from '../src/services/newMadridValidationService';
 
 async function testDelaChopera() {
   console.log('🧪 Probando "De la Chopera" como aparece en el frontend...\n');

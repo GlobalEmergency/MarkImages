@@ -15,10 +15,10 @@ interface Point {
   y: number;
 }
 
-export default function ArrowPlacerWithOrigin({ 
-  imageUrl, 
-  onArrowComplete, 
-  onCancel 
+export default function ArrowPlacerWithOrigin({
+  imageUrl,
+  onArrowComplete,
+  onCancel
 }: ArrowPlacerWithOriginProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [startPoint, setStartPoint] = useState<Point | null>(null);
@@ -32,27 +32,27 @@ export default function ArrowPlacerWithOrigin({
   useEffect(() => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    
+
     img.onload = () => {
       setImageDimensions({ width: img.width, height: img.height });
       setImageLoaded(true);
     };
-    
+
     img.onerror = (error) => {
       console.error('Error loading image:', error);
     };
-    
+
     img.src = imageUrl;
   }, [imageUrl]);
 
   const getPointFromEvent = (e: React.MouseEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
     const rect = img.getBoundingClientRect();
-    
+
     // Calcular coordenadas reales en la imagen
     const scaleX = imageDimensions.width / rect.width;
     const scaleY = imageDimensions.height / rect.height;
-    
+
     return {
       x: (e.clientX - rect.left) * scaleX,
       y: (e.clientY - rect.top) * scaleY
@@ -61,7 +61,7 @@ export default function ArrowPlacerWithOrigin({
 
   const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
     const point = getPointFromEvent(e);
-    
+
     if (step === 'start') {
       setStartPoint(point);
       setStep('end');
@@ -132,19 +132,19 @@ export default function ArrowPlacerWithOrigin({
         <div className="text-blue-700 space-y-2">
           {step === 'start' ? (
             <p>
-              <span className="font-semibold">Paso 1:</span> Haz clic en el punto donde quieres que 
-              <span className="text-green-600 font-semibold"> INICIE </span> 
+              <span className="font-semibold">Paso 1:</span> Haz clic en el punto donde quieres que
+              <span className="text-green-600 font-semibold"> INICIE </span>
               la flecha.
             </p>
           ) : !endPoint ? (
             <p>
-              <span className="font-semibold">Paso 2:</span> Ahora haz clic en el punto donde quieres que 
-              <span className="text-red-600 font-semibold"> TERMINE </span> 
+              <span className="font-semibold">Paso 2:</span> Ahora haz clic en el punto donde quieres que
+              <span className="text-red-600 font-semibold"> TERMINE </span>
               la flecha (ubicación del DEA).
             </p>
           ) : (
             <p className="text-green-700 font-semibold">
-              ¡Perfecto! Flecha configurada correctamente. Haz clic en "Completar Flecha" para continuar.
+              ¡Perfecto! Flecha configurada correctamente. Haz clic en &quot;Completar Flecha&quot; para continuar.
             </p>
           )}
         </div>
@@ -161,7 +161,7 @@ export default function ArrowPlacerWithOrigin({
             onMouseLeave={handleImageMouseLeave}
             className="w-full max-w-sm md:max-w-md lg:max-w-lg cursor-crosshair rounded shadow-sm aspect-square object-cover"
           />
-          
+
           {/* SVG superpuesto para dibujar puntos y flechas */}
           <svg
             className="absolute top-0 left-0 w-full h-full pointer-events-none"
@@ -249,7 +249,7 @@ export default function ArrowPlacerWithOrigin({
                   const angle = Math.atan2(dy, dx);
                   const headLength = ARROW_CONFIG.HEAD_LENGTH;
                   const bodyWidth = ARROW_CONFIG.BODY_WIDTH;
-                  
+
                   return (
                     <>
                       {/* Cuerpo de la flecha */}
@@ -262,7 +262,7 @@ export default function ArrowPlacerWithOrigin({
                         strokeWidth={bodyWidth}
                         strokeLinecap="round"
                       />
-                      
+
                       {/* Punta de la flecha */}
                       <polygon
                         points={`

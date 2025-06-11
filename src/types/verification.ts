@@ -1,11 +1,12 @@
 // src/types/verification.ts
+import { DeaRecord } from './index';
 
 export interface VerificationSession {
   id: number;
   deaRecordId: number;
   status: VerificationStatus;
   currentStep: VerificationStep;
-  stepData?: any; // JSON data for step-by-step validation progress
+  stepData?: Record<string, unknown>; // JSON data for step-by-step validation progress
   originalImageUrl?: string;
   croppedImageUrl?: string;
   processedImageUrl?: string;
@@ -15,7 +16,7 @@ export interface VerificationSession {
   createdAt: string;
   updatedAt: string;
   completedAt?: string;
-  deaRecord?: any;
+  deaRecord?: DeaRecord;
   arrowMarkers?: ArrowMarker[];
   processedImages?: ProcessedImage[];
 }

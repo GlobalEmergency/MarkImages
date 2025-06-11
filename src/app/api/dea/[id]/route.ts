@@ -1,83 +1,85 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { DeaRepository } from '@/repositories/deaRepository'
+import ServiceProvider from '@/services/serviceProvider'
+import { handleApiError, validateIdParam, createSuccessResponse } from '@/utils/apiUtils'
 
-const deaRepository = new DeaRepository();
+// Get the DEA service from the service provider
+const deaService = ServiceProvider.getDeaService();
 
+/**
+ * GET handler for retrieving a specific DEA record by ID
+ */
 export async function GET(
 	request: NextRequest,
 	{ params }: { params: Promise<{ id: string }> }
 ) {
 	try {
 		const { id: idParam } = await params;
-		const id = parseInt(idParam);
+		const { id, errorResponse } = validateIdParam(idParam);
 
-		if (isNaN(id)) {
-			return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
-		}
+		if (errorResponse) return errorResponse;
 
-		const record = await deaRepository.findById(id);
+		const record = await deaService.getRecordById(id!);
 
 		if (!record) {
 			return NextResponse.json({ error: 'Registro no encontrado' }, { status: 404 });
 		}
 
-		return NextResponse.json(record);
+		return createSuccessResponse(record);
 	} catch (error) {
-		console.error(`Error fetching DEA record:`, error);
-		return NextResponse.json({ error: 'Error al obtener registro' }, { status: 500 });
+		return handleApiError(error, 'Error al obtener registro');
 	}
 }
 
+/**
+ * PUT handler for updating a specific DEA record
+ */
 export async function PUT(
 	request: NextRequest,
 	{ params }: { params: Promise<{ id: string }> }
 ) {
 	try {
 		const { id: idParam } = await params;
-		const id = parseInt(idParam);
+		const { id, errorResponse } = validateIdParam(idParam);
 
-		if (isNaN(id)) {
-			return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
-		}
+		if (errorResponse) return errorResponse;
 
 		// Verificar que el registro existe
-		const existingRecord = await deaRepository.findById(id);
+		const existingRecord = await deaService.getRecordById(id!);
 		if (!existingRecord) {
 			return NextResponse.json({ error: 'Registro no encontrado' }, { status: 404 });
 		}
 
 		const data = await request.json();
-		const record = await deaRepository.update(id, data);
+		const record = await deaService.updateRecord(id!, data);
 
-		return NextResponse.json(record);
+		return createSuccessResponse(record);
 	} catch (error) {
-		console.error(`Error updating DEA record:`, error);
-		return NextResponse.json({ error: 'Error al actualizar registro' }, { status: 500 });
+		return handleApiError(error, 'Error al actualizar registro');
 	}
 }
 
+/**
+ * DELETE handler for removing a specific DEA record
+ */
 export async function DELETE(
 	request: NextRequest,
 	{ params }: { params: Promise<{ id: string }> }
 ) {
 	try {
 		const { id: idParam } = await params;
-		const id = parseInt(idParam);
+		const { id, errorResponse } = validateIdParam(idParam);
 
-		if (isNaN(id)) {
-			return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
-		}
+		if (errorResponse) return errorResponse;
 
 		// Verificar que el registro existe
-		const existingRecord = await deaRepository.findById(id);
+		const existingRecord = await deaService.getRecordById(id!);
 		if (!existingRecord) {
 			return NextResponse.json({ error: 'Registro no encontrado' }, { status: 404 });
 		}
 
-		const record = await deaRepository.delete(id);
-		return NextResponse.json({ success: true, deletedRecord: record });
+		const record = await deaService.deleteRecord(id!);
+		return createSuccessResponse({ success: true, deletedRecord: record });
 	} catch (error) {
-		console.error(`Error deleting DEA record:`, error);
-		return NextResponse.json({ error: 'Error al eliminar registro' }, { status: 500 });
+		return handleApiError(error, 'Error al eliminar registro');
 	}
 }

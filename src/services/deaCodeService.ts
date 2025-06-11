@@ -190,7 +190,12 @@ export class DeaCodeService {
   } {
     const result = {
       isValid: false,
-      components: null as any,
+      components: null as {
+        prefix: string;
+        distrito: number;
+        codigoPostal: string;
+        secuencial: number;
+      } | null,
       errors: [] as string[]
     };
     
@@ -294,7 +299,7 @@ export class DeaCodeService {
     deaRecordId: number | null;
     createdAt: Date;
   }>> {
-    const where: any = {};
+    const where: Record<string, unknown> = {};
     
     if (criteria.distrito) {
       where.distrito = criteria.distrito;
@@ -317,7 +322,15 @@ export class DeaCodeService {
       ]
     });
     
-    return codes.map(code => ({
+    return codes.map((code: {
+      id: number;
+      codigoCompleto: string;
+      distrito: number;
+      codigoPostal: string;
+      secuencial: number;
+      deaRecordId: number | null;
+      createdAt: Date;
+    }) => ({
       id: code.id,
       codigo: code.codigoCompleto,
       distrito: code.distrito,
