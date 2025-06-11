@@ -8,6 +8,7 @@ import {
   Loader2,
   SkipForward
 } from 'lucide-react';
+import StreetViewImage from './StreetViewImage';
 
 // Declarar tipos para Leaflet
 declare global {
@@ -80,7 +81,7 @@ function CoordinatesMap({ userCoordinates, officialCoordinates, distance, format
         const userIcon = L.divIcon({
           className: 'custom-div-icon',
           html: `<div style="
-            background-color: #e74c3c; 
+            background-color: #eab308; 
             color: white; 
             width: 30px; 
             height: 30px; 
@@ -100,7 +101,7 @@ function CoordinatesMap({ userCoordinates, officialCoordinates, distance, format
         const officialIcon = L.divIcon({
           className: 'custom-div-icon',
           html: `<div style="
-            background-color: #3498db; 
+            background-color: #003DF6; 
             color: white; 
             width: 30px; 
             height: 30px; 
@@ -150,11 +151,11 @@ function CoordinatesMap({ userCoordinates, officialCoordinates, distance, format
           div.style.cssText = 'background: rgba(255,255,255,0.95); padding: 8px; border-radius: 4px; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: 1px solid #ccc;';
           div.innerHTML = `
             <div style="display: flex; align-items: center; margin-bottom: 4px;">
-              <div style="width: 12px; height: 12px; background: #e74c3c; border-radius: 50%; margin-right: 6px; border: 2px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.3);"></div>
+              <div style="width: 12px; height: 12px; background: #eab308; border-radius: 50%; margin-right: 6px; border: 2px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.3);"></div>
               <span style="font-weight: 500;">Usuario</span>
             </div>
             <div style="display: flex; align-items: center; margin-bottom: 4px;">
-              <div style="width: 12px; height: 12px; background: #3498db; border-radius: 50%; margin-right: 6px; border: 2px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.3);"></div>
+              <div style="width: 12px; height: 12px; background: #003DF6; border-radius: 50%; margin-right: 6px; border: 2px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.3);"></div>
               <span style="font-weight: 500;">Oficial</span>
             </div>
             <div style="border-top: 1px solid #ddd; padding-top: 4px; font-weight: bold; color: #666;">
@@ -199,7 +200,7 @@ function CoordinatesMap({ userCoordinates, officialCoordinates, distance, format
       {/* Información adicional del mapa */}
       <div className="mt-3 text-center text-sm text-gray-600">
         <div className="flex items-center justify-center space-x-4">
-          <span>🔴 Coordenadas del Usuario</span>
+          <span>🟡 Coordenadas del Usuario</span>
           <span>🔵 Coordenadas Oficiales</span>
           <span>📏 Distancia: {formatDistance(distance)}</span>
         </div>
@@ -411,10 +412,6 @@ export default function StepByStepValidation({
 
     return (
       <div className="space-y-4">
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-blue-800 mb-2">
-            Confirme la dirección oficial encontrada
-          </h4>
 
 
           {searchResult.found ? (
@@ -505,7 +502,6 @@ export default function StepByStepValidation({
               </p>
             </div>
           )}
-        </div>
       </div>
     );
   };
@@ -721,15 +717,7 @@ export default function StepByStepValidation({
     const distanceAlert = distance ? getDistanceAlert(distance) : null;
 
     return (
-      <div className="space-y-4">
-        <div className="bg-green-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-green-800 mb-2">
-            Verificar Coordenadas
-          </h4>
-
-          <div className="space-y-4">
-            {/* Comparación de Coordenadas */}
-            <div className="bg-white p-4 rounded border">
+        <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Coordenadas del Usuario */}
                 {userCoordinates && (
@@ -793,6 +781,34 @@ export default function StepByStepValidation({
                 />
               )}
 
+              {/* Vistas de Google Street View */}
+              {userCoordinates && officialCoordinates.lat && officialCoordinates.lng && (
+                <div className="mt-4 p-4 bg-gray-50 rounded border">
+                  <div className="font-medium text-gray-800 mb-3 flex items-center">
+                    <span className="text-lg mr-2">📷</span>
+                    Vistas de Google Street View
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <StreetViewImage
+                      lat={userCoordinates.lat}
+                      lng={userCoordinates.lng}
+                      title="Coordenadas del Usuario"
+                      color="#eab308"
+                    />
+                    <StreetViewImage
+                      lat={officialCoordinates.lat}
+                      lng={officialCoordinates.lng}
+                      title="Coordenadas Oficiales"
+                      color="#003DF6"
+                    />
+                  </div>
+                  <div className="mt-3 text-center text-xs text-gray-500">
+                    Las imágenes de Street View pueden ayudar a verificar visualmente la ubicación correcta.
+                    Es normal que las imágenes estén ligeramente desplazadas de las coordenadas exactas.
+                  </div>
+                </div>
+              )}
+
               {/* Pregunta de Confirmación */}
               <div className="mt-4 text-gray-600">
                 ¿Confirma que estas coordenadas son correctas?
@@ -809,7 +825,8 @@ export default function StepByStepValidation({
                       }
                     })}
                     disabled={loading}
-                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                    className="px-4 py-2 text-white rounded hover:opacity-90 disabled:opacity-50"
+                    style={{ backgroundColor: '#003DF6' }}
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar Coordenadas Oficiales'}
                   </button>
@@ -823,7 +840,8 @@ export default function StepByStepValidation({
                         }
                       })}
                       disabled={loading}
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                      className="px-4 py-2 text-white rounded hover:opacity-90 disabled:opacity-50"
+                      style={{ backgroundColor: '#eab308' }}
                     >
                       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Mantener Coordenadas del Usuario'}
                     </button>
@@ -865,10 +883,7 @@ export default function StepByStepValidation({
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
+            </>
     );
   };
 
@@ -932,7 +947,7 @@ export default function StepByStepValidation({
       {/* Progreso Visual */}
       <div className="bg-white border rounded-lg p-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-lg">Validación Paso a Paso</h3>
+          <h3 className="font-semibold text-lg">Validación Dirección</h3>
           <span className="text-sm text-gray-500">
             {progress.isComplete ? 'Completado' : `Paso ${progress.currentStep} de ${progress.totalSteps}`}
           </span>

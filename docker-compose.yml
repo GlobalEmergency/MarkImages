@@ -4,8 +4,8 @@ services:
     image: postgres:15
     container_name: dea-postgres
     environment:
-      POSTGRES_USER: dea_user
-      POSTGRES_PASSWORD: dea_password
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: toor
       POSTGRES_DB: dea_madrid
     ports:
       - "5433:5432"
