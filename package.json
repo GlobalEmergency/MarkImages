@@ -11,6 +11,8 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "load-madrid-data": "tsx scripts/load-madrid-data-optimized.ts",
+    "preprocess-validations": "tsx scripts/preprocess-address-validations.ts",
+    "test-api-debug": "tsx scripts/test-api-debug.ts",
     "test": "npx tsx tests/run-all-tests.ts",
     "test:validation": "tsx tests/validation-system.test.ts",
     "migrate:status": "prisma migrate status",

@@ -6,8 +6,21 @@
   "functions": {
     "src/app/api/**/*.ts": {
       "maxDuration": 30
+    },
+    "src/app/api/cron/**/*.ts": {
+      "maxDuration": 300
     }
   },
+  "crons": [
+    {
+      "path": "/api/cron/preprocess-validations",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/preprocess-validations",
+      "schedule": "0 */6 * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/(.*)",

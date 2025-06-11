@@ -62,9 +62,11 @@ model DeaRecord {
   // Relaciones
   verificationSessions VerificationSession[]
   deaCodes            DeaCode[]
+  addressValidation   DeaAddressValidation?
 
   @@map("dea_records")
 }
+
 
 model VerificationSession {
   id                    Int      @id @default(autoincrement())
@@ -292,4 +294,40 @@ model DeaCode {
   @@index([distrito])
   @@index([codigoCompleto])
   @@map("dea_codes")
+}
+
+// TABLA PARA PRE-PROCESAMIENTO DE VALIDACIONES DE DIRECCIONES
+model DeaAddressValidation {
+  id                    Int      @id @default(autoincrement())
+  deaRecordId           Int      @unique @map("dea_record_id")
+  
+  // Resultados pre-calculados
+  searchResults         Json     @default("[]") @map("search_results")
+  validationDetails     Json?    @map("validation_details")
+  overallStatus         String   @default("pending") @map("overall_status")
+  recommendedActions    Json     @default("[]") @map("recommended_actions")
+  
+  // Metadatos del procesamiento
+  processedAt           DateTime @default(now()) @map("processed_at")
+  processingDurationMs  Int?     @map("processing_duration_ms")
+  searchStrategiesUsed  Json     @default("[]") @map("search_strategies_used")
+  
+  // Control de versiones y reprocesamiento
+  validationVersion     String   @default("1.0") @map("validation_version")
+  needsReprocessing     Boolean  @default(true) @map("needs_reprocessing")
+  errorMessage          String?  @map("error_message")
+  retryCount            Int      @default(0) @map("retry_count")
+  
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  // Relación con DeaRecord
+  deaRecord             DeaRecord @relation(fields: [deaRecordId], references: [id], onDelete: Cascade)
+
+  // Índices para consultas rápidas
+  @@index([overallStatus])
+  @@index([needsReprocessing])
+  @@index([processedAt])
+  @@index([validationVersion])
+  @@map("dea_address_validations")
 }
