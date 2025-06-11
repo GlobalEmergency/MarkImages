@@ -4,25 +4,9 @@ import { ComprehensiveAddressValidation } from '../types/address';
 
 const prisma = new PrismaClient();
 
-type DeaRecordWithValidation = {
-  id: number;
-  tipoVia: string;
-  nombreVia: string;
-  numeroVia: string | null;
-  codigoPostal: number;
-  distrito: string;
-  latitud: number;
-  longitud: number;
-  createdAt: Date;
-  updatedAt: Date;
-  addressValidation?: {
-    id: number;
-    needsReprocessing: boolean;
-    retryCount: number;
-    errorMessage: string | null;
-    processedAt: Date;
-  } | null;
-};
+// Type assertion to access deaAddressValidation model
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const deaAddressValidation = (prisma as any).deaAddressValidation;
 
 interface ProcessingStats {
   totalRecords: number;
@@ -134,23 +118,26 @@ export class AddressValidationPreprocessor {
     try {
       const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
       
+      // Obtener IDs de registros que necesitan reprocesamiento
+      const validationsToReprocess = await deaAddressValidation.findMany({
+        where: {
+          OR: [
+            { needsReprocessing: true },
+            { processedAt: { lt: fourHoursAgo } }
+          ]
+        },
+        select: { deaRecordId: true }
+      });
+
+      const reprocessIds = validationsToReprocess.map((v: { deaRecordId: number }) => v.deaRecordId);
+
       const recentRecords = await prisma.deaRecord.findMany({
         where: {
           OR: [
             { createdAt: { gte: fourHoursAgo } },
             { updatedAt: { gte: fourHoursAgo } },
-            {
-              addressValidation: {
-                OR: [
-                  { needsReprocessing: true },
-                  { processedAt: { lt: fourHoursAgo } }
-                ]
-              }
-            }
+            { id: { in: reprocessIds } }
           ]
-        },
-        include: {
-          addressValidation: true
         }
       });
 
@@ -191,30 +178,30 @@ export class AddressValidationPreprocessor {
    * Obtiene registros DEA que necesitan procesamiento
    */
   private async getPendingRecords() {
+    // Obtener IDs de registros que ya tienen validación
+    const existingValidations = await deaAddressValidation.findMany({
+      select: { 
+        deaRecordId: true,
+        needsReprocessing: true,
+        retryCount: true,
+        errorMessage: true
+      }
+    });
+
+    const existingIds = existingValidations.map((v: { deaRecordId: number }) => v.deaRecordId);
+    const needsReprocessingIds = existingValidations
+      .filter((v: { needsReprocessing: boolean; errorMessage: string | null; retryCount: number }) => 
+        v.needsReprocessing || (v.errorMessage && v.retryCount < this.MAX_RETRIES))
+      .map((v: { deaRecordId: number }) => v.deaRecordId);
+
     return await prisma.deaRecord.findMany({
       where: {
         OR: [
           // Registros sin validación
-          { addressValidation: null },
+          { id: { notIn: existingIds } },
           // Registros que necesitan reprocesamiento
-          { 
-            addressValidation: {
-              needsReprocessing: true
-            }
-          },
-          // Registros con errores que tienen pocos reintentos
-          {
-            addressValidation: {
-              AND: [
-                { errorMessage: { not: null } },
-                { retryCount: { lt: this.MAX_RETRIES } }
-              ]
-            }
-          }
+          { id: { in: needsReprocessingIds } }
         ]
-      },
-      include: {
-        addressValidation: true
       },
       orderBy: [
         { createdAt: 'asc' }, // Procesar primero los más antiguos
@@ -226,6 +213,7 @@ export class AddressValidationPreprocessor {
   /**
    * Procesa un lote de registros
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async processBatch(records: any[], batchNumber: number): Promise<ProcessingStatsCollector> {
     const batchStats = new ProcessingStatsCollector();
 
@@ -244,7 +232,7 @@ export class AddressValidationPreprocessor {
 
     results.forEach((result, index) => {
       if (result.status === 'fulfilled') {
-        if (result.value.success) {
+        if (result.value.success && 'result' in result.value) {
           batchStats.successful++;
           const processingTime = result.value.result?.processingTime || 0;
           console.log(`✅ DEA ${records[index].id}: ${processingTime}ms`);
@@ -252,9 +240,9 @@ export class AddressValidationPreprocessor {
           batchStats.failed++;
           batchStats.errors.push({
             recordId: result.value.recordId,
-            error: result.value.error
+            error: 'error' in result.value ? result.value.error : 'Unknown error'
           });
-          console.log(`❌ DEA ${records[index].id}: ${result.value.error}`);
+          console.log(`❌ DEA ${records[index].id}: ${'error' in result.value ? result.value.error : 'Unknown error'}`);
         }
       } else {
         batchStats.failed++;
@@ -273,6 +261,7 @@ export class AddressValidationPreprocessor {
   /**
    * Procesa un registro con reintentos
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async processRecordWithRetry(record: any): Promise<{ processingTime: number }> {
     const maxRetries = record.addressValidation?.retryCount || 0;
     
@@ -301,6 +290,7 @@ export class AddressValidationPreprocessor {
   /**
    * Procesa un registro individual
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async processRecord(record: any): Promise<{ processingTime: number }> {
     const startTime = Date.now();
 
@@ -340,6 +330,7 @@ export class AddressValidationPreprocessor {
   /**
    * Realiza la validación de dirección
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async performValidation(record: any): Promise<ComprehensiveAddressValidation> {
     return await newMadridValidationService.validateAddress(
       record.tipoVia,
@@ -359,7 +350,7 @@ export class AddressValidationPreprocessor {
     validation: ComprehensiveAddressValidation, 
     processingTime: number
   ): Promise<void> {
-    await prisma.deaAddressValidation.upsert({
+    await deaAddressValidation.upsert({
       where: { deaRecordId },
       create: {
         deaRecordId,
@@ -392,7 +383,7 @@ export class AddressValidationPreprocessor {
    * Marca un registro como fallido
    */
   private async markAsFailed(deaRecordId: number, errorMessage: string, processingTime?: number): Promise<void> {
-    await prisma.deaAddressValidation.upsert({
+    await deaAddressValidation.upsert({
       where: { deaRecordId },
       create: {
         deaRecordId,
@@ -416,7 +407,7 @@ export class AddressValidationPreprocessor {
    * Incrementa el contador de reintentos
    */
   private async incrementRetryCount(deaRecordId: number): Promise<void> {
-    await prisma.deaAddressValidation.upsert({
+    await deaAddressValidation.upsert({
       where: { deaRecordId },
       create: {
         deaRecordId,
@@ -457,23 +448,23 @@ export class AddressValidationPreprocessor {
    * Obtiene estadísticas del estado actual de validaciones
    */
   async getValidationStats() {
-    const stats = await prisma.deaAddressValidation.groupBy({
+    const stats = await deaAddressValidation.groupBy({
       by: ['overallStatus'],
       _count: {
         id: true
       }
     });
 
-    const needsReprocessing = await prisma.deaAddressValidation.count({
+    const needsReprocessing = await deaAddressValidation.count({
       where: { needsReprocessing: true }
     });
 
-    const withErrors = await prisma.deaAddressValidation.count({
+    const withErrors = await deaAddressValidation.count({
       where: { errorMessage: { not: null } }
     });
 
     const totalRecords = await prisma.deaRecord.count();
-    const processedRecords = await prisma.deaAddressValidation.count();
+    const processedRecords = await deaAddressValidation.count();
 
     return {
       totalRecords,
@@ -481,7 +472,8 @@ export class AddressValidationPreprocessor {
       pendingRecords: totalRecords - processedRecords,
       needsReprocessing,
       withErrors,
-      statusBreakdown: stats.reduce((acc, stat) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      statusBreakdown: stats.reduce((acc: any, stat: any) => {
         acc[stat.overallStatus] = stat._count.id;
         return acc;
       }, {} as Record<string, number>)

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stepValidationService } from '@/services/stepValidationService';
 import { newMadridValidationService } from '@/services/newMadridValidationService';
-import { AddressSearchResult } from '@/types/address';
+import { AddressSearchResult, ComprehensiveAddressValidation } from '@/types/address';
 import { PrismaClient } from '@prisma/client';
 
 // Usar instancia global en lugar de importación dinámica
@@ -115,7 +115,7 @@ export async function GET(
         console.log(`⚡ Usando datos pre-calculados para DEA ${deaRecordId} (${preCalc.processing_duration_ms}ms)`);
         
         // Mapear resultados pre-calculados al formato esperado
-        const mapAddressForFrontend = (address: any) => ({
+        const mapAddressForFrontend = (address: AddressSearchResult) => ({
           tipoVia: address.claseVia,
           nombreVia: address.nombreViaAcentos,
           numeroVia: address.numero,
@@ -178,7 +178,7 @@ export async function GET(
             needs_reprocessing = true,
             updated_at = NOW()
         `;
-      } catch (error) {
+      } catch {
         console.warn(`⚠️ No se pudo marcar para reprocesamiento DEA ${deaRecordId} - tabla no disponible`);
       }
 
@@ -197,7 +197,7 @@ export async function GET(
           { latitude: record.latitud, longitude: record.longitud }
         );
 
-        const validationResult = await Promise.race([validationPromise, timeoutPromise]) as any;
+        const validationResult = await Promise.race([validationPromise, timeoutPromise]) as ComprehensiveAddressValidation;
         
         // Mapear el primer resultado para el frontend
         const mapAddressForFrontend = (address: AddressSearchResult) => ({
