@@ -93,6 +93,11 @@ export class SimpleVerificationService {
     }
 
     try {
+      console.log('=== INICIO PROCESAMIENTO DE IMAGEN ===');
+      console.log('Session ID:', sessionId);
+      console.log('Image URL:', imageUrl);
+      console.log('Crop Data:', cropData);
+
       const processedImage = await ServerImageProcessingService.cropImage(
         imageUrl,
         cropData,
@@ -101,6 +106,12 @@ export class SimpleVerificationService {
           outputSize: { width: 1000, height: 1000 }
         }
       );
+
+      console.log('✅ Imagen procesada exitosamente:', {
+        filename: processedImage.filename,
+        fileSize: processedImage.fileSize,
+        dimensions: processedImage.dimensions
+      });
 
       // Actualizar sesión con imagen recortada
       const updatedSession = await this.verificationRepository.update(sessionId, {
@@ -117,8 +128,15 @@ export class SimpleVerificationService {
         dimensions: processedImage.dimensions
       });
 
+      console.log('✅ Sesión actualizada y datos guardados');
       return updatedSession;
     } catch (error) {
+      console.error('❌ Error en saveCroppedImage:', {
+        sessionId,
+        imageUrl,
+        cropData,
+        error: error instanceof Error ? error.message : String(error)
+      });
       throw new Error(`Error al procesar la imagen: ${error}`);
     }
   }

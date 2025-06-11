@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 import type { CropData } from '@/types/shared';
 
 interface ImageCropperProps {
@@ -32,6 +33,7 @@ export default function ImageCropper({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
   const [canvasScale, setCanvasScale] = useState(1);
+  const [processing, setProcessing] = useState(false);
 
   // Calcular el área de recorte inicial
   const calculateInitialCrop = (imgWidth: number, imgHeight: number) => {
@@ -121,24 +123,90 @@ export default function ImageCropper({
         const { loadImageWithProxy } = await import('@/utils/sharePointProxy');
         const img = await loadImageWithProxy(imageUrl);
         
+        // IMPORTANTE: Aplicar orientación EXIF para obtener dimensiones correctas
+        // Esto asegura que las dimensiones coincidan con las que usará Sharp en el backend
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx) {
+          throw new Error('No se pudo crear el contexto del canvas');
+        }
+
+        // Detectar orientación EXIF y aplicar rotación
+        // Nota: Los navegadores modernos aplican automáticamente la orientación EXIF
+        // pero necesitamos obtener las dimensiones post-rotación
+        let finalWidth = img.naturalWidth;
+        let finalHeight = img.naturalHeight;
+
+        // Para imágenes con orientación EXIF, el navegador ya las muestra rotadas
+        // Las dimensiones que vemos son las correctas (post-rotación)
+        finalWidth = img.width;
+        finalHeight = img.height;
+
+        console.log('=== CARGA DE IMAGEN EN FRONTEND ===');
+        console.log('Dimensiones naturales (archivo físico):', {
+          width: img.naturalWidth,
+          height: img.naturalHeight
+        });
+        console.log('Dimensiones visuales (post-EXIF):', {
+          width: finalWidth,
+          height: finalHeight
+        });
+
+        // Configurar canvas con las dimensiones correctas
+        canvas.width = finalWidth;
+        canvas.height = finalHeight;
+        
+        // Dibujar la imagen (el navegador ya aplica la orientación EXIF)
+        ctx.drawImage(img, 0, 0, finalWidth, finalHeight);
+        
+        // Crear nueva imagen desde el canvas para asegurar dimensiones correctas
+        const correctedImg = new Image();
+        correctedImg.onload = () => {
+          setImageDimensions({ width: finalWidth, height: finalHeight });
+          const initialCrop = calculateInitialCrop(finalWidth, finalHeight);
+          setCropArea(initialCrop);
+          setImageLoaded(true);
+          
+          // Calcular escala (responsive)
+          const maxWidth = Math.min(window.innerWidth - 64, 800);
+          const maxHeight = Math.min(window.innerHeight * 0.6, 600);
+          const scale = Math.min(maxWidth / finalWidth, maxHeight / finalHeight, 1);
+          setCanvasScale(scale);
+          
+          // Notificar crop inicial
+          onCropChange(initialCrop);
+          
+          console.log('✅ Imagen cargada con orientación correcta:', {
+            dimensions: { width: finalWidth, height: finalHeight },
+            initialCrop,
+            scale
+          });
+          
+          // Guardar referencia de la imagen corregida
+          imageRef.current = correctedImg;
+        };
+        
+        correctedImg.src = canvas.toDataURL('image/jpeg', 0.95);
+        
+      } catch (error) {
+        console.error('❌ Error loading image:', error);
+        // Fallback: usar la imagen original si falla la corrección
+        const { loadImageWithProxy } = await import('@/utils/sharePointProxy');
+        const img = await loadImageWithProxy(imageUrl);
+        
         setImageDimensions({ width: img.width, height: img.height });
         const initialCrop = calculateInitialCrop(img.width, img.height);
         setCropArea(initialCrop);
         setImageLoaded(true);
         
-        // Calcular escala (responsive)
         const maxWidth = Math.min(window.innerWidth - 64, 800);
         const maxHeight = Math.min(window.innerHeight * 0.6, 600);
         const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
         setCanvasScale(scale);
         
-        // Notificar crop inicial
         onCropChange(initialCrop);
-        
-        // Guardar referencia de la imagen
         imageRef.current = img;
-      } catch (error) {
-        console.error('Error loading image:', error);
       }
     };
     
@@ -345,8 +413,13 @@ export default function ImageCropper({
     setIsResizing(false);
   };
 
-  const handleAccept = () => {
-    onCropComplete(cropArea);
+  const handleAccept = async () => {
+    setProcessing(true);
+    try {
+      await onCropComplete(cropArea);
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (
@@ -385,10 +458,17 @@ export default function ImageCropper({
         </button>
         <button
           onClick={handleAccept}
-          disabled={!imageLoaded}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+          disabled={!imageLoaded || processing}
+          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
         >
-          Aceptar Recorte
+          {processing ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              Procesando imagen...
+            </>
+          ) : (
+            'Aceptar Recorte'
+          )}
         </button>
       </div>
 

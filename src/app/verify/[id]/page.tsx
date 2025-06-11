@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 import { VerificationStep, VERIFICATION_STEPS_CONFIG } from '@/types/verification';
 import type { VerificationSession } from '@/types/verification';
 import type { CropData, ArrowData } from '@/types/shared';
@@ -19,6 +20,7 @@ export default function VerificationPage({ params }: VerificationPageProps) {
   const [session, setSession] = useState<VerificationSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [completing, setCompleting] = useState(false);
   const router = useRouter();
   const resolvedParams = use(params);
 
@@ -66,6 +68,7 @@ export default function VerificationPage({ params }: VerificationPageProps) {
   };
 
   const completeVerification = async () => {
+    setCompleting(true);
     try {
       const response = await fetch(`/api/verify/${resolvedParams.id}/complete`, {
         method: 'POST',
@@ -79,6 +82,8 @@ export default function VerificationPage({ params }: VerificationPageProps) {
       router.push('/verify');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al completar verificación');
+    } finally {
+      setCompleting(false);
     }
   };
 
@@ -541,9 +546,17 @@ export default function VerificationPage({ params }: VerificationPageProps) {
               </button>
               <button
                 onClick={completeVerification}
-                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
+                disabled={completing}
+                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
               >
-                Completar Verificación
+                {completing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Completando verificación...
+                  </>
+                ) : (
+                  'Completar Verificación'
+                )}
               </button>
             </div>
           </div>

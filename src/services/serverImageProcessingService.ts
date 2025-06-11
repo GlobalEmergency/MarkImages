@@ -64,20 +64,109 @@ export class ServerImageProcessingService {
       // Convertir URL a buffer
       const inputBuffer = await this.imageUrlToBuffer(imageUrl);
       
-      // Obtener metadatos de la imagen original
-      const metadata = await sharp(inputBuffer).metadata();
+      // Obtener metadatos de la imagen original (antes de rotación)
+      const originalMetadata = await sharp(inputBuffer).metadata();
       
-      if (!metadata.width || !metadata.height) {
+      if (!originalMetadata.width || !originalMetadata.height) {
         throw new Error('No se pudieron obtener las dimensiones de la imagen');
       }
 
-      // Realizar el recorte y redimensionado
-      const processedBuffer = await sharp(inputBuffer)
+      // Logging detallado para diagnóstico
+      console.log('=== DIAGNÓSTICO DE RECORTE ===');
+      console.log('Imagen original (física):', {
+        width: originalMetadata.width,
+        height: originalMetadata.height,
+        format: originalMetadata.format,
+        orientation: originalMetadata.orientation
+      });
+
+      // PASO CRÍTICO: Aplicar rotación EXIF manual para obtener dimensiones visuales correctas
+      let rotatedImage = sharp(inputBuffer);
+      let expectedWidth = originalMetadata.width;
+      let expectedHeight = originalMetadata.height;
+
+      // Aplicar rotación manual basada en EXIF orientation
+      switch (originalMetadata.orientation) {
+        case 1:
+          // Normal, sin rotación
+          break;
+        case 3:
+          // Rotar 180°
+          rotatedImage = rotatedImage.rotate(180);
+          break;
+        case 6:
+          // Rotar 90° horario (NUESTRO CASO)
+          rotatedImage = rotatedImage.rotate(90);
+          expectedWidth = originalMetadata.height;
+          expectedHeight = originalMetadata.width;
+          break;
+        case 8:
+          // Rotar 90° antihorario
+          rotatedImage = rotatedImage.rotate(270);
+          expectedWidth = originalMetadata.height;
+          expectedHeight = originalMetadata.width;
+          break;
+        default:
+          console.warn(`Orientación EXIF desconocida: ${originalMetadata.orientation}, usando imagen sin rotar`);
+          break;
+      }
+
+      console.log('Imagen después de aplicar orientación EXIF manual:', {
+        originalDimensions: { width: originalMetadata.width, height: originalMetadata.height },
+        expectedDimensions: { width: expectedWidth, height: expectedHeight },
+        orientation: originalMetadata.orientation,
+        rotationApplied: originalMetadata.orientation !== 1
+      });
+
+      // Usar las dimensiones esperadas para validación
+      const finalWidth = expectedWidth;
+      const finalHeight = expectedHeight;
+
+      console.log('Datos de recorte solicitados:', cropData);
+      
+      // Calcular límites del área de recorte usando las dimensiones POST-rotación
+      const cropLeft = Math.round(cropData.x);
+      const cropTop = Math.round(cropData.y);
+      const cropWidth = Math.round(cropData.width);
+      const cropHeight = Math.round(cropData.height);
+      const cropRight = cropLeft + cropWidth;
+      const cropBottom = cropTop + cropHeight;
+      
+      console.log('Área de recorte calculada:', {
+        left: cropLeft,
+        top: cropTop,
+        width: cropWidth,
+        height: cropHeight,
+        right: cropRight,
+        bottom: cropBottom
+      });
+
+      // Validar que las coordenadas estén dentro de los límites de la imagen ROTADA
+      if (cropLeft < 0 || cropTop < 0) {
+        throw new Error(`Coordenadas de recorte inválidas: x=${cropLeft}, y=${cropTop}. Las coordenadas no pueden ser negativas.`);
+      }
+
+      if (cropWidth <= 0 || cropHeight <= 0) {
+        throw new Error(`Dimensiones de recorte inválidas: width=${cropWidth}, height=${cropHeight}. Las dimensiones deben ser positivas.`);
+      }
+
+      if (cropRight > finalWidth) {
+        throw new Error(`El área de recorte excede el ancho de la imagen rotada. Solicitado: ${cropRight}px, disponible: ${finalWidth}px (original: ${originalMetadata.width}px)`);
+      }
+
+      if (cropBottom > finalHeight) {
+        throw new Error(`El área de recorte excede la altura de la imagen rotada. Solicitado: ${cropBottom}px, disponible: ${finalHeight}px (original: ${originalMetadata.height}px)`);
+      }
+
+      console.log('✅ Validación de coordenadas exitosa (post-rotación)');
+
+      // Realizar el recorte y redimensionado aplicando la rotación manual
+      const processedBuffer = await rotatedImage
         .extract({
-          left: Math.round(cropData.x),
-          top: Math.round(cropData.y),
-          width: Math.round(cropData.width),
-          height: Math.round(cropData.height)
+          left: cropLeft,
+          top: cropTop,
+          width: cropWidth,
+          height: cropHeight
         })
         .resize(outputWidth, outputHeight, {
           fit: 'fill',
@@ -85,6 +174,8 @@ export class ServerImageProcessingService {
         })
         .jpeg({ quality: 85 })
         .toBuffer();
+
+      console.log('✅ Rotación EXIF, recorte y redimensionado completado');
 
       // Convertir a data URL
       const resultImageUrl = this.bufferToDataUrl(processedBuffer, 'jpeg');
@@ -97,6 +188,7 @@ export class ServerImageProcessingService {
         dimensions: `${outputWidth}x${outputHeight}`
       };
     } catch (error) {
+      console.error('❌ Error en cropImage:', error);
       throw new Error(`Error al recortar imagen: ${error}`);
     }
   }

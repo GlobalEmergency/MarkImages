@@ -311,6 +311,7 @@ export default function StepByStepValidation({
   const [error, setError] = useState<string | null>(null);
   const [step1Data, setStep1Data] = useState<Step1Data | null>(null);
   const [currentStepData, setCurrentStepData] = useState<CurrentStepData>({});
+  const [confirmingAddress, setConfirmingAddress] = useState(false);
 
   const initializeValidation = async () => {
     setLoading(true);
@@ -446,11 +447,25 @@ export default function StepByStepValidation({
                     )}
                   </div>
                   <button
-                    onClick={() => executeStep(1, { selectedAddress: searchResult.officialData })}
-                    disabled={loading}
-                    className="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                    onClick={async () => {
+                      setConfirmingAddress(true);
+                      try {
+                        await executeStep(1, { selectedAddress: searchResult.officialData });
+                      } finally {
+                        setConfirmingAddress(false);
+                      }
+                    }}
+                    disabled={loading || confirmingAddress}
+                    className="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center"
                   >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar esta dirección'}
+                    {confirmingAddress ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        Confirmando dirección...
+                      </>
+                    ) : (
+                      'Confirmar esta dirección'
+                    )}
                   </button>
                 </div>
               )}
@@ -886,7 +901,7 @@ export default function StepByStepValidation({
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-        <span className="ml-2 text-gray-600">Inicializando validación...</span>
+        <span className="ml-2 text-gray-600">Calculando direcciones...</span>
       </div>
     );
   }
