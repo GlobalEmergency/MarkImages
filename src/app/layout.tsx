@@ -4,6 +4,9 @@ import Link from 'next/link'
 import { Activity, CheckSquare, Home } from 'lucide-react'
 import './globals.css'
 
+import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
+
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
@@ -51,6 +54,8 @@ export default function RootLayout({
           </div>
         </nav>
         {children}
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   )

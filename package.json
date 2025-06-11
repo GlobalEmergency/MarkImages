@@ -10,12 +10,14 @@
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "load-madrid-data": "tsx scripts/load-madrid-data.ts",
+    "load-madrid-data": "tsx scripts/load-madrid-data-optimized.ts",
     "test": "tsx tests/validation-system.test.ts",
     "test:validation": "tsx tests/validation-system.test.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.9.0",
+    "@vercel/analytics": "^1.5.0",
+    "@vercel/speed-insights": "^1.2.0",
     "lucide-react": "^0.513.0",
     "next": "15.3.3",
     "prisma": "^6.9.0",

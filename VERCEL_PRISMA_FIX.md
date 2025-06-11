@@ -18,21 +18,21 @@ Changed from:
 ```
 To:
 ```json
-"build": "prisma generate && next build"
+"build": "npx prisma generate && next build"
 ```
 
 ### 2. Added postinstall script
 Added a postinstall script as an additional safeguard:
 ```json
-"postinstall": "prisma generate"
+"postinstall": "npx prisma generate"
 ```
 
 ### 3. Created vercel.json configuration
 Created a `vercel.json` file with explicit build and install commands:
 ```json
 {
-  "buildCommand": "prisma generate && next build",
-  "installCommand": "npm install && prisma generate"
+  "buildCommand": "npx prisma generate && next build",
+  "installCommand": "npm install"
 }
 ```
 
