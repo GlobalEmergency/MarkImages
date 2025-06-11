@@ -12,7 +12,15 @@
     "db:seed": "tsx prisma/seed.ts",
     "load-madrid-data": "tsx scripts/load-madrid-data-optimized.ts",
     "test": "tsx tests/validation-system.test.ts",
-    "test:validation": "tsx tests/validation-system.test.ts"
+    "test:validation": "tsx tests/validation-system.test.ts",
+    "migrate:status": "prisma migrate status",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "migrate:reset": "prisma migrate reset",
+    "migrate:diff": "prisma migrate diff",
+    "db:studio": "prisma studio",
+    "db:generate": "prisma generate",
+    "db:format": "prisma format"
   },
   "dependencies": {
     "@prisma/client": "^6.9.0",
