@@ -1,5 +1,7 @@
 // src/utils/imageUtils.ts
 
+import { loadImageWithProxy } from './sharePointProxy';
+
 export interface ImageDimensions {
   width: number;
   height: number;
@@ -56,16 +58,10 @@ export function base64ToBlob(base64: string, mimeType: string): Blob {
 }
 
 /**
- * Carga una imagen desde una URL
+ * Carga una imagen desde una URL (con soporte automático para SharePoint)
  */
 export function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
+  return loadImageWithProxy(src);
 }
 
 /**

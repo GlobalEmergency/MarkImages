@@ -115,31 +115,34 @@ export default function ImageCropper({
   useEffect(() => {
     setImageLoaded(false);
     
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    
-    img.onload = () => {
-      setImageDimensions({ width: img.width, height: img.height });
-      const initialCrop = calculateInitialCrop(img.width, img.height);
-      setCropArea(initialCrop);
-      setImageLoaded(true);
-      
-      // Calcular escala (responsive)
-      const maxWidth = Math.min(window.innerWidth - 64, 800);
-      const maxHeight = Math.min(window.innerHeight * 0.6, 600);
-      const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
-      setCanvasScale(scale);
-      
-      // Notificar crop inicial
-      onCropChange(initialCrop);
+    const loadImageAsync = async () => {
+      try {
+        // Usar loadImageWithProxy que maneja automáticamente SharePoint
+        const { loadImageWithProxy } = await import('@/utils/sharePointProxy');
+        const img = await loadImageWithProxy(imageUrl);
+        
+        setImageDimensions({ width: img.width, height: img.height });
+        const initialCrop = calculateInitialCrop(img.width, img.height);
+        setCropArea(initialCrop);
+        setImageLoaded(true);
+        
+        // Calcular escala (responsive)
+        const maxWidth = Math.min(window.innerWidth - 64, 800);
+        const maxHeight = Math.min(window.innerHeight * 0.6, 600);
+        const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
+        setCanvasScale(scale);
+        
+        // Notificar crop inicial
+        onCropChange(initialCrop);
+        
+        // Guardar referencia de la imagen
+        imageRef.current = img;
+      } catch (error) {
+        console.error('Error loading image:', error);
+      }
     };
     
-    img.onerror = (error) => {
-      console.error('Error loading image:', error);
-    };
-    
-    img.src = imageUrl;
-    imageRef.current = img;
+    loadImageAsync();
   }, [imageUrl]);
 
   // Redibujar cuando cambie el crop area

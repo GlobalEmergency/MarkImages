@@ -54,11 +54,12 @@ export class ImageProcessingService {
     arrows: ArrowData[], 
     config: ArrowConfig
   ): Promise<ProcessedImageResult> {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      
-      img.onload = () => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // Usar loadImageWithProxy para manejar SharePoint automáticamente
+        const { loadImageWithProxy } = await import('@/utils/sharePointProxy');
+        const img = await loadImageWithProxy(imageUrl);
+        
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         
@@ -103,10 +104,9 @@ export class ImageProcessingService {
           fileSize,
           dimensions: `${canvas.width}x${canvas.height}`
         });
-      };
-      
-      img.onerror = () => reject(new Error('Error al cargar la imagen'));
-      img.src = imageUrl;
+      } catch (error) {
+        reject(new Error(`Error al cargar la imagen: ${error instanceof Error ? error.message : 'Error desconocido'}`));
+      }
     });
   }
 
@@ -138,11 +138,12 @@ export class ImageProcessingService {
     imageUrl: string, 
     targetSizeKB: number = 500
   ): Promise<ProcessedImageResult> {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      
-      img.onload = () => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // Usar loadImageWithProxy para manejar SharePoint automáticamente
+        const { loadImageWithProxy } = await import('@/utils/sharePointProxy');
+        const img = await loadImageWithProxy(imageUrl);
+        
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         
@@ -174,10 +175,9 @@ export class ImageProcessingService {
           fileSize: currentSize,
           dimensions: `${canvas.width}x${canvas.height}`
         });
-      };
-      
-      img.onerror = () => reject(new Error('Error al cargar la imagen'));
-      img.src = imageUrl;
+      } catch (error) {
+        reject(new Error(`Error al cargar la imagen: ${error instanceof Error ? error.message : 'Error desconocido'}`));
+      }
     });
   }
 
