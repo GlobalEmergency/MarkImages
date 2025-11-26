@@ -6,13 +6,20 @@ Aplicación para gestionar y visualizar la ubicación de desfibriladores (DEAs) 
 
 ### Auto-Deploy Configurado
 
-El proyecto está configurado para hacer auto-deploy de migraciones en cada deployment.
+El proyecto está configurado para hacer auto-deploy de migraciones **solo en Vercel** y **solo en ramas específicas**.
 
-**Comando de build**: `prisma migrate deploy && prisma generate && next build`
+**Comando de build**: `node scripts/migrate.js && next build`
+
+#### Comportamiento Inteligente
+
+El script `scripts/migrate.js` verifica automáticamente:
+- ✅ **Entorno Vercel**: Solo ejecuta migraciones si `VERCEL=1`
+- ✅ **Ramas permitidas**: Solo en ramas `main` o `refactor` (o que contengan estos nombres)
+- ✅ **Prisma Client**: Siempre se genera, independientemente de la rama
 
 Esto ejecutará automáticamente:
-1. Las migraciones de base de datos
-2. La generación del cliente de Prisma
+1. Las migraciones de base de datos (solo si estás en Vercel + rama correcta)
+2. La generación del cliente de Prisma (siempre)
 3. El build de Next.js
 
 ### Variables de Entorno Requeridas
@@ -60,10 +67,13 @@ DATABASE_URL="postgresql://user:password@host:port/database"
    # Editar .env con tu DATABASE_URL
    ```
 
-4. **Ejecutar migraciones**
+4. **Ejecutar migraciones** (para desarrollo local)
    ```bash
-   npm run build  # Esto ejecuta las migraciones automáticamente
+   npx prisma migrate deploy  # O usa: npx prisma migrate dev
+   npx prisma generate
    ```
+
+   **Nota**: `npm run build` NO ejecuta migraciones en local (solo en Vercel)
 
 5. **Seed (opcional)**
    ```bash
@@ -108,14 +118,19 @@ prisma/
 
 ### Migraciones
 
-Las migraciones se ejecutan automáticamente en cada deploy. Para desarrollo local:
+Las migraciones se ejecutan automáticamente **solo en Vercel** en ramas `main` y `refactor`.
+
+Para desarrollo local:
 
 ```bash
 # Ver estado
 npx prisma migrate status
 
 # Aplicar migraciones
-npm run build  # Ejecuta migrate deploy
+npx prisma migrate deploy
+
+# Crear nueva migración
+npx prisma migrate dev --name descripcion_cambio
 
 # Reset completo (CUIDADO: elimina todos los datos)
 npx prisma migrate reset
@@ -127,7 +142,7 @@ npx prisma migrate reset
 - ✅ Lista de AEDs publicados
 - ✅ Búsqueda por nombre/código
 - ✅ Paginación
-- ✅ Auto-deploy de migraciones
+- ✅ Auto-deploy condicional de migraciones (Vercel + ramas específicas)
 - ✅ Schema normalizado con PostGIS
 
 ### Por Implementar
@@ -176,7 +191,8 @@ npm run db:studio    # Abrir Prisma Studio
 
 - El proyecto usa **Next.js 15** con App Router
 - La base de datos requiere **PostgreSQL** con extensión **PostGIS**
-- Las migraciones se ejecutan automáticamente en cada deploy
+- Las migraciones se ejecutan automáticamente solo en Vercel en ramas `main` y `refactor`
+- Para desarrollo local, ejecuta las migraciones manualmente con `npx prisma migrate deploy`
 - Solo se muestran AEDs con status `PUBLISHED`
 
 ## 🔗 Links
