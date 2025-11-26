@@ -34,16 +34,23 @@ export async function GET(request: NextRequest) {
     const startTime = Date.now();
     let processedCount = 0;
     let errorCount = 0;
-    const errors: Array<{ recordId: number; error: string }> = [];
+    const errors: Array<{ recordId: string; error: string }> = [];
 
     // 1. Obtener registros que necesitan procesamiento
-    const pendingRecords = await prisma.deaRecord.findMany({
+    const pendingRecords = await prisma.aed.findMany({
       where: {
         // Por ahora, procesar todos los registros para la primera ejecución
         // Más adelante se puede optimizar con la tabla de validaciones
       },
       take: 50, // Limitar a 50 registros por ejecución para evitar timeouts
-      orderBy: { createdAt: 'asc' }
+      orderBy: { created_at: 'asc' },
+      include: {
+        location: {
+          include: {
+            district: true
+          }
+        }
+      }
     });
 
     console.log(`📊 Encontrados ${pendingRecords.length} registros para procesar`);
@@ -75,56 +82,51 @@ export async function GET(request: NextRequest) {
           
           // Realizar validación
           const validation = await newMadridValidationService.validateAddress(
-            record.tipoVia,
-            record.nombreVia,
-            record.numeroVia || undefined,
-            record.codigoPostal.toString(),
-            record.distrito,
-            { latitude: record.latitud, longitude: record.longitud }
+            record.location.street_type,
+            record.location.street_name,
+            record.location.street_number || undefined,
+            record.location.postal_code,
+            record.location.district.name,
+            { latitude: record.latitude, longitude: record.longitude }
           );
 
           const processingTime = Date.now() - recordStartTime;
 
-          // Guardar resultados usando SQL directo (corregido)
+          // Guardar resultados en la nueva tabla aed_address_validations
           await prisma.$executeRaw`
-            INSERT INTO dea_address_validations (
-              dea_record_id,
-              search_results,
-              validation_details,
-              overall_status,
+            INSERT INTO aed_address_validations (
+              id,
+              location_id,
+              suggestions,
+              detected_problems,
               recommended_actions,
-              processing_duration_ms,
-              search_strategies_used,
-              needs_reprocessing,
-              error_message,
-              retry_count,
-              updated_at
+              address_found,
+              match_level,
+              duration_ms,
+              strategies_used,
+              processed_at
             ) VALUES (
-              ${record.id},
+              gen_random_uuid(),
+              ${record.location_id}::uuid,
               ${JSON.stringify(validation.searchResult.suggestions)}::jsonb,
-              ${JSON.stringify(validation.validationDetails)}::jsonb,
-              ${validation.overallStatus},
+              ${JSON.stringify(validation.validationDetails?.problems || [])}::jsonb,
               ${JSON.stringify(validation.recommendedActions)}::jsonb,
+              ${validation.overallStatus === 'valid'},
+              ${validation.searchResult.matchLevel || 0.0},
               ${processingTime},
               ${JSON.stringify(['exact', 'fuzzy'])}::jsonb,
-              false,
-              null,
-              0,
               NOW()
             )
-            ON CONFLICT (dea_record_id) 
+            ON CONFLICT (location_id)
             DO UPDATE SET
-              search_results = EXCLUDED.search_results,
-              validation_details = EXCLUDED.validation_details,
-              overall_status = EXCLUDED.overall_status,
+              suggestions = EXCLUDED.suggestions,
+              detected_problems = EXCLUDED.detected_problems,
               recommended_actions = EXCLUDED.recommended_actions,
-              processing_duration_ms = EXCLUDED.processing_duration_ms,
-              search_strategies_used = EXCLUDED.search_strategies_used,
-              processed_at = NOW(),
-              needs_reprocessing = false,
-              error_message = null,
-              retry_count = 0,
-              updated_at = NOW()
+              address_found = EXCLUDED.address_found,
+              match_level = EXCLUDED.match_level,
+              duration_ms = EXCLUDED.duration_ms,
+              strategies_used = EXCLUDED.strategies_used,
+              processed_at = NOW()
           `;
 
           processedCount++;
@@ -146,33 +148,31 @@ export async function GET(request: NextRequest) {
           // Marcar como fallido
           try {
             await prisma.$executeRaw`
-              INSERT INTO dea_address_validations (
-                dea_record_id,
-                search_results,
-                overall_status,
-                processing_duration_ms,
-                needs_reprocessing,
-                error_message,
-                retry_count
+              INSERT INTO aed_address_validations (
+                id,
+                location_id,
+                suggestions,
+                address_found,
+                detected_problems,
+                duration_ms,
+                processed_at
               ) VALUES (
-                ${record.id},
+                gen_random_uuid(),
+                ${record.location_id}::uuid,
                 '[]'::jsonb,
-                'invalid',
+                false,
+                ${JSON.stringify([{ type: 'error', message: errorMessage }])}::jsonb,
                 0,
-                true,
-                ${errorMessage},
-                1
+                NOW()
               )
-              ON CONFLICT (dea_record_id) 
+              ON CONFLICT (location_id)
               DO UPDATE SET
-                needs_reprocessing = true,
-                error_message = EXCLUDED.error_message,
-                processed_at = NOW(),
-                retry_count = dea_address_validations.retry_count + 1,
-                updated_at = NOW()
+                address_found = false,
+                detected_problems = ${JSON.stringify([{ type: 'error', message: errorMessage }])}::jsonb,
+                processed_at = NOW()
             `;
           } catch (dbError) {
-            console.error(`❌ Error guardando fallo para DEA ${record.id}:`, dbError);
+            console.error(`❌ Error guardando fallo para AED ${record.id}:`, dbError);
           }
           
           return { success: false, recordId: record.id, error: errorMessage };
