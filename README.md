@@ -1,148 +1,186 @@
-# DEA Analizer - Sistema de Análisis de Desfibriladores Externos Automáticos
+# DEA Madrid - Desfibriladores Automáticos Externos
 
-Sistema web para el análisis y validación de ubicaciones de Desfibriladores Externos Automáticos (DEA) en Madrid, desarrollado con Next.js y PostgreSQL.
+Aplicación para gestionar y visualizar la ubicación de desfibriladores (DEAs) en Madrid.
 
-## 🚀 Inicio Rápido
+## 🚀 Deployment en Vercel
 
-### Prerrequisitos
-- Node.js 22 
-- PostgreSQL
-- Variables de entorno configuradas (`.env.local`)
+### Auto-Deploy Configurado
 
-### Instalación
+El proyecto está configurado para hacer auto-deploy de migraciones en cada deployment.
 
-```bash
-# Clonar el repositorio
-git clone <repository-url>
-cd DEA_Analizer
+**Comando de build**: `prisma migrate deploy && prisma generate && next build`
 
-# Instalar dependencias
-npm install
+Esto ejecutará automáticamente:
+1. Las migraciones de base de datos
+2. La generación del cliente de Prisma
+3. El build de Next.js
 
-# Verificar estado de migraciones
-npm run migrate:status
+### Variables de Entorno Requeridas
 
-# Aplicar migraciones (si es necesario)
-npm run migrate:dev
+En Vercel, configura la siguiente variable:
 
-# Cargar datos de Madrid
-npm run load-madrid-data
-
-# Iniciar servidor de desarrollo
-npm run dev
-```
-
-Abrir [http://localhost:3000](http://localhost:3000) para ver la aplicación.
-
-## 📚 Documentación
-
-Toda la documentación del proyecto se encuentra en la carpeta [`doc/`](./doc/):
-
-- **[Índice de Documentación](./doc/README.md)** - Punto de entrada a toda la documentación
-- **[Comandos de Migración](./doc/MIGRATION_COMMANDS.md)** - Gestión de base de datos
-- **[Validación de Direcciones](./doc/README_VALIDATION.md)** - Sistema de validación
-- **[Resolución de Problemas](./doc/DEPLOYMENT_TROUBLESHOOTING.md)** - Guía de troubleshooting
-
-## 🛠️ Comandos Principales
-
-### Desarrollo
-```bash
-npm run dev          # Servidor de desarrollo
-npm run build        # Build de producción
-npm run start        # Servidor de producción
-```
-
-### Base de Datos
-```bash
-npm run migrate:status    # Verificar estado de migraciones
-npm run migrate:dev      # Aplicar migraciones en desarrollo
-npm run db:studio        # Abrir Prisma Studio
-npm run load-madrid-data # Cargar datos de Madrid
-```
-
-### Testing
-```bash
-npm run test            # Ejecutar tests
-npm run test:validation # Tests de validación específicos
-```
-
-## 🏗️ Arquitectura
-
-### Stack Tecnológico
-- **Frontend**: Next.js 15, React 19, TypeScript
-- **Backend**: Next.js API Routes
-- **Base de Datos**: PostgreSQL con Prisma ORM
-- **Estilos**: Tailwind CSS
-- **Despliegue**: Vercel
-
-### Estructura del Proyecto
-```
-DEA_Analizer/
-├── src/
-│   ├── app/           # App Router de Next.js
-│   ├── components/    # Componentes React
-│   ├── services/      # Lógica de negocio
-│   ├── types/         # Definiciones TypeScript
-│   └── utils/         # Utilidades
-├── prisma/            # Schema y migraciones
-├── scripts/           # Scripts de carga de datos
-├── doc/              # Documentación del proyecto
-└── tests/            # Tests automatizados
-```
-
-## 📊 Base de Datos
-
-### Datos Cargados
-- **21 distritos** de Madrid
-- **131 barrios**
-- **9,393 vías** (calles, avenidas, plazas)
-- **213,427 direcciones** con coordenadas geográficas
-
-### Optimizaciones
-- Índices espaciales para búsquedas geográficas
-- Índices de texto completo en español
-- Índices compuestos para consultas complejas
-
-## 🔧 Configuración
-
-### Variables de Entorno
-Crear archivo `.env.local`:
 ```env
-DATABASE_URL="postgresql://..."
-NEXTAUTH_SECRET="..."
-# Otras variables según necesidad
+DATABASE_URL="postgresql://user:password@host:port/database"
 ```
 
-### Base de Datos
-El proyecto utiliza una migración consolidada optimizada. Ver [documentación de migraciones](./doc/MIGRATION_COMMANDS.md) para más detalles.
+### Primer Deploy
 
-## 🚀 Despliegue
+1. **Conecta el repositorio** a Vercel
+2. **Configura la variable** `DATABASE_URL`
+3. **Deploy**: Vercel ejecutará las migraciones automáticamente
+4. **Seeds** (opcional): Ejecuta manualmente si quieres datos de ejemplo:
+   ```bash
+   npm run db:seed
+   ```
 
-### Vercel (Recomendado)
-1. Conectar repositorio a Vercel
-2. Configurar variables de entorno
-3. El despliegue es automático
+## 📋 Desarrollo Local
 
-Ver [guía de troubleshooting](./doc/DEPLOYMENT_TROUBLESHOOTING.md) para problemas comunes.
+### Requisitos
 
-## 🤝 Contribución
+- Node.js 18+
+- PostgreSQL con extensión PostGIS
+- npm o yarn
 
-1. Fork del proyecto
-2. Crear rama feature (`git checkout -b feature/AmazingFeature`)
-3. Commit cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abrir Pull Request
+### Setup
 
-## 📝 Licencia
+1. **Clonar el repositorio**
+   ```bash
+   git clone <repo-url>
+   cd MarkImages
+   ```
 
-Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
+2. **Instalar dependencias**
+   ```bash
+   npm install
+   ```
 
-## 🆘 Soporte
+3. **Configurar variables de entorno**
+   ```bash
+   cp .env.example .env
+   # Editar .env con tu DATABASE_URL
+   ```
 
-- **Documentación**: [./doc/README.md](./doc/README.md)
-- **Issues**: Usar el sistema de issues de GitHub
-- **Troubleshooting**: [./doc/DEPLOYMENT_TROUBLESHOOTING.md](./doc/DEPLOYMENT_TROUBLESHOOTING.md)
+4. **Ejecutar migraciones**
+   ```bash
+   npm run build  # Esto ejecuta las migraciones automáticamente
+   ```
 
----
+5. **Seed (opcional)**
+   ```bash
+   npm run db:seed
+   ```
 
-**Desarrollado para el análisis y optimización de ubicaciones de DEA en Madrid**
+6. **Iniciar desarrollo**
+   ```bash
+   npm run dev
+   ```
+
+## 📚 Estructura del Proyecto
+
+```
+src/
+├── app/
+│   ├── page.tsx              # Página principal (lista de AEDs)
+│   └── api/
+│       └── aeds/
+│           └── route.ts      # API REST para AEDs
+├── hooks/
+│   └── useAeds.ts            # Hook para obtener AEDs
+├── types/
+│   ├── aed.ts                # Tipos de AED
+│   └── index.ts              # Re-exports
+prisma/
+├── schema.prisma             # Esquema de base de datos
+├── seed.ts                   # Seeds de ejemplo
+└── migrations/
+    └── 20250126000000_init/  # Migración inicial
+```
+
+## 🗄️ Base de Datos
+
+### Schema Principal
+
+- **Aed**: Desfibriladores con toda su información
+- **AedLocation**: Ubicación detallada
+- **AedResponsible**: Responsable/contacto
+- **AedSchedule**: Horarios de disponibilidad
+- **District, Neighborhood, Street**: Sistema de direcciones oficial
+
+### Migraciones
+
+Las migraciones se ejecutan automáticamente en cada deploy. Para desarrollo local:
+
+```bash
+# Ver estado
+npx prisma migrate status
+
+# Aplicar migraciones
+npm run build  # Ejecuta migrate deploy
+
+# Reset completo (CUIDADO: elimina todos los datos)
+npx prisma migrate reset
+```
+
+## 🎯 Features
+
+### Implementado
+- ✅ Lista de AEDs publicados
+- ✅ Búsqueda por nombre/código
+- ✅ Paginación
+- ✅ Auto-deploy de migraciones
+- ✅ Schema normalizado con PostGIS
+
+### Por Implementar
+- [ ] Mapa interactivo
+- [ ] Detalle de AED
+- [ ] Formulario de registro
+- [ ] Panel de administración
+- [ ] Sistema de validación
+
+## 📖 API
+
+### GET /api/aeds
+
+Lista AEDs publicados con paginación.
+
+**Query params:**
+- `page` (default: 1)
+- `limit` (default: 50, max: 100)
+- `search` (opcional): buscar por nombre o código
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [...],
+  "pagination": {
+    "page": 1,
+    "limit": 50,
+    "total": 100,
+    "totalPages": 2
+  }
+}
+```
+
+## 🛠️ Scripts Disponibles
+
+```bash
+npm run dev          # Desarrollo con Turbopack
+npm run build        # Build + migraciones
+npm start            # Producción
+npm run db:seed      # Ejecutar seeds
+npm run db:studio    # Abrir Prisma Studio
+```
+
+## 📝 Notas
+
+- El proyecto usa **Next.js 15** con App Router
+- La base de datos requiere **PostgreSQL** con extensión **PostGIS**
+- Las migraciones se ejecutan automáticamente en cada deploy
+- Solo se muestran AEDs con status `PUBLISHED`
+
+## 🔗 Links
+
+- [Documentación de Prisma](https://www.prisma.io/docs)
+- [Next.js 15 Docs](https://nextjs.org/docs)
+- [Vercel Deployment](https://vercel.com/docs)
