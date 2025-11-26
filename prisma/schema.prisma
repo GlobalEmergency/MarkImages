@@ -1,297 +1,745 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  extensions = [postgis]
 }
 
-model DeaRecord {
-  id                    Int                   @id @default(autoincrement())
-  horaInicio            DateTime
-  horaFinalizacion      DateTime
-  correoElectronico     String
-  nombre                String
-  numeroProvisionalDea  Int
-  tipoEstablecimiento   String
-  titularidadLocal      String
-  usoLocal              String
-  titularidad           String
-  propuestaDenominacion String
-  tipoVia               String
-  nombreVia             String
-  numeroVia             String?
-  complementoDireccion  String?
-  codigoPostal          Int
-  distrito              String
-  latitud               Float
-  longitud              Float
-  horarioApertura       String
-  aperturaLunesViernes  Int
-  cierreLunesViernes    Int
-  aperturaSabados       Int
-  cierreSabados         Int
-  aperturaDomingos      Int
-  cierreDomingos        Int
-  vigilante24h          String
-  foto1                 String?
-  foto2                 String?
-  descripcionAcceso     String?
-  comentarioLibre       String?
-  gmTipoVia             String?
-  gmNombreVia           String?
-  gmNumero              String?
-  gmCp                  String?
-  gmDistrito            String?
-  gmLat                 Float?
-  gmLon                 Float?
-  defTipoVia            String?
-  defNombreVia          String?
-  defNumero             String?
-  defCp                 String?
-  defDistrito           String?
-  defLat                Float?
-  defLon                Float?
-  defCodDea             String?
-  gmBarrio              String?
-  defBarrio             String?
-  imageVerificationStatus   String           @default("pending") @map("image_verification_status")
-  addressValidationStatus   String           @default("pending") @map("address_validation_status")
-  createdAt             DateTime              @default(now())
-  updatedAt             DateTime              @updatedAt
-  addressValidation     DeaAddressValidation?
-  deaCodes              DeaCode[]
-  verificationSessions  VerificationSession[]
+// ============================================
+// CORE - AED (Automated External Defibrillator) Information
+// ============================================
+model Aed {
+  id                        String                   @id @default(uuid()) @db.Uuid
+  code                      String                   @unique
+  provisional_number        Int?
+  name                      String
+  establishment_type        String
 
-  @@map("dea_records")
-}
+  // ⭐ GEOSPATIAL - Denormalized for fast proximity searches
+  latitude                  Float
+  longitude                 Float
+  coordinates_precision     String?
+  geom                      Unsupported("geometry(Point, 4326)")?  // PostGIS point
 
-model VerificationSession {
-  id                      String           @id @default(cuid())
-  deaRecordId             Int              @map("dea_record_id")
-  status                  String           @default("in_progress")
-  currentStep             String           @default("dea_info") @map("current_step")
-  stepData                Json?            @map("step_data")
-  originalImageUrl        String?          @map("original_image_url")
-  croppedImageUrl         String?          @map("cropped_image_url")
-  processedImageUrl       String?          @map("processed_image_url")
-  secondImageUrl          String?          @map("second_image_url")
-  secondCroppedImageUrl   String?          @map("second_cropped_image_url")
-  secondProcessedImageUrl String?          @map("second_processed_image_url")
-  image1Valid             Boolean?         @map("image1_valid")
-  image2Valid             Boolean?         @map("image2_valid")
-  imagesSwapped           Boolean?         @map("images_swapped")
-  markedAsInvalid         Boolean          @default(false) @map("marked_as_invalid")
-  createdAt               DateTime         @default(now()) @map("created_at")
-  updatedAt               DateTime         @updatedAt @map("updated_at")
-  completedAt             DateTime?        @map("completed_at")
-  arrowMarkers            ArrowMarker[]
-  processedImages         ProcessedImage[]
-  deaRecord               DeaRecord        @relation(fields: [deaRecordId], references: [id])
+  // Origin and traceability
+  source_origin             SourceOrigin             @default(WEB_FORM)
+  source_details            String?
+  import_batch_id           String?                  @db.Uuid
+  external_reference        String?
+
+  // Observations and notes
+  origin_observations       String?
+  validation_observations   String?
+  internal_notes            String?
+  requires_attention        Boolean                  @default(false)
+  attention_reason          String?
+
+  // General status
+  status                    AedStatus                @default(DRAFT)
+  published_at              DateTime?
+
+  // Creation sequence
+  sequence                  Int                      @default(autoincrement())
+
+  // Relationships
+  location_id               String                   @unique @db.Uuid
+  responsible_id            String                   @db.Uuid
+  schedule_id               String?                  @unique @db.Uuid
+
+  location                  AedLocation              @relation(fields: [location_id], references: [id])
+  responsible               AedResponsible           @relation(fields: [responsible_id], references: [id])
+  schedule                  AedSchedule?             @relation(fields: [schedule_id], references: [id])
+  import_batch              ImportBatch?             @relation(fields: [import_batch_id], references: [id])
+  images                    AedImage[]
+  validations               AedValidation[]
+  code_history              AedCodeHistory[]
+  status_changes            AedStatusChange[]
+
+  created_at                DateTime                 @default(now())
+  updated_at                DateTime                 @updatedAt
+  created_by                String?
+  updated_by                String?
 
   @@index([status])
-  @@index([deaRecordId, status])
-  @@map("verification_sessions")
+  @@index([code])
+  @@index([created_at])
+  @@index([responsible_id])
+  @@index([establishment_type])
+  @@index([sequence])
+  @@index([source_origin])
+  @@index([import_batch_id])
+  @@index([requires_attention])
+  // ⭐ CRITICAL: Spatial index for proximity searches
+  @@index([latitude, longitude], map: "idx_aeds_coordinates")
+  @@index([status, latitude, longitude], map: "idx_aeds_published_coordinates")
+  // PostGIS spatial index (created via migration)
+  @@map("aeds")
 }
 
-model ArrowMarker {
-  id                    String              @id @default(cuid())
-  verificationSessionId String              @map("verification_session_id")
-  imageNumber           Int                 @map("image_number")
-  startX                Float               @map("start_x")
-  startY                Float               @map("start_y")
-  endX                  Float               @map("end_x")
-  endY                  Float               @map("end_y")
-  arrowColor            String              @default("#dc2626") @map("arrow_color")
-  arrowWidth            Int                 @default(40) @map("arrow_width")
-  createdAt             DateTime            @default(now()) @map("created_at")
-  verificationSession   VerificationSession @relation(fields: [verificationSessionId], references: [id])
-
-  @@map("arrow_markers")
+enum AedStatus {
+  DRAFT
+  PENDING_REVIEW
+  VERIFIED
+  PUBLISHED
+  SUSPENDED
+  ARCHIVED
 }
 
-model ProcessedImage {
-  id                    String              @id @default(cuid())
-  verificationSessionId String              @map("verification_session_id")
-  originalFilename      String              @map("original_filename")
-  processedFilename     String              @map("processed_filename")
-  imageType             String              @map("image_type")
-  fileSize              Int                 @map("file_size")
-  dimensions            String
-  createdAt             DateTime            @default(now()) @map("created_at")
-  verificationSession   VerificationSession @relation(fields: [verificationSessionId], references: [id])
-
-  @@map("processed_images")
+enum SourceOrigin {
+  WEB_FORM
+  ADMIN_FORM
+  EXCEL_IMPORT
+  CSV_IMPORT
+  EXTERNAL_API
+  HEALTH_API
+  FIRE_DEPARTMENT_API
+  CIVIL_PROTECTION_API
+  LEGACY_MIGRATION
+  HOSPITAL_INTEGRATION
+  MANUAL_UPDATE
+  CITIZEN_REPORT
+  FIELD_VERIFICATION
 }
 
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-model Distrito {
-  id                Int                  @id @default(autoincrement())
-  codigoDistrito    Int                  @unique @map("codigo_distrito")
-  codigoTexto       String               @map("codigo_texto")
-  nombre            String
-  nombreNormalizado String               @map("nombre_normalizado")
-  shapeLength       Float?               @map("shape_length")
-  shapeArea         Float?               @map("shape_area")
-  fechaAlta         DateTime?            @map("fecha_alta")
-  fechaBaja         DateTime?            @map("fecha_baja")
-  observaciones     String?
-  createdAt         DateTime             @default(now()) @map("created_at")
-  barrios           Barrio[]
-  direcciones       Direccion[]
-  viaRangos         ViaRangoNumeracion[]
+// ============================================
+// STATUS CHANGE HISTORY
+// ============================================
+model AedStatusChange {
+  id                String      @id @default(uuid()) @db.Uuid
+  aed_id            String      @db.Uuid
+  previous_status   AedStatus?
+  new_status        AedStatus
+  reason            String?
+  modified_by       String?
+  notes             String?
 
-  @@index([codigoDistrito])
-  @@index([nombreNormalizado])
-  @@map("distritos")
+  aed               Aed         @relation(fields: [aed_id], references: [id], onDelete: Cascade)
+
+  created_at        DateTime    @default(now())
+
+  @@index([aed_id, created_at])
+  @@index([new_status])
+  @@map("aed_status_changes")
 }
 
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-model Barrio {
-  id                   Int                  @id @default(autoincrement())
-  distritoId           Int                  @map("distrito_id")
-  codigoBarrio         Int                  @map("codigo_barrio")
-  codigoDistritoBarrio Int                  @unique @map("codigo_distrito_barrio")
-  numeroBarrio         Int                  @map("numero_barrio")
-  nombre               String
-  nombreNormalizado    String               @map("nombre_normalizado")
-  nombreMayuscula      String               @map("nombre_mayuscula")
-  shapeLength          Float?               @map("shape_length")
-  shapeArea            Float?               @map("shape_area")
-  fechaAlta            DateTime?            @map("fecha_alta")
-  fechaBaja            DateTime?            @map("fecha_baja")
-  createdAt            DateTime             @default(now()) @map("created_at")
-  distrito             Distrito             @relation(fields: [distritoId], references: [id], onDelete: Cascade)
-  direcciones          Direccion[]
-  viaRangos            ViaRangoNumeracion[]
+// ============================================
+// BATCH IMPORTS - For mass uploads
+// ============================================
+model ImportBatch {
+  id                    String                  @id @default(uuid()) @db.Uuid
+  name                  String
+  description           String?
+  source_origin         SourceOrigin
 
-  @@index([distritoId, codigoBarrio])
-  @@index([nombreNormalizado])
-  @@map("barrios")
+  // Source file
+  file_name             String?
+  file_url              String?
+  file_hash             String?
+  file_size             Int?
+
+  // Process statistics
+  total_records         Int                     @default(0)
+  successful_records    Int                     @default(0)
+  failed_records        Int                     @default(0)
+  warning_records       Int                     @default(0)
+
+  // Status
+  status                ImportStatus            @default(PENDING)
+  started_at            DateTime?
+  completed_at          DateTime?
+  duration_seconds      Int?
+
+  // Metadata
+  import_parameters     Json?
+  error_summary         Json?
+  detailed_log          String?
+
+  // Audit
+  imported_by           String
+  ip_address            String?
+
+  aeds                  Aed[]
+  errors                ImportError[]
+
+  created_at            DateTime                @default(now())
+
+  @@index([status])
+  @@index([source_origin])
+  @@index([created_at])
+  @@index([imported_by])
+  @@map("import_batches")
 }
 
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-model Via {
-  id                Int                  @id @default(autoincrement())
-  codigoVia         Int                  @unique @map("codigo_via")
-  claseVia          String               @map("clase_via")
-  particula         String?
-  nombre            String
-  nombreConAcentos  String               @map("nombre_con_acentos")
-  nombreNormalizado String               @map("nombre_normalizado")
-  codigoViaInicio   Int?                 @map("codigo_via_inicio")
-  claseInicio       String?              @map("clase_inicio")
-  particulaInicio   String?              @map("particula_inicio")
-  nombreInicio      String?              @map("nombre_inicio")
-  codigoViaFin      Int?                 @map("codigo_via_fin")
-  claseFin          String?              @map("clase_fin")
-  particulaFin      String?              @map("particula_fin")
-  nombreFin         String?              @map("nombre_fin")
-  createdAt         DateTime             @default(now()) @map("created_at")
-  direcciones       Direccion[]
-  rangosNumeracion  ViaRangoNumeracion[]
-
-  @@index([codigoVia])
-  @@index([claseVia])
-  @@index([nombreNormalizado])
-  @@index([codigoViaInicio])
-  @@index([codigoViaFin])
-  @@map("vias")
+enum ImportStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  COMPLETED_WITH_ERRORS
+  FAILED
+  CANCELLED
 }
 
-model ViaRangoNumeracion {
-  id             Int      @id @default(autoincrement())
-  viaId          Int      @map("via_id")
-  distritoId     Int      @map("distrito_id")
-  barrioId       Int?     @map("barrio_id")
-  numeroImparMin Int?     @map("numero_impar_min")
-  numeroImparMax Int?     @map("numero_impar_max")
-  numeroParMin   Int?     @map("numero_par_min")
-  numeroParMax   Int?     @map("numero_par_max")
-  createdAt      DateTime @default(now()) @map("created_at")
-  barrio         Barrio?  @relation(fields: [barrioId], references: [id])
-  distrito       Distrito @relation(fields: [distritoId], references: [id])
-  via            Via      @relation(fields: [viaId], references: [id], onDelete: Cascade)
+// ============================================
+// IMPORT ERROR LOG
+// ============================================
+model ImportError {
+  id                  String              @id @default(uuid()) @db.Uuid
+  import_batch_id     String              @db.Uuid
+  row_number          Int?
+  record_reference    String?
 
-  @@index([viaId, distritoId])
-  @@index([numeroImparMin, numeroImparMax])
-  @@index([numeroParMin, numeroParMax])
-  @@index([viaId, distritoId, barrioId])
-  @@map("via_rangos_numeracion")
+  error_type          ImportErrorType
+  affected_field      String?
+  original_value      String?
+  error_message       String
+  severity            ErrorSeverity
+
+  // Context
+  row_data            Json?
+  correction_suggestion String?
+
+  import_batch        ImportBatch         @relation(fields: [import_batch_id], references: [id], onDelete: Cascade)
+
+  created_at          DateTime            @default(now())
+
+  @@index([import_batch_id])
+  @@index([error_type])
+  @@index([severity])
+  @@map("import_errors")
 }
 
-model Direccion {
-  id               Int      @id @default(autoincrement())
-  viaId            Int      @map("via_id")
-  distritoId       Int      @map("distrito_id")
-  barrioId         Int?     @map("barrio_id")
-  claseAplicacion  String?  @map("clase_aplicacion")
-  numero           Int?
-  calificador      String?
-  tipoPunto        String?  @map("tipo_punto")
-  codigoPunto      Int?     @map("codigo_punto")
-  codigoPostal     String?  @map("codigo_postal")
-  latitud          Float
-  longitud         Float
-  utmXEtrs         Float?   @map("utm_x_etrs")
-  utmYEtrs         Float?   @map("utm_y_etrs")
-  utmXEd           Float?   @map("utm_x_ed")
-  utmYEd           Float?   @map("utm_y_ed")
-  anguloRotulacion Float?   @map("angulo_rotulacion")
-  createdAt        DateTime @default(now()) @map("created_at")
-  barrio           Barrio?  @relation(fields: [barrioId], references: [id])
-  distrito         Distrito @relation(fields: [distritoId], references: [id])
-  via              Via      @relation(fields: [viaId], references: [id])
-
-  @@index([viaId, numero])
-  @@index([distritoId, barrioId])
-  @@index([codigoPostal])
-  @@index([latitud, longitud])
-  @@index([viaId, distritoId, numero, codigoPostal])
-  @@index([latitud, longitud], map: "idx_direcciones_spatial")
-  @@map("direcciones")
+enum ImportErrorType {
+  VALIDATION
+  FORMAT
+  DUPLICATE_DATA
+  MISSING_DATA
+  INVALID_DATA
+  RELATION_NOT_FOUND
+  INVALID_COORDINATES
+  ADDRESS_NOT_FOUND
+  SYSTEM_ERROR
 }
 
-model DeaCode {
-  id             Int        @id @default(autoincrement())
-  distrito       Int
-  codigoPostal   String     @map("codigo_postal")
-  secuencial     Int
-  codigoCompleto String     @unique @map("codigo_completo")
-  deaRecordId    Int?       @map("dea_record_id")
-  createdAt      DateTime   @default(now()) @map("created_at")
-  deaRecord      DeaRecord? @relation(fields: [deaRecordId], references: [id])
-
-  @@unique([distrito, secuencial])
-  @@index([distrito])
-  @@index([codigoCompleto])
-  @@map("dea_codes")
+enum ErrorSeverity {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
 }
 
-model DeaAddressValidation {
-  id                   Int       @id @default(autoincrement())
-  deaRecordId          Int       @unique @map("dea_record_id")
-  searchResults        Json      @default("[]") @map("search_results")
-  validationDetails    Json?     @map("validation_details")
-  overallStatus        String    @default("pending") @map("overall_status")
-  recommendedActions   Json      @default("[]") @map("recommended_actions")
-  processedAt          DateTime  @default(now()) @map("processed_at")
-  processingDurationMs Int?      @map("processing_duration_ms")
-  searchStrategiesUsed Json      @default("[]") @map("search_strategies_used")
-  validationVersion    String    @default("1.0") @map("validation_version")
-  needsReprocessing    Boolean   @default(true) @map("needs_reprocessing")
-  errorMessage         String?   @map("error_message")
-  retryCount           Int       @default(0) @map("retry_count")
-  detectedNeighborhoodName String? @map("detected_neighborhood_name")
-  createdAt            DateTime  @default(now()) @map("created_at")
-  updatedAt            DateTime  @updatedAt @map("updated_at")
-  deaRecord            DeaRecord @relation(fields: [deaRecordId], references: [id], onDelete: Cascade)
+// ============================================
+// LOCATION - Geographic information
+// ============================================
+model AedLocation {
+  id                      String                      @id @default(uuid()) @db.Uuid
 
-  @@index([overallStatus])
-  @@index([needsReprocessing])
-  @@index([processedAt])
-  @@index([validationVersion])
-  @@index([overallStatus, needsReprocessing])
-  @@map("dea_address_validations")
+  // Original address from form
+  street_type             String
+  street_name             String
+  street_number           String?
+  additional_info         String?
+  postal_code             String
+
+  // Original coordinates
+  latitude                Float
+  longitude               Float
+  coordinates_precision   String?
+
+  // Relationships with official address system
+  street_id               Int?
+  district_id             Int
+  neighborhood_id         Int?
+
+  // Access information
+  access_description      String?
+  visible_references      String?
+  floor                   String?
+  specific_location       String?
+
+  // Observations
+  location_observations   String?
+  access_warnings         String?
+
+  street                  Street?                     @relation(fields: [street_id], references: [id])
+  district                District                    @relation(fields: [district_id], references: [id])
+  neighborhood            Neighborhood?               @relation(fields: [neighborhood_id], references: [id])
+  aed                     Aed?
+  address_validation      AedAddressValidation?
+
+  created_at              DateTime                    @default(now())
+  updated_at              DateTime                    @updatedAt
+
+  @@index([district_id, neighborhood_id])
+  @@index([postal_code])
+  @@index([latitude, longitude], map: "idx_location_spatial")
+  @@index([street_id])
+  @@map("aed_locations")
+}
+
+// ============================================
+// SCHEDULE - Availability information
+// ============================================
+model AedSchedule {
+  id                      String    @id @default(uuid()) @db.Uuid
+  description             String?
+  has_24h_surveillance    Boolean   @default(false)
+  has_restricted_access   Boolean   @default(false)
+
+  // Structured schedules (HH:MM format)
+  weekday_opening         String?
+  weekday_closing         String?
+  saturday_opening        String?
+  saturday_closing        String?
+  sunday_opening          String?
+  sunday_closing          String?
+
+  // Special days
+  holidays_as_weekday     Boolean   @default(false)
+  closed_on_holidays      Boolean   @default(false)
+  closed_in_august        Boolean   @default(false)
+
+  // Observations
+  observations            String?
+  schedule_exceptions     String?
+  access_instructions     String?
+
+  aed                     Aed?
+
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @updatedAt
+
+  @@index([has_24h_surveillance])
+  @@map("aed_schedules")
+}
+
+// ============================================
+// RESPONSIBLE - Contact information
+// ============================================
+model AedResponsible {
+  id                String    @id @default(uuid()) @db.Uuid
+  name              String
+  email             String    @unique
+  phone             String?
+  alternative_phone String?
+  ownership         String
+  local_ownership   String
+  local_use         String
+
+  // Additional info
+  organization      String?
+  position          String?
+  department        String?
+
+  // Observations
+  observations      String?
+  contact_notes     String?
+
+  aeds              Aed[]
+
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  @@index([email])
+  @@index([organization])
+  @@map("aed_responsibles")
+}
+
+// ============================================
+// IMAGES - Image management
+// ============================================
+model AedImage {
+  id                  String            @id @default(uuid()) @db.Uuid
+  aed_id              String            @db.Uuid
+  type                AedImageType
+  order               Int               @default(1)
+
+  // URLs
+  original_url        String
+  processed_url       String?
+  thumbnail_url       String?
+
+  // Metadata
+  width               Int?
+  height              Int?
+  size_bytes          Int?
+  format              String?
+  file_hash           String?
+
+  // Verification status
+  is_verified         Boolean           @default(false)
+  verified_at         DateTime?
+  verified_by         String?
+  rejection_reason    String?
+
+  aed                 Aed               @relation(fields: [aed_id], references: [id], onDelete: Cascade)
+  markers             ImageMarker[]
+
+  created_at          DateTime          @default(now())
+
+  @@index([aed_id, type, order])
+  @@index([is_verified])
+  @@index([file_hash])
+  @@map("aed_images")
+}
+
+enum AedImageType {
+  FRONT
+  LOCATION
+  ACCESS
+  SIGNAGE
+  CONTEXT
+  PLATE
+}
+
+model ImageMarker {
+  id          String      @id @default(uuid()) @db.Uuid
+  image_id    String      @db.Uuid
+  type        String
+
+  // Normalized coordinates (0-1)
+  start_x     Float
+  start_y     Float
+  end_x       Float?
+  end_y       Float?
+
+  // Style
+  color       String      @default("#dc2626")
+  thickness   Int         @default(40)
+  text        String?
+
+  image       AedImage    @relation(fields: [image_id], references: [id], onDelete: Cascade)
+  created_at  DateTime    @default(now())
+
+  @@index([image_id])
+  @@map("image_markers")
+}
+
+// ============================================
+// VALIDATIONS - Verification system
+// ============================================
+model AedValidation {
+  id                  String              @id @default(uuid()) @db.Uuid
+  aed_id              String              @db.Uuid
+  type                ValidationType
+  status              ValidationStatus    @default(PENDING)
+
+  // Process
+  started_at          DateTime            @default(now())
+  completed_at        DateTime?
+  verified_by         String?
+
+  // Validation specific data
+  data                Json?
+  result              Json?
+  errors              Json?
+
+  // Metrics
+  duration_ms         Int?
+  attempts            Int                 @default(1)
+
+  aed                 Aed                 @relation(fields: [aed_id], references: [id], onDelete: Cascade)
+  sessions            ValidationSession[]
+
+  created_at          DateTime            @default(now())
+  updated_at          DateTime            @updatedAt
+
+  @@index([aed_id, type])
+  @@index([status, started_at])
+  @@index([completed_at])
+  @@index([type, status])
+  @@map("aed_validations")
+}
+
+enum ValidationType {
+  IMAGES
+  ADDRESS
+  SCHEDULE
+  AVAILABILITY
+  DUPLICATE
+  MANUAL
+}
+
+enum ValidationStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+  REQUIRES_REVIEW
+  ERROR
+}
+
+model ValidationSession {
+  id                String            @id @default(uuid()) @db.Uuid
+  validation_id     String            @db.Uuid
+  step              String
+  step_data         Json?
+  is_completed      Boolean           @default(false)
+
+  validation        AedValidation     @relation(fields: [validation_id], references: [id], onDelete: Cascade)
+
+  created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
+
+  @@index([validation_id, step])
+  @@map("validation_sessions")
+}
+
+// ============================================
+// ADDRESS VALIDATION - Specific information
+// ============================================
+model AedAddressValidation {
+  id                        String          @id @default(uuid()) @db.Uuid
+  location_id               String          @unique @db.Uuid
+
+  // Search results
+  address_found             Boolean         @default(false)
+  match_level               Float?
+  distance_meters           Float?
+  match_type                String?
+
+  // Corrected coordinates (if applicable)
+  suggested_latitude        Float?
+  suggested_longitude       Float?
+
+  // Official address found
+  official_street_id        Int?
+  official_number           String?
+  official_postal_code      String?
+  official_district_id      Int?
+  official_neighborhood_id  Int?
+
+  // Suggested addresses
+  suggestions               Json            @default("[]")
+
+  // Diagnosis
+  detected_problems         Json            @default("[]")
+  recommended_actions       Json            @default("[]")
+  result_confidence         Float?
+
+  // Process metadata
+  strategies_used           Json            @default("[]")
+  duration_ms               Int?
+  api_calls_made            Int             @default(0)
+
+  location                  AedLocation     @relation(fields: [location_id], references: [id], onDelete: Cascade)
+
+  processed_at              DateTime        @default(now())
+
+  @@index([address_found])
+  @@index([match_level])
+  @@index([match_type])
+  @@map("aed_address_validations")
+}
+
+// ============================================
+// AED CODES - Management and history
+// ============================================
+model AedCodeHistory {
+  id                String    @id @default(uuid()) @db.Uuid
+  aed_id            String    @db.Uuid
+  code              String    @unique
+  district          Int
+  sequential        Int
+
+  // Status
+  is_active         Boolean   @default(true)
+  change_reason     String?
+  changed_by        String?
+
+  assigned_at       DateTime  @default(now())
+  deactivated_at    DateTime?
+
+  aed               Aed       @relation(fields: [aed_id], references: [id], onDelete: Cascade)
+
+  @@unique([district, sequential, is_active])
+  @@index([aed_id, is_active])
+  @@index([code])
+  @@index([is_active])
+  @@map("aed_code_history")
+}
+
+// ============================================
+// ADDRESS SYSTEM - Official data (integers)
+// ============================================
+
+model District {
+  id                  Int                     @id @default(autoincrement())
+  district_code       Int                     @unique
+  text_code           String
+  name                String
+  normalized_name     String
+  shape_length        Float?
+  shape_area          Float?
+  effective_date      DateTime?
+  end_date            DateTime?
+  observations        String?
+  created_at          DateTime                @default(now())
+
+  neighborhoods       Neighborhood[]
+  addresses           Address[]
+  street_ranges       StreetNumberRange[]
+  aed_locations       AedLocation[]
+
+  @@index([district_code])
+  @@index([normalized_name])
+  @@map("districts")
+}
+
+model Neighborhood {
+  id                      Int                     @id @default(autoincrement())
+  district_id             Int
+  neighborhood_code       Int
+  district_neighborhood_code Int                  @unique
+  neighborhood_number     Int
+  name                    String
+  normalized_name         String
+  uppercase_name          String
+  shape_length            Float?
+  shape_area              Float?
+  effective_date          DateTime?
+  end_date                DateTime?
+  created_at              DateTime                @default(now())
+
+  district                District                @relation(fields: [district_id], references: [id], onDelete: Cascade)
+  addresses               Address[]
+  street_ranges           StreetNumberRange[]
+  aed_locations           AedLocation[]
+
+  @@index([district_id, neighborhood_code])
+  @@index([normalized_name])
+  @@map("neighborhoods")
+}
+
+model Street {
+  id                  Int                     @id @default(autoincrement())
+  street_code         Int                     @unique
+  street_class        String
+  particle            String?
+  name                String
+  name_with_accents   String
+  normalized_name     String
+  start_street_code   Int?
+  start_class         String?
+  start_particle      String?
+  start_name          String?
+  end_street_code     Int?
+  end_class           String?
+  end_particle        String?
+  end_name            String?
+  created_at          DateTime                @default(now())
+
+  addresses           Address[]
+  number_ranges       StreetNumberRange[]
+  aed_locations       AedLocation[]
+
+  @@index([street_code])
+  @@index([street_class])
+  @@index([normalized_name])
+  @@index([start_street_code])
+  @@index([end_street_code])
+  @@map("streets")
+}
+
+model StreetNumberRange {
+  id                Int           @id @default(autoincrement())
+  street_id         Int
+  district_id       Int
+  neighborhood_id   Int?
+  odd_min           Int?
+  odd_max           Int?
+  even_min          Int?
+  even_max          Int?
+  created_at        DateTime      @default(now())
+
+  neighborhood      Neighborhood? @relation(fields: [neighborhood_id], references: [id])
+  district          District      @relation(fields: [district_id], references: [id])
+  street            Street        @relation(fields: [street_id], references: [id], onDelete: Cascade)
+
+  @@index([street_id, district_id])
+  @@index([odd_min, odd_max])
+  @@index([even_min, even_max])
+  @@index([street_id, district_id, neighborhood_id])
+  @@map("street_number_ranges")
+}
+
+model Address {
+  id                  Int           @id @default(autoincrement())
+  street_id           Int
+  district_id         Int
+  neighborhood_id     Int?
+  application_class   String?
+  number              Int?
+  qualifier           String?
+  point_type          String?
+  point_code          Int?
+  postal_code         String?
+  latitude            Float
+  longitude           Float
+  utm_x_etrs          Float?
+  utm_y_etrs          Float?
+  utm_x_ed            Float?
+  utm_y_ed            Float?
+  label_angle         Float?
+  created_at          DateTime      @default(now())
+
+  neighborhood        Neighborhood? @relation(fields: [neighborhood_id], references: [id])
+  district            District      @relation(fields: [district_id], references: [id])
+  street              Street        @relation(fields: [street_id], references: [id])
+
+  @@index([street_id, number])
+  @@index([district_id, neighborhood_id])
+  @@index([postal_code])
+  @@index([latitude, longitude])
+  @@index([street_id, district_id, number, postal_code])
+  @@index([latitude, longitude], map: "idx_addresses_spatial")
+  @@map("addresses")
+}
+
+// ============================================
+// AUDIT AND LOGS
+// ============================================
+
+model AuditLog {
+  id              String    @id @default(uuid()) @db.Uuid
+  table_name      String
+  record_id       String
+  action          String
+  user_id         String?
+  ip_address      String?
+  user_agent      String?
+
+  // Change data
+  data_before     Json?
+  data_after      Json?
+  changed_fields  String[]
+
+  created_at      DateTime  @default(now())
+
+  @@index([table_name, record_id])
+  @@index([user_id])
+  @@index([created_at])
+  @@index([action])
+  @@map("audit_logs")
+}
+
+// ============================================
+// METRICS AND MONITORING
+// ============================================
+
+model SystemMetric {
+  id              String    @id @default(uuid()) @db.Uuid
+  metric_name     String
+  metric_value    Float
+  metric_context  Json?
+  tags            String[]  @default([])
+
+  recorded_at     DateTime  @default(now())
+
+  @@index([metric_name, recorded_at])
+  @@index([recorded_at])
+  @@map("system_metrics")
 }
