@@ -2,6 +2,9 @@
   "name": "dea-madrid-webapp",
   "version": "0.1.0",
   "private": true,
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "node scripts/migrate.js && next build",
