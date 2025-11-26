@@ -2,7 +2,7 @@
  * Hook to fetch and manage AEDs
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Aed, AedsResponse, AedFilters } from '@/types/aed';
 
 export function useAeds(filters: AedFilters = {}) {
@@ -16,11 +16,7 @@ export function useAeds(filters: AedFilters = {}) {
     totalPages: 0,
   });
 
-  useEffect(() => {
-    fetchAeds();
-  }, [filters.page, filters.limit, filters.search]);
-
-  const fetchAeds = async () => {
+  const fetchAeds = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -51,11 +47,11 @@ export function useAeds(filters: AedFilters = {}) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters.page, filters.limit, filters.search]);
 
-  const refetch = () => {
+  useEffect(() => {
     fetchAeds();
-  };
+  }, [fetchAeds]);
 
   return {
     aeds,
