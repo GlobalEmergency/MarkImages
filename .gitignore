@@ -36,8 +36,13 @@ scripts/*test*
 scripts/check-*
 
 # env files (can opt-in for committing if needed)
-.env.*
 .env
+.env.local
+.env.development
+.env.test
+.env.production
+# But allow .env.example to be committed
+!.env.example
 
 # vercel
 .vercel
