@@ -58,6 +58,6 @@ export function useAeds(filters: AedFilters = {}) {
     loading,
     error,
     pagination,
-    refetch,
+    refetch: fetchAeds,
   };
 }
