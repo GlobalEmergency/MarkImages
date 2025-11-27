@@ -9,9 +9,11 @@ import {
   MapPin,
   Navigation,
   Phone,
+  Plus,
   Search,
 } from "lucide-react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useState } from "react";
 
 import AedDetailModal from "@/components/AedDetailModal";
@@ -175,6 +177,17 @@ export default function Home() {
                 style={{ minHeight: "48px" }}
               />
             </div>
+
+            {/* Add DEA Button */}
+            <Link href="/dea/new">
+              <button
+                className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 whitespace-nowrap"
+                style={{ minHeight: "48px" }}
+              >
+                <Plus className="w-5 h-5" />
+                <span>Agregar DEA</span>
+              </button>
+            </Link>
 
             {/* View Toggle */}
             <div
