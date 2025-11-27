@@ -32,8 +32,8 @@ interface CreateAedRequest {
     street_number?: string;
     additional_info?: string;
     postal_code: string;
-    district_id: string;
-    neighborhood_id?: string;
+    district_id: number;
+    neighborhood_id?: number;
     access_description?: string;
     visible_references?: string;
     floor?: string;

@@ -123,7 +123,7 @@ export default function NewDeaPage() {
           street_number: formData.location_street_number || undefined,
           additional_info: formData.location_additional_info || undefined,
           postal_code: formData.location_postal_code,
-          district_id: formData.location_district_id,
+          district_id: parseInt(formData.location_district_id),
           access_description: formData.location_access_description || undefined,
           visible_references: formData.location_visible_references || undefined,
           floor: formData.location_floor || undefined,
