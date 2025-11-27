@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { Search, Filter, MapPin, Clock, Users } from 'lucide-react'
-import type { Aed } from '@/types/aed'
-import { useAeds } from '@/hooks/useAeds'
 import Link from 'next/link'
+import { useState, useMemo, useEffect } from 'react'
+
+import { Search, Filter, MapPin, Clock, Users } from 'lucide-react'
+
+import { useAeds } from '@/hooks/useAeds'
+import type { Aed } from '@/types/aed'
 
 // Dynamic import to avoid SSR issues with Leaflet
 const MapView = dynamic(() => import('@/components/MapView'), {
@@ -18,7 +20,7 @@ export default function MapPage() {
   const [show24h, setShow24h] = useState(false)
   const [showPublicAccess, setShowPublicAccess] = useState(false)
   const [selectedAed, setSelectedAed] = useState<Aed | null>(null)
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
+  const [_userLocation, setUserLocation] = useState<[number, number] | null>(null)
 
   const { aeds, loading, error } = useAeds({
     page: 1,
