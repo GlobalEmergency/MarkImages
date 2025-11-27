@@ -418,6 +418,6 @@ function AedCard({ aed, onClick }: { aed: Aed; onClick: () => void }) {
           </p>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
