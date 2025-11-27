@@ -1,24 +1,20 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import Link from 'next/link'
-import { Activity, CheckSquare, Home } from 'lucide-react'
-import './globals.css'
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Activity, CheckSquare, Home } from "lucide-react";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import Link from "next/link";
 
-import { Analytics } from "@vercel/analytics/next"
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import "./globals.css";
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'DEA Madrid - Gestión de Desfibriladores',
-  description: 'Sistema de gestión y verificación de desfibriladores en Madrid',
-}
+  title: "DEA Madrid - Gestión de Desfibriladores",
+  description: "Sistema de gestión y verificación de desfibriladores en Madrid",
+};
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
       <head>
@@ -58,5 +54,5 @@ export default function RootLayout({
         <Analytics />
       </body>
     </html>
-  )
+  );
 }

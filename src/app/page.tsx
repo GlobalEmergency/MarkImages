@@ -1,230 +1,187 @@
-'use client'
+"use client";
 
-import { useState, useCallback, useMemo } from 'react'
-import { Activity } from 'lucide-react'
-import type { DeaRecord } from '@/types'
-import { filterRecords, getUniqueTypes } from '@/utils/helpers'
-import DeaCard from '@/components/DeaCard'
-import DeaModal from '@/components/DeaModal'
-import DeaFormModal from '@/components/DeaFormModal'
-import SearchFilters from '@/components/SearchFilters'
-import StatsDashboard from '@/components/StatsDashboard'
-import HeroHeader from '@/components/HeroHeader'
-import LoadingScreen from '@/components/LoadingScreen'
-import useDeaRecords from '@/hooks/useDeaRecords'
+import { Activity, MapPin, Clock, Phone } from "lucide-react";
+import { useState } from "react";
+
+import { useAeds } from "@/hooks/useAeds";
+import type { Aed } from "@/types/aed";
 
 export default function Home() {
-    const {
-        records,
-        loading,
-        loadingMore,
-        error,
-        hasMore,
-        totalRecords,
-        loadMore,
-        refreshRecords,
-        createRecord,
-        updateRecord,
-        deleteRecord
-    } = useDeaRecords()
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const { aeds, loading, error, pagination, refetch } = useAeds({
+    page,
+    limit: 50,
+    search,
+  });
 
-    const [selectedRecord, setSelectedRecord] = useState<DeaRecord | null>(null)
-    const [modalOpen, setModalOpen] = useState(false)
-    const [formModalOpen, setFormModalOpen] = useState(false)
-    const [editingRecord, setEditingRecord] = useState<DeaRecord | null>(null)
-    const [searchTerm, setSearchTerm] = useState('')
-    const [filterType, setFilterType] = useState('')
-
-    // Memoize derived values to prevent unnecessary recalculations
-    const filteredRecords = useMemo(() =>
-        filterRecords(records, searchTerm, filterType),
-        [records, searchTerm, filterType]
-    )
-
-    const uniqueTypes = useMemo(() =>
-        getUniqueTypes(records),
-        [records]
-    )
-
-    /**
-     * Opens the modal with the selected record for viewing
-     */
-    const handleOpenRecordModal = useCallback((record: DeaRecord) => {
-        setSelectedRecord(record)
-        setModalOpen(true)
-    }, [])
-
-    /**
-     * Opens the form modal for editing a record
-     */
-    const handleEditRecord = useCallback((record: DeaRecord) => {
-        setEditingRecord(record)
-        setFormModalOpen(true)
-    }, [])
-
-    /**
-     * Opens the form modal for creating a new record
-     */
-    const handleCreateRecord = useCallback(() => {
-        setEditingRecord(null)
-        setFormModalOpen(true)
-    }, [])
-
-    /**
-     * Handles record deletion with confirmation
-     */
-    const handleDelete = useCallback(async (id: number) => {
-        if (window.confirm('¿Está seguro de que desea eliminar este registro?')) {
-            try {
-                await deleteRecord(id)
-                refreshRecords()
-            } catch (error) {
-                console.error('Error al eliminar el registro:', error)
-            }
-        }
-    }, [deleteRecord, refreshRecords])
-
-    /**
-     * Closes the view modal and resets the selected record
-     */
-    const handleCloseModal = useCallback(() => {
-        setSelectedRecord(null)
-        setModalOpen(false)
-    }, [])
-
-    /**
-     * Closes the form modal and resets the editing record
-     */
-    const handleCloseFormModal = useCallback(() => {
-        setEditingRecord(null)
-        setFormModalOpen(false)
-    }, [])
-
-    /**
-     * Saves a record (create or update) and refreshes the list
-     */
-    const handleSaveRecord = useCallback(async (record: Omit<DeaRecord, 'id' | 'createdAt' | 'updatedAt'>) => {
-        try {
-            if (editingRecord?.id) {
-                await updateRecord(editingRecord.id, record as DeaRecord)
-            } else {
-                await createRecord(record as DeaRecord)
-            }
-            refreshRecords()
-            handleCloseFormModal()
-        } catch (error) {
-            console.error('Error al guardar el registro:', error)
-        }
-    }, [editingRecord, createRecord, updateRecord, refreshRecords, handleCloseFormModal])
-
-    if (loading) return <LoadingScreen />
-
-    if (error) return (
-        <div className="flex items-center justify-center h-screen">
-            <div className="text-center">
-                <h2 className="text-2xl font-bold text-red-600 mb-2">Error de carga</h2>
-                <p className="text-gray-700">No pudimos cargar los datos. Por favor, inténtelo de nuevo.</p>
-                <button
-                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    onClick={refreshRecords}
-                >
-                    Reintentar
-                </button>
-            </div>
-        </div>
-    )
-
+  if (loading && aeds.length === 0) {
     return (
-        <main className="min-h-screen w-full max-w-full bg-gradient-to-br from-blue-50 to-indigo-100">
-            <HeroHeader />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Activity className="w-12 h-12 animate-spin mx-auto text-red-600 mb-4" />
+          <p className="text-gray-600">Cargando DEAs...</p>
+        </div>
+      </div>
+    );
+  }
 
-            <div className="container mx-auto px-4 sm:px-6 py-6">
-                <StatsDashboard records={records} />
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={refetch}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-                <SearchFilters
-                    searchTerm={searchTerm}
-                    onSearchChange={setSearchTerm}
-                    filterType={filterType}
-                    onFilterChange={setFilterType}
-                    uniqueTypes={uniqueTypes}
-                />
-
-                <div className="mt-8 pb-16">
-                    <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
-                        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-0">
-                            {filteredRecords.length} DEAs encontrados
-                        </h2>
-                        <button
-                            onClick={handleCreateRecord}
-                            className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                        >
-                            <Activity className="w-4 h-4 mr-2" />
-                            <span>Añadir nuevo DEA</span>
-                        </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                        {filteredRecords.map(record => (
-                            <DeaCard
-                                key={record.id}
-                                record={record}
-                                onEdit={() => handleEditRecord(record)}
-                                onDelete={() => handleDelete(record.id)}
-                                onView={() => handleOpenRecordModal(record)}
-                            />
-                        ))}
-
-                        {filteredRecords.length === 0 && (
-                            <div className="col-span-full text-center py-12 bg-white bg-opacity-70 rounded-xl shadow-md">
-                                <p className="text-xl text-gray-600">No se encontraron registros con los criterios especificados.</p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Load More Button and Info */}
-                    {!searchTerm && !filterType && (
-                        <div className="mt-8 flex flex-col items-center gap-4">
-                            <div className="text-center text-sm text-gray-600">
-                                Mostrando {records.length} de {totalRecords} registros
-                            </div>
-                            
-                            {hasMore && (
-                                <button
-                                    onClick={loadMore}
-                                    disabled={loadingMore}
-                                    className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                >
-                                    {loadingMore ? (
-                                        <>
-                                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                            Cargando...
-                                        </>
-                                    ) : (
-                                        'Cargar más registros'
-                                    )}
-                                </button>
-                            )}
-                        </div>
-                    )}
-                </div>
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-red-600 text-white shadow-lg">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Activity className="w-10 h-10" />
+              <div>
+                <h1 className="text-3xl font-bold">Desfibriladores Madrid</h1>
+                <p className="text-red-100">{pagination.total} DEAs registrados</p>
+              </div>
             </div>
+          </div>
+        </div>
+      </header>
 
-            <DeaModal
-                record={selectedRecord}
-                isOpen={modalOpen}
-                onClose={handleCloseModal}
-                onSave={handleSaveRecord}
-            />
+      {/* Search Bar */}
+      <div className="bg-white shadow">
+        <div className="container mx-auto px-4 py-4">
+          <input
+            type="text"
+            placeholder="Buscar por nombre o código..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+          />
+        </div>
+      </div>
 
-            <DeaFormModal
-                record={editingRecord}
-                isOpen={formModalOpen}
-                onClose={handleCloseFormModal}
-                onSave={handleSaveRecord}
-            />
-        </main>
-    )
+      {/* Content */}
+      <main className="container mx-auto px-4 py-8">
+        {/* AED List */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {aeds.map((aed) => (
+            <AedCard key={aed.id} aed={aed} />
+          ))}
+        </div>
+
+        {aeds.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-600">No se encontraron DEAs</p>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {pagination.totalPages > 1 && (
+          <div className="mt-8 flex justify-center space-x-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-4 py-2 bg-white border rounded disabled:opacity-50"
+            >
+              Anterior
+            </button>
+            <span className="px-4 py-2">
+              Página {page} de {pagination.totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+              disabled={page === pagination.totalPages}
+              className="px-4 py-2 bg-white border rounded disabled:opacity-50"
+            >
+              Siguiente
+            </button>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+/**
+ * AED Card Component
+ */
+function AedCard({ aed }: { aed: Aed }) {
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h3 className="text-lg font-bold text-gray-900">{aed.name}</h3>
+          <p className="text-sm text-gray-500">{aed.code}</p>
+        </div>
+        <Activity className="w-6 h-6 text-red-600" />
+      </div>
+
+      {/* Type */}
+      <div className="mb-4">
+        <span className="inline-block px-3 py-1 bg-red-100 text-red-800 text-sm rounded-full">
+          {aed.establishment_type}
+        </span>
+      </div>
+
+      {/* Location */}
+      <div className="space-y-2 text-sm text-gray-600">
+        <div className="flex items-start space-x-2">
+          <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <div>
+            <p>
+              {aed.location.street_type} {aed.location.street_name} {aed.location.street_number}
+            </p>
+            <p>
+              {aed.location.postal_code} - {aed.location.district.name}
+            </p>
+          </div>
+        </div>
+
+        {/* Schedule */}
+        {aed.schedule && (
+          <div className="flex items-center space-x-2">
+            <Clock className="w-4 h-4 flex-shrink-0" />
+            <p>
+              {aed.schedule.has_24h_surveillance
+                ? "24h"
+                : aed.schedule.weekday_opening && aed.schedule.weekday_closing
+                  ? `${aed.schedule.weekday_opening} - ${aed.schedule.weekday_closing}`
+                  : "Horario no especificado"}
+            </p>
+          </div>
+        )}
+
+        {/* Contact */}
+        {aed.responsible.phone && (
+          <div className="flex items-center space-x-2">
+            <Phone className="w-4 h-4 flex-shrink-0" />
+            <p>{aed.responsible.phone}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Coordinates */}
+      <div className="mt-4 pt-4 border-t text-xs text-gray-400">
+        <p>
+          Coordenadas: {aed.latitude.toFixed(6)}, {aed.longitude.toFixed(6)}
+        </p>
+      </div>
+    </div>
+  );
 }
