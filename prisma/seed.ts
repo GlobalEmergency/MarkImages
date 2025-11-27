@@ -202,7 +202,7 @@ async function main() {
   await prisma.aedCodeHistory.create({
     data: {
       aed_id: aed1.id,
-      code: aed1.code,
+      code: aed1.code!,
       district: 12,
       sequential: 1,
       is_active: true,
@@ -213,7 +213,7 @@ async function main() {
   await prisma.aedCodeHistory.create({
     data: {
       aed_id: aed2.id,
-      code: aed2.code,
+      code: aed2.code!,
       district: 12,
       sequential: 2,
       is_active: true,
