@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useRef } from 'react';
 import { Upload, X, Loader2 } from 'lucide-react';
+import { useState, useRef } from 'react';
+
 import { useImageUpload } from '@/hooks/useImageUpload';
 
 interface ImageUploadProps {

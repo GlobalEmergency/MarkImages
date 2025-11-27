@@ -1,9 +1,9 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Aed, AedLocation, AedImage, AedResponsible, AedValidation, District, Neighborhood, Street } from '@prisma/client';
-import { Loader2 } from 'lucide-react';
 
 import AddressValidation from '@/components/verification/AddressValidation';
 import ArrowPlacer from '@/components/verification/ArrowPlacer';

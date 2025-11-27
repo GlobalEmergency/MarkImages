@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
 import { CheckCircle, AlertTriangle, MapPin, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 
 interface AddressValidationProps {
   _aedId: string;

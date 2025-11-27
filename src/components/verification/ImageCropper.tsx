@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 
 import type { CropData } from '@/types/shared';
 
