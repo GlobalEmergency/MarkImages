@@ -14,14 +14,14 @@ datasource db {
 // ============================================
 model Aed {
   id                        String                   @id @default(uuid()) @db.Uuid
-  code                      String                   @unique
+  code                      String?                  @unique
   provisional_number        Int?
   name                      String
-  establishment_type        String
+  establishment_type        String?
 
   // ⭐ GEOSPATIAL - Denormalized for fast proximity searches
-  latitude                  Float
-  longitude                 Float
+  latitude                  Float?
+  longitude                 Float?
   coordinates_precision     String?
   geom                      Unsupported("geometry(Point, 4326)")?  // PostGIS point
 
@@ -47,11 +47,11 @@ model Aed {
 
   // Relationships
   location_id               String                   @unique @db.Uuid
-  responsible_id            String                   @db.Uuid
+  responsible_id            String?                  @db.Uuid
   schedule_id               String?                  @unique @db.Uuid
 
   location                  AedLocation              @relation(fields: [location_id], references: [id])
-  responsible               AedResponsible           @relation(fields: [responsible_id], references: [id])
+  responsible               AedResponsible?          @relation(fields: [responsible_id], references: [id])
   schedule                  AedSchedule?             @relation(fields: [schedule_id], references: [id])
   import_batch              ImportBatch?             @relation(fields: [import_batch_id], references: [id])
   images                    AedImage[]
@@ -238,20 +238,20 @@ model AedLocation {
   id                      String                      @id @default(uuid()) @db.Uuid
 
   // Original address from form
-  street_type             String
-  street_name             String
+  street_type             String?
+  street_name             String?
   street_number           String?
   additional_info         String?
-  postal_code             String
+  postal_code             String?
 
   // Original coordinates
-  latitude                Float
-  longitude               Float
+  latitude                Float?
+  longitude               Float?
   coordinates_precision   String?
 
   // Relationships with official address system
   street_id               Int?
-  district_id             Int
+  district_id             Int?
   neighborhood_id         Int?
 
   // Access information
@@ -265,7 +265,7 @@ model AedLocation {
   access_warnings         String?
 
   street                  Street?                     @relation(fields: [street_id], references: [id])
-  district                District                    @relation(fields: [district_id], references: [id])
+  district                District?                   @relation(fields: [district_id], references: [id])
   neighborhood            Neighborhood?               @relation(fields: [neighborhood_id], references: [id])
   aed                     Aed?
   address_validation      AedAddressValidation?
@@ -322,12 +322,12 @@ model AedSchedule {
 model AedResponsible {
   id                String    @id @default(uuid()) @db.Uuid
   name              String
-  email             String    @unique
+  email             String?
   phone             String?
   alternative_phone String?
-  ownership         String
-  local_ownership   String
-  local_use         String
+  ownership         String?
+  local_ownership   String?
+  local_use         String?
 
   // Additional info
   organization      String?
@@ -343,7 +343,6 @@ model AedResponsible {
   created_at        DateTime  @default(now())
   updated_at        DateTime  @updatedAt
 
-  @@index([email])
   @@index([organization])
   @@map("aed_responsibles")
 }

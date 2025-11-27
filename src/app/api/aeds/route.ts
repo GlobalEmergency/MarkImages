@@ -13,26 +13,26 @@ const prisma = new PrismaClient();
  * Types for creating a new AED
  */
 interface CreateAedRequest {
-  // Basic AED data (required)
-  code: string;
+  // Basic AED data
+  code?: string;
   name: string;
-  establishment_type: string;
-  latitude: number;
-  longitude: number;
+  establishment_type?: string;
+  latitude?: number;
+  longitude?: number;
 
   // Optional AED data
   provisional_number?: number;
   source_details?: string;
   origin_observations?: string;
 
-  // Location data (required)
-  location: {
-    street_type: string;
-    street_name: string;
+  // Location data (optional)
+  location?: {
+    street_type?: string;
+    street_name?: string;
     street_number?: string;
     additional_info?: string;
-    postal_code: string;
-    district_id: number;
+    postal_code?: string;
+    district_id?: number;
     neighborhood_id?: number;
     access_description?: string;
     visible_references?: string;
@@ -42,15 +42,15 @@ interface CreateAedRequest {
     access_warnings?: string;
   };
 
-  // Responsible data (required)
-  responsible: {
-    name: string;
-    email: string;
+  // Responsible data (optional)
+  responsible?: {
+    name?: string;
+    email?: string;
     phone?: string;
     alternative_phone?: string;
-    ownership: string;
-    local_ownership: string;
-    local_use: string;
+    ownership?: string;
+    local_ownership?: string;
+    local_use?: string;
     organization?: string;
     position?: string;
     department?: string;
@@ -207,106 +207,42 @@ export async function POST(request: NextRequest) {
   try {
     const body: CreateAedRequest = await request.json();
 
-    // Validate required fields
-    if (!body.code || !body.name || !body.establishment_type) {
+    // Validate only name is required
+    if (!body.name) {
       return NextResponse.json(
         {
           success: false,
-          error: "Missing required AED fields",
-          message: "code, name, and establishment_type are required",
+          error: "Missing required field",
+          message: "name is required",
         },
         { status: 400 }
       );
     }
 
-    if (!body.latitude || !body.longitude) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Missing required coordinates",
-          message: "latitude and longitude are required",
-        },
-        { status: 400 }
-      );
+    // Check if code already exists (only if code is provided)
+    if (body.code) {
+      const existingAed = await prisma.aed.findUnique({
+        where: { code: body.code },
+      });
+
+      if (existingAed) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Code already exists",
+            message: `An AED with code ${body.code} already exists`,
+          },
+          { status: 409 }
+        );
+      }
     }
 
-    if (!body.location) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Missing location data",
-          message: "location is required",
-        },
-        { status: 400 }
-      );
-    }
-
-    if (!body.responsible) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Missing responsible data",
-          message: "responsible is required",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Validate responsible required fields
-    if (!body.responsible.name || !body.responsible.email || !body.responsible.ownership || !body.responsible.local_ownership || !body.responsible.local_use) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Missing required responsible fields",
-          message: "name, email, ownership, local_ownership, and local_use are required for responsible",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Validate location required fields
-    if (!body.location.street_type || !body.location.street_name || !body.location.postal_code || !body.location.district_id) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Missing required location fields",
-          message: "street_type, street_name, postal_code, and district_id are required for location",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Check if code already exists
-    const existingAed = await prisma.aed.findUnique({
-      where: { code: body.code },
-    });
-
-    if (existingAed) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Code already exists",
-          message: `An AED with code ${body.code} already exists`,
-        },
-        { status: 409 }
-      );
-    }
-
-    // Check if email already exists for responsible
-    const existingResponsible = await prisma.aedResponsible.findUnique({
-      where: { email: body.responsible.email },
-    });
-
-    let responsibleId: string;
-
-    if (existingResponsible) {
-      // Reuse existing responsible
-      responsibleId = existingResponsible.id;
-    } else {
-      // Create new responsible
+    // Create responsible only if data is provided
+    let responsibleId: string | undefined;
+    if (body.responsible && body.responsible.name) {
       const newResponsible = await prisma.aedResponsible.create({
         data: {
-          name: body.responsible.name,
+          name: body.responsible.name || "",
           email: body.responsible.email,
           phone: body.responsible.phone,
           alternative_phone: body.responsible.alternative_phone,
@@ -322,25 +258,25 @@ export async function POST(request: NextRequest) {
       responsibleId = newResponsible.id;
     }
 
-    // Create location
+    // Create location (optional fields)
     const location = await prisma.aedLocation.create({
       data: {
-        street_type: body.location.street_type,
-        street_name: body.location.street_name,
-        street_number: body.location.street_number,
-        additional_info: body.location.additional_info,
-        postal_code: body.location.postal_code,
+        street_type: body.location?.street_type,
+        street_name: body.location?.street_name,
+        street_number: body.location?.street_number,
+        additional_info: body.location?.additional_info,
+        postal_code: body.location?.postal_code,
         latitude: body.latitude,
         longitude: body.longitude,
-        coordinates_precision: "medium",
-        district_id: body.location.district_id,
-        neighborhood_id: body.location.neighborhood_id,
-        access_description: body.location.access_description,
-        visible_references: body.location.visible_references,
-        floor: body.location.floor,
-        specific_location: body.location.specific_location,
-        location_observations: body.location.location_observations,
-        access_warnings: body.location.access_warnings,
+        coordinates_precision: body.latitude && body.longitude ? "medium" : undefined,
+        district_id: body.location?.district_id,
+        neighborhood_id: body.location?.neighborhood_id,
+        access_description: body.location?.access_description,
+        visible_references: body.location?.visible_references,
+        floor: body.location?.floor,
+        specific_location: body.location?.specific_location,
+        location_observations: body.location?.location_observations,
+        access_warnings: body.location?.access_warnings,
       },
     });
 
@@ -385,7 +321,7 @@ export async function POST(request: NextRequest) {
         location_id: location.id,
         responsible_id: responsibleId,
         schedule_id: scheduleId,
-        coordinates_precision: "medium",
+        coordinates_precision: body.latitude && body.longitude ? "medium" : undefined,
       },
       include: {
         location: {
