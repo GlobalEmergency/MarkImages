@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Building2, User, Mail, Phone, Loader2, CheckCircle } from 'lucide-react';
 
 interface ResponsibleFormProps {
-  aedId: string;
+  _aedId: string;
   currentResponsible?: {
     id?: string;
     name?: string;
@@ -37,7 +37,7 @@ interface ResponsibleData {
 }
 
 export default function ResponsibleForm({
-  aedId,
+  _aedId,
   currentResponsible,
   onAssignmentComplete
 }: ResponsibleFormProps) {

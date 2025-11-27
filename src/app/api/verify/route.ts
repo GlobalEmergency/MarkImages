@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { requireAuth } from '@/lib/auth';
-import { db } from '@/lib/db';
+import { prisma } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     // Get AEDs that are pending verification (DRAFT or PENDING_REVIEW status)
     const [aeds, totalCount] = await Promise.all([
-      db.aed.findMany({
+      prisma.aed.findMany({
         where: {
           status: {
             in: ['DRAFT', 'PENDING_REVIEW']
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
         skip,
         take: limit
       }),
-      db.aed.count({
+      prisma.aed.count({
         where: {
           status: {
             in: ['DRAFT', 'PENDING_REVIEW']

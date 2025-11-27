@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
+
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AedForVerification {
   id: string;

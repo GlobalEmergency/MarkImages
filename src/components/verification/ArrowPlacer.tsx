@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+
 import type { ArrowData } from '@/types/shared';
 import { ARROW_CONFIG } from '@/utils/arrowConstants';
 

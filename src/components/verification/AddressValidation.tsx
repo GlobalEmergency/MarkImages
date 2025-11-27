@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { CheckCircle, AlertTriangle, MapPin, Loader2 } from 'lucide-react';
 
 interface AddressValidationProps {
-  aedId: string;
+  _aedId: string;
   currentAddress?: {
     street_type?: string;
     street_name?: string;
@@ -28,7 +28,7 @@ interface AddressData {
 }
 
 export default function AddressValidation({
-  aedId,
+  _aedId,
   currentAddress,
   onValidationComplete
 }: AddressValidationProps) {

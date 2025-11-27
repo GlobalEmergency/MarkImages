@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { requireAuth } from '@/lib/auth';
-import { db } from '@/lib/db';
+import { prisma } from '@/lib/db';
 import { VerificationStep } from '@/types/verification';
 
 export async function GET(
@@ -19,7 +20,7 @@ export async function GET(
     const { id } = await params;
 
     // Get the AED with all necessary data
-    const aed = await db.aed.findUnique({
+    const aed = await prisma.aed.findUnique({
       where: { id },
       include: {
         location: {
@@ -60,7 +61,7 @@ export async function GET(
 
     if (!validation || validation.status === 'COMPLETED') {
       // Create a new validation session
-      validation = await db.aedValidation.create({
+      validation = await prisma.aedValidation.create({
         data: {
           aed_id: aed.id,
           type: 'IMAGES', // We'll use IMAGES type for the full verification
@@ -109,7 +110,7 @@ export async function PUT(
     const { step, data } = body;
 
     // Find the active validation
-    const validation = await db.aedValidation.findFirst({
+    const validation = await prisma.aedValidation.findFirst({
       where: {
         aed_id: id,
         status: 'IN_PROGRESS'
@@ -124,7 +125,7 @@ export async function PUT(
     }
 
     // Update the validation with new step and data
-    const updatedValidation = await db.aedValidation.update({
+    const updatedValidation = await prisma.aedValidation.update({
       where: { id: validation.id },
       data: {
         data: {
@@ -137,7 +138,7 @@ export async function PUT(
     });
 
     // Create a session record for this step
-    await db.validationSession.create({
+    await prisma.validationSession.create({
       data: {
         validation_id: validation.id,
         step,
@@ -172,7 +173,7 @@ export async function DELETE(
     const { id } = await params;
 
     // Find and delete the active validation
-    const validation = await db.aedValidation.findFirst({
+    const validation = await prisma.aedValidation.findFirst({
       where: {
         aed_id: id,
         status: 'IN_PROGRESS'
@@ -180,7 +181,7 @@ export async function DELETE(
     });
 
     if (validation) {
-      await db.aedValidation.delete({
+      await prisma.aedValidation.delete({
         where: { id: validation.id }
       });
     }

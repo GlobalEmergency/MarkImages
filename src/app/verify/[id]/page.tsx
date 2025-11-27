@@ -2,17 +2,18 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { Loader2 } from 'lucide-react';
-import { VerificationStep, VERIFICATION_STEPS_CONFIG } from '@/types/verification';
 import type { Aed, AedLocation, AedImage, AedResponsible, AedValidation, District, Neighborhood, Street } from '@prisma/client';
+import { Loader2 } from 'lucide-react';
+
 import AddressValidation from '@/components/verification/AddressValidation';
-import ResponsibleForm from '@/components/verification/ResponsibleForm';
-import ImagePairSelector, { ImageSelection } from '@/components/verification/ImagePairSelector';
-import ImageCropper from '@/components/verification/ImageCropper';
 import ArrowPlacer from '@/components/verification/ArrowPlacer';
-import type { AddressData, ResponsibleData } from '@/types/verification';
+import ImageCropper from '@/components/verification/ImageCropper';
+import ImagePairSelector, { ImageSelection } from '@/components/verification/ImagePairSelector';
+import ResponsibleForm from '@/components/verification/ResponsibleForm';
+import { useAuth } from '@/contexts/AuthContext';
 import type { CropData, ArrowData } from '@/types/shared';
+import type { AddressData, ResponsibleData } from '@/types/verification';
+import { VerificationStep, VERIFICATION_STEPS_CONFIG } from '@/types/verification';
 
 interface VerificationData {
   aed: Aed & {
@@ -220,9 +221,8 @@ export default function VerifyPage({ params }: VerifyPageProps) {
 
             <ImageCropper
               imageUrl={data.aed.images[0]?.original_url || ''}
-              onCropChange={(cropData: CropData) => {
+              onCropChange={(_cropData: CropData) => {
                 // Track crop changes
-                console.log('Crop data:', cropData);
               }}
               onCropComplete={async (cropData: CropData) => {
                 // TODO: Call API to process cropped image
@@ -269,8 +269,8 @@ export default function VerifyPage({ params }: VerifyPageProps) {
 
             <ImageCropper
               imageUrl={data.aed.images[1]?.original_url || ''}
-              onCropChange={(cropData: CropData) => {
-                console.log('Interior crop data:', cropData);
+              onCropChange={(_cropData: CropData) => {
+                // Track interior crop changes
               }}
               onCropComplete={async (cropData: CropData) => {
                 updateStep(VerificationStep.IMAGE_ARROW_INTERIOR, {

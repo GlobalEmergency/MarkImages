@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { loadImageWithRetry } from '@/utils/imageLoader';
+
 import ImageUpload from '@/components/ImageUpload';
+import { loadImageWithRetry } from '@/utils/imageLoader';
 
 interface ImagePairSelectorProps {
   image1Url?: string;

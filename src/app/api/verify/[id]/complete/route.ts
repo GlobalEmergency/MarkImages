@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { requireAuth } from '@/lib/auth';
-import { db } from '@/lib/db';
+import { prisma } from '@/lib/db';
 
 export async function POST(
   request: NextRequest,
@@ -18,7 +19,7 @@ export async function POST(
     const { id } = await params;
 
     // Find the active validation
-    const validation = await db.aedValidation.findFirst({
+    const validation = await prisma.aedValidation.findFirst({
       where: {
         aed_id: id,
         status: 'IN_PROGRESS'
@@ -33,7 +34,7 @@ export async function POST(
     }
 
     // Update validation status to COMPLETED
-    const updatedValidation = await db.aedValidation.update({
+    const updatedValidation = await prisma.aedValidation.update({
       where: { id: validation.id },
       data: {
         status: 'COMPLETED',
@@ -46,7 +47,7 @@ export async function POST(
     });
 
     // Update AED status to VERIFIED
-    await db.aed.update({
+    await prisma.aed.update({
       where: { id },
       data: {
         status: 'VERIFIED',
