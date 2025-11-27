@@ -1,7 +1,18 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+
+// Dynamic import to avoid SSR issues with Leaflet
+const LocationPickerMap = dynamic(() => import("@/components/LocationPickerMap"), {
+  ssr: false,
+  loading: () => (
+    <div style={{ height: "400px", display: "flex", alignItems: "center", justifyContent: "center", background: "#f5f5f5", borderRadius: "8px" }}>
+      <p style={{ color: "#666" }}>Cargando mapa...</p>
+    </div>
+  ),
+});
 
 interface District {
   id: string;
@@ -96,6 +107,14 @@ export default function NewDeaPage() {
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
+  };
+
+  const handleLocationChange = (lat: number, lng: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      latitude: lat.toString(),
+      longitude: lng.toString(),
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -303,6 +322,18 @@ export default function NewDeaPage() {
                 style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
               />
             </div>
+          </div>
+
+          {/* Interactive Map for Location Selection */}
+          <div style={{ marginBottom: "15px" }}>
+            <label style={{ display: "block", marginBottom: "10px", fontWeight: "500" }}>
+              Seleccionar ubicación en el mapa
+            </label>
+            <LocationPickerMap
+              latitude={formData.latitude ? parseFloat(formData.latitude) : 0}
+              longitude={formData.longitude ? parseFloat(formData.longitude) : 0}
+              onLocationChange={handleLocationChange}
+            />
           </div>
 
           <div style={{ marginBottom: "15px" }}>
