@@ -2,8 +2,9 @@
  * Hook to fetch and manage AEDs
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { Aed, AedsResponse, AedFilters } from '@/types/aed';
+import { useState, useEffect, useCallback } from "react";
+
+import { Aed, AedsResponse, AedFilters } from "@/types/aed";
 
 export function useAeds(filters: AedFilters = {}) {
   const [aeds, setAeds] = useState<Aed[]>([]);
@@ -23,14 +24,14 @@ export function useAeds(filters: AedFilters = {}) {
 
       // Build query params
       const params = new URLSearchParams();
-      if (filters.page) params.append('page', filters.page.toString());
-      if (filters.limit) params.append('limit', filters.limit.toString());
-      if (filters.search) params.append('search', filters.search);
+      if (filters.page) params.append("page", filters.page.toString());
+      if (filters.limit) params.append("limit", filters.limit.toString());
+      if (filters.search) params.append("search", filters.search);
 
       const response = await fetch(`/api/aeds?${params.toString()}`);
 
       if (!response.ok) {
-        throw new Error('Failed to fetch AEDs');
+        throw new Error("Failed to fetch AEDs");
       }
 
       const data: AedsResponse = await response.json();
@@ -39,11 +40,11 @@ export function useAeds(filters: AedFilters = {}) {
         setAeds(data.data);
         setPagination(data.pagination);
       } else {
-        throw new Error('Invalid response from server');
+        throw new Error("Invalid response from server");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      console.error('Error fetching AEDs:', err);
+      setError(err instanceof Error ? err.message : "Unknown error");
+      console.error("Error fetching AEDs:", err);
     } finally {
       setLoading(false);
     }

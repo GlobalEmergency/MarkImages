@@ -4,8 +4,8 @@
  * Simple API to list published AEDs (Automated External Defibrillators)
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
@@ -21,20 +21,20 @@ const prisma = new PrismaClient();
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
-    const search = searchParams.get('search') || '';
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 100);
+    const search = searchParams.get("search") || "";
 
     // Calculate pagination
     const skip = (page - 1) * limit;
 
     // Build where clause
     const where = {
-      status: 'PUBLISHED' as const,
+      status: "PUBLISHED" as const,
       ...(search && {
         OR: [
-          { name: { contains: search, mode: 'insensitive' as const } },
-          { code: { contains: search, mode: 'insensitive' as const } },
+          { name: { contains: search, mode: "insensitive" as const } },
+          { code: { contains: search, mode: "insensitive" as const } },
         ],
       }),
     };
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
           },
         },
         orderBy: {
-          created_at: 'desc',
+          created_at: "desc",
         },
       }),
     ]);
@@ -99,12 +99,12 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching AEDs:', error);
+    console.error("Error fetching AEDs:", error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch AEDs',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        error: "Failed to fetch AEDs",
+        message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );

@@ -1,35 +1,38 @@
-import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from "@prisma/client";
+import { NextResponse } from "next/server";
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 export async function GET() {
   try {
     // Check database connection
-    await prisma.$queryRaw`SELECT 1`
+    await prisma.$queryRaw`SELECT 1`;
 
     // Get basic stats using new Aed model
-    const aedCount = await prisma.aed.count()
+    const aedCount = await prisma.aed.count();
 
     return NextResponse.json({
-      status: 'healthy',
+      status: "healthy",
       timestamp: new Date().toISOString(),
-      database: 'connected',
+      database: "connected",
       aeds: aedCount,
-      environment: process.env.NODE_ENV || 'unknown',
-      version: process.env.npm_package_version || '0.1.0'
-    })
+      environment: process.env.NODE_ENV || "unknown",
+      version: process.env.npm_package_version || "0.1.0",
+    });
   } catch (error) {
-    console.error('Health check failed:', error)
+    console.error("Health check failed:", error);
 
-    return NextResponse.json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      database: 'disconnected',
-      error: error instanceof Error ? error.message : 'Unknown error',
-      environment: process.env.NODE_ENV || 'unknown'
-    }, { status: 503 })
+    return NextResponse.json(
+      {
+        status: "unhealthy",
+        timestamp: new Date().toISOString(),
+        database: "disconnected",
+        error: error instanceof Error ? error.message : "Unknown error",
+        environment: process.env.NODE_ENV || "unknown",
+      },
+      { status: 503 }
+    );
   } finally {
-    await prisma.$disconnect()
+    await prisma.$disconnect();
   }
 }
