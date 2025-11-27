@@ -2,6 +2,15 @@
  * AED (Automated External Defibrillator) Types
  */
 
+export interface AedImage {
+  id: string;
+  type: 'FRONT' | 'LOCATION' | 'ACCESS' | 'SIGNAGE' | 'CONTEXT' | 'PLATE';
+  original_url: string;
+  processed_url: string | null;
+  thumbnail_url: string | null;
+  order: number;
+}
+
 export interface Aed {
   id: string;
   code: string;
@@ -18,6 +27,7 @@ export interface Aed {
     district: {
       name: string;
     };
+    access_description?: string | null;
   };
   schedule: {
     has_24h_surveillance: boolean;
@@ -29,6 +39,7 @@ export interface Aed {
     email: string;
     phone: string | null;
   };
+  images?: AedImage[];
 }
 
 export interface AedsResponse {

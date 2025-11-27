@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
               street_name: true,
               street_number: true,
               postal_code: true,
+              access_description: true,
               district: {
                 select: {
                   name: true,
@@ -80,6 +81,23 @@ export async function GET(request: NextRequest) {
               email: true,
               phone: true,
             },
+          },
+          images: {
+            select: {
+              id: true,
+              type: true,
+              original_url: true,
+              processed_url: true,
+              thumbnail_url: true,
+              order: true,
+            },
+            where: {
+              is_verified: true,
+            },
+            orderBy: {
+              order: 'asc',
+            },
+            take: 5,
           },
         },
         orderBy: {
