@@ -1,14 +1,25 @@
 "use client";
 
-import { useState } from 'react';
-import dynamic from 'next/dynamic';
-import { useAeds } from '@/hooks/useAeds';
-import { MapPin, Heart, Navigation, Clock, Phone, Search, Image as ImageIcon, Map, List } from 'lucide-react';
-import type { Aed } from '@/types/aed';
-import AedDetailModal from '@/components/AedDetailModal';
+import {
+  Clock,
+  Heart,
+  Image as ImageIcon,
+  List,
+  Map,
+  MapPin,
+  Navigation,
+  Phone,
+  Search,
+} from "lucide-react";
+import dynamic from "next/dynamic";
+import { useState } from "react";
+
+import AedDetailModal from "@/components/AedDetailModal";
+import { useAeds } from "@/hooks/useAeds";
+import type { Aed } from "@/types/aed";
 
 // Dynamic import to avoid SSR issues with Leaflet
-const MapView = dynamic(() => import('@/components/MapView'), {
+const MapView = dynamic(() => import("@/components/MapView"), {
   ssr: false,
   loading: () => (
     <div className="w-full h-[600px] rounded-xl bg-white/95 flex items-center justify-center">
@@ -22,10 +33,10 @@ const MapView = dynamic(() => import('@/components/MapView'), {
 
 export default function Home() {
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [selectedAed, setSelectedAed] = useState<Aed | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
   const { aeds, loading, error, pagination, refetch } = useAeds({
     page,
@@ -48,14 +59,14 @@ export default function Home() {
       <div
         className="min-h-screen flex items-center justify-center"
         style={{
-          background: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)'
+          background: "linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)",
         }}
       >
         <div
           className="text-center p-8 rounded-2xl shadow-xl"
           style={{
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)'
+            background: "rgba(255, 255, 255, 0.95)",
+            backdropFilter: "blur(20px)",
           }}
         >
           <MapPin className="w-12 h-12 animate-pulse mx-auto text-blue-600 mb-4" />
@@ -70,21 +81,21 @@ export default function Home() {
       <div
         className="min-h-screen flex items-center justify-center"
         style={{
-          background: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)'
+          background: "linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)",
         }}
       >
         <div
           className="text-center p-8 rounded-2xl shadow-xl"
           style={{
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)'
+            background: "rgba(255, 255, 255, 0.95)",
+            backdropFilter: "blur(20px)",
           }}
         >
           <p className="text-red-600 mb-4 font-medium">{error}</p>
           <button
             onClick={refetch}
             className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95"
-            style={{ minHeight: '44px' }}
+            style={{ minHeight: "44px" }}
           >
             Reintentar
           </button>
@@ -97,8 +108,8 @@ export default function Home() {
     <div
       className="min-h-screen"
       style={{
-        background: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
-        backgroundAttachment: 'fixed'
+        background: "linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)",
+        backgroundAttachment: "fixed",
       }}
     >
       {/* Hero Header */}
@@ -107,9 +118,9 @@ export default function Home() {
           <div
             className="p-3 sm:p-4 rounded-full flex-shrink-0"
             style={{
-              background: 'rgba(255, 255, 255, 0.2)',
-              backdropFilter: 'blur(20px)',
-              border: '2px solid rgba(255, 255, 255, 0.3)'
+              background: "rgba(255, 255, 255, 0.2)",
+              backdropFilter: "blur(20px)",
+              border: "2px solid rgba(255, 255, 255, 0.3)",
             }}
           >
             <MapPin className="w-8 h-8 sm:w-10 sm:h-10 text-white animate-pulse" />
@@ -118,11 +129,11 @@ export default function Home() {
             <h1
               className="font-black text-3xl sm:text-4xl md:text-5xl mb-1"
               style={{
-                background: 'linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                color: 'transparent',
-                lineHeight: '1.1'
+                background: "linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%)",
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                color: "transparent",
+                lineHeight: "1.1",
               }}
             >
               deamap.es
@@ -144,8 +155,8 @@ export default function Home() {
         <div
           className="rounded-xl shadow-lg p-4 sm:p-5"
           style={{
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)'
+            background: "rgba(255, 255, 255, 0.95)",
+            backdropFilter: "blur(20px)",
           }}
         >
           <div className="flex flex-col sm:flex-row gap-3">
@@ -161,7 +172,7 @@ export default function Home() {
                   setPage(1);
                 }}
                 className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                style={{ minHeight: '48px' }}
+                style={{ minHeight: "48px" }}
               />
             </div>
 
@@ -169,29 +180,29 @@ export default function Home() {
             <div
               className="flex rounded-lg overflow-hidden"
               style={{
-                background: 'rgba(0, 0, 0, 0.05)'
+                background: "rgba(0, 0, 0, 0.05)",
               }}
             >
               <button
-                onClick={() => setViewMode('list')}
+                onClick={() => setViewMode("list")}
                 className={`flex items-center gap-2 px-4 py-3 font-medium transition-all ${
-                  viewMode === 'list'
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                    : 'text-gray-700 hover:bg-white/50'
+                  viewMode === "list"
+                    ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
+                    : "text-gray-700 hover:bg-white/50"
                 }`}
-                style={{ minHeight: '48px' }}
+                style={{ minHeight: "48px" }}
               >
                 <List className="w-5 h-5" />
                 <span className="hidden sm:inline">Lista</span>
               </button>
               <button
-                onClick={() => setViewMode('map')}
+                onClick={() => setViewMode("map")}
                 className={`flex items-center gap-2 px-4 py-3 font-medium transition-all ${
-                  viewMode === 'map'
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                    : 'text-gray-700 hover:bg-white/50'
+                  viewMode === "map"
+                    ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
+                    : "text-gray-700 hover:bg-white/50"
                 }`}
-                style={{ minHeight: '48px' }}
+                style={{ minHeight: "48px" }}
               >
                 <Map className="w-5 h-5" />
                 <span className="hidden sm:inline">Mapa</span>
@@ -203,7 +214,7 @@ export default function Home() {
 
       {/* Content */}
       <main className="container mx-auto px-3 sm:px-4 md:px-6 py-4 pb-12">
-        {viewMode === 'map' ? (
+        {viewMode === "map" ? (
           <MapView aeds={aeds} onAedClick={handleCardClick} />
         ) : (
           <>
@@ -217,8 +228,8 @@ export default function Home() {
               <div
                 className="text-center py-12 sm:py-16 rounded-xl shadow-lg"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(20px)'
+                  background: "rgba(255, 255, 255, 0.95)",
+                  backdropFilter: "blur(20px)",
                 }}
               >
                 <p className="text-gray-600 text-lg px-4">No se encontraron DEAs</p>
@@ -231,17 +242,17 @@ export default function Home() {
                 <div
                   className="flex gap-2 sm:gap-3"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(20px)',
-                    padding: '0.5rem',
-                    borderRadius: '0.75rem'
+                    background: "rgba(255, 255, 255, 0.95)",
+                    backdropFilter: "blur(20px)",
+                    padding: "0.5rem",
+                    borderRadius: "0.75rem",
                   }}
                 >
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
                     className="px-4 py-2 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95 font-medium"
-                    style={{ minHeight: '44px' }}
+                    style={{ minHeight: "44px" }}
                   >
                     Anterior
                   </button>
@@ -252,7 +263,7 @@ export default function Home() {
                     onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
                     disabled={page === pagination.totalPages}
                     className="px-4 py-2 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95 font-medium"
-                    style={{ minHeight: '44px' }}
+                    style={{ minHeight: "44px" }}
                   >
                     Siguiente
                   </button>
@@ -264,11 +275,7 @@ export default function Home() {
       </main>
 
       {/* Detail Modal */}
-      <AedDetailModal
-        aed={selectedAed}
-        isOpen={modalOpen}
-        onClose={handleCloseModal}
-      />
+      <AedDetailModal aed={selectedAed} isOpen={modalOpen} onClose={handleCloseModal} />
     </div>
   );
 }
@@ -277,18 +284,19 @@ export default function Home() {
  * AED Card Component
  */
 function AedCard({ aed, onClick }: { aed: Aed; onClick: () => void }) {
-  const displayImage = aed.images && aed.images.length > 0
-    ? (aed.images[0].thumbnail_url || aed.images[0].processed_url || aed.images[0].original_url)
-    : null;
+  const displayImage =
+    aed.images && aed.images.length > 0
+      ? aed.images[0].thumbnail_url || aed.images[0].processed_url || aed.images[0].original_url
+      : null;
 
   return (
     <button
       onClick={onClick}
       className="w-full rounded-xl sm:rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer text-left"
       style={{
-        background: 'rgba(255, 255, 255, 0.98)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.3)'
+        background: "rgba(255, 255, 255, 0.98)",
+        backdropFilter: "blur(20px)",
+        border: "1px solid rgba(255, 255, 255, 0.3)",
       }}
     >
       {/* Image Header or Gradient Header */}
@@ -302,22 +310,18 @@ function AedCard({ aed, onClick }: { aed: Aed; onClick: () => void }) {
           <div
             className="absolute inset-0"
             style={{
-              background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%)'
+              background: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%)",
             }}
           />
           <div className="absolute bottom-0 left-0 right-0 p-4">
-            <h3 className="text-base sm:text-lg font-bold text-white truncate">
-              {aed.name}
-            </h3>
-            <p className="text-xs sm:text-sm text-white/90 mt-1">
-              {aed.code}
-            </p>
+            <h3 className="text-base sm:text-lg font-bold text-white truncate">{aed.name}</h3>
+            <p className="text-xs sm:text-sm text-white/90 mt-1">{aed.code}</p>
           </div>
           <div
             className="absolute top-3 right-3 p-2 rounded-lg"
             style={{
-              background: 'rgba(255, 255, 255, 0.9)',
-              backdropFilter: 'blur(10px)'
+              background: "rgba(255, 255, 255, 0.9)",
+              backdropFilter: "blur(10px)",
             }}
           >
             <Heart className="w-5 h-5 text-red-500" />
@@ -326,8 +330,8 @@ function AedCard({ aed, onClick }: { aed: Aed; onClick: () => void }) {
             <div
               className="absolute top-3 left-3 px-2 py-1 rounded-lg text-white text-xs font-medium flex items-center gap-1"
               style={{
-                background: 'rgba(0, 0, 0, 0.6)',
-                backdropFilter: 'blur(10px)'
+                background: "rgba(0, 0, 0, 0.6)",
+                backdropFilter: "blur(10px)",
               }}
             >
               <ImageIcon className="w-3 h-3" />
@@ -339,23 +343,19 @@ function AedCard({ aed, onClick }: { aed: Aed; onClick: () => void }) {
         <div
           className="p-4 sm:p-5"
           style={{
-            background: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)'
+            background: "linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)",
           }}
         >
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
-              <h3 className="text-base sm:text-lg font-bold text-white truncate">
-                {aed.name}
-              </h3>
-              <p className="text-xs sm:text-sm text-white/80 mt-1">
-                {aed.code}
-              </p>
+              <h3 className="text-base sm:text-lg font-bold text-white truncate">{aed.name}</h3>
+              <p className="text-xs sm:text-sm text-white/80 mt-1">{aed.code}</p>
             </div>
             <div
               className="p-2 rounded-lg ml-2 flex-shrink-0"
               style={{
-                background: 'rgba(255, 255, 255, 0.2)',
-                backdropFilter: 'blur(10px)'
+                background: "rgba(255, 255, 255, 0.2)",
+                backdropFilter: "blur(10px)",
               }}
             >
               <Heart className="w-5 h-5 text-white" />
@@ -379,8 +379,7 @@ function AedCard({ aed, onClick }: { aed: Aed; onClick: () => void }) {
             <MapPin className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0 text-blue-500" />
             <div className="flex-1 min-w-0">
               <p className="text-sm sm:text-base text-gray-900 font-medium break-words">
-                {aed.location.street_type} {aed.location.street_name}{' '}
-                {aed.location.street_number}
+                {aed.location.street_type} {aed.location.street_name} {aed.location.street_number}
               </p>
               <p className="text-xs sm:text-sm text-gray-500 mt-1">
                 {aed.location.postal_code} - {aed.location.district.name}
@@ -394,10 +393,10 @@ function AedCard({ aed, onClick }: { aed: Aed; onClick: () => void }) {
               <Clock className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-purple-500" />
               <p className="text-sm sm:text-base">
                 {aed.schedule.has_24h_surveillance
-                  ? '24h Vigilancia'
+                  ? "24h Vigilancia"
                   : aed.schedule.weekday_opening && aed.schedule.weekday_closing
-                  ? `${aed.schedule.weekday_opening} - ${aed.schedule.weekday_closing}`
-                  : 'Horario no especificado'}
+                    ? `${aed.schedule.weekday_opening} - ${aed.schedule.weekday_closing}`
+                    : "Horario no especificado"}
               </p>
             </div>
           )}

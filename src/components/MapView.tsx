@@ -1,11 +1,13 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import L from 'leaflet';
-import type { Aed } from '@/types/aed';
-import { MapPin, Heart, Clock, Phone } from 'lucide-react';
-import 'leaflet/dist/leaflet.css';
+import L from "leaflet";
+import { Clock, MapPin, Phone } from "lucide-react";
+import { useEffect } from "react";
+import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+
+import type { Aed } from "@/types/aed";
+
+import "leaflet/dist/leaflet.css";
 
 interface MapViewProps {
   aeds: Aed[];
@@ -15,7 +17,7 @@ interface MapViewProps {
 // Fix for default marker icon in Leaflet with Next.js
 const createCustomIcon = () => {
   return L.divIcon({
-    className: 'custom-marker',
+    className: "custom-marker",
     html: `
       <div style="
         background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
@@ -54,11 +56,11 @@ const createCustomIcon = () => {
 export default function MapView({ aeds, onAedClick }: MapViewProps) {
   useEffect(() => {
     // Ensure Leaflet styles are loaded
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-    link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
-    link.crossOrigin = '';
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+    link.integrity = "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
+    link.crossOrigin = "";
     document.head.appendChild(link);
 
     return () => {
@@ -67,12 +69,13 @@ export default function MapView({ aeds, onAedClick }: MapViewProps) {
   }, []);
 
   // Calculate center of Madrid from all AEDs
-  const center: [number, number] = aeds.length > 0
-    ? [
-        aeds.reduce((sum, aed) => sum + aed.latitude, 0) / aeds.length,
-        aeds.reduce((sum, aed) => sum + aed.longitude, 0) / aeds.length,
-      ]
-    : [40.4168, -3.7038]; // Default Madrid center
+  const center: [number, number] =
+    aeds.length > 0
+      ? [
+          aeds.reduce((sum, aed) => sum + aed.latitude, 0) / aeds.length,
+          aeds.reduce((sum, aed) => sum + aed.longitude, 0) / aeds.length,
+        ]
+      : [40.4168, -3.7038]; // Default Madrid center
 
   return (
     <div className="w-full h-[600px] rounded-xl overflow-hidden shadow-xl">
@@ -106,7 +109,7 @@ export default function MapView({ aeds, onAedClick }: MapViewProps) {
                     <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-gray-700">
-                        {aed.location.street_type} {aed.location.street_name}{' '}
+                        {aed.location.street_type} {aed.location.street_name}{" "}
                         {aed.location.street_number}
                       </p>
                       <p className="text-gray-500 text-xs">
@@ -120,10 +123,10 @@ export default function MapView({ aeds, onAedClick }: MapViewProps) {
                       <Clock className="w-4 h-4 text-purple-500 flex-shrink-0" />
                       <p className="text-gray-700">
                         {aed.schedule.has_24h_surveillance
-                          ? '24h Vigilancia'
+                          ? "24h Vigilancia"
                           : aed.schedule.weekday_opening && aed.schedule.weekday_closing
-                          ? `${aed.schedule.weekday_opening} - ${aed.schedule.weekday_closing}`
-                          : 'Horario no especificado'}
+                            ? `${aed.schedule.weekday_opening} - ${aed.schedule.weekday_closing}`
+                            : "Horario no especificado"}
                       </p>
                     </div>
                   )}
