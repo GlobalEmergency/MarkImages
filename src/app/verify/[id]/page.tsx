@@ -6,6 +6,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { VerificationStep, VERIFICATION_STEPS_CONFIG } from '@/types/verification';
 import type { Aed, AedLocation, AedImage, AedResponsible, AedValidation, District, Neighborhood, Street } from '@prisma/client';
+import AddressValidation from '@/components/verification/AddressValidation';
+import ResponsibleForm from '@/components/verification/ResponsibleForm';
+import type { AddressData, ResponsibleData } from '@/types/verification';
 
 interface VerificationData {
   aed: Aed & {
@@ -155,33 +158,22 @@ export default function VerifyPage({ params }: VerifyPageProps) {
             <h2 className="text-2xl font-bold mb-4">{stepConfig.title}</h2>
             <p className="text-gray-600 mb-6">{stepConfig.description}</p>
 
-            {/* Address validation component will go here */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-              <p className="text-sm text-gray-700">
-                <strong>Dirección actual:</strong>{' '}
-                {data.aed.location?.street_type} {data.aed.location?.street_name}{' '}
-                {data.aed.location?.street_number}
-              </p>
-              {data.aed.location?.postal_code && (
-                <p className="text-sm text-gray-700 mt-1">
-                  <strong>CP:</strong> {data.aed.location.postal_code}
-                </p>
-              )}
-              {data.aed.location?.district && (
-                <p className="text-sm text-gray-700 mt-1">
-                  <strong>Distrito:</strong> {data.aed.location.district.name}
-                </p>
-              )}
-            </div>
-
-            <div className="flex justify-end mt-6">
-              <button
-                onClick={() => updateStep(VerificationStep.IMAGE_SELECTION)}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-              >
-                Dirección Validada - Continuar
-              </button>
-            </div>
+            <AddressValidation
+              aedId={data.aed.id}
+              currentAddress={{
+                street_type: data.aed.location?.street_type,
+                street_name: data.aed.location?.street_name,
+                street_number: data.aed.location?.street_number,
+                postal_code: data.aed.location?.postal_code,
+                latitude: data.aed.location?.latitude,
+                longitude: data.aed.location?.longitude
+              }}
+              onValidationComplete={(validatedAddress: AddressData) => {
+                updateStep(VerificationStep.IMAGE_SELECTION, {
+                  validated_address: validatedAddress
+                });
+              }}
+            />
           </div>
         );
 
@@ -228,43 +220,22 @@ export default function VerifyPage({ params }: VerifyPageProps) {
             <h2 className="text-2xl font-bold mb-4">{stepConfig.title}</h2>
             <p className="text-gray-600 mb-6">{stepConfig.description}</p>
 
-            {/* Responsible assignment form will go here */}
-            {data.aed.responsible ? (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                <p className="text-sm text-gray-700">
-                  <strong>Responsable actual:</strong> {data.aed.responsible.name}
-                </p>
-                {data.aed.responsible.email && (
-                  <p className="text-sm text-gray-700 mt-1">
-                    <strong>Email:</strong> {data.aed.responsible.email}
-                  </p>
-                )}
-                {data.aed.responsible.phone && (
-                  <p className="text-sm text-gray-700 mt-1">
-                    <strong>Teléfono:</strong> {data.aed.responsible.phone}
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                <p className="text-sm text-gray-700">
-                  No hay responsable asignado. Por favor, asigna una entidad responsable.
-                </p>
-              </div>
-            )}
+            <ResponsibleForm
+              aedId={data.aed.id}
+              currentResponsible={data.aed.responsible || undefined}
+              onAssignmentComplete={(responsibleData: ResponsibleData) => {
+                updateStep(VerificationStep.REVIEW, {
+                  responsible_data: responsibleData
+                });
+              }}
+            />
 
-            <div className="flex justify-between mt-6">
+            <div className="flex justify-start mt-6">
               <button
                 onClick={() => updateStep(VerificationStep.IMAGE_SELECTION)}
                 className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600"
               >
                 Anterior
-              </button>
-              <button
-                onClick={() => updateStep(VerificationStep.REVIEW)}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-              >
-                Responsable Asignado - Continuar
               </button>
             </div>
           </div>
