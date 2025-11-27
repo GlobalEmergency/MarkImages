@@ -7,6 +7,7 @@ export default function NewSimpleDeaPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Form state - ultra simple
   const [formData, setFormData] = useState({
@@ -59,14 +60,19 @@ export default function NewSimpleDeaPage() {
         throw new Error(data.message || "Error al crear el DEA");
       }
 
-      alert("DEA creado exitosamente. Está pendiente de revisión y geocodificación.");
-      router.push("/");
+      // Mostrar modal de éxito
+      setShowSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");
       console.error("Error submitting form:", err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccess(false);
+    router.push("/");
   };
 
   return (
@@ -276,6 +282,152 @@ export default function NewSimpleDeaPage() {
           </button>
         </div>
       </form>
+
+      {/* Modal de éxito */}
+      {showSuccess && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            animation: "fadeIn 0.3s ease-in",
+          }}
+          onClick={handleSuccessClose}
+        >
+          <div
+            style={{
+              backgroundColor: "white",
+              borderRadius: "12px",
+              padding: "40px",
+              maxWidth: "450px",
+              width: "90%",
+              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
+              animation: "slideIn 0.3s ease-out",
+              textAlign: "center",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Icono de éxito */}
+            <div
+              style={{
+                width: "80px",
+                height: "80px",
+                borderRadius: "50%",
+                backgroundColor: "#10b981",
+                margin: "0 auto 24px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                animation: "scaleIn 0.5s ease-out",
+              }}
+            >
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+
+            <h2
+              style={{
+                fontSize: "24px",
+                fontWeight: "bold",
+                color: "#1f2937",
+                marginBottom: "12px",
+              }}
+            >
+              ¡DEA Creado Exitosamente!
+            </h2>
+
+            <p
+              style={{
+                fontSize: "16px",
+                color: "#6b7280",
+                marginBottom: "24px",
+                lineHeight: "1.5",
+              }}
+            >
+              El DEA ha sido registrado y está pendiente de revisión y geocodificación por un
+              administrador.
+            </p>
+
+            <button
+              onClick={handleSuccessClose}
+              style={{
+                padding: "12px 32px",
+                backgroundColor: "#10b981",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "16px",
+                fontWeight: "600",
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#059669";
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.4)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#10b981";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            >
+              Volver al mapa
+            </button>
+          </div>
+
+          <style jsx>{`
+            @keyframes fadeIn {
+              from {
+                opacity: 0;
+              }
+              to {
+                opacity: 1;
+              }
+            }
+
+            @keyframes slideIn {
+              from {
+                transform: translateY(-50px);
+                opacity: 0;
+              }
+              to {
+                transform: translateY(0);
+                opacity: 1;
+              }
+            }
+
+            @keyframes scaleIn {
+              0% {
+                transform: scale(0);
+              }
+              50% {
+                transform: scale(1.1);
+              }
+              100% {
+                transform: scale(1);
+              }
+            }
+          `}</style>
+        </div>
+      )}
     </div>
   );
 }
