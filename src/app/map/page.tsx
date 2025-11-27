@@ -1,10 +1,9 @@
 'use client'
 
+import { Search, Filter, MapPin, Clock, Users } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useState, useMemo, useEffect } from 'react'
-
-import { Search, Filter, MapPin, Clock, Users } from 'lucide-react'
 
 import { useAeds } from '@/hooks/useAeds'
 import type { Aed } from '@/types/aed'

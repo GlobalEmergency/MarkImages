@@ -1,10 +1,9 @@
 'use client'
 
+import { ArrowLeft, MapPin, Clock, Users, Settings, AlertCircle, Phone, Navigation } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-
-import { ArrowLeft, MapPin, Clock, Users, Settings, AlertCircle, Phone, Navigation } from 'lucide-react'
 
 import type { Aed } from '@/types/aed'
 
