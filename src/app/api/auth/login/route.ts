@@ -86,8 +86,15 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Login error:", error);
 
+    // Return more detailed error in development
+    const errorMessage = error instanceof Error ? error.message : "Error al iniciar sesión";
+    const isDevelopment = process.env.NODE_ENV === "development";
+
     return NextResponse.json(
-      { error: "Error al iniciar sesión" },
+      {
+        error: "Error al iniciar sesión",
+        ...(isDevelopment && { details: errorMessage })
+      },
       { status: 500 }
     );
   } finally {
