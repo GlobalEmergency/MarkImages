@@ -742,3 +742,39 @@ model SystemMetric {
   @@index([recorded_at])
   @@map("system_metrics")
 }
+
+// ============================================
+// AUTHENTICATION - User management
+// ============================================
+
+model User {
+  id                String    @id @default(uuid()) @db.Uuid
+  email             String    @unique
+  password_hash     String
+  name              String
+
+  // Profile
+  role              UserRole  @default(USER)
+  is_active         Boolean   @default(true)
+  is_verified       Boolean   @default(false)
+
+  // Metadata
+  last_login_at     DateTime?
+  verification_token String?
+  reset_token       String?
+  reset_token_expires DateTime?
+
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  @@index([email])
+  @@index([role])
+  @@index([is_active])
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  MODERATOR
+  USER
+}

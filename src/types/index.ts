@@ -4,3 +4,4 @@
  */
 
 export * from './aed';
+export * from './auth';
