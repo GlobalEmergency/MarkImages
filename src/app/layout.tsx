@@ -3,6 +3,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 
 import Navigation from "@/components/Navigation";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 import "./globals.css";
 
@@ -19,8 +20,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta charSet="utf-8" />
       </head>
       <body className="font-sans antialiased">
-        <Navigation />
-        {children}
+        <AuthProvider>
+          <Navigation />
+          {children}
+        </AuthProvider>
         <SpeedInsights />
         <Analytics />
       </body>

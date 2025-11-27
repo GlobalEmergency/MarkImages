@@ -40,8 +40,10 @@
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
     "@vladmandic/face-api": "^1.7.15",
+    "bcryptjs": "^3.0.3",
     "canvas": "^3.2.0",
     "dotenv": "^17.2.2",
+    "jose": "^6.1.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.513.0",
     "next": "15.3.3",
@@ -55,6 +57,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "3.3.1",
+    "@types/bcryptjs": "^2.4.6",
     "@types/leaflet": "^1.9.8",
     "@types/node": "20.6.0",
     "@types/proj4": "^2.5.6",
