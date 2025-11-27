@@ -1,16 +1,31 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useAeds } from '@/hooks/useAeds';
-import { MapPin, Heart, Navigation, Clock, Phone, Search, Image as ImageIcon } from 'lucide-react';
+import { MapPin, Heart, Navigation, Clock, Phone, Search, Image as ImageIcon, Map, List } from 'lucide-react';
 import type { Aed } from '@/types/aed';
 import AedDetailModal from '@/components/AedDetailModal';
+
+// Dynamic import to avoid SSR issues with Leaflet
+const MapView = dynamic(() => import('@/components/MapView'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[600px] rounded-xl bg-white/95 flex items-center justify-center">
+      <div className="text-center">
+        <MapPin className="w-12 h-12 animate-pulse mx-auto text-blue-600 mb-4" />
+        <p className="text-gray-700 font-medium">Cargando mapa...</p>
+      </div>
+    </div>
+  ),
+});
 
 export default function Home() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [selectedAed, setSelectedAed] = useState<Aed | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
   const { aeds, loading, error, pagination, refetch } = useAeds({
     page,
@@ -124,7 +139,7 @@ export default function Home() {
         </p>
       </header>
 
-      {/* Search Bar */}
+      {/* Search Bar and View Toggle */}
       <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4">
         <div
           className="rounded-xl shadow-lg p-4 sm:p-5"
@@ -133,77 +148,120 @@ export default function Home() {
             backdropFilter: 'blur(20px)'
           }}
         >
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Buscar por nombre o código..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar por nombre o código..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                style={{ minHeight: '48px' }}
+              />
+            </div>
+
+            {/* View Toggle */}
+            <div
+              className="flex rounded-lg overflow-hidden"
+              style={{
+                background: 'rgba(0, 0, 0, 0.05)'
               }}
-              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              style={{ minHeight: '48px' }}
-            />
+            >
+              <button
+                onClick={() => setViewMode('list')}
+                className={`flex items-center gap-2 px-4 py-3 font-medium transition-all ${
+                  viewMode === 'list'
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                    : 'text-gray-700 hover:bg-white/50'
+                }`}
+                style={{ minHeight: '48px' }}
+              >
+                <List className="w-5 h-5" />
+                <span className="hidden sm:inline">Lista</span>
+              </button>
+              <button
+                onClick={() => setViewMode('map')}
+                className={`flex items-center gap-2 px-4 py-3 font-medium transition-all ${
+                  viewMode === 'map'
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                    : 'text-gray-700 hover:bg-white/50'
+                }`}
+                style={{ minHeight: '48px' }}
+              >
+                <Map className="w-5 h-5" />
+                <span className="hidden sm:inline">Mapa</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Content */}
       <main className="container mx-auto px-3 sm:px-4 md:px-6 py-4 pb-12">
-        {/* AED List */}
-        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {aeds.map((aed) => (
-            <AedCard key={aed.id} aed={aed} onClick={() => handleCardClick(aed)} />
-          ))}
-        </div>
-
-        {aeds.length === 0 && (
-          <div
-            className="text-center py-12 sm:py-16 rounded-xl shadow-lg"
-            style={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(20px)'
-            }}
-          >
-            <p className="text-gray-600 text-lg px-4">No se encontraron DEAs</p>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {pagination.totalPages > 1 && (
-          <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
-            <div
-              className="flex gap-2 sm:gap-3"
-              style={{
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(20px)',
-                padding: '0.5rem',
-                borderRadius: '0.75rem'
-              }}
-            >
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-4 py-2 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95 font-medium"
-                style={{ minHeight: '44px' }}
-              >
-                Anterior
-              </button>
-              <span className="px-4 py-2 flex items-center text-gray-700 font-medium">
-                Página {page} de {pagination.totalPages}
-              </span>
-              <button
-                onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-                disabled={page === pagination.totalPages}
-                className="px-4 py-2 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95 font-medium"
-                style={{ minHeight: '44px' }}
-              >
-                Siguiente
-              </button>
+        {viewMode === 'map' ? (
+          /* Map View */
+          <MapView aeds={aeds} onAedClick={handleCardClick} />
+        ) : (
+          /* List View */
+          <>
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {aeds.map((aed) => (
+                <AedCard key={aed.id} aed={aed} onClick={() => handleCardClick(aed)} />
+              ))}
             </div>
-          </div>
+
+            {aeds.length === 0 && (
+              <div
+                className="text-center py-12 sm:py-16 rounded-xl shadow-lg"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(20px)'
+                }}
+              >
+                <p className="text-gray-600 text-lg px-4">No se encontraron DEAs</p>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {pagination.totalPages > 1 && (
+              <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
+                <div
+                  className="flex gap-2 sm:gap-3"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(20px)',
+                    padding: '0.5rem',
+                    borderRadius: '0.75rem'
+                  }}
+                >
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="px-4 py-2 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95 font-medium"
+                    style={{ minHeight: '44px' }}
+                  >
+                    Anterior
+                  </button>
+                  <span className="px-4 py-2 flex items-center text-gray-700 font-medium">
+                    Página {page} de {pagination.totalPages}
+                  </span>
+                  <button
+                    onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+                    disabled={page === pagination.totalPages}
+                    className="px-4 py-2 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95 font-medium"
+                    style={{ minHeight: '44px' }}
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </main>
 
