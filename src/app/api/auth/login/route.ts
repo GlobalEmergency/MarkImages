@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { verifyPassword } from "@/lib/password";
+import { NextRequest, NextResponse } from "next/server";
+
 import { createToken, setAuthCookie } from "@/lib/jwt";
-import type { LoginRequest, AuthResponse, UserPublic } from "@/types";
+import { verifyPassword } from "@/lib/password";
+import type { AuthResponse, LoginRequest, UserPublic } from "@/types";
 
 const prisma = new PrismaClient();
 

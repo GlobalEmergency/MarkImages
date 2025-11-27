@@ -4,6 +4,7 @@ import { Home, MapPin, Menu, X, LogIn, UserPlus, LogOut, User } from "lucide-rea
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function Navigation() {

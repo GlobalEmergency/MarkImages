@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function RegisterForm() {
   const router = useRouter();

@@ -7,7 +7,8 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
-import type { UserPublic, LoginRequest, RegisterRequest } from "@/types";
+
+import type { LoginRequest, RegisterRequest, UserPublic } from "@/types";
 
 interface AuthContextType {
   user: UserPublic | null;

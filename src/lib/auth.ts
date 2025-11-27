@@ -1,13 +1,15 @@
-import { NextRequest } from "next/server";
-import { getCurrentUser } from "./jwt";
-import type { JWTPayload } from "@/types";
 import { UserRole } from "@prisma/client";
+import { NextRequest } from "next/server";
+
+import type { JWTPayload } from "@/types";
+
+import { getCurrentUser } from "./jwt";
 
 /**
  * Middleware to check if user is authenticated
  */
 export async function requireAuth(
-  request: NextRequest
+  _request: NextRequest
 ): Promise<JWTPayload | null> {
   const user = await getCurrentUser();
   return user;
@@ -17,7 +19,7 @@ export async function requireAuth(
  * Middleware to check if user has specific role
  */
 export async function requireRole(
-  request: NextRequest,
+  _request: NextRequest,
   allowedRoles: UserRole[]
 ): Promise<JWTPayload | null> {
   const user = await getCurrentUser();
@@ -37,7 +39,7 @@ export async function requireRole(
  * Middleware to check if user is admin
  */
 export async function requireAdmin(
-  request: NextRequest
+  _request: NextRequest
 ): Promise<JWTPayload | null> {
-  return requireRole(request, [UserRole.ADMIN]);
+  return requireRole(_request, [UserRole.ADMIN]);
 }

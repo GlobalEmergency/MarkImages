@@ -1,6 +1,7 @@
 import { SignJWT, jwtVerify } from "jose";
-import type { JWTPayload } from "@/types";
 import { cookies } from "next/headers";
+
+import type { JWTPayload } from "@/types";
 
 const SECRET_KEY = process.env.JWT_SECRET || "default-secret-key-change-in-production";
 const COOKIE_NAME = "auth-token";

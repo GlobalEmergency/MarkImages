@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { removeAuthCookie } from "@/lib/jwt";
 
 export async function POST() {
