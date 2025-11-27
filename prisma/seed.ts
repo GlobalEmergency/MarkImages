@@ -37,35 +37,46 @@ async function main() {
 
   // 2. Crear responsables de ejemplo
   console.log('👤 Creando responsables...')
-  const responsible1 = await prisma.aedResponsible.upsert({
+
+  // Buscar o crear responsible1
+  let responsible1 = await prisma.aedResponsible.findFirst({
     where: { email: 'escobarcma.ext@madrid.es' },
-    update: {},
-    create: {
-      name: 'Maria Del Carmen Escobar Cano',
-      email: 'escobarcma.ext@madrid.es',
-      phone: '+34 600 123 456',
-      ownership: 'Público',
-      local_ownership: 'Privada',
-      local_use: 'Público',
-      organization: 'Colegio Nuestra Señora de Fátima',
-      position: 'Coordinadora de Salud',
-    },
   })
 
-  const responsible2 = await prisma.aedResponsible.upsert({
+  if (!responsible1) {
+    responsible1 = await prisma.aedResponsible.create({
+      data: {
+        name: 'Maria Del Carmen Escobar Cano',
+        email: 'escobarcma.ext@madrid.es',
+        phone: '+34 600 123 456',
+        ownership: 'Público',
+        local_ownership: 'Privada',
+        local_use: 'Público',
+        organization: 'Colegio Nuestra Señora de Fátima',
+        position: 'Coordinadora de Salud',
+      },
+    })
+  }
+
+  // Buscar o crear responsible2
+  let responsible2 = await prisma.aedResponsible.findFirst({
     where: { email: 'admin@materpurissima.edu' },
-    update: {},
-    create: {
-      name: 'Director Administrativo',
-      email: 'admin@materpurissima.edu',
-      phone: '+34 600 654 321',
-      ownership: 'Público',
-      local_ownership: 'Privada',
-      local_use: 'Público',
-      organization: 'Colegio Mater Purissima',
-      position: 'Director',
-    },
   })
+
+  if (!responsible2) {
+    responsible2 = await prisma.aedResponsible.create({
+      data: {
+        name: 'Director Administrativo',
+        email: 'admin@materpurissima.edu',
+        phone: '+34 600 654 321',
+        ownership: 'Público',
+        local_ownership: 'Privada',
+        local_use: 'Público',
+        organization: 'Colegio Mater Purissima',
+        position: 'Director',
+      },
+    })
+  }
 
   console.log(`✅ Responsables creados: ${responsible1.name}, ${responsible2.name}`)
 
@@ -191,7 +202,7 @@ async function main() {
   await prisma.aedCodeHistory.create({
     data: {
       aed_id: aed1.id,
-      code: aed1.code,
+      code: aed1.code!,
       district: 12,
       sequential: 1,
       is_active: true,
@@ -202,7 +213,7 @@ async function main() {
   await prisma.aedCodeHistory.create({
     data: {
       aed_id: aed2.id,
-      code: aed2.code,
+      code: aed2.code!,
       district: 12,
       sequential: 2,
       is_active: true,
