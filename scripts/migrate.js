@@ -21,7 +21,7 @@ const isVercel = process.env.VERCEL === '1';
 const gitBranch = process.env.VERCEL_GIT_COMMIT_REF || process.env.GIT_BRANCH || '';
 
 // Define branches that should run migrations
-const MIGRATION_BRANCHES = ['main', 'refactor'];
+const MIGRATION_BRANCHES = ['main', 'refactor', 'claude/simple-dea-form'];
 
 // Check if current branch matches any migration branch
 const shouldRunMigrations = isVercel && MIGRATION_BRANCHES.some(branch =>
