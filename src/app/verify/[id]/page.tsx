@@ -8,7 +8,11 @@ import { VerificationStep, VERIFICATION_STEPS_CONFIG } from '@/types/verificatio
 import type { Aed, AedLocation, AedImage, AedResponsible, AedValidation, District, Neighborhood, Street } from '@prisma/client';
 import AddressValidation from '@/components/verification/AddressValidation';
 import ResponsibleForm from '@/components/verification/ResponsibleForm';
+import ImagePairSelector, { ImageSelection } from '@/components/verification/ImagePairSelector';
+import ImageCropper from '@/components/verification/ImageCropper';
+import ArrowPlacer from '@/components/verification/ArrowPlacer';
 import type { AddressData, ResponsibleData } from '@/types/verification';
+import type { CropData, ArrowData } from '@/types/shared';
 
 interface VerificationData {
   aed: Aed & {
@@ -183,34 +187,116 @@ export default function VerifyPage({ params }: VerifyPageProps) {
             <h2 className="text-2xl font-bold mb-4">{stepConfig.title}</h2>
             <p className="text-gray-600 mb-6">{stepConfig.description}</p>
 
-            {/* Image selection component will go here */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-              {data.aed.images.map((image) => (
-                <div key={image.id} className="border rounded-lg p-2">
-                  <img
-                    src={image.original_url}
-                    alt={`Imagen ${image.type}`}
-                    className="w-full h-40 object-cover rounded mb-2"
-                  />
-                  <p className="text-sm text-gray-600 text-center">{image.type}</p>
-                </div>
-              ))}
-            </div>
+            <ImagePairSelector
+              image1Url={data.aed.images[0]?.original_url}
+              image2Url={data.aed.images[1]?.original_url}
+              descripcionAcceso={data.aed.location?.access_description || undefined}
+              onSelectionComplete={(selection: ImageSelection) => {
+                // Determine next step based on selection
+                if (selection.markedAsInvalid) {
+                  updateStep(VerificationStep.RESPONSIBLE_ASSIGNMENT, {
+                    images_invalid: true
+                  });
+                } else if (selection.image1Valid) {
+                  updateStep(VerificationStep.IMAGE_CROP_FRONT, {
+                    image_selection: selection
+                  });
+                } else {
+                  updateStep(VerificationStep.RESPONSIBLE_ASSIGNMENT, {
+                    images_invalid: true
+                  });
+                }
+              }}
+              onCancel={() => updateStep(VerificationStep.ADDRESS_VALIDATION)}
+            />
+          </div>
+        );
 
-            <div className="flex justify-between mt-6">
-              <button
-                onClick={() => updateStep(VerificationStep.ADDRESS_VALIDATION)}
-                className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600"
-              >
-                Anterior
-              </button>
-              <button
-                onClick={() => updateStep(VerificationStep.RESPONSIBLE_ASSIGNMENT)}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-              >
-                Imágenes Seleccionadas - Continuar
-              </button>
-            </div>
+      case VerificationStep.IMAGE_CROP_FRONT:
+        return (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-2xl font-bold mb-4">{stepConfig.title}</h2>
+            <p className="text-gray-600 mb-6">{stepConfig.description}</p>
+
+            <ImageCropper
+              imageUrl={data.aed.images[0]?.original_url || ''}
+              onCropChange={(cropData: CropData) => {
+                // Track crop changes
+                console.log('Crop data:', cropData);
+              }}
+              onCropComplete={async (cropData: CropData) => {
+                // TODO: Call API to process cropped image
+                updateStep(VerificationStep.IMAGE_ARROW_FRONT, {
+                  front_crop_data: cropData
+                });
+              }}
+              onCancel={() => updateStep(VerificationStep.IMAGE_SELECTION)}
+            />
+          </div>
+        );
+
+      case VerificationStep.IMAGE_ARROW_FRONT:
+        return (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-2xl font-bold mb-4">{stepConfig.title}</h2>
+            <p className="text-gray-600 mb-6">{stepConfig.description}</p>
+
+            <ArrowPlacer
+              imageUrl={data.aed.images[0]?.original_url || ''} // TODO: Use cropped image
+              onArrowComplete={async (arrowData: ArrowData) => {
+                // Determine if there's a second image
+                const hasSecondImage = data.aed.images.length > 1;
+                if (hasSecondImage) {
+                  updateStep(VerificationStep.IMAGE_CROP_INTERIOR, {
+                    front_arrow_data: arrowData
+                  });
+                } else {
+                  updateStep(VerificationStep.RESPONSIBLE_ASSIGNMENT, {
+                    front_arrow_data: arrowData
+                  });
+                }
+              }}
+              onCancel={() => updateStep(VerificationStep.IMAGE_CROP_FRONT)}
+            />
+          </div>
+        );
+
+      case VerificationStep.IMAGE_CROP_INTERIOR:
+        return (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-2xl font-bold mb-4">{stepConfig.title}</h2>
+            <p className="text-gray-600 mb-6">{stepConfig.description}</p>
+
+            <ImageCropper
+              imageUrl={data.aed.images[1]?.original_url || ''}
+              onCropChange={(cropData: CropData) => {
+                console.log('Interior crop data:', cropData);
+              }}
+              onCropComplete={async (cropData: CropData) => {
+                updateStep(VerificationStep.IMAGE_ARROW_INTERIOR, {
+                  interior_crop_data: cropData
+                });
+              }}
+              onCancel={() => updateStep(VerificationStep.IMAGE_ARROW_FRONT)}
+            />
+          </div>
+        );
+
+      case VerificationStep.IMAGE_ARROW_INTERIOR:
+        return (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-2xl font-bold mb-4">{stepConfig.title}</h2>
+            <p className="text-gray-600 mb-6">{stepConfig.description}</p>
+
+            <ArrowPlacer
+              imageUrl={data.aed.images[1]?.original_url || ''} // TODO: Use cropped image
+              onArrowComplete={async (arrowData: ArrowData) => {
+                updateStep(VerificationStep.RESPONSIBLE_ASSIGNMENT, {
+                  interior_arrow_data: arrowData
+                });
+              }}
+              onCancel={() => updateStep(VerificationStep.IMAGE_CROP_INTERIOR)}
+            />
           </div>
         );
 
