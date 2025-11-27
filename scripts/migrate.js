@@ -23,9 +23,13 @@ const gitBranch = process.env.VERCEL_GIT_COMMIT_REF || process.env.GIT_BRANCH ||
 // Define branches that should run migrations
 const MIGRATION_BRANCHES = ['main', 'refactor'];
 
-// Check if current branch matches any migration branch
-const shouldRunMigrations = isVercel && MIGRATION_BRANCHES.some(branch =>
-  gitBranch === branch || gitBranch.includes(branch)
+// Also allow claude/ branches to run migrations for development previews
+const isClaudeBranch = gitBranch.startsWith('claude/');
+
+// Check if current branch matches any migration branch or is a claude branch
+const shouldRunMigrations = isVercel && (
+  MIGRATION_BRANCHES.some(branch => gitBranch === branch || gitBranch.includes(branch)) ||
+  isClaudeBranch
 );
 
 console.log('🔍 Migration Check:');
