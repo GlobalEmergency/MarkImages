@@ -1,13 +1,14 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useAeds } from '@/hooks/useAeds';
-import { Activity, MapPin, Clock, Phone } from 'lucide-react';
-import type { Aed } from '@/types/aed';
+import { Activity, MapPin, Clock, Phone } from "lucide-react";
+import { useState } from "react";
+
+import { useAeds } from "@/hooks/useAeds";
+import type { Aed } from "@/types/aed";
 
 export default function Home() {
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const { aeds, loading, error, pagination, refetch } = useAeds({
     page,
     limit: 50,
@@ -51,9 +52,7 @@ export default function Home() {
               <Activity className="w-10 h-10" />
               <div>
                 <h1 className="text-3xl font-bold">Desfibriladores Madrid</h1>
-                <p className="text-red-100">
-                  {pagination.total} DEAs registrados
-                </p>
+                <p className="text-red-100">{pagination.total} DEAs registrados</p>
               </div>
             </div>
           </div>
@@ -146,10 +145,11 @@ function AedCard({ aed }: { aed: Aed }) {
           <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
           <div>
             <p>
-              {aed.location.street_type} {aed.location.street_name}{' '}
-              {aed.location.street_number}
+              {aed.location.street_type} {aed.location.street_name} {aed.location.street_number}
             </p>
-            <p>{aed.location.postal_code} - {aed.location.district.name}</p>
+            <p>
+              {aed.location.postal_code} - {aed.location.district.name}
+            </p>
           </div>
         </div>
 
@@ -159,10 +159,10 @@ function AedCard({ aed }: { aed: Aed }) {
             <Clock className="w-4 h-4 flex-shrink-0" />
             <p>
               {aed.schedule.has_24h_surveillance
-                ? '24h'
+                ? "24h"
                 : aed.schedule.weekday_opening && aed.schedule.weekday_closing
-                ? `${aed.schedule.weekday_opening} - ${aed.schedule.weekday_closing}`
-                : 'Horario no especificado'}
+                  ? `${aed.schedule.weekday_opening} - ${aed.schedule.weekday_closing}`
+                  : "Horario no especificado"}
             </p>
           </div>
         )}
