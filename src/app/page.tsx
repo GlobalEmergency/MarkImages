@@ -204,10 +204,8 @@ export default function Home() {
       {/* Content */}
       <main className="container mx-auto px-3 sm:px-4 md:px-6 py-4 pb-12">
         {viewMode === 'map' ? (
-          /* Map View */
           <MapView aeds={aeds} onAedClick={handleCardClick} />
         ) : (
-          /* List View */
           <>
             <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {aeds.map((aed) => (
