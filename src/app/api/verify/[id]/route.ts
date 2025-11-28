@@ -33,7 +33,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         responsible: true,
         validations: {
           where: {
-            type: "ADDRESS",
+            status: "IN_PROGRESS",
           },
           orderBy: {
             created_at: "desc",
