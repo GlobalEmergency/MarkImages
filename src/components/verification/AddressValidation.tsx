@@ -42,6 +42,7 @@ interface SearchResult {
     municipality?: string;
   };
   type?: string;
+  source?: "google" | "osm";
 }
 
 export default function AddressValidation({
@@ -122,14 +123,12 @@ export default function AddressValidation({
           searchText = `Calle ${searchText}`;
         }
 
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?` +
-            `format=json&` +
-            `q=${encodeURIComponent(searchText + ", Madrid, España")}&` +
-            `addressdetails=1&` +
-            `limit=10&` + // Increase limit to get more options with house numbers
-            `countrycodes=es`
-        );
+        // Use our API endpoint that combines Google Geocoding and OSM results
+        const response = await fetch(`/api/geocode?q=${encodeURIComponent(searchText)}`);
+
+        if (!response.ok) {
+          throw new Error("Error fetching geocoding results");
+        }
 
         const data = await response.json();
 
@@ -394,7 +393,7 @@ export default function AddressValidation({
                   <div className="flex items-start space-x-3">
                     <MapPin className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0 group-hover:text-blue-700" />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-base font-medium text-gray-900">
                           {result.address.road}
                           {result.address.house_number && ` ${result.address.house_number}`}
@@ -402,6 +401,11 @@ export default function AddressValidation({
                         {result.address.house_number && (
                           <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
                             Nº exacto
+                          </span>
+                        )}
+                        {result.source === "google" && (
+                          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+                            Google Maps
                           </span>
                         )}
                       </div>
