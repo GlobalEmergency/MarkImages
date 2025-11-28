@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AedForVerification {
   id: string;
@@ -54,7 +54,7 @@ export default function VerifyPage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/login?redirect=/verify');
+      router.push("/login?redirect=/verify");
       return;
     }
 
@@ -69,14 +69,14 @@ export default function VerifyPage() {
       const response = await fetch(`/api/verify?page=${page}&limit=12`);
 
       if (!response.ok) {
-        throw new Error('Error al cargar DEAs');
+        throw new Error("Error al cargar DEAs");
       }
 
       const data: ApiResponse = await response.json();
       setAeds(data.data);
       setPagination(data.pagination);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      setError(err instanceof Error ? err.message : "Error desconocido");
     } finally {
       setLoading(false);
     }
@@ -91,14 +91,14 @@ export default function VerifyPage() {
       const response = await fetch(`/api/verify?page=${nextPage}&limit=12`);
 
       if (!response.ok) {
-        throw new Error('Error al cargar más DEAs');
+        throw new Error("Error al cargar más DEAs");
       }
 
       const data: ApiResponse = await response.json();
-      setAeds(prev => [...prev, ...data.data]);
+      setAeds((prev) => [...prev, ...data.data]);
       setPagination(data.pagination);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar más DEAs');
+      setError(err instanceof Error ? err.message : "Error al cargar más DEAs");
     } finally {
       setLoadingMore(false);
     }
@@ -127,9 +127,7 @@ export default function VerifyPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Verificación de DEAs
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Verificación de DEAs</h1>
           <p className="text-gray-600 mb-6">
             Selecciona un DEA para iniciar el proceso de verificación
           </p>
@@ -138,7 +136,7 @@ export default function VerifyPage() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
               <div className="flex items-center justify-between text-sm text-blue-800">
                 <span>
-                  Mostrando <strong>{aeds.length}</strong> de{' '}
+                  Mostrando <strong>{aeds.length}</strong> de{" "}
                   <strong>{pagination.totalRecords}</strong> DEAs pendientes
                 </span>
                 <span className="text-blue-600">
@@ -150,7 +148,7 @@ export default function VerifyPage() {
                 <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                   style={{
-                    width: `${(aeds.length / pagination.totalRecords) * 100}%`
+                    width: `${(aeds.length / pagination.totalRecords) * 100}%`,
                   }}
                 ></div>
               </div>
@@ -172,9 +170,7 @@ export default function VerifyPage() {
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               No hay DEAs pendientes de verificar
             </h3>
-            <p className="text-gray-600">
-              Todos los DEAs han sido verificados
-            </p>
+            <p className="text-gray-600">Todos los DEAs han sido verificados</p>
           </div>
         ) : (
           <>
@@ -199,7 +195,8 @@ export default function VerifyPage() {
                     <div className="p-6">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-gray-900">
-                          {aed.code || `#${aed.provisional_number}` || 'Sin código'}
+                          {aed.code ||
+                            (aed.provisional_number ? `#${aed.provisional_number}` : "Sin código")}
                         </h3>
                         <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
                           Pendiente
@@ -218,13 +215,13 @@ export default function VerifyPage() {
                         {aed.location && (
                           <>
                             <p className="text-sm text-gray-600">
-                              <span className="font-medium">Dirección:</span>{' '}
-                              {aed.location.street_type} {aed.location.street_name}{' '}
+                              <span className="font-medium">Dirección:</span>{" "}
+                              {aed.location.street_type} {aed.location.street_name}{" "}
                               {aed.location.street_number}
                             </p>
                             {aed.location.district && (
                               <p className="text-sm text-gray-600">
-                                <span className="font-medium">Distrito:</span>{' '}
+                                <span className="font-medium">Distrito:</span>{" "}
                                 {aed.location.district.name}
                               </p>
                             )}

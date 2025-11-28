@@ -535,6 +535,52 @@ export default function VerifyPage({ params }: VerifyPageProps) {
           </div>
         </div>
 
+        {/* DEA Information */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Información del DEA</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-500">Código</p>
+              <p className="font-medium text-gray-900">
+                {data.aed.code ||
+                  (data.aed.provisional_number ? `#${data.aed.provisional_number}` : "Sin código")}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Nombre</p>
+              <p className="font-medium text-gray-900">{data.aed.name}</p>
+            </div>
+            {data.aed.establishment_type && (
+              <div>
+                <p className="text-sm text-gray-500">Tipo de establecimiento</p>
+                <p className="font-medium text-gray-900">{data.aed.establishment_type}</p>
+              </div>
+            )}
+            {data.aed.location && (
+              <div>
+                <p className="text-sm text-gray-500">Ubicación</p>
+                <p className="font-medium text-gray-900">
+                  {data.aed.location.street_type} {data.aed.location.street_name}{" "}
+                  {data.aed.location.street_number}
+                  {data.aed.location.district && ` - ${data.aed.location.district.name}`}
+                </p>
+              </div>
+            )}
+            <div>
+              <p className="text-sm text-gray-500">Estado</p>
+              <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                {data.aed.status === "DRAFT" ? "Borrador" : "Pendiente de revisión"}
+              </span>
+            </div>
+            {data.aed.images && data.aed.images.length > 0 && (
+              <div>
+                <p className="text-sm text-gray-500">Imágenes</p>
+                <p className="font-medium text-gray-900">{data.aed.images.length} imagen(es)</p>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Step Content */}
         {renderStepContent()}
       </div>

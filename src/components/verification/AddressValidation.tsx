@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { CheckCircle, AlertTriangle, MapPin, Loader2 } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { CheckCircle, AlertTriangle, MapPin, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 
 interface AddressValidationProps {
   _aedId: string;
@@ -30,7 +30,7 @@ interface AddressData {
 export default function AddressValidation({
   _aedId,
   currentAddress,
-  onValidationComplete
+  onValidationComplete,
 }: AddressValidationProps) {
   const [loading, setLoading] = useState(false);
   const [validated, setValidated] = useState(false);
@@ -45,13 +45,13 @@ export default function AddressValidation({
     const loadMap = async () => {
       // Load Leaflet library
       if (!(window as any).L) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
         document.head.appendChild(link);
 
-        const script = document.createElement('script');
-        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        const script = document.createElement("script");
+        script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
         script.onload = () => initializeMap();
         document.head.appendChild(script);
       } else {
@@ -78,21 +78,25 @@ export default function AddressValidation({
       mapInstanceRef.current = map;
 
       // Add OpenStreetMap tiles
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
       }).addTo(map);
 
       // Add marker
       const marker = L.marker([currentAddress.latitude, currentAddress.longitude], {
-        draggable: false
+        draggable: false,
       }).addTo(map);
 
-      marker.bindPopup(`
+      marker
+        .bindPopup(
+          `
         <b>Ubicación del DEA</b><br/>
-        ${currentAddress.street_type || ''} ${currentAddress.street_name || ''} ${currentAddress.street_number || ''}<br/>
+        ${currentAddress.street_type || ""} ${currentAddress.street_name || ""} ${currentAddress.street_number || ""}<br/>
         <small>Lat: ${currentAddress.latitude.toFixed(6)}<br/>
         Lng: ${currentAddress.longitude.toFixed(6)}</small>
-      `).openPopup();
+      `
+        )
+        .openPopup();
 
       setMapLoaded(true);
     };
@@ -112,7 +116,7 @@ export default function AddressValidation({
     try {
       // Simulate address validation
       // In a real implementation, this would call a geocoding API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       setValidated(true);
 
@@ -124,51 +128,75 @@ export default function AddressValidation({
         postal_code: currentAddress?.postal_code,
         latitude: currentAddress?.latitude,
         longitude: currentAddress?.longitude,
-        confidence: 0.95
+        confidence: 0.95,
       };
 
       onValidationComplete(validatedAddress);
     } catch (error) {
-      console.error('Error validating address:', error);
+      console.error("Error validating address:", error);
     } finally {
       setLoading(false);
     }
   };
 
+  const hasAddress = currentAddress?.street_name || currentAddress?.street_type;
+  const hasCoordinates = currentAddress?.latitude && currentAddress?.longitude;
+
   return (
     <div className="space-y-6">
       {/* Current Address Info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div
+        className={`border rounded-lg p-4 ${hasAddress ? "bg-blue-50 border-blue-200" : "bg-yellow-50 border-yellow-200"}`}
+      >
         <div className="flex items-start space-x-3">
-          <MapPin className="w-5 h-5 text-blue-600 mt-0.5" />
+          <MapPin
+            className={`w-5 h-5 mt-0.5 ${hasAddress ? "text-blue-600" : "text-yellow-600"}`}
+          />
           <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 mb-2">Dirección Actual</h3>
-            <p className="text-gray-700">
-              {currentAddress?.street_type} {currentAddress?.street_name}{' '}
-              {currentAddress?.street_number}
-            </p>
-            {currentAddress?.postal_code && (
-              <p className="text-sm text-gray-600 mt-1">
-                CP: {currentAddress.postal_code}
-              </p>
-            )}
-            {currentAddress?.latitude && currentAddress?.longitude && (
-              <p className="text-xs text-gray-500 mt-1 font-mono">
-                {currentAddress.latitude.toFixed(6)}, {currentAddress.longitude.toFixed(6)}
-              </p>
+            <h3 className="font-semibold text-gray-900 mb-2">Dirección del DEA</h3>
+            {hasAddress ? (
+              <>
+                <p className="text-gray-700 mb-2">
+                  {currentAddress?.street_type && (
+                    <span className="font-medium">{currentAddress.street_type} </span>
+                  )}
+                  {currentAddress?.street_name || (
+                    <span className="text-gray-400">Sin nombre de calle</span>
+                  )}
+                  {currentAddress?.street_number && <span> {currentAddress.street_number}</span>}
+                </p>
+                {currentAddress?.postal_code && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    Código Postal: {currentAddress.postal_code}
+                  </p>
+                )}
+                {hasCoordinates ? (
+                  <p className="text-xs text-gray-500 mt-2 font-mono">
+                    📍 {currentAddress.latitude!.toFixed(6)}, {currentAddress.longitude!.toFixed(6)}
+                  </p>
+                ) : (
+                  <p className="text-xs text-yellow-700 mt-2">
+                    ⚠️ No hay coordenadas GPS registradas
+                  </p>
+                )}
+              </>
+            ) : (
+              <div>
+                <p className="text-yellow-800 mb-2">No hay dirección registrada para este DEA</p>
+                <p className="text-sm text-yellow-700">
+                  Deberás verificar manualmente la ubicación con la información disponible en las
+                  imágenes o contactando con el responsable.
+                </p>
+              </div>
             )}
           </div>
         </div>
       </div>
 
       {/* Map Display */}
-      {currentAddress?.latitude && currentAddress?.longitude && (
+      {hasCoordinates ? (
         <div className="border rounded-lg overflow-hidden">
-          <div
-            ref={mapRef}
-            className="w-full h-96 bg-gray-200"
-            style={{ minHeight: '400px' }}
-          >
+          <div ref={mapRef} className="w-full h-96 bg-gray-200" style={{ minHeight: "400px" }}>
             {!mapLoaded && (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
@@ -182,6 +210,19 @@ export default function AddressValidation({
             <p className="text-xs text-gray-600">
               Mapa interactivo con OpenStreetMap. La ubicación se muestra con un marcador rojo.
             </p>
+          </div>
+        </div>
+      ) : (
+        <div className="border border-gray-300 rounded-lg bg-gray-50 p-8">
+          <div className="text-center text-gray-500">
+            <MapPin className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+            <p className="font-medium text-gray-700 mb-1">Mapa no disponible</p>
+            <p className="text-sm">Este DEA no tiene coordenadas GPS registradas.</p>
+            {hasAddress && (
+              <p className="text-xs mt-2">
+                Puedes usar Google Maps con la dirección proporcionada para verificar la ubicación.
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -206,12 +247,11 @@ export default function AddressValidation({
           <div className="flex items-start space-x-3">
             <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-yellow-900 mb-1">
-                Validación Requerida
-              </h4>
+              <h4 className="font-semibold text-yellow-900 mb-1">Validación Requerida</h4>
               <p className="text-sm text-yellow-700 mb-3">
                 Por favor, verifica que la dirección y la ubicación en el mapa sean correctas.
-                Puedes usar Google Maps o verificar con el sistema oficial del Ayuntamiento de Madrid.
+                Puedes usar Google Maps o verificar con el sistema oficial del Ayuntamiento de
+                Madrid.
               </p>
               <button
                 onClick={validateAddress}
@@ -224,7 +264,7 @@ export default function AddressValidation({
                     Validando...
                   </>
                 ) : (
-                  'Validar Dirección'
+                  "Validar Dirección"
                 )}
               </button>
             </div>
@@ -233,16 +273,24 @@ export default function AddressValidation({
       )}
 
       {/* Google Maps Link */}
-      {currentAddress?.latitude && currentAddress?.longitude && (
+      {(hasCoordinates || hasAddress) && (
         <div className="text-center">
           <a
-            href={`https://www.google.com/maps?q=${currentAddress.latitude},${currentAddress.longitude}`}
+            href={
+              hasCoordinates
+                ? `https://www.google.com/maps?q=${currentAddress.latitude},${currentAddress.longitude}`
+                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                    `${currentAddress?.street_type || ""} ${currentAddress?.street_name || ""} ${currentAddress?.street_number || ""} Madrid España`
+                  )}`
+            }
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center text-blue-600 hover:text-blue-700 text-sm"
+            className="inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium"
           >
             <MapPin className="w-4 h-4 mr-1" />
-            Abrir en Google Maps
+            {hasCoordinates
+              ? "Ver en Google Maps (coordenadas exactas)"
+              : "Buscar en Google Maps (dirección)"}
           </a>
         </div>
       )}
