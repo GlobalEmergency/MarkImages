@@ -160,6 +160,11 @@ xl: '1280px'  // Large desktop
 
 Antes de completar cualquier tarea, verificar:
 
+### Validación de Código (Obligatorio)
+- [ ] **Ejecutar `npm run lint:fix`** - El código debe pasar sin errores críticos
+- [ ] **Ejecutar `npm run build`** - El build debe completarse sin errores críticos
+
+### Calidad de Código
 - [ ] ¿El código sigue los principios SOLID?
 - [ ] ¿La arquitectura respeta las capas de DDD?
 - [ ] ¿He desarrollado Outside-In?
@@ -170,6 +175,8 @@ Antes de completar cualquier tarea, verificar:
 - [ ] ¿Las variables y funciones tienen nombres claros y descriptivos?
 - [ ] ¿He evitado código duplicado?
 - [ ] ¿Las funciones son pequeñas y tienen una única responsabilidad?
+
+**⚠️ IMPORTANTE**: No se puede completar ninguna tarea sin que `npm run lint:fix` y `npm run build` se ejecuten exitosamente sin errores críticos. Estos comandos deben ejecutarse antes de hacer commit o dar por finalizada cualquier implementación.
 
 ## Estructura de Commits
 
