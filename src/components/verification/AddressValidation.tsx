@@ -55,7 +55,15 @@ export default function AddressValidation({
   const [validated, setValidated] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+
+  // Initialize search query with current address for pre-filling
+  const initialSearchQuery = currentAddress
+    ? [currentAddress.street_type, currentAddress.street_name, currentAddress.street_number]
+        .filter(Boolean)
+        .join(" ")
+    : "";
+
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showResults, setShowResults] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
@@ -69,6 +77,7 @@ export default function AddressValidation({
     street_name: currentAddress?.street_name || "",
     street_number: currentAddress?.street_number || "",
     postal_code: currentAddress?.postal_code || "",
+    locality: "Madrid", // Default locality
     latitude: currentAddress?.latitude,
     longitude: currentAddress?.longitude,
   });
@@ -200,7 +209,17 @@ export default function AddressValidation({
   const parseAddress = (result: SearchResult) => {
     // Extract street type from road name if possible
     const roadName = result.address.road || "";
-    const streetTypes = ["Calle", "Avenida", "Plaza", "Paseo", "Travesía", "Glorieta"];
+    const streetTypes = [
+      "Calle",
+      "Avenida",
+      "Plaza",
+      "Paseo",
+      "Travesía",
+      "Glorieta",
+      "Ronda",
+      "Camino",
+      "Carretera",
+    ];
     let street_type = "";
     let street_name = roadName;
 
@@ -212,11 +231,20 @@ export default function AddressValidation({
       }
     }
 
+    // Get locality from various possible fields
+    const locality =
+      result.address.city ||
+      result.address.town ||
+      result.address.village ||
+      result.address.municipality ||
+      "Madrid";
+
     return {
       street_type: street_type || undefined,
       street_name: street_name || undefined,
       street_number: result.address.house_number || undefined,
       postal_code: result.address.postcode || undefined,
+      locality: locality || undefined,
       latitude: parseFloat(result.lat),
       longitude: parseFloat(result.lon),
     };
@@ -225,7 +253,17 @@ export default function AddressValidation({
   const selectSearchResult = (result: SearchResult) => {
     const parsedAddress = parseAddress(result);
     setAddressForm(parsedAddress as any);
-    setSearchQuery("");
+
+    // Update search query with the selected address for easy modification
+    const selectedAddressText = [
+      parsedAddress.street_type,
+      parsedAddress.street_name,
+      parsedAddress.street_number,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    setSearchQuery(selectedAddressText);
     setShowResults(false);
     setSearchResults([]);
     setEditing(false);
@@ -238,7 +276,7 @@ export default function AddressValidation({
 
       setValidated(true);
 
-      // Create validated address object
+      // Create validated address object with all available data
       const validatedAddress: AddressData = {
         street_type: addressForm.street_type || undefined,
         street_name: addressForm.street_name || undefined,
@@ -434,6 +472,19 @@ export default function AddressValidation({
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Localidad</label>
+                <input
+                  type="text"
+                  value={addressForm.locality}
+                  onChange={(e) =>
+                    setAddressForm((prev) => ({ ...prev, locality: e.target.value }))
+                  }
+                  placeholder="Ej: Madrid"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
               </div>
 
               <div className="flex items-center space-x-2 pt-2">
