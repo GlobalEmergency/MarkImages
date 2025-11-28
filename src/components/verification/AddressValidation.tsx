@@ -272,208 +272,209 @@ export default function AddressValidation({
         </div>
       )}
 
-      {/* Address Search */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6">
-        <div className="flex items-start space-x-3 mb-4">
-          <Search className="w-5 h-5 text-blue-600 mt-0.5" />
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 mb-1">Buscar Dirección</h3>
-            <p className="text-sm text-gray-600 mb-3">
-              Escribe una dirección en Madrid para buscar y seleccionar automáticamente
-            </p>
-
-            <div className="relative">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => searchResults.length > 0 && setShowResults(true)}
-                  placeholder="Ej: Calle Gran Vía 28, Madrid"
-                  className="w-full px-4 py-3 pr-10 border-2 border-blue-300 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition-colors"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => {
-                      setSearchQuery("");
-                      setSearchResults([]);
-                      setShowResults(false);
-                    }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-                {searching && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-                  </div>
-                )}
-              </div>
-
-              {/* Search Results Dropdown */}
-              {showResults && searchResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-y-auto">
-                  {searchResults.map((result, index) => (
-                    <button
-                      key={index}
-                      onClick={() => selectSearchResult(result)}
-                      className="w-full px-4 py-3 text-left hover:bg-blue-50 border-b border-gray-100 last:border-b-0 transition-colors"
-                    >
-                      <div className="flex items-start space-x-3">
-                        <MapPin className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {result.address.road}{" "}
-                            {result.address.house_number && `${result.address.house_number}`}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate">{result.display_name}</p>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {showResults &&
-                searchQuery.length >= 3 &&
-                searchResults.length === 0 &&
-                !searching && (
-                  <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4">
-                    <p className="text-sm text-gray-500 text-center">
-                      No se encontraron resultados. Intenta con otra búsqueda.
-                    </p>
-                  </div>
-                )}
+      {/* Main Address Search - Prominent Single Field */}
+      <div className="mb-6">
+        <label className="block text-lg font-semibold text-gray-900 mb-3">
+          Buscar y verificar dirección del DEA
+        </label>
+        <div className="relative">
+          <div className="relative">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2">
+              <Search className="w-5 h-5 text-gray-400" />
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Current/Editable Address Info */}
-      <div
-        className={`border rounded-lg p-4 ${hasAddress ? "bg-blue-50 border-blue-200" : "bg-yellow-50 border-yellow-200"}`}
-      >
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-start space-x-3">
-            <MapPin
-              className={`w-5 h-5 mt-0.5 ${hasAddress ? "text-blue-600" : "text-yellow-600"}`}
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => searchResults.length > 0 && setShowResults(true)}
+              placeholder="Escribe la dirección completa (ej: Calle Gran Vía 28, Madrid)"
+              className="w-full pl-12 pr-12 py-4 text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all shadow-sm hover:border-gray-400"
             />
-            <h3 className="font-semibold text-gray-900">Dirección del DEA</h3>
+            {searchQuery && !searching && (
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSearchResults([]);
+                  setShowResults(false);
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+            {searching && (
+              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+              </div>
+            )}
           </div>
-          {!editing && hasAddress && (
-            <button
-              onClick={() => setEditing(true)}
-              className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-700"
-            >
-              <Edit2 className="w-4 h-4" />
-              <span>Editar manualmente</span>
-            </button>
+
+          {/* Search Results Dropdown */}
+          {showResults && searchResults.length > 0 && (
+            <div className="absolute z-10 w-full mt-2 bg-white border-2 border-blue-200 rounded-xl shadow-2xl max-h-96 overflow-y-auto">
+              {searchResults.map((result, index) => (
+                <button
+                  key={index}
+                  onClick={() => selectSearchResult(result)}
+                  className="w-full px-5 py-4 text-left hover:bg-blue-50 border-b border-gray-100 last:border-b-0 transition-colors group"
+                >
+                  <div className="flex items-start space-x-3">
+                    <MapPin className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0 group-hover:text-blue-700" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-base font-medium text-gray-900 mb-1">
+                        {result.address.road}{" "}
+                        {result.address.house_number && `${result.address.house_number}`}
+                      </p>
+                      <p className="text-sm text-gray-500">{result.display_name}</p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* No Results Message */}
+          {showResults && searchQuery.length >= 3 && searchResults.length === 0 && !searching && (
+            <div className="absolute z-10 w-full mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-xl p-6 text-center">
+              <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-3" />
+              <p className="text-base text-gray-700 font-medium mb-1">
+                No se encontraron resultados
+              </p>
+              <p className="text-sm text-gray-500">
+                Intenta con otra búsqueda o edita la dirección manualmente más abajo
+              </p>
+            </div>
+          )}
+
+          {/* Search Hint */}
+          {!searchQuery && !hasAddress && (
+            <p className="mt-2 text-sm text-gray-500 flex items-center space-x-2">
+              <span>💡</span>
+              <span>Empieza a escribir para ver sugerencias automáticas de direcciones</span>
+            </p>
           )}
         </div>
-
-        {editing ? (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de vía</label>
-                <input
-                  type="text"
-                  value={addressForm.street_type}
-                  onChange={(e) =>
-                    setAddressForm((prev) => ({ ...prev, street_type: e.target.value }))
-                  }
-                  placeholder="Ej: Calle, Avenida..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre de vía *
-                </label>
-                <input
-                  type="text"
-                  value={addressForm.street_name}
-                  onChange={(e) =>
-                    setAddressForm((prev) => ({ ...prev, street_name: e.target.value }))
-                  }
-                  placeholder="Ej: Gran Vía"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Número</label>
-                <input
-                  type="text"
-                  value={addressForm.street_number}
-                  onChange={(e) =>
-                    setAddressForm((prev) => ({ ...prev, street_number: e.target.value }))
-                  }
-                  placeholder="Ej: 28"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Código Postal
-                </label>
-                <input
-                  type="text"
-                  value={addressForm.postal_code}
-                  onChange={(e) =>
-                    setAddressForm((prev) => ({ ...prev, postal_code: e.target.value }))
-                  }
-                  placeholder="Ej: 28013"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2 pt-2">
-              <button
-                onClick={() => setEditing(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium"
-              >
-                Guardar cambios
-              </button>
-              <p className="text-xs text-gray-500">
-                O usa el buscador de arriba para seleccionar automáticamente
-              </p>
-            </div>
-          </div>
-        ) : hasAddress ? (
-          <div>
-            <p className="text-gray-700 mb-2">
-              {addressForm.street_type && (
-                <span className="font-medium">{addressForm.street_type} </span>
-              )}
-              {addressForm.street_name}
-              {addressForm.street_number && <span> {addressForm.street_number}</span>}
-            </p>
-            {addressForm.postal_code && (
-              <p className="text-sm text-gray-600 mt-1">Código Postal: {addressForm.postal_code}</p>
-            )}
-            {hasCoordinates ? (
-              <p className="text-xs text-gray-500 mt-2 font-mono">
-                📍 {addressForm.latitude!.toFixed(6)}, {addressForm.longitude!.toFixed(6)}
-              </p>
-            ) : (
-              <p className="text-xs text-yellow-700 mt-2">
-                ⚠️ No hay coordenadas GPS - Usa el buscador para encontrar la ubicación
-              </p>
-            )}
-          </div>
-        ) : (
-          <div>
-            <p className="text-yellow-800 mb-2">No hay dirección registrada para este DEA</p>
-            <p className="text-sm text-yellow-700">
-              Usa el buscador de arriba para encontrar y seleccionar la dirección correcta.
-            </p>
-          </div>
-        )}
       </div>
+
+      {/* Current/Editable Address Info - Only show if address exists */}
+      {hasAddress && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex items-start space-x-3">
+              <MapPin className="w-5 h-5 mt-0.5 text-blue-600" />
+              <h3 className="font-semibold text-gray-900">Dirección Seleccionada</h3>
+            </div>
+            {!editing && (
+              <button
+                onClick={() => setEditing(true)}
+                className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-700"
+              >
+                <Edit2 className="w-4 h-4" />
+                <span>Editar manualmente</span>
+              </button>
+            )}
+          </div>
+
+          {editing ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tipo de vía
+                  </label>
+                  <input
+                    type="text"
+                    value={addressForm.street_type}
+                    onChange={(e) =>
+                      setAddressForm((prev) => ({ ...prev, street_type: e.target.value }))
+                    }
+                    placeholder="Ej: Calle, Avenida..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nombre de vía *
+                  </label>
+                  <input
+                    type="text"
+                    value={addressForm.street_name}
+                    onChange={(e) =>
+                      setAddressForm((prev) => ({ ...prev, street_name: e.target.value }))
+                    }
+                    placeholder="Ej: Gran Vía"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Número</label>
+                  <input
+                    type="text"
+                    value={addressForm.street_number}
+                    onChange={(e) =>
+                      setAddressForm((prev) => ({ ...prev, street_number: e.target.value }))
+                    }
+                    placeholder="Ej: 28"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Código Postal
+                  </label>
+                  <input
+                    type="text"
+                    value={addressForm.postal_code}
+                    onChange={(e) =>
+                      setAddressForm((prev) => ({ ...prev, postal_code: e.target.value }))
+                    }
+                    placeholder="Ej: 28013"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-2">
+                <button
+                  onClick={() => setEditing(false)}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium"
+                >
+                  Guardar cambios
+                </button>
+                <p className="text-xs text-gray-500">
+                  O usa el buscador de arriba para seleccionar automáticamente
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="text-gray-700 mb-2">
+                {addressForm.street_type && (
+                  <span className="font-medium">{addressForm.street_type} </span>
+                )}
+                {addressForm.street_name}
+                {addressForm.street_number && <span> {addressForm.street_number}</span>}
+              </p>
+              {addressForm.postal_code && (
+                <p className="text-sm text-gray-600 mt-1">
+                  Código Postal: {addressForm.postal_code}
+                </p>
+              )}
+              {hasCoordinates ? (
+                <p className="text-xs text-gray-500 mt-2 font-mono">
+                  📍 {addressForm.latitude!.toFixed(6)}, {addressForm.longitude!.toFixed(6)}
+                </p>
+              ) : (
+                <p className="text-xs text-yellow-700 mt-2">
+                  ⚠️ No hay coordenadas GPS - Usa el buscador para encontrar la ubicación
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Map Display */}
       {hasCoordinates ? (
