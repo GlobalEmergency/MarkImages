@@ -1,0 +1,82 @@
+/**
+ * Puerto: Repositorio de importación
+ * Capa de Dominio - Define el contrato para persistencia
+ */
+
+import { CsvRow } from "../value-objects/CsvRow";
+
+export interface CreateImportBatchData {
+  name: string;
+  description?: string;
+  sourceOrigin: string;
+  fileName?: string;
+  totalRecords: number;
+  importedBy: string;
+}
+
+export interface ImportBatchInfo {
+  id: string;
+  name: string;
+  status: string;
+  totalRecords: number;
+  successfulRecords: number;
+  failedRecords: number;
+  createdAt: Date;
+  startedAt: Date | null;
+  completedAt: Date | null;
+}
+
+export interface CreateAedFromCsvData {
+  csvRow: CsvRow;
+  batchId: string;
+  districtId: number | null;
+  latitude: number | null;
+  longitude: number | null;
+  addressValidationFailed: boolean;
+  imageUrls: Array<{ url: string; type: string }>;
+}
+
+export interface ImportErrorData {
+  batchId: string;
+  rowNumber: number;
+  errorType: string;
+  errorMessage: string;
+  severity: string;
+  rowData?: Record<string, unknown>;
+}
+
+export interface IImportRepository {
+  /**
+   * Crea un nuevo batch de importación
+   */
+  createBatch(data: CreateImportBatchData): Promise<string>;
+
+  /**
+   * Actualiza el estado de un batch
+   */
+  updateBatchStatus(
+    batchId: string,
+    status: string,
+    stats?: {
+      successfulRecords?: number;
+      failedRecords?: number;
+      startedAt?: Date;
+      completedAt?: Date;
+    }
+  ): Promise<void>;
+
+  /**
+   * Obtiene información de un batch
+   */
+  getBatchInfo(batchId: string): Promise<ImportBatchInfo | null>;
+
+  /**
+   * Crea un AED desde una fila CSV
+   */
+  createAedFromCsv(data: CreateAedFromCsvData): Promise<string>;
+
+  /**
+   * Registra un error de importación
+   */
+  logImportError(error: ImportErrorData): Promise<void>;
+}
