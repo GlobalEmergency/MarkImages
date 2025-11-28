@@ -318,6 +318,7 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                     body: JSON.stringify({
                       images: imageUrls.map((url, index) => ({
                         original_url: url,
+                        type: "FRONT", // Default type for user-uploaded verification images
                         order: index,
                       })),
                     }),

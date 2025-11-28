@@ -13,13 +13,37 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { id } = await params;
     const body = await request.json();
 
+    // Extract images from body if present (needs special handling)
+    const { images, ...updateData } = body;
+
+    // Build the update data object
+    const data: any = {
+      ...updateData,
+      updated_by: user.userId,
+      updated_at: new Date(),
+    };
+
+    // Handle images relation separately if provided
+    if (images && Array.isArray(images)) {
+      data.images = {
+        // Delete all existing images
+        deleteMany: {},
+        // Create new images
+        create: images.map((img: any, index: number) => ({
+          original_url: img.original_url,
+          type: img.type || "FRONT", // Default to FRONT if not specified
+          order: img.order ?? index,
+          is_verified: false,
+        })),
+      };
+    }
+
     // Update the AED with the provided data
     const updatedAed = await prisma.aed.update({
       where: { id },
-      data: {
-        ...body,
-        updated_by: user.userId,
-        updated_at: new Date(),
+      data,
+      include: {
+        images: true,
       },
     });
 
