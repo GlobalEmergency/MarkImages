@@ -85,6 +85,10 @@ export default function VerifyPage({ params }: VerifyPageProps) {
   };
 
   const updateStep = async (step: VerificationStep, stepData?: Record<string, unknown>) => {
+    console.log("=== updateStep called ===");
+    console.log("Step:", step);
+    console.log("Step data:", stepData);
+
     try {
       const response = await fetch(`/api/verify/${resolvedParams.id}`, {
         method: "PUT",
@@ -94,13 +98,23 @@ export default function VerifyPage({ params }: VerifyPageProps) {
         body: JSON.stringify({ step, data: stepData || {} }),
       });
 
+      console.log("Update response status:", response.status);
+
       if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Update error response:", errorData);
         throw new Error("Error al actualizar paso");
       }
 
+      const responseData = await response.json();
+      console.log("Update successful, response:", responseData);
+
       // Refresh data
+      console.log("Refreshing verification data...");
       await fetchVerificationData();
+      console.log("Verification data refreshed");
     } catch (err) {
+      console.error("Error in updateStep:", err);
       setError(err instanceof Error ? err.message : "Error al actualizar paso");
     }
   };

@@ -304,6 +304,11 @@ export default function AddressValidation({
   };
 
   const validateAddress = async () => {
+    console.log("=== Starting address validation ===");
+    console.log("Address form data:", addressForm);
+    console.log("Has address:", hasAddress);
+    console.log("Has coordinates:", hasCoordinates);
+
     setLoading(true);
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -321,7 +326,10 @@ export default function AddressValidation({
         confidence: hasCoordinates ? 0.95 : 0.5,
       };
 
+      console.log("Validated address:", validatedAddress);
+      console.log("Calling onValidationComplete...");
       onValidationComplete(validatedAddress);
+      console.log("onValidationComplete called successfully");
     } catch (error) {
       console.error("Error validating address:", error);
     } finally {
