@@ -1,27 +1,38 @@
-'use client';
+"use client";
 
-import type { Aed, AedLocation, AedImage, AedResponsible, AedValidation, District, Neighborhood, Street } from '@prisma/client';
-import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { use, useEffect, useState } from 'react';
+import type {
+  Aed,
+  AedLocation,
+  AedImage,
+  AedResponsible,
+  AedValidation,
+  District,
+  Neighborhood,
+  Street,
+} from "@prisma/client";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useState } from "react";
 
-import AddressValidation from '@/components/verification/AddressValidation';
-import ArrowPlacer from '@/components/verification/ArrowPlacer';
-import ImageCropper from '@/components/verification/ImageCropper';
-import ImagePairSelector, { ImageSelection } from '@/components/verification/ImagePairSelector';
-import ResponsibleForm from '@/components/verification/ResponsibleForm';
-import { useAuth } from '@/contexts/AuthContext';
-import type { CropData, ArrowData } from '@/types/shared';
-import type { AddressData, ResponsibleData } from '@/types/verification';
-import { VerificationStep, VERIFICATION_STEPS_CONFIG } from '@/types/verification';
+import AddressValidation from "@/components/verification/AddressValidation";
+import ArrowPlacer from "@/components/verification/ArrowPlacer";
+import ImageCropper from "@/components/verification/ImageCropper";
+import ImagePairSelector, { ImageSelection } from "@/components/verification/ImagePairSelector";
+import ResponsibleForm from "@/components/verification/ResponsibleForm";
+import { useAuth } from "@/contexts/AuthContext";
+import type { CropData, ArrowData } from "@/types/shared";
+import type { AddressData, ResponsibleData } from "@/types/verification";
+import { VerificationStep, VERIFICATION_STEPS_CONFIG } from "@/types/verification";
 
 interface VerificationData {
   aed: Aed & {
-    location: (AedLocation & {
-      district: District | null;
-      neighborhood: Neighborhood | null;
-      street: Street | null;
-    }) | null;
+    location:
+      | (AedLocation & {
+          district: District | null;
+          neighborhood: Neighborhood | null;
+          street: Street | null;
+        })
+      | null;
     images: AedImage[];
     responsible: AedResponsible | null;
   };
@@ -44,7 +55,7 @@ export default function VerifyPage({ params }: VerifyPageProps) {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/login?redirect=/verify');
+      router.push("/login?redirect=/verify");
       return;
     }
 
@@ -59,15 +70,15 @@ export default function VerifyPage({ params }: VerifyPageProps) {
 
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error('Sesión de verificación no encontrada');
+          throw new Error("Sesión de verificación no encontrada");
         }
-        throw new Error('Error al cargar sesión');
+        throw new Error("Error al cargar sesión");
       }
 
       const responseData = await response.json();
       setData(responseData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      setError(err instanceof Error ? err.message : "Error desconocido");
     } finally {
       setLoading(false);
     }
@@ -76,21 +87,21 @@ export default function VerifyPage({ params }: VerifyPageProps) {
   const updateStep = async (step: VerificationStep, stepData?: Record<string, unknown>) => {
     try {
       const response = await fetch(`/api/verify/${resolvedParams.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ step, data: stepData || {} }),
       });
 
       if (!response.ok) {
-        throw new Error('Error al actualizar paso');
+        throw new Error("Error al actualizar paso");
       }
 
       // Refresh data
       await fetchVerificationData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al actualizar paso');
+      setError(err instanceof Error ? err.message : "Error al actualizar paso");
     }
   };
 
@@ -98,41 +109,41 @@ export default function VerifyPage({ params }: VerifyPageProps) {
     setCompleting(true);
     try {
       const response = await fetch(`/api/verify/${resolvedParams.id}/complete`, {
-        method: 'POST',
+        method: "POST",
       });
 
       if (!response.ok) {
-        throw new Error('Error al completar verificación');
+        throw new Error("Error al completar verificación");
       }
 
       // Redirect to verify list after short delay
       setTimeout(() => {
-        router.push('/verify');
+        router.push("/verify");
       }, 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al completar verificación');
+      setError(err instanceof Error ? err.message : "Error al completar verificación");
     } finally {
       setCompleting(false);
     }
   };
 
   const cancelVerification = async () => {
-    if (!confirm('¿Estás seguro de que quieres cancelar la verificación?')) {
+    if (!confirm("¿Estás seguro de que quieres cancelar la verificación?")) {
       return;
     }
 
     try {
       const response = await fetch(`/api/verify/${resolvedParams.id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (!response.ok) {
-        throw new Error('Error al cancelar verificación');
+        throw new Error("Error al cancelar verificación");
       }
 
-      router.push('/verify');
+      router.push("/verify");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cancelar verificación');
+      setError(err instanceof Error ? err.message : "Error al cancelar verificación");
     }
   };
 
@@ -140,14 +151,14 @@ export default function VerifyPage({ params }: VerifyPageProps) {
     if (!data) return { current: 0, total: 0, percentage: 0 };
 
     const steps = Object.keys(VERIFICATION_STEPS_CONFIG).filter(
-      step => step !== VerificationStep.COMPLETED
+      (step) => step !== VerificationStep.COMPLETED
     );
     const currentIndex = steps.indexOf(data.current_step);
 
     return {
       current: currentIndex + 1,
       total: steps.length,
-      percentage: Math.round(((currentIndex + 1) / steps.length) * 100)
+      percentage: Math.round(((currentIndex + 1) / steps.length) * 100),
     };
   };
 
@@ -164,18 +175,18 @@ export default function VerifyPage({ params }: VerifyPageProps) {
             <p className="text-gray-600 mb-6">{stepConfig.description}</p>
 
             <AddressValidation
-              aedId={data.aed.id}
+              _aedId={data.aed.id}
               currentAddress={{
-                street_type: data.aed.location?.street_type,
-                street_name: data.aed.location?.street_name,
-                street_number: data.aed.location?.street_number,
-                postal_code: data.aed.location?.postal_code,
-                latitude: data.aed.location?.latitude,
-                longitude: data.aed.location?.longitude
+                street_type: data.aed.location?.street_type ?? undefined,
+                street_name: data.aed.location?.street_name ?? undefined,
+                street_number: data.aed.location?.street_number ?? undefined,
+                postal_code: data.aed.location?.postal_code ?? undefined,
+                latitude: data.aed.location?.latitude ?? undefined,
+                longitude: data.aed.location?.longitude ?? undefined,
               }}
               onValidationComplete={(validatedAddress: AddressData) => {
                 updateStep(VerificationStep.IMAGE_SELECTION, {
-                  validated_address: validatedAddress
+                  validated_address: validatedAddress,
                 });
               }}
             />
@@ -196,15 +207,15 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                 // Determine next step based on selection
                 if (selection.markedAsInvalid) {
                   updateStep(VerificationStep.RESPONSIBLE_ASSIGNMENT, {
-                    images_invalid: true
+                    images_invalid: true,
                   });
                 } else if (selection.image1Valid) {
                   updateStep(VerificationStep.IMAGE_CROP_FRONT, {
-                    image_selection: selection
+                    image_selection: selection,
                   });
                 } else {
                   updateStep(VerificationStep.RESPONSIBLE_ASSIGNMENT, {
-                    images_invalid: true
+                    images_invalid: true,
                   });
                 }
               }}
@@ -220,14 +231,14 @@ export default function VerifyPage({ params }: VerifyPageProps) {
             <p className="text-gray-600 mb-6">{stepConfig.description}</p>
 
             <ImageCropper
-              imageUrl={data.aed.images[0]?.original_url || ''}
+              imageUrl={data.aed.images[0]?.original_url || ""}
               onCropChange={(_cropData: CropData) => {
                 // Track crop changes
               }}
               onCropComplete={async (cropData: CropData) => {
                 // TODO: Call API to process cropped image
                 updateStep(VerificationStep.IMAGE_ARROW_FRONT, {
-                  front_crop_data: cropData
+                  front_crop_data: cropData,
                 });
               }}
               onCancel={() => updateStep(VerificationStep.IMAGE_SELECTION)}
@@ -242,17 +253,17 @@ export default function VerifyPage({ params }: VerifyPageProps) {
             <p className="text-gray-600 mb-6">{stepConfig.description}</p>
 
             <ArrowPlacer
-              imageUrl={data.aed.images[0]?.original_url || ''} // TODO: Use cropped image
+              imageUrl={data.aed.images[0]?.original_url || ""} // TODO: Use cropped image
               onArrowComplete={async (arrowData: ArrowData) => {
                 // Determine if there's a second image
                 const hasSecondImage = data.aed.images.length > 1;
                 if (hasSecondImage) {
                   updateStep(VerificationStep.IMAGE_CROP_INTERIOR, {
-                    front_arrow_data: arrowData
+                    front_arrow_data: arrowData,
                   });
                 } else {
                   updateStep(VerificationStep.RESPONSIBLE_ASSIGNMENT, {
-                    front_arrow_data: arrowData
+                    front_arrow_data: arrowData,
                   });
                 }
               }}
@@ -268,13 +279,13 @@ export default function VerifyPage({ params }: VerifyPageProps) {
             <p className="text-gray-600 mb-6">{stepConfig.description}</p>
 
             <ImageCropper
-              imageUrl={data.aed.images[1]?.original_url || ''}
+              imageUrl={data.aed.images[1]?.original_url || ""}
               onCropChange={(_cropData: CropData) => {
                 // Track interior crop changes
               }}
               onCropComplete={async (cropData: CropData) => {
                 updateStep(VerificationStep.IMAGE_ARROW_INTERIOR, {
-                  interior_crop_data: cropData
+                  interior_crop_data: cropData,
                 });
               }}
               onCancel={() => updateStep(VerificationStep.IMAGE_ARROW_FRONT)}
@@ -289,10 +300,10 @@ export default function VerifyPage({ params }: VerifyPageProps) {
             <p className="text-gray-600 mb-6">{stepConfig.description}</p>
 
             <ArrowPlacer
-              imageUrl={data.aed.images[1]?.original_url || ''} // TODO: Use cropped image
+              imageUrl={data.aed.images[1]?.original_url || ""} // TODO: Use cropped image
               onArrowComplete={async (arrowData: ArrowData) => {
                 updateStep(VerificationStep.RESPONSIBLE_ASSIGNMENT, {
-                  interior_arrow_data: arrowData
+                  interior_arrow_data: arrowData,
                 });
               }}
               onCancel={() => updateStep(VerificationStep.IMAGE_CROP_INTERIOR)}
@@ -307,11 +318,25 @@ export default function VerifyPage({ params }: VerifyPageProps) {
             <p className="text-gray-600 mb-6">{stepConfig.description}</p>
 
             <ResponsibleForm
-              aedId={data.aed.id}
-              currentResponsible={data.aed.responsible || undefined}
+              _aedId={data.aed.id}
+              currentResponsible={
+                data.aed.responsible
+                  ? {
+                      id: data.aed.responsible.id,
+                      name: data.aed.responsible.name,
+                      email: data.aed.responsible.email ?? undefined,
+                      phone: data.aed.responsible.phone ?? undefined,
+                      alternative_phone: data.aed.responsible.alternative_phone ?? undefined,
+                      organization: data.aed.responsible.organization ?? undefined,
+                      position: data.aed.responsible.position ?? undefined,
+                      department: data.aed.responsible.department ?? undefined,
+                      observations: data.aed.responsible.observations ?? undefined,
+                    }
+                  : undefined
+              }
               onAssignmentComplete={(responsibleData: ResponsibleData) => {
                 updateStep(VerificationStep.REVIEW, {
-                  responsible_data: responsibleData
+                  responsible_data: responsibleData,
                 });
               }}
             />
@@ -341,14 +366,14 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                   <strong>Nombre:</strong> {data.aed.name}
                 </p>
                 <p className="text-sm text-gray-700">
-                  <strong>Código:</strong> {data.aed.code || 'Sin asignar'}
+                  <strong>Código:</strong> {data.aed.code || "Sin asignar"}
                 </p>
               </div>
 
               <div className="border-b pb-4">
                 <h3 className="font-semibold text-lg mb-2">Dirección Validada</h3>
                 <p className="text-sm text-gray-700">
-                  {data.aed.location?.street_type} {data.aed.location?.street_name}{' '}
+                  {data.aed.location?.street_type} {data.aed.location?.street_name}{" "}
                   {data.aed.location?.street_number}
                 </p>
                 {data.aed.location?.district && (
@@ -398,7 +423,7 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                     Completando...
                   </>
                 ) : (
-                  'Completar Verificación'
+                  "Completar Verificación"
                 )}
               </button>
             </div>
@@ -410,16 +435,22 @@ export default function VerifyPage({ params }: VerifyPageProps) {
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="text-center py-12">
               <div className="mb-6">
-                <svg className="w-20 h-20 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg
+                  className="w-20 h-20 text-green-500 mx-auto"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               </div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                ✅ Verificación Completada
-              </h2>
-              <p className="text-gray-600 mb-6">
-                El DEA ha sido verificado exitosamente.
-              </p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">✅ Verificación Completada</h2>
+              <p className="text-gray-600 mb-6">El DEA ha sido verificado exitosamente.</p>
               <div className="text-sm text-gray-500">
                 <p>Redirigiendo a la lista...</p>
                 <Loader2 className="w-4 h-4 animate-spin mx-auto mt-2" />
@@ -431,12 +462,8 @@ export default function VerifyPage({ params }: VerifyPageProps) {
       default:
         return (
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-bold mb-4">
-              {stepConfig?.title || 'Cargando...'}
-            </h2>
-            <p className="text-gray-600">
-              {stepConfig?.description || 'Procesando paso...'}
-            </p>
+            <h2 className="text-2xl font-bold mb-4">{stepConfig?.title || "Cargando..."}</h2>
+            <p className="text-gray-600">{stepConfig?.description || "Procesando paso..."}</p>
           </div>
         );
     }
@@ -460,7 +487,7 @@ export default function VerifyPage({ params }: VerifyPageProps) {
           <div className="text-red-600 text-xl mb-4">⚠️ Error</div>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
-            onClick={() => router.push('/verify')}
+            onClick={() => router.push("/verify")}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
           >
             Volver a Verificaciones
@@ -482,9 +509,7 @@ export default function VerifyPage({ params }: VerifyPageProps) {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Verificación de DEA
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900">Verificación de DEA</h1>
             <button
               onClick={cancelVerification}
               className="text-red-600 hover:text-red-700 font-medium"
@@ -499,9 +524,7 @@ export default function VerifyPage({ params }: VerifyPageProps) {
               <span className="text-sm font-medium text-gray-700">
                 Paso {progress.current} de {progress.total}
               </span>
-              <span className="text-sm text-gray-500">
-                {progress.percentage}% completado
-              </span>
+              <span className="text-sm text-gray-500">{progress.percentage}% completado</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
