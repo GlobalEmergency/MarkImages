@@ -71,6 +71,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const validationData = validation.data as { current_step?: string; user_id?: string } | null;
 
+    console.log("=== GET /api/verify/[id] - Returning data ===");
+    console.log("Validation ID:", validation.id);
+    console.log("Validation data:", validationData);
+    console.log(
+      "Current step:",
+      validationData?.current_step || VerificationStep.ADDRESS_VALIDATION
+    );
+
     return NextResponse.json({
       aed,
       validation,
@@ -93,6 +101,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const body = await request.json();
     const { step, data } = body;
 
+    console.log("=== PUT /api/verify/[id] - Updating step ===");
+    console.log("AED ID:", id);
+    console.log("New step:", step);
+    console.log("Step data:", data);
+
     // Find the active validation
     const validation = await prisma.aedValidation.findFirst({
       where: {
@@ -104,6 +117,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (!validation) {
       return NextResponse.json({ error: "Sesión de verificación no encontrada" }, { status: 404 });
     }
+
+    console.log("Found validation:", validation.id);
+    console.log("Current validation data:", validation.data);
 
     // Update the validation with new step and data
     const updatedValidation = await prisma.aedValidation.update({
@@ -117,6 +133,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         updated_at: new Date(),
       },
     });
+
+    console.log("Updated validation data:", updatedValidation.data);
 
     // Create a session record for this step
     await prisma.validationSession.create({
