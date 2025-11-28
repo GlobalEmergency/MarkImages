@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle, AlertTriangle, MapPin, Loader2, Search, Edit2 } from "lucide-react";
+import { CheckCircle, AlertTriangle, MapPin, Loader2, Search, Edit2, X } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
 interface AddressValidationProps {
@@ -28,6 +28,22 @@ interface AddressData {
   confidence?: number;
 }
 
+interface SearchResult {
+  display_name: string;
+  lat: string;
+  lon: string;
+  address: {
+    road?: string;
+    house_number?: string;
+    postcode?: string;
+    city?: string;
+    town?: string;
+    village?: string;
+    municipality?: string;
+  };
+  type?: string;
+}
+
 export default function AddressValidation({
   _aedId,
   currentAddress,
@@ -35,13 +51,17 @@ export default function AddressValidation({
   onValidationComplete,
 }: AddressValidationProps) {
   const [loading, setLoading] = useState(false);
-  const [geocoding, setGeocoding] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [validated, setValidated] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [showResults, setShowResults] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Editable address fields
   const [addressForm, setAddressForm] = useState({
@@ -55,6 +75,45 @@ export default function AddressValidation({
 
   const hasAddress = addressForm.street_name || addressForm.street_type;
   const hasCoordinates = addressForm.latitude && addressForm.longitude;
+
+  // Search addresses with debouncing
+  useEffect(() => {
+    if (searchQuery.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?` +
+            `format=json&` +
+            `q=${encodeURIComponent(searchQuery + " Madrid España")}&` +
+            `addressdetails=1&` +
+            `limit=5`
+        );
+
+        const data = await response.json();
+        setSearchResults(data);
+        setShowResults(true);
+      } catch (error) {
+        console.error("Error searching address:", error);
+      } finally {
+        setSearching(false);
+      }
+    }, 500); // 500ms debounce
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery]);
 
   // Initialize map with OpenStreetMap
   useEffect(() => {
@@ -138,39 +197,38 @@ export default function AddressValidation({
     };
   }, [hasCoordinates, addressForm.latitude, addressForm.longitude]);
 
-  const geocodeAddress = async () => {
-    if (!addressForm.street_name) {
-      alert("Por favor ingresa al menos un nombre de calle");
-      return;
-    }
+  const parseAddress = (result: SearchResult) => {
+    // Extract street type from road name if possible
+    const roadName = result.address.road || "";
+    const streetTypes = ["Calle", "Avenida", "Plaza", "Paseo", "Travesía", "Glorieta"];
+    let street_type = "";
+    let street_name = roadName;
 
-    setGeocoding(true);
-    try {
-      const query = `${addressForm.street_type || ""} ${addressForm.street_name} ${addressForm.street_number || ""} Madrid España`;
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`
-      );
-
-      const data = await response.json();
-
-      if (data && data.length > 0) {
-        const result = data[0];
-        setAddressForm((prev) => ({
-          ...prev,
-          latitude: parseFloat(result.lat),
-          longitude: parseFloat(result.lon),
-        }));
-      } else {
-        alert(
-          "No se encontró la dirección. Por favor verifica los datos o coloca el marcador manualmente en el mapa."
-        );
+    for (const type of streetTypes) {
+      if (roadName.startsWith(type + " ")) {
+        street_type = type;
+        street_name = roadName.substring(type.length + 1);
+        break;
       }
-    } catch (error) {
-      console.error("Error geocoding address:", error);
-      alert("Error al buscar la dirección");
-    } finally {
-      setGeocoding(false);
     }
+
+    return {
+      street_type: street_type || undefined,
+      street_name: street_name || undefined,
+      street_number: result.address.house_number || undefined,
+      postal_code: result.address.postcode || undefined,
+      latitude: parseFloat(result.lat),
+      longitude: parseFloat(result.lon),
+    };
+  };
+
+  const selectSearchResult = (result: SearchResult) => {
+    const parsedAddress = parseAddress(result);
+    setAddressForm(parsedAddress as any);
+    setSearchQuery("");
+    setShowResults(false);
+    setSearchResults([]);
+    setEditing(false);
   };
 
   const validateAddress = async () => {
@@ -214,6 +272,84 @@ export default function AddressValidation({
         </div>
       )}
 
+      {/* Address Search */}
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6">
+        <div className="flex items-start space-x-3 mb-4">
+          <Search className="w-5 h-5 text-blue-600 mt-0.5" />
+          <div className="flex-1">
+            <h3 className="font-semibold text-gray-900 mb-1">Buscar Dirección</h3>
+            <p className="text-sm text-gray-600 mb-3">
+              Escribe una dirección en Madrid para buscar y seleccionar automáticamente
+            </p>
+
+            <div className="relative">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => searchResults.length > 0 && setShowResults(true)}
+                  placeholder="Ej: Calle Gran Vía 28, Madrid"
+                  className="w-full px-4 py-3 pr-10 border-2 border-blue-300 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => {
+                      setSearchQuery("");
+                      setSearchResults([]);
+                      setShowResults(false);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+                {searching && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                  </div>
+                )}
+              </div>
+
+              {/* Search Results Dropdown */}
+              {showResults && searchResults.length > 0 && (
+                <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-y-auto">
+                  {searchResults.map((result, index) => (
+                    <button
+                      key={index}
+                      onClick={() => selectSearchResult(result)}
+                      className="w-full px-4 py-3 text-left hover:bg-blue-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                    >
+                      <div className="flex items-start space-x-3">
+                        <MapPin className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {result.address.road}{" "}
+                            {result.address.house_number && `${result.address.house_number}`}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">{result.display_name}</p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {showResults &&
+                searchQuery.length >= 3 &&
+                searchResults.length === 0 &&
+                !searching && (
+                  <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4">
+                    <p className="text-sm text-gray-500 text-center">
+                      No se encontraron resultados. Intenta con otra búsqueda.
+                    </p>
+                  </div>
+                )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Current/Editable Address Info */}
       <div
         className={`border rounded-lg p-4 ${hasAddress ? "bg-blue-50 border-blue-200" : "bg-yellow-50 border-yellow-200"}`}
@@ -231,12 +367,12 @@ export default function AddressValidation({
               className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-700"
             >
               <Edit2 className="w-4 h-4" />
-              <span>Editar</span>
+              <span>Editar manualmente</span>
             </button>
           )}
         </div>
 
-        {editing || !hasAddress ? (
+        {editing ? (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -261,7 +397,7 @@ export default function AddressValidation({
                   onChange={(e) =>
                     setAddressForm((prev) => ({ ...prev, street_name: e.target.value }))
                   }
-                  placeholder="Ej: Ordicia"
+                  placeholder="Ej: Gran Vía"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                 />
               </div>
@@ -275,7 +411,7 @@ export default function AddressValidation({
                   onChange={(e) =>
                     setAddressForm((prev) => ({ ...prev, street_number: e.target.value }))
                   }
-                  placeholder="Ej: 31"
+                  placeholder="Ej: 28"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                 />
               </div>
@@ -289,41 +425,25 @@ export default function AddressValidation({
                   onChange={(e) =>
                     setAddressForm((prev) => ({ ...prev, postal_code: e.target.value }))
                   }
-                  placeholder="Ej: 28001"
+                  placeholder="Ej: 28013"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                 />
               </div>
             </div>
 
-            <div className="flex space-x-2 pt-2">
+            <div className="flex items-center space-x-2 pt-2">
               <button
-                onClick={geocodeAddress}
-                disabled={geocoding || !addressForm.street_name}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-sm font-medium"
+                onClick={() => setEditing(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium"
               >
-                {geocoding ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Buscando...</span>
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-4 h-4" />
-                    <span>Buscar Coordenadas</span>
-                  </>
-                )}
+                Guardar cambios
               </button>
-              {editing && (
-                <button
-                  onClick={() => setEditing(false)}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium"
-                >
-                  Cancelar
-                </button>
-              )}
+              <p className="text-xs text-gray-500">
+                O usa el buscador de arriba para seleccionar automáticamente
+              </p>
             </div>
           </div>
-        ) : (
+        ) : hasAddress ? (
           <div>
             <p className="text-gray-700 mb-2">
               {addressForm.street_type && (
@@ -341,9 +461,16 @@ export default function AddressValidation({
               </p>
             ) : (
               <p className="text-xs text-yellow-700 mt-2">
-                ⚠️ No hay coordenadas GPS - Haz clic en &quot;Editar&quot; para buscarlas
+                ⚠️ No hay coordenadas GPS - Usa el buscador para encontrar la ubicación
               </p>
             )}
+          </div>
+        ) : (
+          <div>
+            <p className="text-yellow-800 mb-2">No hay dirección registrada para este DEA</p>
+            <p className="text-sm text-yellow-700">
+              Usa el buscador de arriba para encontrar y seleccionar la dirección correcta.
+            </p>
           </div>
         )}
       </div>
@@ -374,11 +501,9 @@ export default function AddressValidation({
             <MapPin className="w-12 h-12 mx-auto mb-3 text-gray-400" />
             <p className="font-medium text-gray-700 mb-1">Mapa no disponible</p>
             <p className="text-sm">Este DEA no tiene coordenadas GPS registradas.</p>
-            {hasAddress && (
-              <p className="text-xs mt-2">
-                Haz clic en &quot;Buscar Coordenadas&quot; para geocodificar la dirección.
-              </p>
-            )}
+            <p className="text-xs mt-2">
+              Usa el buscador de direcciones para encontrar la ubicación automáticamente.
+            </p>
           </div>
         </div>
       )}
