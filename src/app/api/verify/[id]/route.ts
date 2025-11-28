@@ -31,15 +31,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           },
         },
         responsible: true,
-        validations: {
-          where: {
-            status: "IN_PROGRESS",
-          },
-          orderBy: {
-            created_at: "desc",
-          },
-          take: 1,
-        },
       },
     });
 
@@ -47,8 +38,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: "DEA no encontrado" }, { status: 404 });
     }
 
-    // Check if there's an active validation session
-    let validation = aed.validations[0];
+    // Get the active validation session with a direct query (avoid nested include caching issues)
+    let validation = await prisma.aedValidation.findFirst({
+      where: {
+        aed_id: id,
+        status: "IN_PROGRESS",
+      },
+      orderBy: {
+        created_at: "desc",
+      },
+      include: {
+        sessions: true,
+      },
+    });
 
     if (!validation || validation.status === "COMPLETED") {
       // Create a new validation session
