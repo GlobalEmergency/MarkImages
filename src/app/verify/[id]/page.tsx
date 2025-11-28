@@ -305,6 +305,35 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                   });
                 }
               }}
+              onUploadNewImages={async (image1Url: string | null, image2Url: string | null) => {
+                // Update AED with new images
+                const imageUrls = [image1Url, image2Url].filter(Boolean) as string[];
+
+                try {
+                  const response = await fetch(`/api/aeds/${resolvedParams.id}`, {
+                    method: "PATCH",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      images: imageUrls.map((url, index) => ({
+                        original_url: url,
+                        order: index,
+                      })),
+                    }),
+                  });
+
+                  if (!response.ok) {
+                    throw new Error("Error al actualizar las imágenes");
+                  }
+
+                  // Refresh verification data to show new images
+                  await fetchVerificationData();
+                } catch (err) {
+                  console.error("Error uploading new images:", err);
+                  setError(err instanceof Error ? err.message : "Error al subir las imágenes");
+                }
+              }}
               onCancel={() => updateStep(VerificationStep.ADDRESS_VALIDATION)}
             />
           </div>
