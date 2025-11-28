@@ -19,9 +19,7 @@ export default function NewSimpleDeaPage() {
     observations: "",
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -32,16 +30,20 @@ export default function NewSimpleDeaPage() {
     setError(null);
 
     try {
-      // Construir la dirección completa en additional_info
-      const fullAddress = `${formData.street}${formData.number ? ' ' + formData.number : ''}, ${formData.city}, ${formData.country}`;
+      // Construir la dirección completa para additional_info
+      const fullAddress = `${formData.street}${formData.number ? " " + formData.number : ""}, ${formData.city}, ${formData.country}`;
 
       const payload = {
         name: formData.name,
         origin_observations: formData.observations || undefined,
         source_details: "Formulario simple - dirección sin geocodificar",
 
-        // Location data mínimo
+        // Location data con campos estructurados
         location: {
+          street_name: formData.street || undefined,
+          street_number: formData.number || undefined,
+          locality: formData.city || undefined,
+          country: formData.country || undefined,
           additional_info: fullAddress,
         },
       };
@@ -192,9 +194,7 @@ export default function NewSimpleDeaPage() {
           </div>
 
           <div style={{ marginBottom: "0" }}>
-            <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
-              País
-            </label>
+            <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>País</label>
             <input
               type="text"
               name="country"
