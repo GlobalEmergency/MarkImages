@@ -72,19 +72,20 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const validationData = validation.data as { current_step?: string; user_id?: string } | null;
+    const currentStep = validationData?.current_step || VerificationStep.ADDRESS_VALIDATION;
 
     console.log("=== GET /api/verify/[id] - Returning data ===");
     console.log("Validation ID:", validation.id);
-    console.log("Validation data:", validationData);
-    console.log(
-      "Current step:",
-      validationData?.current_step || VerificationStep.ADDRESS_VALIDATION
-    );
+    console.log("Validation status:", validation.status);
+    console.log("Validation created at:", validation.created_at);
+    console.log("Validation data (full):", validation.data);
+    console.log("Extracted current_step:", validationData?.current_step);
+    console.log("Final current_step to return:", currentStep);
 
     return NextResponse.json({
       aed,
       validation,
-      current_step: validationData?.current_step || VerificationStep.ADDRESS_VALIDATION,
+      current_step: currentStep,
     });
   } catch (error) {
     console.error("Error fetching verification session:", error);
@@ -124,19 +125,21 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     console.log("Current validation data:", validation.data);
 
     // Update the validation with new step and data
+    // IMPORTANT: current_step must be last to avoid being overwritten by stepData
     const updatedValidation = await prisma.aedValidation.update({
       where: { id: validation.id },
       data: {
         data: {
           ...((validation.data as object) || {}),
-          current_step: step,
           ...data,
+          current_step: step, // Must be last to ensure it's not overwritten
         },
         updated_at: new Date(),
       },
     });
 
     console.log("Updated validation data:", updatedValidation.data);
+    console.log("Confirmed current_step in DB:", (updatedValidation.data as any)?.current_step);
 
     // Create a session record for this step
     await prisma.validationSession.create({
