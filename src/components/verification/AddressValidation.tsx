@@ -99,16 +99,51 @@ export default function AddressValidation({
     searchTimeoutRef.current = setTimeout(async () => {
       setSearching(true);
       try {
+        // Prepare search query - ensure it includes street prefix for better results
+        let searchText = searchQuery.trim();
+
+        // If query doesn't start with a street type, try to detect it and add "Calle" as default
+        const streetTypes = [
+          "Calle",
+          "Avenida",
+          "Plaza",
+          "Paseo",
+          "Travesía",
+          "Glorieta",
+          "Ronda",
+          "Camino",
+          "Carretera",
+        ];
+        const startsWithStreetType = streetTypes.some((type) =>
+          searchText.toLowerCase().startsWith(type.toLowerCase())
+        );
+
+        if (!startsWithStreetType && searchText.length > 0) {
+          searchText = `Calle ${searchText}`;
+        }
+
         const response = await fetch(
           `https://nominatim.openstreetmap.org/search?` +
             `format=json&` +
-            `q=${encodeURIComponent(searchQuery + " Madrid España")}&` +
+            `q=${encodeURIComponent(searchText + ", Madrid, España")}&` +
             `addressdetails=1&` +
-            `limit=5`
+            `limit=10&` + // Increase limit to get more options with house numbers
+            `countrycodes=es`
         );
 
         const data = await response.json();
-        setSearchResults(data);
+
+        // Filter and prioritize results with house numbers
+        const resultsWithNumbers = data.filter((r: SearchResult) => r.address.house_number);
+        const resultsWithoutNumbers = data.filter((r: SearchResult) => !r.address.house_number);
+
+        // Prioritize results with house numbers, but keep some without numbers as fallback
+        const prioritizedResults = [
+          ...resultsWithNumbers.slice(0, 7),
+          ...resultsWithoutNumbers.slice(0, 3),
+        ];
+
+        setSearchResults(prioritizedResults);
         setShowResults(true);
       } catch (error) {
         console.error("Error searching address:", error);
@@ -359,11 +394,23 @@ export default function AddressValidation({
                   <div className="flex items-start space-x-3">
                     <MapPin className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0 group-hover:text-blue-700" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-base font-medium text-gray-900 mb-1">
-                        {result.address.road}{" "}
-                        {result.address.house_number && `${result.address.house_number}`}
-                      </p>
-                      <p className="text-sm text-gray-500">{result.display_name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-base font-medium text-gray-900">
+                          {result.address.road}
+                          {result.address.house_number && ` ${result.address.house_number}`}
+                        </p>
+                        {result.address.house_number && (
+                          <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
+                            Nº exacto
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500 truncate">{result.display_name}</p>
+                      {!result.address.house_number && (
+                        <p className="text-xs text-amber-600 mt-1">
+                          ⚠️ Sin número - ubicación aproximada de la calle
+                        </p>
+                      )}
                     </div>
                   </div>
                 </button>
