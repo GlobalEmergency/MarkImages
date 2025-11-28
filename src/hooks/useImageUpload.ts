@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState } from "react";
+
+import { compressImage } from "@/lib/imageCompression";
 
 interface UploadState {
   loading: boolean;
@@ -13,29 +15,36 @@ export function useImageUpload() {
     url: null,
   });
 
-  const uploadImage = async (file: File, prefix: string = 'dea-foto'): Promise<string | null> => {
+  const uploadImage = async (file: File, prefix: string = "dea-foto"): Promise<string | null> => {
     setUploadState({ loading: true, error: null, url: null });
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('prefix', prefix);
+      // Compress image to ensure it stays under Vercel's 4.5MB limit
+      const compressedFile = await compressImage(file, {
+        maxSizeMB: 4,
+        maxWidthOrHeight: 2048,
+        initialQuality: 0.9,
+      });
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
+      const formData = new FormData();
+      formData.append("file", compressedFile);
+      formData.append("prefix", prefix);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
         body: formData,
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Error al subir la imagen');
+        throw new Error(result.error || "Error al subir la imagen");
       }
 
       setUploadState({ loading: false, error: null, url: result.url });
       return result.url;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      const errorMessage = error instanceof Error ? error.message : "Error desconocido";
       setUploadState({ loading: false, error: errorMessage, url: null });
       return null;
     }
