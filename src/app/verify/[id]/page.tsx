@@ -305,10 +305,8 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                   });
                 }
               }}
-              onUploadNewImages={async (image1Url: string | null, image2Url: string | null) => {
-                // Update AED with new images
-                const imageUrls = [image1Url, image2Url].filter(Boolean) as string[];
-
+              onUploadNewImages={async (images) => {
+                // Update AED with new images (including user-selected types)
                 try {
                   const response = await fetch(`/api/aeds/${resolvedParams.id}`, {
                     method: "PATCH",
@@ -316,9 +314,9 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                       "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                      images: imageUrls.map((url, index) => ({
-                        original_url: url,
-                        type: "FRONT", // Default type for user-uploaded verification images
+                      images: images.map((img, index) => ({
+                        original_url: img.url,
+                        type: img.type,
                         order: index,
                       })),
                     }),

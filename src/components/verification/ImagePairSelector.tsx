@@ -1,17 +1,22 @@
-'use client';
+"use client";
 
-import { Loader2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 
-import ImageUpload from '@/components/ImageUpload';
-import { loadImageWithRetry } from '@/utils/imageLoader';
+import ImageUploadWithType, { AedImageType } from "@/components/ImageUploadWithType";
+import { loadImageWithRetry } from "@/utils/imageLoader";
+
+export interface ImageWithType {
+  url: string;
+  type: AedImageType;
+}
 
 interface ImagePairSelectorProps {
   image1Url?: string;
   image2Url?: string;
   descripcionAcceso?: string;
   onSelectionComplete: (selection: ImageSelection) => void;
-  onUploadNewImages?: (image1Url: string | null, image2Url: string | null) => void;
+  onUploadNewImages?: (images: ImageWithType[]) => void;
   onCancel: () => void;
 }
 
@@ -22,15 +27,15 @@ export interface ImageSelection {
   markedAsInvalid: boolean;
 }
 
-type SelectionOption = 
-  | 'both_valid'
-  | 'only_image1'
-  | 'only_image2'
-  | 'both_invalid'
-  | 'swap_images'
-  | 'single_as_image1'
-  | 'single_as_image2'
-  | 'single_invalid';
+type SelectionOption =
+  | "both_valid"
+  | "only_image1"
+  | "only_image2"
+  | "both_invalid"
+  | "swap_images"
+  | "single_as_image1"
+  | "single_as_image2"
+  | "single_invalid";
 
 export default function ImagePairSelector({
   image1Url,
@@ -38,19 +43,19 @@ export default function ImagePairSelector({
   descripcionAcceso,
   onSelectionComplete,
   onUploadNewImages,
-  onCancel
+  onCancel,
 }: ImagePairSelectorProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [image1Loaded, setImage1Loaded] = useState(false);
   const [image2Loaded, setImage2Loaded] = useState(false);
   const [image1Error, setImage1Error] = useState(false);
   const [image2Error, setImage2Error] = useState(false);
-  const [image1DataUrl, setImage1DataUrl] = useState<string>('');
-  const [image2DataUrl, setImage2DataUrl] = useState<string>('');
-  const [loadingState, setLoadingState] = useState<string>('Cargando imágenes...');
+  const [image1DataUrl, setImage1DataUrl] = useState<string>("");
+  const [image2DataUrl, setImage2DataUrl] = useState<string>("");
+  const [loadingState, setLoadingState] = useState<string>("Cargando imágenes...");
   const [uploadMode, setUploadMode] = useState(false);
-  const [newImage1Url, setNewImage1Url] = useState<string | null>(null);
-  const [newImage2Url, setNewImage2Url] = useState<string | null>(null);
+  const [newImage1, setNewImage1] = useState<ImageWithType | null>(null);
+  const [newImage2, setNewImage2] = useState<ImageWithType | null>(null);
 
   const hasImage1 = !!image1Url;
   const hasImage2 = !!image2Url;
@@ -63,27 +68,27 @@ export default function ImagePairSelector({
       // Cargar imagen 1
       if (image1Url) {
         try {
-          setLoadingState('Cargando imagen 1...');
+          setLoadingState("Cargando imagen 1...");
           const result = await loadImageWithRetry(image1Url, {
             maxRetries: 3,
             initialDelay: 1000,
             useCacheBusting: true,
             useProxyFallback: true,
           });
-          
-          const canvas = document.createElement('canvas');
+
+          const canvas = document.createElement("canvas");
           canvas.width = result.image.width;
           canvas.height = result.image.height;
-          const ctx = canvas.getContext('2d');
-          
+          const ctx = canvas.getContext("2d");
+
           if (ctx) {
             ctx.drawImage(result.image, 0, 0);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
             setImage1DataUrl(dataUrl);
             setImage1Loaded(true);
           }
         } catch (error) {
-          console.error('Error loading image 1:', error);
+          console.error("Error loading image 1:", error);
           setImage1Error(true);
           setImage1DataUrl(image1Url);
         }
@@ -92,33 +97,33 @@ export default function ImagePairSelector({
       // Cargar imagen 2
       if (image2Url) {
         try {
-          setLoadingState('Cargando imagen 2...');
+          setLoadingState("Cargando imagen 2...");
           const result = await loadImageWithRetry(image2Url, {
             maxRetries: 3,
             initialDelay: 1000,
             useCacheBusting: true,
             useProxyFallback: true,
           });
-          
-          const canvas = document.createElement('canvas');
+
+          const canvas = document.createElement("canvas");
           canvas.width = result.image.width;
           canvas.height = result.image.height;
-          const ctx = canvas.getContext('2d');
-          
+          const ctx = canvas.getContext("2d");
+
           if (ctx) {
             ctx.drawImage(result.image, 0, 0);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
             setImage2DataUrl(dataUrl);
             setImage2Loaded(true);
           }
         } catch (error) {
-          console.error('Error loading image 2:', error);
+          console.error("Error loading image 2:", error);
           setImage2Error(true);
           setImage2DataUrl(image2Url);
         }
       }
 
-      setLoadingState('');
+      setLoadingState("");
     };
 
     loadImages();
@@ -126,83 +131,83 @@ export default function ImagePairSelector({
 
   const handleSelection = async (option: SelectionOption) => {
     setIsProcessing(true);
-    
+
     try {
       let selection: ImageSelection;
 
       switch (option) {
-        case 'both_valid':
+        case "both_valid":
           selection = {
             image1Valid: true,
             image2Valid: true,
             imagesSwapped: false,
-            markedAsInvalid: false
+            markedAsInvalid: false,
           };
           break;
-        case 'only_image1':
+        case "only_image1":
           selection = {
             image1Valid: true,
             image2Valid: false,
             imagesSwapped: false,
-            markedAsInvalid: false
+            markedAsInvalid: false,
           };
           break;
-        case 'only_image2':
+        case "only_image2":
           selection = {
             image1Valid: false,
             image2Valid: true,
             imagesSwapped: false,
-            markedAsInvalid: false
+            markedAsInvalid: false,
           };
           break;
-        case 'both_invalid':
+        case "both_invalid":
           selection = {
             image1Valid: false,
             image2Valid: false,
             imagesSwapped: false,
-            markedAsInvalid: true
+            markedAsInvalid: true,
           };
           break;
-        case 'swap_images':
+        case "swap_images":
           selection = {
             image1Valid: true,
             image2Valid: true,
             imagesSwapped: true,
-            markedAsInvalid: false
+            markedAsInvalid: false,
           };
           break;
-        case 'single_as_image1':
+        case "single_as_image1":
           selection = {
             image1Valid: true,
             image2Valid: false,
             imagesSwapped: false,
-            markedAsInvalid: false
+            markedAsInvalid: false,
           };
           break;
-        case 'single_as_image2':
+        case "single_as_image2":
           selection = {
             image1Valid: false,
             image2Valid: true,
             imagesSwapped: hasImage1, // Si la única imagen es image1, necesitamos swap
-            markedAsInvalid: false
+            markedAsInvalid: false,
           };
           break;
-        case 'single_invalid':
+        case "single_invalid":
           selection = {
             image1Valid: false,
             image2Valid: false,
             imagesSwapped: false,
-            markedAsInvalid: true
+            markedAsInvalid: true,
           };
           break;
         default:
-          throw new Error('Opción no válida');
+          throw new Error("Opción no válida");
       }
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       onSelectionComplete(selection);
     } catch (error) {
-      console.error('Error processing selection:', error);
+      console.error("Error processing selection:", error);
     } finally {
       setIsProcessing(false);
     }
@@ -210,13 +215,17 @@ export default function ImagePairSelector({
 
   const handleUploadNewImages = async () => {
     if (!onUploadNewImages) return;
-    if (!newImage1Url && !newImage2Url) return;
+    if (!newImage1 && !newImage2) return;
 
     setIsProcessing(true);
     try {
-      await onUploadNewImages(newImage1Url, newImage2Url);
+      const images: ImageWithType[] = [];
+      if (newImage1) images.push(newImage1);
+      if (newImage2) images.push(newImage2);
+
+      await onUploadNewImages(images);
     } catch (error) {
-      console.error('Error uploading new images:', error);
+      console.error("Error uploading new images:", error);
     } finally {
       setIsProcessing(false);
     }
@@ -230,26 +239,23 @@ export default function ImagePairSelector({
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
             <h3 className="text-lg font-semibold text-blue-800 mb-4">Subir Nuevas Imágenes</h3>
             <p className="text-blue-700 mb-6">
-              Sube 1 o 2 imágenes nuevas para este DEA. Las imágenes deben corresponder a:
+              Sube 1 o 2 imágenes nuevas para este DEA. Selecciona el tipo de cada imagen según
+              corresponda.
             </p>
-            <ul className="text-blue-700 text-sm space-y-1 list-disc list-inside mb-6">
-              <li><strong>Imagen 1 (Entrada):</strong> Vista general desde la entrada</li>
-              <li><strong>Imagen 2 (Detalle):</strong> Vista de cerca del DEA</li>
-            </ul>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <ImageUpload
-                label="Imagen 1 (Entrada) - Opcional"
-                value={newImage1Url || undefined}
-                onChange={(url) => setNewImage1Url(url)}
-                prefix="dea-images/entrada"
+              <ImageUploadWithType
+                label="Imagen 1 - Opcional"
+                value={newImage1}
+                onChange={(data) => setNewImage1(data)}
+                prefix="dea-images"
                 required={false}
               />
-              <ImageUpload
-                label="Imagen 2 (Detalle) - Opcional"
-                value={newImage2Url || undefined}
-                onChange={(url) => setNewImage2Url(url)}
-                prefix="dea-images/detalle"
+              <ImageUploadWithType
+                label="Imagen 2 - Opcional"
+                value={newImage2}
+                onChange={(data) => setNewImage2(data)}
+                prefix="dea-images"
                 required={false}
               />
             </div>
@@ -258,7 +264,7 @@ export default function ImagePairSelector({
           <div className="flex gap-4">
             <button
               onClick={handleUploadNewImages}
-              disabled={isProcessing || (!newImage1Url && !newImage2Url)}
+              disabled={isProcessing || (!newImage1 && !newImage2)}
               className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isProcessing ? (
@@ -267,14 +273,14 @@ export default function ImagePairSelector({
                   Procesando...
                 </>
               ) : (
-                'Continuar con las Imágenes Subidas'
+                "Continuar con las Imágenes Subidas"
               )}
             </button>
             <button
               onClick={() => {
                 setUploadMode(false);
-                setNewImage1Url(null);
-                setNewImage2Url(null);
+                setNewImage1(null);
+                setNewImage2(null);
               }}
               disabled={isProcessing}
               className="px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
@@ -283,7 +289,7 @@ export default function ImagePairSelector({
             </button>
           </div>
 
-          {!newImage1Url && !newImage2Url && (
+          {!newImage1 && !newImage2 && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <p className="text-yellow-700 text-sm">
                 ⚠️ Debes subir al menos una imagen para continuar
@@ -298,9 +304,7 @@ export default function ImagePairSelector({
       <div className="space-y-6 w-full">
         <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
           <div className="text-red-600 text-xl mb-4">⚠️ Sin Imágenes</div>
-          <p className="text-red-700 mb-4">
-            Este DEA no tiene imágenes disponibles para procesar.
-          </p>
+          <p className="text-red-700 mb-4">Este DEA no tiene imágenes disponibles para procesar.</p>
           <div className="flex flex-col gap-3 max-w-md mx-auto">
             {onUploadNewImages && (
               <button
@@ -311,11 +315,11 @@ export default function ImagePairSelector({
               </button>
             )}
             <button
-              onClick={() => handleSelection('both_invalid')}
+              onClick={() => handleSelection("both_invalid")}
               disabled={isProcessing}
               className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
             >
-              {isProcessing ? 'Procesando...' : 'Marcar DEA como Inválido'}
+              {isProcessing ? "Procesando..." : "Marcar DEA como Inválido"}
             </button>
           </div>
         </div>
@@ -330,8 +334,8 @@ export default function ImagePairSelector({
     );
   }
 
-  const isLoading = (hasImage1 && !image1Loaded && !image1Error) || 
-                     (hasImage2 && !image2Loaded && !image2Error);
+  const isLoading =
+    (hasImage1 && !image1Loaded && !image1Error) || (hasImage2 && !image2Loaded && !image2Error);
 
   // Renderizar caso: Una sola imagen
   if (hasSingleImage) {
@@ -376,29 +380,32 @@ export default function ImagePairSelector({
         )}
 
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <h4 className="text-md font-semibold text-yellow-800 mb-3">
-            Clasificar Imagen
-          </h4>
+          <h4 className="text-md font-semibold text-yellow-800 mb-3">Clasificar Imagen</h4>
           <p className="text-yellow-700 text-sm mb-4">
-            Por favor, indica si esta imagen corresponde a la foto de entrada o a la foto de detalle del DEA.
+            Por favor, indica si esta imagen corresponde a la foto de entrada o a la foto de detalle
+            del DEA.
           </p>
           <ul className="text-yellow-700 text-sm space-y-1 list-disc list-inside">
-            <li><strong>Foto 1 (Entrada):</strong> Vista general, desde la entrada o acceso al lugar</li>
-            <li><strong>Foto 2 (Detalle):</strong> Vista de cerca del DEA o su ubicación exacta</li>
+            <li>
+              <strong>Foto 1 (Entrada):</strong> Vista general, desde la entrada o acceso al lugar
+            </li>
+            <li>
+              <strong>Foto 2 (Detalle):</strong> Vista de cerca del DEA o su ubicación exacta
+            </li>
           </ul>
         </div>
 
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
-              onClick={() => handleSelection('single_as_image1')}
+              onClick={() => handleSelection("single_as_image1")}
               disabled={isProcessing || !imageLoaded}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Es Foto 1 (Entrada)
             </button>
             <button
-              onClick={() => handleSelection('single_as_image2')}
+              onClick={() => handleSelection("single_as_image2")}
               disabled={isProcessing || !imageLoaded}
               className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -406,7 +413,7 @@ export default function ImagePairSelector({
             </button>
           </div>
           <button
-            onClick={() => handleSelection('single_invalid')}
+            onClick={() => handleSelection("single_invalid")}
             disabled={isProcessing || !imageLoaded}
             className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -431,26 +438,23 @@ export default function ImagePairSelector({
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-blue-800 mb-4">Subir Nuevas Imágenes</h3>
           <p className="text-blue-700 mb-6">
-            Las imágenes actuales no son válidas. Sube 1 o 2 imágenes nuevas para reemplazarlas:
+            Las imágenes actuales no son válidas. Sube 1 o 2 imágenes nuevas y selecciona el tipo de
+            cada una:
           </p>
-          <ul className="text-blue-700 text-sm space-y-1 list-disc list-inside mb-6">
-            <li><strong>Imagen 1 (Entrada):</strong> Vista general desde la entrada</li>
-            <li><strong>Imagen 2 (Detalle):</strong> Vista de cerca del DEA</li>
-          </ul>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ImageUpload
-              label="Imagen 1 (Entrada) - Opcional"
-              value={newImage1Url || undefined}
-              onChange={(url) => setNewImage1Url(url)}
-              prefix="dea-images/entrada"
+            <ImageUploadWithType
+              label="Imagen 1 - Opcional"
+              value={newImage1}
+              onChange={(data) => setNewImage1(data)}
+              prefix="dea-images"
               required={false}
             />
-            <ImageUpload
-              label="Imagen 2 (Detalle) - Opcional"
-              value={newImage2Url || undefined}
-              onChange={(url) => setNewImage2Url(url)}
-              prefix="dea-images/detalle"
+            <ImageUploadWithType
+              label="Imagen 2 - Opcional"
+              value={newImage2}
+              onChange={(data) => setNewImage2(data)}
+              prefix="dea-images"
               required={false}
             />
           </div>
@@ -459,7 +463,7 @@ export default function ImagePairSelector({
         <div className="flex gap-4">
           <button
             onClick={handleUploadNewImages}
-            disabled={isProcessing || (!newImage1Url && !newImage2Url)}
+            disabled={isProcessing || (!newImage1 && !newImage2)}
             className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isProcessing ? (
@@ -468,14 +472,14 @@ export default function ImagePairSelector({
                 Procesando...
               </>
             ) : (
-              'Continuar con las Imágenes Subidas'
+              "Continuar con las Imágenes Subidas"
             )}
           </button>
           <button
             onClick={() => {
               setUploadMode(false);
-              setNewImage1Url(null);
-              setNewImage2Url(null);
+              setNewImage1(null);
+              setNewImage2(null);
             }}
             disabled={isProcessing}
             className="px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
@@ -484,7 +488,7 @@ export default function ImagePairSelector({
           </button>
         </div>
 
-        {!newImage1Url && !newImage2Url && (
+        {!newImage1 && !newImage2 && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-yellow-700 text-sm">
               ⚠️ Debes subir al menos una imagen para continuar
@@ -562,15 +566,17 @@ export default function ImagePairSelector({
       )}
 
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <h4 className="text-md font-semibold text-yellow-800 mb-3">
-          Validar Imágenes
-        </h4>
+        <h4 className="text-md font-semibold text-yellow-800 mb-3">Validar Imágenes</h4>
         <p className="text-yellow-700 text-sm mb-3">
           Verifica que las imágenes sean válidas y correspondan correctamente:
         </p>
         <ul className="text-yellow-700 text-sm space-y-1 list-disc list-inside">
-          <li><strong>Imagen 1:</strong> Debe ser la vista de entrada o general</li>
-          <li><strong>Imagen 2:</strong> Debe ser la vista de detalle del DEA</li>
+          <li>
+            <strong>Imagen 1:</strong> Debe ser la vista de entrada o general
+          </li>
+          <li>
+            <strong>Imagen 2:</strong> Debe ser la vista de detalle del DEA
+          </li>
           <li>Si están intercambiadas, selecciona la opción de intercambiar</li>
           <li>Si alguna es borrosa o incorrecta, márcala como inválida</li>
         </ul>
@@ -579,31 +585,31 @@ export default function ImagePairSelector({
       <div className="flex flex-col gap-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
-            onClick={() => handleSelection('both_valid')}
+            onClick={() => handleSelection("both_valid")}
             disabled={isProcessing || isLoading}
             className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             ✅ Ambas Válidas
           </button>
           <button
-            onClick={() => handleSelection('swap_images')}
+            onClick={() => handleSelection("swap_images")}
             disabled={isProcessing || isLoading}
             className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             🔄 Intercambiar Imágenes
           </button>
         </div>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
-            onClick={() => handleSelection('only_image1')}
+            onClick={() => handleSelection("only_image1")}
             disabled={isProcessing || isLoading}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Solo Imagen 1 Válida
           </button>
           <button
-            onClick={() => handleSelection('only_image2')}
+            onClick={() => handleSelection("only_image2")}
             disabled={isProcessing || isLoading}
             className="px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -613,7 +619,7 @@ export default function ImagePairSelector({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
-            onClick={() => handleSelection('both_invalid')}
+            onClick={() => handleSelection("both_invalid")}
             disabled={isProcessing || isLoading}
             className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
