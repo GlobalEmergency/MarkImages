@@ -397,6 +397,14 @@ Algunos estados permiten trabajo parcial pero no publicación:
 
 ---
 
+## Documentación Adicional
+
+### 📄 Optimización de Subida de Imágenes
+Para información detallada sobre cómo se resolvió el error 413 (Payload Too Large) y la implementación de compresión automática de imágenes, consulta:
+- [image-upload-optimization.md](./image-upload-optimization.md)
+
+---
+
 ## Anexo Técnico
 
 ### Campos de Base de Datos

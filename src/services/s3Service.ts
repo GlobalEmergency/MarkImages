@@ -99,12 +99,12 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
     };
   }
 
-  // Validar tamaño (máximo 5MB)
-  const maxSize = 5 * 1024 * 1024; // 5MB en bytes
+  // Validar tamaño (máximo 3MB - reducido para evitar error 413 en Vercel)
+  const maxSize = 3 * 1024 * 1024; // 3MB en bytes
   if (file.size > maxSize) {
     return {
       valid: false,
-      error: 'El archivo es demasiado grande. Máximo 5MB.',
+      error: 'El archivo es demasiado grande. Máximo 3MB.',
     };
   }
 

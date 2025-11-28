@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { Upload, X, Loader2 } from 'lucide-react';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { compressImage, validateFileSize, validateFileType } from '@/utils/imageCompression';
 
 interface ImageUploadProps {
   label: string;
@@ -27,17 +28,49 @@ export default function ImageUpload({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Crear preview local
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setPreview(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Validar tipo de archivo
+      const typeValidation = validateFileType(file);
+      if (!typeValidation.valid) {
+        alert(typeValidation.error);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        return;
+      }
 
-    // Subir a S3
-    const url = await uploadImage(file, prefix);
-    if (url) {
-      onChange(url);
+      // Validar tamaño original
+      const sizeValidation = validateFileSize(file);
+      if (!sizeValidation.valid) {
+        alert(sizeValidation.error);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        return;
+      }
+
+      // Crear preview local del archivo original
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      // Comprimir la imagen antes de subirla
+      const compressedFile = await compressImage(file);
+
+      // Subir la imagen comprimida a S3
+      const url = await uploadImage(compressedFile, prefix);
+      if (url) {
+        onChange(url);
+      }
+    } catch (error) {
+      console.error('Error al procesar imagen:', error);
+      alert(error instanceof Error ? error.message : 'Error al procesar la imagen');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      setPreview(null);
     }
   };
 
@@ -110,7 +143,10 @@ export default function ImageUpload({
                     Haz clic para subir una imagen
                   </p>
                   <p className="text-xs text-gray-500">
-                    JPG, PNG o WebP (máx. 5MB)
+                    JPG, PNG o WebP (máx. 50MB)
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Las imágenes grandes se comprimirán automáticamente
                   </p>
                 </div>
               </>
