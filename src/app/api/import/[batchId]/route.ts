@@ -3,8 +3,9 @@
  * Consulta el estado de un batch de importación
  */
 
-import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
+
 import { PrismaImportRepository } from "@/infrastructure/import/repositories/PrismaImportRepository";
 
 const prisma = new PrismaClient();

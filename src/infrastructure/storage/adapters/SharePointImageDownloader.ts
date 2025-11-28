@@ -4,6 +4,7 @@
  */
 
 import axios, { AxiosRequestConfig } from "axios";
+
 import {
   IImageDownloader,
   ImageDownloadOptions,

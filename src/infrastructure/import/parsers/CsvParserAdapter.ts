@@ -3,9 +3,11 @@
  * Capa de Infraestructura - Implementa ICsvParser
  */
 
-import Papa from "papaparse";
-import { CsvRow, CsvRowData } from "@/domain/import/value-objects/CsvRow";
 import * as fs from "fs";
+
+import Papa from "papaparse";
+
+import { CsvRow, CsvRowData } from "@/domain/import/value-objects/CsvRow";
 
 export interface CsvParseResult {
   rows: CsvRow[];

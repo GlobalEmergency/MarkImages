@@ -3,12 +3,12 @@
  * Capa de Aplicación - Versión simplificada para MVP
  */
 
-import { CsvParserAdapter } from "@/infrastructure/import/parsers/CsvParserAdapter";
+import { mapDistrictNameToId } from "@/domain/import/constants/DistrictMapping";
 import { IImportRepository } from "@/domain/import/ports/IImportRepository";
+import { CsvRow } from "@/domain/import/value-objects/CsvRow";
 import { IImageDownloader, DownloadAuthConfig } from "@/domain/storage/ports/IImageDownloader";
 import { IImageStorage } from "@/domain/storage/ports/IImageStorage";
-import { mapDistrictNameToId } from "@/domain/import/constants/DistrictMapping";
-import { CsvRow } from "@/domain/import/value-objects/CsvRow";
+import { CsvParserAdapter } from "@/infrastructure/import/parsers/CsvParserAdapter";
 
 export interface ImportDeaBatchRequest {
   filePath: string;
