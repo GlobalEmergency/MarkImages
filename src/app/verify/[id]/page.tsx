@@ -147,6 +147,52 @@ export default function VerifyPage({ params }: VerifyPageProps) {
     }
   };
 
+  const rejectDea = async () => {
+    const reason = prompt(
+      "¿Por qué deseas rechazar este DEA? (Por ej: datos insuficientes, información incorrecta, duplicado, etc.)"
+    );
+
+    if (!reason) {
+      return; // User cancelled
+    }
+
+    if (!confirm(`¿Estás seguro de que quieres rechazar este DEA?\n\nMotivo: ${reason}`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Update AED status to REJECTED with the reason
+      const response = await fetch(`/api/aeds/${resolvedParams.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: "REJECTED",
+          rejection_reason: reason,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al rechazar DEA");
+      }
+
+      // Cancel the verification session
+      await fetch(`/api/verify/${resolvedParams.id}`, {
+        method: "DELETE",
+      });
+
+      alert("DEA rechazado correctamente");
+      router.push("/verify");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al rechazar DEA");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getStepProgress = () => {
     if (!data) return { current: 0, total: 0, percentage: 0 };
 
@@ -184,6 +230,7 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                 latitude: data.aed.location?.latitude ?? undefined,
                 longitude: data.aed.location?.longitude ?? undefined,
               }}
+              observations={data.aed.origin_observations ?? undefined}
               onValidationComplete={(validatedAddress: AddressData) => {
                 updateStep(VerificationStep.IMAGE_SELECTION, {
                   validated_address: validatedAddress,
@@ -510,12 +557,21 @@ export default function VerifyPage({ params }: VerifyPageProps) {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-3xl font-bold text-gray-900">Verificación de DEA</h1>
-            <button
-              onClick={cancelVerification}
-              className="text-red-600 hover:text-red-700 font-medium"
-            >
-              Cancelar
-            </button>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={rejectDea}
+                disabled={loading}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed font-medium text-sm transition-colors"
+              >
+                Rechazar DEA
+              </button>
+              <button
+                onClick={cancelVerification}
+                className="text-gray-600 hover:text-gray-700 font-medium text-sm"
+              >
+                Cancelar Verificación
+              </button>
+            </div>
           </div>
 
           {/* Progress Bar */}
