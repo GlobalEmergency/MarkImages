@@ -112,13 +112,29 @@ export default function VerifyPage({ params }: VerifyPageProps) {
         throw new Error("Error al actualizar paso");
       }
 
-      const responseData = await response.json();
-      console.log("Update successful, response:", responseData);
+      const updatedValidation = await response.json();
+      console.log("Update successful, response:", updatedValidation);
 
-      // Refresh data
-      console.log("Refreshing verification data...");
-      await fetchVerificationData();
-      console.log("Verification data refreshed");
+      // Extract current_step from the updated validation data
+      const validationData = updatedValidation.data as {
+        current_step?: string;
+        user_id?: string;
+      } | null;
+      const newStep = validationData?.current_step || VerificationStep.ADDRESS_VALIDATION;
+
+      console.log("New step from PUT response:", newStep);
+
+      // Update state directly with the new step (avoid GET request and caching issues)
+      if (data) {
+        const updatedData = {
+          ...data,
+          validation: updatedValidation,
+          current_step: newStep as VerificationStep,
+        };
+        console.log("Updating state with new step:", newStep);
+        setData(updatedData);
+        console.log("State updated successfully");
+      }
     } catch (err) {
       console.error("Error in updateStep:", err);
       setError(err instanceof Error ? err.message : "Error al actualizar paso");
