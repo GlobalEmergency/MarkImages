@@ -528,24 +528,39 @@ export default function ImagePairSelector({
     setImagesSwapped(!imagesSwapped);
   };
 
+  // Function to confirm and upload a new image
+  const handleConfirmUpload = async (imageNumber: 1 | 2) => {
+    if (!onUploadNewImages) return;
+
+    setIsProcessing(true);
+    try {
+      const img1 = imageNumber === 1 ? newImage1Url : null;
+      const img2 = imageNumber === 2 ? newImage2Url : null;
+
+      await onUploadNewImages(img1, img2);
+
+      // Reset upload state after successful upload
+      if (imageNumber === 1) {
+        setUploadingImage1(false);
+        setImage1Action('keep');
+        setNewImage1Url(null);
+      } else {
+        setUploadingImage2(false);
+        setImage2Action('keep');
+        setNewImage2Url(null);
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   // Helper function to handle final submission
   const handleContinue = async () => {
     setIsProcessing(true);
 
     try {
-      // Handle image replacement/deletion first if needed
-      if (image1Action === 'replace' || image2Action === 'replace') {
-        if (onUploadNewImages) {
-          const img1 = image1Action === 'replace' ? newImage1Url : null;
-          const img2 = image2Action === 'replace' ? newImage2Url : null;
-
-          if (img1 || img2) {
-            await onUploadNewImages(img1, img2);
-            return;
-          }
-        }
-      }
-
       // Determine final selection based on individual image states and actions
       const img1Valid = image1Action !== 'delete' && image1Status === 'valid';
       const img2Valid = image2Action !== 'delete' && image2Status === 'valid';
@@ -568,12 +583,15 @@ export default function ImagePairSelector({
 
   // Determine if continue button should be enabled
   const canContinue = () => {
+    // Cannot continue if in upload mode
+    if (uploadingImage1 || uploadingImage2) {
+      return false;
+    }
+
     // At least one image must be marked as valid and kept
     const hasValidImage =
       (image1Status === 'valid' && image1Action === 'keep') ||
-      (image2Status === 'valid' && image2Action === 'keep') ||
-      (image1Action === 'replace' && newImage1Url) ||
-      (image2Action === 'replace' && newImage2Url);
+      (image2Status === 'valid' && image2Action === 'keep');
 
     return hasValidImage && !isProcessing;
   };
@@ -705,26 +723,43 @@ export default function ImagePairSelector({
             </div>
 
             {onUploadNewImages && (
-              <button
-                onClick={() => {
-                  setUploadingImage1(!uploadingImage1);
-                  if (!uploadingImage1) {
-                    setImage1Action('replace');
-                  } else {
-                    setImage1Action('keep');
-                    setNewImage1Url(null);
-                  }
-                }}
-                disabled={isProcessing}
-                className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${
-                  uploadingImage1
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                <Upload className="w-4 h-4 inline mr-1" />
-                {uploadingImage1 ? 'Cancelar Subida' : 'Subir Nueva'}
-              </button>
+              <>
+                {!uploadingImage1 ? (
+                  <button
+                    onClick={() => {
+                      setUploadingImage1(true);
+                      setImage1Action('replace');
+                    }}
+                    disabled={isProcessing}
+                    className="w-full px-4 py-2 rounded-lg font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Upload className="w-4 h-4 inline mr-1" />
+                    Subir Nueva
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleConfirmUpload(1)}
+                      disabled={isProcessing || !newImage1Url}
+                      className="flex-1 px-4 py-2 rounded-lg font-medium transition-colors bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Check className="w-4 h-4 inline mr-1" />
+                      Confirmar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setUploadingImage1(false);
+                        setImage1Action('keep');
+                        setNewImage1Url(null);
+                      }}
+                      disabled={isProcessing}
+                      className="flex-1 px-4 py-2 rounded-lg font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                )}
+              </>
             )}
 
             <button
@@ -840,26 +875,43 @@ export default function ImagePairSelector({
             </div>
 
             {onUploadNewImages && (
-              <button
-                onClick={() => {
-                  setUploadingImage2(!uploadingImage2);
-                  if (!uploadingImage2) {
-                    setImage2Action('replace');
-                  } else {
-                    setImage2Action('keep');
-                    setNewImage2Url(null);
-                  }
-                }}
-                disabled={isProcessing}
-                className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${
-                  uploadingImage2
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                <Upload className="w-4 h-4 inline mr-1" />
-                {uploadingImage2 ? 'Cancelar Subida' : 'Subir Nueva'}
-              </button>
+              <>
+                {!uploadingImage2 ? (
+                  <button
+                    onClick={() => {
+                      setUploadingImage2(true);
+                      setImage2Action('replace');
+                    }}
+                    disabled={isProcessing}
+                    className="w-full px-4 py-2 rounded-lg font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Upload className="w-4 h-4 inline mr-1" />
+                    Subir Nueva
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleConfirmUpload(2)}
+                      disabled={isProcessing || !newImage2Url}
+                      className="flex-1 px-4 py-2 rounded-lg font-medium transition-colors bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Check className="w-4 h-4 inline mr-1" />
+                      Confirmar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setUploadingImage2(false);
+                        setImage2Action('keep');
+                        setNewImage2Url(null);
+                      }}
+                      disabled={isProcessing}
+                      className="flex-1 px-4 py-2 rounded-lg font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                )}
+              </>
             )}
 
             <button
@@ -910,7 +962,9 @@ export default function ImagePairSelector({
       {!canContinue() && !isProcessing && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-yellow-700 text-sm">
-            ⚠️ Debes marcar al menos una imagen como válida para continuar
+            {uploadingImage1 || uploadingImage2
+              ? '⚠️ Debes confirmar o cancelar la subida de imágenes antes de continuar'
+              : '⚠️ Debes marcar al menos una imagen como válida para continuar'}
           </p>
         </div>
       )}
