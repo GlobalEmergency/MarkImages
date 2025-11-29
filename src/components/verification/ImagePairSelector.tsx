@@ -539,19 +539,37 @@ export default function ImagePairSelector({
 
       await onUploadNewImages(img1, img2);
 
-      // Reset upload state after successful upload
+      // After upload, determine final validation state
+      // The uploaded image is automatically valid
+      // The other image keeps its current validation state
+      let img1Valid: boolean;
+      let img2Valid: boolean;
+
       if (imageNumber === 1) {
-        setUploadingImage1(false);
-        setImage1Action('keep');
-        setNewImage1Url(null);
+        // Uploading image 1 - it becomes valid
+        img1Valid = true;
+        // Image 2 keeps its state (valid if marked as valid and not deleted)
+        img2Valid = image2Action !== 'delete' && image2Status === 'valid';
       } else {
-        setUploadingImage2(false);
-        setImage2Action('keep');
-        setNewImage2Url(null);
+        // Uploading image 2 - it becomes valid
+        img2Valid = true;
+        // Image 1 keeps its state (valid if marked as valid and not deleted)
+        img1Valid = image1Action !== 'delete' && image1Status === 'valid';
       }
+
+      // Send the selection with the validation states
+      const selection: ImageSelection = {
+        image1Valid: img1Valid,
+        image2Valid: img2Valid,
+        imagesSwapped: imagesSwapped,
+        markedAsInvalid: !img1Valid && !img2Valid
+      };
+
+      // Complete the selection process
+      await new Promise(resolve => setTimeout(resolve, 500));
+      onSelectionComplete(selection);
     } catch (error) {
       console.error('Error uploading image:', error);
-    } finally {
       setIsProcessing(false);
     }
   };
