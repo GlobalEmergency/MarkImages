@@ -45,14 +45,32 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         status: "IN_PROGRESS",
       },
       orderBy: {
-        created_at: "desc",
+        created_at: "desc", // Get the MOST RECENT validation session
       },
       include: {
         sessions: true,
       },
     });
 
+    console.log("=== GET /api/verify/[id] - Finding validation ===");
+    console.log("AED ID:", id);
+    console.log("Found validation:", validation?.id);
+    console.log("Validation created at:", validation?.created_at);
+    console.log("Validation status:", validation?.status);
+
     if (!validation || validation.status === "COMPLETED") {
+      console.log("Creating NEW validation session");
+
+      // Before creating a new one, delete any old IN_PROGRESS validations
+      // to prevent multiple active sessions
+      const deleteResult = await prisma.aedValidation.deleteMany({
+        where: {
+          aed_id: id,
+          status: "IN_PROGRESS",
+        },
+      });
+      console.log(`Deleted ${deleteResult.count} old IN_PROGRESS validations`);
+
       // Create a new validation session
       validation = await prisma.aedValidation.create({
         data: {
@@ -69,6 +87,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           sessions: true,
         },
       });
+      console.log("Created validation ID:", validation.id);
+    } else {
+      console.log("Using EXISTING validation session");
     }
 
     const validationData = validation.data as { current_step?: string; user_id?: string } | null;
@@ -109,11 +130,14 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     console.log("New step:", step);
     console.log("Step data:", data);
 
-    // Find the active validation
+    // Find the active validation (MUST use same orderBy as GET to ensure consistency)
     const validation = await prisma.aedValidation.findFirst({
       where: {
         aed_id: id,
         status: "IN_PROGRESS",
+      },
+      orderBy: {
+        created_at: "desc", // Get the MOST RECENT validation session (same as GET)
       },
     });
 
@@ -122,6 +146,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     console.log("Found validation:", validation.id);
+    console.log("Validation created at:", validation.created_at);
     console.log("Current validation data:", validation.data);
 
     // Update the validation with new step and data
