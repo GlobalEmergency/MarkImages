@@ -326,8 +326,16 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                     throw new Error("Error al actualizar las imágenes");
                   }
 
-                  // Refresh verification data to show new images
-                  await fetchVerificationData();
+                  // Update AED images in local state without refetching verification
+                  // This prevents the current_step from being reset
+                  const updatedAed = await response.json();
+                  setData((prevData) => {
+                    if (!prevData) return prevData;
+                    return {
+                      ...prevData,
+                      aed: updatedAed,
+                    };
+                  });
                 } catch (err) {
                   console.error("Error uploading new images:", err);
                   setError(err instanceof Error ? err.message : "Error al subir las imágenes");
