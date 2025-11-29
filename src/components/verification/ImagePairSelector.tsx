@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader2, Upload, Trash2, Check, X } from 'lucide-react';
+import { Loader2, Upload, Trash2, Check, X, ArrowLeftRight } from 'lucide-react';
 import { loadImageWithRetry } from '@/utils/imageLoader';
 import ImageUpload from '@/components/ImageUpload';
 
@@ -61,6 +61,7 @@ export default function ImagePairSelector({
   const [image2Action, setImage2Action] = useState<ImageAction>('keep');
   const [uploadingImage1, setUploadingImage1] = useState(false);
   const [uploadingImage2, setUploadingImage2] = useState(false);
+  const [imagesSwapped, setImagesSwapped] = useState(false);
 
   const hasImage1 = !!image1Url;
   const hasImage2 = !!image2Url;
@@ -505,6 +506,28 @@ export default function ImagePairSelector({
     );
   }
 
+  // Function to swap images
+  const handleSwapImages = () => {
+    // Swap all states between image1 and image2
+    const tempStatus = image1Status;
+    const tempAction = image1Action;
+    const tempUploading = uploadingImage1;
+    const tempNewUrl = newImage1Url;
+
+    setImage1Status(image2Status);
+    setImage1Action(image2Action);
+    setUploadingImage1(uploadingImage2);
+    setNewImage1Url(newImage2Url);
+
+    setImage2Status(tempStatus);
+    setImage2Action(tempAction);
+    setUploadingImage2(tempUploading);
+    setNewImage2Url(tempNewUrl);
+
+    // Toggle the swapped flag
+    setImagesSwapped(!imagesSwapped);
+  };
+
   // Helper function to handle final submission
   const handleContinue = async () => {
     setIsProcessing(true);
@@ -530,7 +553,7 @@ export default function ImagePairSelector({
       const selection: ImageSelection = {
         image1Valid: img1Valid,
         image2Valid: img2Valid,
-        imagesSwapped: false,
+        imagesSwapped: imagesSwapped,
         markedAsInvalid: !img1Valid && !img2Valid
       };
 
@@ -573,6 +596,18 @@ export default function ImagePairSelector({
           Para cada imagen, indica si es válida, si deseas subir una nueva, o si quieres eliminarla.
           Al menos una imagen debe ser válida para continuar.
         </p>
+      </div>
+
+      {/* Swap Images Button */}
+      <div className="flex justify-center">
+        <button
+          onClick={handleSwapImages}
+          disabled={isProcessing || (!image1Loaded && !image2Loaded)}
+          className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2 transition-colors"
+        >
+          <ArrowLeftRight className="w-5 h-5" />
+          Intercambiar Imágenes
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
