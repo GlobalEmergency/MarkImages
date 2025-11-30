@@ -72,50 +72,18 @@ export default function ImagePairSelector({
   const hasSingleImage = (hasImage1 && !hasImage2) || (!hasImage1 && hasImage2);
   const hasNoImages = !hasImage1 && !hasImage2;
 
-  // Auto-upload when a new image is selected
+  // Mark image as auto-validated when user selects a new file
   useEffect(() => {
-    const autoUploadImage = async () => {
-      if (!onUploadNewImages) return;
+    if (newImage1Url && !image1AutoValidated) {
+      setImage1AutoValidated(true);
+    }
+  }, [newImage1Url, image1AutoValidated]);
 
-      // Auto-upload image 1 if selected
-      if (newImage1Url && uploadingImage1 && !isProcessing) {
-        setIsProcessing(true);
-        try {
-          await onUploadNewImages(newImage1Url, null);
-
-          // Mark as auto-validated and reset upload state
-          setImage1AutoValidated(true);
-          setUploadingImage1(false);
-          setImage1Action('keep');
-          setNewImage1Url(null);
-        } catch (error) {
-          console.error('Error uploading image 1:', error);
-        } finally {
-          setIsProcessing(false);
-        }
-      }
-
-      // Auto-upload image 2 if selected
-      if (newImage2Url && uploadingImage2 && !isProcessing) {
-        setIsProcessing(true);
-        try {
-          await onUploadNewImages(null, newImage2Url);
-
-          // Mark as auto-validated and reset upload state
-          setImage2AutoValidated(true);
-          setUploadingImage2(false);
-          setImage2Action('keep');
-          setNewImage2Url(null);
-        } catch (error) {
-          console.error('Error uploading image 2:', error);
-        } finally {
-          setIsProcessing(false);
-        }
-      }
-    };
-
-    autoUploadImage();
-  }, [newImage1Url, newImage2Url, uploadingImage1, uploadingImage2, isProcessing, onUploadNewImages]);
+  useEffect(() => {
+    if (newImage2Url && !image2AutoValidated) {
+      setImage2AutoValidated(true);
+    }
+  }, [newImage2Url, image2AutoValidated]);
 
   // Cargar imágenes
   useEffect(() => {
@@ -582,8 +550,13 @@ export default function ImagePairSelector({
     setIsProcessing(true);
 
     try {
+      // First, upload any new images if present
+      if (onUploadNewImages && (newImage1Url || newImage2Url)) {
+        await onUploadNewImages(newImage1Url, newImage2Url);
+      }
+
       // Determine final selection based on individual image states and actions
-      // Auto-validated images (uploaded) are automatically valid
+      // Auto-validated images (new uploads) are automatically valid
       // Manually validated images must be marked as valid
       const img1Valid = image1AutoValidated || (image1Action !== 'delete' && image1Status === 'valid');
       const img2Valid = image2AutoValidated || (image2Action !== 'delete' && image2Status === 'valid');
@@ -636,8 +609,8 @@ export default function ImagePairSelector({
           Validar Imágenes
         </h4>
         <p className="text-yellow-700 text-sm">
-          Para cada imagen, indica si es válida, si deseas subir una nueva, o si quieres eliminarla.
-          Al menos una imagen debe ser válida para continuar.
+          Para cada imagen, marca si es válida o invalida, o sube una nueva. Las imágenes que subas se consideran automáticamente válidas.
+          Haz clic en "Continuar" cuando estés listo para avanzar al siguiente paso.
         </p>
       </div>
 
