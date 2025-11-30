@@ -66,7 +66,6 @@ export default function VerifyPage({ params }: VerifyPageProps) {
 
   const fetchVerificationData = async () => {
     try {
-      console.log("=== Fetching verification data ===");
       const response = await fetch(`/api/verify/${resolvedParams.id}`);
 
       if (!response.ok) {
@@ -77,12 +76,7 @@ export default function VerifyPage({ params }: VerifyPageProps) {
       }
 
       const responseData = await response.json();
-      console.log("=== Verification data received ===");
-      console.log("Current step from API:", responseData.current_step);
-      console.log("Full response data:", responseData);
-
       setData(responseData);
-      console.log("=== State updated with new data ===");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");
     } finally {
@@ -91,10 +85,6 @@ export default function VerifyPage({ params }: VerifyPageProps) {
   };
 
   const updateStep = async (step: VerificationStep, stepData?: Record<string, unknown>) => {
-    console.log("=== updateStep called ===");
-    console.log("Step:", step);
-    console.log("Step data:", stepData);
-
     try {
       const response = await fetch(`/api/verify/${resolvedParams.id}`, {
         method: "PUT",
@@ -104,16 +94,13 @@ export default function VerifyPage({ params }: VerifyPageProps) {
         body: JSON.stringify({ step, data: stepData || {} }),
       });
 
-      console.log("Update response status:", response.status);
-
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Update error response:", errorData);
+        console.error("Error updating verification step:", errorData);
         throw new Error("Error al actualizar paso");
       }
 
       const updatedValidation = await response.json();
-      console.log("Update successful, response:", updatedValidation);
 
       // Extract current_step from the updated validation data
       const validationData = updatedValidation.data as {
@@ -122,8 +109,6 @@ export default function VerifyPage({ params }: VerifyPageProps) {
       } | null;
       const newStep = validationData?.current_step || VerificationStep.ADDRESS_VALIDATION;
 
-      console.log("New step from PUT response:", newStep);
-
       // Update state directly with the new step (avoid GET request and caching issues)
       if (data) {
         const updatedData = {
@@ -131,9 +116,7 @@ export default function VerifyPage({ params }: VerifyPageProps) {
           validation: updatedValidation,
           current_step: newStep as VerificationStep,
         };
-        console.log("Updating state with new step:", newStep);
         setData(updatedData);
-        console.log("State updated successfully");
       }
     } catch (err) {
       console.error("Error in updateStep:", err);
@@ -246,9 +229,6 @@ export default function VerifyPage({ params }: VerifyPageProps) {
 
   const renderStepContent = () => {
     if (!data) return null;
-
-    console.log("=== Rendering step content ===");
-    console.log("Current step:", data.current_step);
 
     const stepConfig = VERIFICATION_STEPS_CONFIG[data.current_step];
 

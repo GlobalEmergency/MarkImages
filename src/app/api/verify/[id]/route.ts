@@ -52,24 +52,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       },
     });
 
-    console.log("=== GET /api/verify/[id] - Finding validation ===");
-    console.log("AED ID:", id);
-    console.log("Found validation:", validation?.id);
-    console.log("Validation created at:", validation?.created_at);
-    console.log("Validation status:", validation?.status);
-
     if (!validation || validation.status === "COMPLETED") {
-      console.log("Creating NEW validation session");
-
       // Before creating a new one, delete any old IN_PROGRESS validations
       // to prevent multiple active sessions
-      const deleteResult = await prisma.aedValidation.deleteMany({
+      await prisma.aedValidation.deleteMany({
         where: {
           aed_id: id,
           status: "IN_PROGRESS",
         },
       });
-      console.log(`Deleted ${deleteResult.count} old IN_PROGRESS validations`);
 
       // Create a new validation session
       validation = await prisma.aedValidation.create({
@@ -87,21 +78,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           sessions: true,
         },
       });
-      console.log("Created validation ID:", validation.id);
-    } else {
-      console.log("Using EXISTING validation session");
     }
 
     const validationData = validation.data as { current_step?: string; user_id?: string } | null;
     const currentStep = validationData?.current_step || VerificationStep.ADDRESS_VALIDATION;
-
-    console.log("=== GET /api/verify/[id] - Returning data ===");
-    console.log("Validation ID:", validation.id);
-    console.log("Validation status:", validation.status);
-    console.log("Validation created at:", validation.created_at);
-    console.log("Validation data (full):", validation.data);
-    console.log("Extracted current_step:", validationData?.current_step);
-    console.log("Final current_step to return:", currentStep);
 
     return NextResponse.json({
       aed,
@@ -125,11 +105,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const body = await request.json();
     const { step, data } = body;
 
-    console.log("=== PUT /api/verify/[id] - Updating step ===");
-    console.log("AED ID:", id);
-    console.log("New step:", step);
-    console.log("Step data:", data);
-
     // Find the active validation (MUST use same orderBy as GET to ensure consistency)
     const validation = await prisma.aedValidation.findFirst({
       where: {
@@ -145,10 +120,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: "Sesión de verificación no encontrada" }, { status: 404 });
     }
 
-    console.log("Found validation:", validation.id);
-    console.log("Validation created at:", validation.created_at);
-    console.log("Current validation data:", validation.data);
-
     // Update the validation with new step and data
     // IMPORTANT: current_step must be last to avoid being overwritten by stepData
     const updatedValidation = await prisma.aedValidation.update({
@@ -162,9 +133,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         updated_at: new Date(),
       },
     });
-
-    console.log("Updated validation data:", updatedValidation.data);
-    console.log("Confirmed current_step in DB:", (updatedValidation.data as any)?.current_step);
 
     // Create a session record for this step
     await prisma.validationSession.create({
