@@ -610,7 +610,7 @@ export default function ImagePairSelector({
         </h4>
         <p className="text-yellow-700 text-sm">
           Para cada imagen, marca si es válida o invalida, o sube una nueva. Las imágenes que subas se consideran automáticamente válidas.
-          Haz clic en "Continuar" cuando estés listo para avanzar al siguiente paso.
+          Haz clic en &apos;Continuar&apos; cuando estés listo para avanzar al siguiente paso.
         </p>
       </div>
 
