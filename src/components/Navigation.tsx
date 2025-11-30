@@ -11,6 +11,7 @@ import {
   User,
   PlusCircle,
   ClipboardCheck,
+  Upload,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -41,7 +42,10 @@ export default function Navigation() {
     { href: "/dea/new-simple", label: "Agregar DEA", icon: PlusCircle },
   ];
 
-  const authNavLinks = [{ href: "/verify", label: "Verificar", icon: ClipboardCheck }];
+  const authNavLinks = [
+    { href: "/verify", label: "Verificar", icon: ClipboardCheck },
+    { href: "/import", label: "Importar", icon: Upload },
+  ];
 
   const navLinks = user ? [...publicNavLinks, ...authNavLinks] : publicNavLinks;
 
