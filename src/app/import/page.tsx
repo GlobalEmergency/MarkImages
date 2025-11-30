@@ -25,7 +25,7 @@ export default function ImportPage() {
     refreshInterval: 5000,
   });
 
-  const handleUploadStart = (batchId: string) => {
+  const handleUploadStart = (_batchId: string) => {
     // Actualizar lista de importaciones
     refetch();
   };

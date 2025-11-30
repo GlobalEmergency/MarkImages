@@ -127,7 +127,7 @@ export async function saveTempFile(file: File): Promise<string> {
 
   // Guardar archivo
   const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+  const buffer = new Uint8Array(arrayBuffer);
   await fs.writeFile(filePath, buffer);
 
   console.log(`📁 Temporary file saved: ${filePath}`);

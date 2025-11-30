@@ -63,7 +63,7 @@ export default function CsvUploadZone({ onUploadStart }: CsvUploadZoneProps) {
       }
 
       return null; // Validación exitosa
-    } catch (error) {
+    } catch {
       return "Error al leer el archivo CSV";
     }
   };

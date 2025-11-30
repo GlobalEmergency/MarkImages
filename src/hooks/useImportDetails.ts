@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 
-import type { ImportBatch, ImportError } from "@/types/import";
+import type { ImportError } from "@/types/import";
 
 interface BatchDetails {
   batch: {
