@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload, Trash2, Check, X, ArrowLeftRight } from 'lucide-react';
 import { loadImageWithRetry } from '@/utils/imageLoader';
 import ImageUpload from '@/components/ImageUpload';
 
@@ -21,7 +21,7 @@ export interface ImageSelection {
   markedAsInvalid: boolean;
 }
 
-type SelectionOption = 
+type SelectionOption =
   | 'both_valid'
   | 'only_image1'
   | 'only_image2'
@@ -30,6 +30,9 @@ type SelectionOption =
   | 'single_as_image1'
   | 'single_as_image2'
   | 'single_invalid';
+
+type ImageStatus = 'valid' | 'invalid' | 'pending';
+type ImageAction = 'keep' | 'replace' | 'delete';
 
 export default function ImagePairSelector({
   image1Url,
@@ -51,10 +54,36 @@ export default function ImagePairSelector({
   const [newImage1Url, setNewImage1Url] = useState<string | null>(null);
   const [newImage2Url, setNewImage2Url] = useState<string | null>(null);
 
+  // New state for individual image control
+  const [image1Status, setImage1Status] = useState<ImageStatus>('pending');
+  const [image2Status, setImage2Status] = useState<ImageStatus>('pending');
+  const [image1Action, setImage1Action] = useState<ImageAction>('keep');
+  const [image2Action, setImage2Action] = useState<ImageAction>('keep');
+  const [uploadingImage1, setUploadingImage1] = useState(false);
+  const [uploadingImage2, setUploadingImage2] = useState(false);
+  const [imagesSwapped, setImagesSwapped] = useState(false);
+
+  // Track which images were auto-uploaded (and thus auto-validated)
+  const [image1AutoValidated, setImage1AutoValidated] = useState(false);
+  const [image2AutoValidated, setImage2AutoValidated] = useState(false);
+
   const hasImage1 = !!image1Url;
   const hasImage2 = !!image2Url;
   const hasSingleImage = (hasImage1 && !hasImage2) || (!hasImage1 && hasImage2);
   const hasNoImages = !hasImage1 && !hasImage2;
+
+  // Mark image as auto-validated when user selects a new file
+  useEffect(() => {
+    if (newImage1Url && !image1AutoValidated) {
+      setImage1AutoValidated(true);
+    }
+  }, [newImage1Url, image1AutoValidated]);
+
+  useEffect(() => {
+    if (newImage2Url && !image2AutoValidated) {
+      setImage2AutoValidated(true);
+    }
+  }, [newImage2Url, image2AutoValidated]);
 
   // Cargar imágenes
   useEffect(() => {
@@ -494,65 +523,80 @@ export default function ImagePairSelector({
     );
   }
 
+  // Function to swap images
+  const handleSwapImages = () => {
+    // Swap all states between image1 and image2
+    const tempStatus = image1Status;
+    const tempAction = image1Action;
+    const tempUploading = uploadingImage1;
+    const tempNewUrl = newImage1Url;
+
+    setImage1Status(image2Status);
+    setImage1Action(image2Action);
+    setUploadingImage1(uploadingImage2);
+    setNewImage1Url(newImage2Url);
+
+    setImage2Status(tempStatus);
+    setImage2Action(tempAction);
+    setUploadingImage2(tempUploading);
+    setNewImage2Url(tempNewUrl);
+
+    // Toggle the swapped flag
+    setImagesSwapped(!imagesSwapped);
+  };
+
+  // Helper function to handle final submission
+  const handleContinue = async () => {
+    setIsProcessing(true);
+
+    try {
+      // First, upload any new images if present
+      if (onUploadNewImages && (newImage1Url || newImage2Url)) {
+        await onUploadNewImages(newImage1Url, newImage2Url);
+      }
+
+      // Determine final selection based on individual image states and actions
+      // Auto-validated images (new uploads) are automatically valid
+      // Manually validated images must be marked as valid
+      const img1Valid = image1AutoValidated || (image1Action !== 'delete' && image1Status === 'valid');
+      const img2Valid = image2AutoValidated || (image2Action !== 'delete' && image2Status === 'valid');
+
+      const selection: ImageSelection = {
+        image1Valid: img1Valid,
+        image2Valid: img2Valid,
+        imagesSwapped: imagesSwapped,
+        markedAsInvalid: !img1Valid && !img2Valid
+      };
+
+      await new Promise(resolve => setTimeout(resolve, 500));
+      onSelectionComplete(selection);
+    } catch (error) {
+      console.error('Error processing selection:', error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Determine if continue button should be enabled
+  const canContinue = () => {
+    // Cannot continue if currently processing
+    if (isProcessing) {
+      return false;
+    }
+
+    // At least one image must be valid (auto-validated or manually marked as valid)
+    const hasValidImage =
+      image1AutoValidated ||
+      image2AutoValidated ||
+      (image1Status === 'valid' && image1Action === 'keep') ||
+      (image2Status === 'valid' && image2Action === 'keep');
+
+    return hasValidImage;
+  };
+
   // Renderizar caso: Dos imágenes
   return (
     <div className="space-y-6 w-full">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Imagen 1 */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h3 className="text-lg font-semibold mb-3">Imagen 1 (Entrada)</h3>
-          <div className="flex justify-center">
-            {!image1Loaded && !image1Error ? (
-              <div className="w-full aspect-square flex items-center justify-center bg-white rounded-lg shadow-md border border-gray-200">
-                <div className="text-center p-8">
-                  <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
-                  <p className="text-gray-600 text-sm">Cargando...</p>
-                </div>
-              </div>
-            ) : image1Error ? (
-              <div className="w-full aspect-square flex items-center justify-center bg-red-50 rounded-lg shadow-md border border-red-200">
-                <div className="text-center p-8">
-                  <p className="text-red-600 text-sm">Error al cargar</p>
-                </div>
-              </div>
-            ) : (
-              <img
-                src={image1DataUrl || image1Url}
-                alt="Imagen 1 - Entrada"
-                className="w-full rounded-lg shadow-md aspect-square object-cover"
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Imagen 2 */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h3 className="text-lg font-semibold mb-3">Imagen 2 (Detalle)</h3>
-          <div className="flex justify-center">
-            {!image2Loaded && !image2Error ? (
-              <div className="w-full aspect-square flex items-center justify-center bg-white rounded-lg shadow-md border border-gray-200">
-                <div className="text-center p-8">
-                  <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
-                  <p className="text-gray-600 text-sm">Cargando...</p>
-                </div>
-              </div>
-            ) : image2Error ? (
-              <div className="w-full aspect-square flex items-center justify-center bg-red-50 rounded-lg shadow-md border border-red-200">
-                <div className="text-center p-8">
-                  <p className="text-red-600 text-sm">Error al cargar</p>
-                </div>
-              </div>
-            ) : (
-              <img
-                src={image2DataUrl || image2Url}
-                alt="Imagen 2 - Detalle"
-                className="w-full rounded-lg shadow-md aspect-square object-cover"
-              />
-            )}
-          </div>
-        </div>
-      </div>
-
       {descripcionAcceso && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h4 className="text-md font-semibold text-blue-800 mb-2">Descripción de Acceso</h4>
@@ -564,79 +608,362 @@ export default function ImagePairSelector({
         <h4 className="text-md font-semibold text-yellow-800 mb-3">
           Validar Imágenes
         </h4>
-        <p className="text-yellow-700 text-sm mb-3">
-          Verifica que las imágenes sean válidas y correspondan correctamente:
+        <p className="text-yellow-700 text-sm">
+          Para cada imagen, marca si es válida o invalida, o sube una nueva. Las imágenes que subas se consideran automáticamente válidas.
+          Haz clic en &apos;Continuar&apos; cuando estés listo para avanzar al siguiente paso.
         </p>
-        <ul className="text-yellow-700 text-sm space-y-1 list-disc list-inside">
-          <li><strong>Imagen 1:</strong> Debe ser la vista de entrada o general</li>
-          <li><strong>Imagen 2:</strong> Debe ser la vista de detalle del DEA</li>
-          <li>Si están intercambiadas, selecciona la opción de intercambiar</li>
-          <li>Si alguna es borrosa o incorrecta, márcala como inválida</li>
-        </ul>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button
-            onClick={() => handleSelection('both_valid')}
-            disabled={isProcessing || isLoading}
-            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            ✅ Ambas Válidas
-          </button>
-          <button
-            onClick={() => handleSelection('swap_images')}
-            disabled={isProcessing || isLoading}
-            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            🔄 Intercambiar Imágenes
-          </button>
-        </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button
-            onClick={() => handleSelection('only_image1')}
-            disabled={isProcessing || isLoading}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Solo Imagen 1 Válida
-          </button>
-          <button
-            onClick={() => handleSelection('only_image2')}
-            disabled={isProcessing || isLoading}
-            className="px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Solo Imagen 2 Válida
-          </button>
-        </div>
+      {/* Swap Images Button */}
+      <div className="flex justify-center">
+        <button
+          onClick={handleSwapImages}
+          disabled={isProcessing || (!image1Loaded && !image2Loaded)}
+          className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2 transition-colors"
+        >
+          <ArrowLeftRight className="w-5 h-5" />
+          Intercambiar Imágenes
+        </button>
+      </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button
-            onClick={() => handleSelection('both_invalid')}
-            disabled={isProcessing || isLoading}
-            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            ❌ Ambas Inválidas
-          </button>
-          {onUploadNewImages && (
-            <button
-              onClick={() => setUploadMode(true)}
-              disabled={isProcessing || isLoading}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              📤 Subir Nuevas Imágenes
-            </button>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Imagen 1 */}
+        <div className={`bg-white rounded-lg border-2 ${
+          image1AutoValidated || image1Status === 'valid' ? 'border-green-500' :
+          image1Status === 'invalid' ? 'border-red-500' :
+          'border-gray-200'
+        } p-4 transition-all`}>
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-lg font-semibold">Imagen 1 (Entrada)</h3>
+            {image1AutoValidated && (
+              <span className="text-green-600 text-sm font-medium flex items-center gap-1">
+                <Check className="w-4 h-4" /> Válida
+              </span>
+            )}
+            {!image1AutoValidated && image1Status === 'valid' && (
+              <span className="text-green-600 text-sm font-medium flex items-center gap-1">
+                <Check className="w-4 h-4" /> Válida
+              </span>
+            )}
+            {!image1AutoValidated && image1Status === 'invalid' && (
+              <span className="text-red-600 text-sm font-medium flex items-center gap-1">
+                <X className="w-4 h-4" /> Inválida
+              </span>
+            )}
+          </div>
+
+          {/* Image Display */}
+          {uploadingImage1 ? (
+            <div className="mb-4">
+              <ImageUpload
+                label="Nueva Imagen 1"
+                value={newImage1Url || undefined}
+                onChange={(url) => setNewImage1Url(url)}
+                prefix="dea-images/entrada"
+                required={false}
+              />
+            </div>
+          ) : (
+            <div className="flex justify-center mb-4">
+              {!image1Loaded && !image1Error ? (
+                <div className="w-full aspect-square flex items-center justify-center bg-white rounded-lg shadow-md border border-gray-200">
+                  <div className="text-center p-8">
+                    <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
+                    <p className="text-gray-600 text-sm">Cargando...</p>
+                  </div>
+                </div>
+              ) : image1Error ? (
+                <div className="w-full aspect-square flex items-center justify-center bg-red-50 rounded-lg shadow-md border border-red-200">
+                  <div className="text-center p-8">
+                    <p className="text-red-600 text-sm">Error al cargar</p>
+                  </div>
+                </div>
+              ) : (
+                <img
+                  src={image1DataUrl || image1Url}
+                  alt="Imagen 1 - Entrada"
+                  className="w-full rounded-lg shadow-md aspect-square object-cover"
+                />
+              )}
+            </div>
           )}
+
+          {/* Image Controls */}
+          <div className="space-y-2">
+            {uploadingImage1 ? (
+              // In upload mode - only show cancel button
+              <button
+                onClick={() => {
+                  setUploadingImage1(false);
+                  setImage1Action('keep');
+                  setNewImage1Url(null);
+                }}
+                disabled={isProcessing}
+                className="w-full px-4 py-2 rounded-lg font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancelar
+              </button>
+            ) : (
+              <>
+                {/* Show validation buttons only if NOT auto-validated */}
+                {!image1AutoValidated && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setImage1Status('valid');
+                        setImage1Action('keep');
+                      }}
+                      disabled={isProcessing || (!image1Loaded && !image1Error)}
+                      className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                        image1Status === 'valid' && image1Action === 'keep'
+                          ? 'bg-green-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-green-50 hover:text-green-700'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      <Check className="w-4 h-4 inline mr-1" />
+                      Válida
+                    </button>
+                    <button
+                      onClick={() => {
+                        setImage1Status('invalid');
+                        setImage1Action('keep');
+                      }}
+                      disabled={isProcessing || (!image1Loaded && !image1Error)}
+                      className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                        image1Status === 'invalid' && image1Action === 'keep'
+                          ? 'bg-red-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-700'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      <X className="w-4 h-4 inline mr-1" />
+                      Inválida
+                    </button>
+                  </div>
+                )}
+
+                {/* Upload new button - always available */}
+                {onUploadNewImages && (
+                  <button
+                    onClick={() => {
+                      setUploadingImage1(true);
+                      setImage1Action('replace');
+                      setImage1AutoValidated(false); // Reset auto-validation when replacing
+                    }}
+                    disabled={isProcessing}
+                    className="w-full px-4 py-2 rounded-lg font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Upload className="w-4 h-4 inline mr-1" />
+                    Subir Nueva
+                  </button>
+                )}
+
+                {/* Delete button - always available */}
+                <button
+                  onClick={() => {
+                    setImage1Action('delete');
+                    setImage1Status('invalid');
+                    setImage1AutoValidated(false);
+                  }}
+                  disabled={isProcessing}
+                  className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${
+                    image1Action === 'delete'
+                      ? 'bg-red-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-700'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  <Trash2 className="w-4 h-4 inline mr-1" />
+                  {image1Action === 'delete' ? 'Eliminada' : 'Eliminar'}
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
+        {/* Imagen 2 */}
+        <div className={`bg-white rounded-lg border-2 ${
+          image2AutoValidated || image2Status === 'valid' ? 'border-green-500' :
+          image2Status === 'invalid' ? 'border-red-500' :
+          'border-gray-200'
+        } p-4 transition-all`}>
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-lg font-semibold">Imagen 2 (Detalle)</h3>
+            {image2AutoValidated && (
+              <span className="text-green-600 text-sm font-medium flex items-center gap-1">
+                <Check className="w-4 h-4" /> Válida
+              </span>
+            )}
+            {!image2AutoValidated && image2Status === 'valid' && (
+              <span className="text-green-600 text-sm font-medium flex items-center gap-1">
+                <Check className="w-4 h-4" /> Válida
+              </span>
+            )}
+            {!image2AutoValidated && image2Status === 'invalid' && (
+              <span className="text-red-600 text-sm font-medium flex items-center gap-1">
+                <X className="w-4 h-4" /> Inválida
+              </span>
+            )}
+          </div>
+
+          {/* Image Display */}
+          {uploadingImage2 ? (
+            <div className="mb-4">
+              <ImageUpload
+                label="Nueva Imagen 2"
+                value={newImage2Url || undefined}
+                onChange={(url) => setNewImage2Url(url)}
+                prefix="dea-images/detalle"
+                required={false}
+              />
+            </div>
+          ) : (
+            <div className="flex justify-center mb-4">
+              {!image2Loaded && !image2Error ? (
+                <div className="w-full aspect-square flex items-center justify-center bg-white rounded-lg shadow-md border border-gray-200">
+                  <div className="text-center p-8">
+                    <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
+                    <p className="text-gray-600 text-sm">Cargando...</p>
+                  </div>
+                </div>
+              ) : image2Error ? (
+                <div className="w-full aspect-square flex items-center justify-center bg-red-50 rounded-lg shadow-md border border-red-200">
+                  <div className="text-center p-8">
+                    <p className="text-red-600 text-sm">Error al cargar</p>
+                  </div>
+                </div>
+              ) : (
+                <img
+                  src={image2DataUrl || image2Url}
+                  alt="Imagen 2 - Detalle"
+                  className="w-full rounded-lg shadow-md aspect-square object-cover"
+                />
+              )}
+            </div>
+          )}
+
+          {/* Image Controls */}
+          <div className="space-y-2">
+            {uploadingImage2 ? (
+              // In upload mode - only show cancel button
+              <button
+                onClick={() => {
+                  setUploadingImage2(false);
+                  setImage2Action('keep');
+                  setNewImage2Url(null);
+                }}
+                disabled={isProcessing}
+                className="w-full px-4 py-2 rounded-lg font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancelar
+              </button>
+            ) : (
+              <>
+                {/* Show validation buttons only if NOT auto-validated */}
+                {!image2AutoValidated && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setImage2Status('valid');
+                        setImage2Action('keep');
+                      }}
+                      disabled={isProcessing || (!image2Loaded && !image2Error)}
+                      className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                        image2Status === 'valid' && image2Action === 'keep'
+                          ? 'bg-green-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-green-50 hover:text-green-700'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      <Check className="w-4 h-4 inline mr-1" />
+                      Válida
+                    </button>
+                    <button
+                      onClick={() => {
+                        setImage2Status('invalid');
+                        setImage2Action('keep');
+                      }}
+                      disabled={isProcessing || (!image2Loaded && !image2Error)}
+                      className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                        image2Status === 'invalid' && image2Action === 'keep'
+                          ? 'bg-red-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-700'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      <X className="w-4 h-4 inline mr-1" />
+                      Inválida
+                    </button>
+                  </div>
+                )}
+
+                {/* Upload new button - always available */}
+                {onUploadNewImages && (
+                  <button
+                    onClick={() => {
+                      setUploadingImage2(true);
+                      setImage2Action('replace');
+                      setImage2AutoValidated(false); // Reset auto-validation when replacing
+                    }}
+                    disabled={isProcessing}
+                    className="w-full px-4 py-2 rounded-lg font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Upload className="w-4 h-4 inline mr-1" />
+                    Subir Nueva
+                  </button>
+                )}
+
+                {/* Delete button - always available */}
+                <button
+                  onClick={() => {
+                    setImage2Action('delete');
+                    setImage2Status('invalid');
+                    setImage2AutoValidated(false);
+                  }}
+                  disabled={isProcessing}
+                  className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${
+                    image2Action === 'delete'
+                      ? 'bg-red-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-700'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  <Trash2 className="w-4 h-4 inline mr-1" />
+                  {image2Action === 'delete' ? 'Eliminada' : 'Eliminar'}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-4">
+        <button
+          onClick={handleContinue}
+          disabled={!canContinue()}
+          className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+        >
+          {isProcessing ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+              Procesando...
+            </>
+          ) : (
+            'Continuar'
+          )}
+        </button>
         <button
           onClick={onCancel}
-          className="px-6 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
+          className="px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
           disabled={isProcessing}
         >
           Cancelar
         </button>
       </div>
+
+      {!canContinue() && !isProcessing && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <p className="text-yellow-700 text-sm">
+            ⚠️ Debes marcar al menos una imagen como válida o subir una nueva imagen para continuar
+          </p>
+        </div>
+      )}
     </div>
   );
 }
