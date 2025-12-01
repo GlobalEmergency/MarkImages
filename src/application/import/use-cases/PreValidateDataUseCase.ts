@@ -7,6 +7,7 @@
 import { PrismaClient } from '@prisma/client';
 
 import { mapDistrictNameToId } from '@/domain/import/constants/DistrictMapping';
+import { CsvRowMapper } from '@/domain/import/services/CsvRowMapper';
 import { ColumnMapping } from '@/domain/import/value-objects/ColumnMapping';
 import { CsvPreview } from '@/domain/import/value-objects/CsvPreview';
 import { ValidationIssue, ValidationResult } from '@/domain/import/value-objects/ValidationResult';
@@ -173,6 +174,7 @@ export class PreValidateDataUseCase {
 
   /**
    * Valida que los campos requeridos no estén vacíos
+   * USA LA MISMA LÓGICA que ImportDeaBatchUseCase para garantizar consistencia
    */
   private validateRequiredFields(
     row: string[],
@@ -181,26 +183,35 @@ export class PreValidateDataUseCase {
     rowNumber: number
   ): ValidationIssue[] {
     const issues: ValidationIssue[] = [];
-    const requiredFields = ['proposedName', 'district', 'streetName', 'streetNumber'];
 
-    for (const field of requiredFields) {
-      const csvColumn = mappingMap.get(field);
-      if (!csvColumn) continue;
-
+    // 1. Construir objeto raw desde el array (nombre columna → valor)
+    const rawData: Record<string, string> = {};
+    for (const [_systemField, csvColumn] of mappingMap.entries()) {
       const columnIndex = preview.getColumnIndex(csvColumn);
-      if (columnIndex === -1) continue;
-
-      const value = row[columnIndex] || '';
-
-      if (!value.trim()) {
-        issues.push({
-          row: rowNumber,
-          field,
-          value: '',
-          severity: 'ERROR',
-          message: `Campo requerido "${field}" está vacío`,
-        });
+      if (columnIndex !== -1) {
+        rawData[csvColumn] = row[columnIndex] || '';
       }
+    }
+
+    // 2. Construir mappings en el formato que espera CsvRowMapper
+    const mappings = Array.from(mappingMap.entries()).map(([systemField, csvColumn]) => ({
+      csvColumn,
+      systemField,
+    }));
+
+    // 3. Usar el servicio compartido para construir DynamicCsvRow
+    // Esta es la MISMA lógica que usa ImportDeaBatchUseCase
+    const dynamicRow = CsvRowMapper.buildDynamicRow(rawData, mappings);
+
+    // 4. Validar usando hasMinimumRequiredFields() (igual que en importación)
+    if (!dynamicRow.hasMinimumRequiredFields()) {
+      issues.push({
+        row: rowNumber,
+        field: 'system',
+        value: '',
+        severity: 'ERROR',
+        message: 'Missing minimum required fields (proposedName, streetName, streetNumber)',
+      });
     }
 
     return issues;
@@ -208,6 +219,7 @@ export class PreValidateDataUseCase {
 
   /**
    * Valida que el distrito exista en la base de datos
+   * Nota: El distrito es OPCIONAL, solo se valida si está presente
    */
   private async validateDistrict(
     row: string[],
@@ -218,15 +230,18 @@ export class PreValidateDataUseCase {
     const issues: ValidationIssue[] = [];
     const csvColumn = mappingMap.get('district');
 
+    // Si no está mapeado, no validar (es opcional)
     if (!csvColumn) return issues;
 
     const columnIndex = preview.getColumnIndex(csvColumn);
     if (columnIndex === -1) return issues;
 
     const districtValue = row[columnIndex] || '';
+    
+    // Si está vacío, no es un error (es opcional)
     if (!districtValue.trim()) return issues;
 
-    // Intentar mapear distrito
+    // Si hay valor, validarlo
     const districtId = mapDistrictNameToId(districtValue);
 
     if (districtId === null) {
@@ -234,7 +249,7 @@ export class PreValidateDataUseCase {
         row: rowNumber,
         field: 'district',
         value: districtValue,
-        severity: 'ERROR',
+        severity: 'WARNING', // Cambiar a WARNING porque es opcional
         message: `Distrito "${districtValue}" no encontrado en el sistema`,
         suggestion: 'Verifica el nombre del distrito. Formatos válidos: "Centro", "1. Centro", etc.',
       });
@@ -249,7 +264,7 @@ export class PreValidateDataUseCase {
           row: rowNumber,
           field: 'district',
           value: districtValue,
-          severity: 'CRITICAL',
+          severity: 'WARNING', // Cambiar a WARNING porque es opcional
           message: `Distrito con ID ${districtId} no existe en la base de datos`,
         });
       }

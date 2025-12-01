@@ -5,18 +5,19 @@
 
 "use client";
 
-import { Upload, ChevronLeft, ChevronRight } from "lucide-react";
+import { Upload, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 
-import CsvUploadZone from "@/components/import/CsvUploadZone";
 import ImportDetailsModal from "@/components/import/ImportDetailsModal";
 import ImportHistoryTable from "@/components/import/ImportHistoryTable";
+import ImportWizard from "@/components/import/ImportWizard";
 import { useImportBatches } from "@/hooks/useImportBatches";
 
 export default function ImportPage() {
   const [page, setPage] = useState(1);
   const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
 
   const { batches, loading, error, pagination, refetch } = useImportBatches({
     page,
@@ -25,9 +26,10 @@ export default function ImportPage() {
     refreshInterval: 5000,
   });
 
-  const handleUploadStart = (_batchId: string) => {
-    // Actualizar lista de importaciones
+  const handleWizardComplete = (_batchId: string) => {
+    // Actualizar lista de importaciones y cerrar wizard
     refetch();
+    setShowWizard(false);
   };
 
   const handleViewDetails = (batchId: string) => {
@@ -93,83 +95,111 @@ export default function ImportPage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-3 sm:px-4 md:px-6 py-4 pb-12 space-y-6">
-        {/* Upload Section */}
-        <div
-          className="rounded-xl shadow-lg p-4 sm:p-6"
-          style={{
-            background: "rgba(255, 255, 255, 0.95)",
-            backdropFilter: "blur(20px)",
-          }}
-        >
-          <h2 className="text-xl font-bold text-gray-900 mb-1">
-            Nueva Importación
-          </h2>
-          <p className="text-sm text-gray-600 mb-4">
-            Selecciona un archivo CSV para comenzar la importación
-          </p>
-          <CsvUploadZone onUploadStart={handleUploadStart} />
-        </div>
-
-        {/* Error Message */}
-        {error && (
+        {showWizard ? (
+          /* Wizard de importación */
           <div
-            className="rounded-xl shadow-lg p-4 border border-red-300"
+            className="rounded-xl shadow-lg p-4 sm:p-6"
             style={{
-              background: "rgba(254, 226, 226, 0.95)",
+              background: "rgba(255, 255, 255, 0.95)",
+              backdropFilter: "blur(20px)",
             }}
           >
-            <p className="text-red-800 font-medium">Error: {error}</p>
+            <button
+              onClick={() => setShowWizard(false)}
+              className="mb-4 flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="font-medium">Volver al historial</span>
+            </button>
+            <ImportWizard onComplete={handleWizardComplete} />
           </div>
-        )}
-
-        {/* History Table */}
-        <div
-          className="rounded-xl shadow-lg overflow-hidden"
-          style={{
-            background: "rgba(255, 255, 255, 0.95)",
-            backdropFilter: "blur(20px)",
-          }}
-        >
-          <ImportHistoryTable
-            batches={batches}
-            loading={loading}
-            onRefresh={refetch}
-            onViewDetails={handleViewDetails}
-          />
-
-          {/* Pagination */}
-          {pagination && pagination.totalPages > 1 && (
-            <div className="border-t border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between">
-              <div className="text-sm text-gray-700">
-                Página {page} de {pagination.totalPages}
-                <span className="hidden sm:inline">
-                  {" "}
-                  ({pagination.total} total)
-                </span>
-              </div>
-
-              <div className="flex space-x-2">
-                <button
-                  onClick={handlePreviousPage}
-                  disabled={page === 1}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  <span className="hidden sm:inline">Anterior</span>
-                </button>
-
-                <button
-                  onClick={handleNextPage}
-                  disabled={page === pagination.totalPages}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-                >
-                  <span className="hidden sm:inline">Siguiente</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
+        ) : (
+          <>
+            {/* Botón para nueva importación */}
+            <div
+              className="rounded-xl shadow-lg p-4 sm:p-6"
+              style={{
+                background: "rgba(255, 255, 255, 0.95)",
+                backdropFilter: "blur(20px)",
+              }}
+            >
+              <h2 className="text-xl font-bold text-gray-900 mb-1">
+                Nueva Importación
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">
+                Importa datos desde archivos CSV con mapeo de columnas y validación
+              </p>
+              <button
+                onClick={() => setShowWizard(true)}
+                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center space-x-2"
+              >
+                <Upload className="w-5 h-5" />
+                <span>Iniciar Nueva Importación</span>
+              </button>
             </div>
-          )}
-        </div>
+
+            {/* Error Message */}
+            {error && (
+              <div
+                className="rounded-xl shadow-lg p-4 border border-red-300"
+                style={{
+                  background: "rgba(254, 226, 226, 0.95)",
+                }}
+              >
+                <p className="text-red-800 font-medium">Error: {error}</p>
+              </div>
+            )}
+
+            {/* History Table */}
+            <div
+              className="rounded-xl shadow-lg overflow-hidden"
+              style={{
+                background: "rgba(255, 255, 255, 0.95)",
+                backdropFilter: "blur(20px)",
+              }}
+            >
+              <ImportHistoryTable
+                batches={batches}
+                loading={loading}
+                onRefresh={refetch}
+                onViewDetails={handleViewDetails}
+              />
+
+              {/* Pagination */}
+              {pagination && pagination.totalPages > 1 && (
+                <div className="border-t border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between">
+                  <div className="text-sm text-gray-700">
+                    Página {page} de {pagination.totalPages}
+                    <span className="hidden sm:inline">
+                      {" "}
+                      ({pagination.total} total)
+                    </span>
+                  </div>
+
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={handlePreviousPage}
+                      disabled={page === 1}
+                      className="px-4 py-2 bg-white border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      <span className="hidden sm:inline">Anterior</span>
+                    </button>
+
+                    <button
+                      onClick={handleNextPage}
+                      disabled={page === pagination.totalPages}
+                      className="px-4 py-2 bg-white border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                    >
+                      <span className="hidden sm:inline">Siguiente</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </main>
 
       {/* Details Modal */}

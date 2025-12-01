@@ -60,6 +60,11 @@ export class CsvRow {
     return this.data["Propuesta de denominación"];
   }
 
+  // Alias para compatibilidad con DynamicCsvRow
+  get name(): string {
+    return this.proposedName;
+  }
+
   get establishmentType(): string {
     return this.data["Tipo de establecimiento"];
   }
@@ -171,13 +176,13 @@ export class CsvRow {
 
   /**
    * Valida que la fila tenga los campos mínimos requeridos
+   * Solo son obligatorios: nombre, nombre de calle y número de calle
    */
   hasMinimumRequiredFields(): boolean {
     return !!(
       this.proposedName &&
       this.streetName &&
-      this.streetNumber &&
-      (this.postalCode || this.district)
+      this.streetNumber
     );
   }
 

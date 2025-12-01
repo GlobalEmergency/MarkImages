@@ -4,6 +4,7 @@
  */
 
 import { CsvRow } from "../value-objects/CsvRow";
+import { DynamicCsvRow } from "../value-objects/DynamicCsvRow";
 
 export interface CreateImportBatchData {
   name: string;
@@ -27,7 +28,7 @@ export interface ImportBatchInfo {
 }
 
 export interface CreateAedFromCsvData {
-  csvRow: CsvRow;
+  csvRow: CsvRow | DynamicCsvRow; // Soporta ambos tipos (legacy y dinámico)
   batchId: string;
   districtId: number | null;
   latitude: number | null;
@@ -58,6 +59,7 @@ export interface IImportRepository {
     batchId: string,
     status: string,
     stats?: {
+      totalRecords?: number;
       successfulRecords?: number;
       failedRecords?: number;
       startedAt?: Date;

@@ -36,6 +36,7 @@ export class PrismaImportRepository implements IImportRepository {
     batchId: string,
     status: string,
     stats?: {
+      totalRecords?: number;
       successfulRecords?: number;
       failedRecords?: number;
       startedAt?: Date;
@@ -46,6 +47,7 @@ export class PrismaImportRepository implements IImportRepository {
       where: { id: batchId },
       data: {
         status: status as any,
+        total_records: stats?.totalRecords,
         successful_records: stats?.successfulRecords,
         failed_records: stats?.failedRecords,
         started_at: stats?.startedAt,
@@ -111,7 +113,8 @@ export class PrismaImportRepository implements IImportRepository {
           postal_code: csvRow.postalCode || undefined,
           latitude: latitude ?? undefined,
           longitude: longitude ?? undefined,
-          district_id: districtId ?? undefined,
+          // Solo asignar district_id si existe Y es válido (no null)
+          district_id: districtId !== null ? districtId : undefined,
           access_description: csvRow.accessDescription || undefined,
         },
       });
@@ -132,7 +135,7 @@ export class PrismaImportRepository implements IImportRepository {
 
       // 4. Crear AED
       const aedData: any = {
-        name: csvRow.proposedName || "Sin nombre",
+        name: csvRow.name || "Sin nombre",
         provisional_number: csvRow.provisionalNumber ? parseInt(csvRow.provisionalNumber) : undefined,
         establishment_type: csvRow.establishmentType || undefined,
         status: "DRAFT",

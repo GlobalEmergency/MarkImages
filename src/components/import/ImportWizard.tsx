@@ -5,11 +5,13 @@
 
 'use client';
 
-import { ArrowLeft, CheckCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-type Step = 'upload' | 'preview' | 'mapping' | 'validation' | 'importing';
+import ColumnMappingEditor from './ColumnMappingEditor';
+
+type Step = 'upload' | 'preview' | 'mapping' | 'validation';
 
 interface ImportWizardProps {
   onComplete?: (batchId: string) => void;
@@ -18,13 +20,13 @@ interface ImportWizardProps {
 export default function ImportWizard({ onComplete: _onComplete }: ImportWizardProps) {
   const [currentStep, setCurrentStep] = useState<Step>('upload');
   const [sessionData, setSessionData] = useState<any>(null);
+  const [isImporting, setIsImporting] = useState(false);
 
   const steps = [
     { id: 'upload', label: 'Subir CSV', icon: '📤' },
     { id: 'preview', label: 'Preview', icon: '👁️' },
     { id: 'mapping', label: 'Mapear Columnas', icon: '🔗' },
     { id: 'validation', label: 'Validación', icon: '✓' },
-    { id: 'importing', label: 'Importando', icon: '⚡' },
   ];
 
   const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
@@ -54,18 +56,73 @@ export default function ImportWizard({ onComplete: _onComplete }: ImportWizardPr
     }
   };
 
-  const handleMappingComplete = (mappings: any[]) => {
+  const handleMappingComplete = (mappings: Array<{ csvColumn: string; systemField: string; confidence: number }>) => {
     setSessionData((prev: any) => ({ ...prev, mappings }));
     setCurrentStep('validation');
+    toast.success('✅ Mapeo confirmado, procediendo a validación');
   };
 
   const handleValidationComplete = (validation: any) => {
-    if (validation.summary.canProceed) {
-      setSessionData((prev: any) => ({ ...prev, validation }));
-      // Aquí iniciaríamos la importación real
-      toast.success('✅ Validación exitosa. Listo para importar.');
-    } else {
+    setSessionData((prev: any) => ({ ...prev, validation }));
+    if (!validation.summary.canProceed) {
       toast.error('❌ Hay errores que deben corregirse antes de importar');
+    }
+  };
+
+  const handleStartImport = async () => {
+    // Crear clave única basada en el filePath
+    const importKey = `importing_${sessionData.filePath}`;
+    
+    // Verificar si ya hay una importación en proceso para este archivo
+    if (localStorage.getItem(importKey)) {
+      toast.error('Ya hay una importación en proceso para este archivo');
+      return;
+    }
+    
+    // Prevenir múltiples clicks
+    if (isImporting) return;
+    
+    setIsImporting(true);
+    
+    // Marcar como importando en localStorage
+    localStorage.setItem(importKey, 'true');
+    
+    try {
+      toast.loading('🚀 Iniciando importación...', { id: 'import-start' });
+
+      // Llamar al API para iniciar la importación
+      const response = await fetch('/api/import', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filePath: sessionData.filePath,
+          mappings: sessionData.mappings, // ← Enviar mappings del usuario
+          batchName: `Importación ${new Date().toLocaleString()}`,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al iniciar la importación');
+      }
+
+      await response.json();
+      
+      toast.success('✅ Importación iniciada correctamente', { id: 'import-start' });
+      
+      // Redirigir usando window.location para mayor confiabilidad
+      window.location.href = '/import';
+    } catch (error) {
+      // Limpiar flag y re-habilitar el botón si hay error
+      localStorage.removeItem(importKey);
+      setIsImporting(false);
+      console.error('Error starting import:', error);
+      toast.error(
+        error instanceof Error ? error.message : 'Error al iniciar la importación',
+        { id: 'import-start' }
+      );
     }
   };
 
@@ -130,61 +187,29 @@ export default function ImportWizard({ onComplete: _onComplete }: ImportWizardPr
 
         {currentStep === 'mapping' && sessionData && (
           <div>
-            <h2 className="text-2xl font-bold mb-4">Paso 2-3: Preview y Mapeo de Columnas</h2>
+            <h2 className="text-2xl font-bold mb-4">Paso 2: Mapeo de Columnas</h2>
             <p className="text-gray-600 mb-6">
-              Revisa el preview de tu CSV y configura cómo se mapearán las columnas a los campos
-              del sistema.
+              Configura cómo se mapearán las columnas de tu CSV a los campos del sistema. Los
+              campos marcados con <span className="text-red-600 font-bold">*</span> son
+              obligatorios.
             </p>
-            <div className="text-center py-8 text-gray-500">
-              <p className="mb-4">📊 Componente de mapeo en construcción</p>
-              <p className="text-sm">Preview: {sessionData.preview.totalRows} filas detectadas</p>
-              <p className="text-sm">
-                Sugerencias: {sessionData.suggestions.length} mapeos automáticos
-              </p>
-              <button
-                onClick={() => handleMappingComplete(sessionData.suggestions)}
-                className="mt-6 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              >
-                Continuar con mapeos sugeridos →
-              </button>
-            </div>
+            <ColumnMappingEditor
+              preview={sessionData.preview}
+              suggestions={sessionData.suggestions}
+              onMappingsConfirmed={handleMappingComplete}
+            />
           </div>
         )}
 
         {currentStep === 'validation' && sessionData && (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Paso 4: Validación de Datos</h2>
-            <p className="text-gray-600 mb-6">
-              Validando los datos antes de la importación...
-            </p>
-            <div className="text-center py-8">
-              <button
-                onClick={async () => {
-                  try {
-                    const response = await fetch('/api/import/validate', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        filePath: sessionData.filePath,
-                        preview: sessionData.preview,
-                        mappings: sessionData.mappings,
-                        maxRowsToValidate: 100,
-                      }),
-                    });
-
-                    const validation = await response.json();
-                    handleValidationComplete(validation);
-                  } catch {
-                    toast.error('Error en la validación');
-                  }
-                }}
-                className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              >
-                Iniciar Validación
-              </button>
-            </div>
-          </div>
+          <ValidationStep
+            sessionData={sessionData}
+            onValidationComplete={handleValidationComplete}
+            onStartImport={handleStartImport}
+            isImporting={isImporting}
+          />
         )}
+
       </div>
 
       {/* Navegación */}
@@ -205,6 +230,153 @@ export default function ImportWizard({ onComplete: _onComplete }: ImportWizardPr
           Paso {currentStepIndex + 1} de {steps.length}
         </div>
       </div>
+    </div>
+  );
+}
+
+// Componente de validación
+function ValidationStep({
+  sessionData,
+  onValidationComplete,
+  onStartImport,
+  isImporting,
+}: {
+  sessionData: any;
+  onValidationComplete: (validation: any) => void;
+  onStartImport: () => void;
+  isImporting: boolean;
+}) {
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationResult, setValidationResult] = useState<any>(null);
+
+  const handleValidate = async () => {
+    setIsValidating(true);
+    try {
+      const response = await fetch('/api/import/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filePath: sessionData.filePath,
+          preview: sessionData.preview,
+          mappings: sessionData.mappings,
+          maxRowsToValidate: 100,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error en la validación');
+      }
+
+      const validation = await response.json();
+      setValidationResult(validation);
+      onValidationComplete(validation);
+    } catch (error) {
+      toast.error('Error en la validación');
+      console.error(error);
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Paso 3: Validación de Datos</h2>
+      <p className="text-gray-600 mb-6">
+        Validaremos los datos antes de la importación para detectar posibles errores.
+      </p>
+
+      {!validationResult ? (
+        <div className="text-center py-12">
+          <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-10 h-10 text-blue-600" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Listo para validar
+          </h3>
+          <p className="text-gray-600 mb-6">
+            Se validarán las primeras 100 filas para detectar problemas
+          </p>
+          <button
+            onClick={handleValidate}
+            disabled={isValidating}
+            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center space-x-2 mx-auto"
+          >
+            {isValidating ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Validando...</span>
+              </>
+            ) : (
+              <span>Iniciar Validación</span>
+            )}
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Resumen de validación */}
+          <div
+            className={`p-4 rounded-lg border ${
+              validationResult.summary?.canProceed
+                ? 'bg-green-50 border-green-200'
+                : 'bg-red-50 border-red-200'
+            }`}
+          >
+            <h3
+              className={`font-bold mb-2 ${
+                validationResult.summary?.canProceed ? 'text-green-900' : 'text-red-900'
+              }`}
+            >
+              {validationResult.summary?.canProceed
+                ? '✅ Validación exitosa'
+                : '❌ Se encontraron errores'}
+            </h3>
+            <p
+              className={`text-sm ${
+                validationResult.summary?.canProceed ? 'text-green-700' : 'text-red-700'
+              }`}
+            >
+              {validationResult.summary?.canProceed
+                ? 'Los datos están listos para importarse'
+                : 'Debes corregir los errores antes de continuar'}
+            </p>
+          </div>
+
+          {/* Mostrar errores si existen */}
+          {validationResult.validation && (
+            <div className="bg-white border rounded-lg p-4 max-h-96 overflow-y-auto">
+              <h4 className="font-medium text-gray-900 mb-3">
+                Resultados de validación
+              </h4>
+              <pre className="text-xs text-gray-700 whitespace-pre-wrap">
+                {JSON.stringify(validationResult.validation, null, 2)}
+              </pre>
+            </div>
+          )}
+
+          {/* Botón para iniciar importación */}
+          {validationResult.summary?.canProceed && (
+            <div className="flex justify-center pt-6">
+              <button
+                onClick={onStartImport}
+                disabled={isImporting}
+                className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {isImporting ? (
+                  <>
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <span>Iniciando...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-2xl">🚀</span>
+                    <span>Iniciar Importación</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -5,15 +5,18 @@
 
 import { mapDistrictNameToId } from "@/domain/import/constants/DistrictMapping";
 import { IImportRepository } from "@/domain/import/ports/IImportRepository";
+import { CsvRowMapper } from "@/domain/import/services/CsvRowMapper";
 import { CsvRow } from "@/domain/import/value-objects/CsvRow";
 import { IImageDownloader, DownloadAuthConfig } from "@/domain/storage/ports/IImageDownloader";
 import { IImageStorage } from "@/domain/storage/ports/IImageStorage";
 import { CsvParserAdapter } from "@/infrastructure/import/parsers/CsvParserAdapter";
 
 export interface ImportDeaBatchRequest {
+  batchId?: string; // ID del batch ya creado (opcional, para evitar duplicación)
   filePath: string;
   batchName: string;
   importedBy: string;
+  mappings?: Array<{csvColumn: string; systemField: string}>; // Mapeo de columnas del usuario
   sharePointAuth?: DownloadAuthConfig;
   chunkSize?: number;
 }
@@ -35,7 +38,7 @@ export class ImportDeaBatchUseCase {
   ) {}
 
   async execute(request: ImportDeaBatchRequest): Promise<ImportDeaBatchResponse> {
-    const { filePath, batchName, importedBy, sharePointAuth, chunkSize = 50 } = request;
+    const { batchId: existingBatchId, filePath, batchName, importedBy, mappings, sharePointAuth, chunkSize = 50 } = request;
 
     // 1. Parsear CSV
     console.log(`📄 Parsing CSV file: ${filePath}`);
@@ -45,21 +48,34 @@ export class ImportDeaBatchUseCase {
       console.warn(`⚠️ CSV parsing warnings: ${parseResult.errors.length} errors`);
     }
 
-    // 2. Crear batch
-    console.log(`📦 Creating import batch: ${batchName}`);
-    const batchId = await this.repository.createBatch({
-      name: batchName,
-      description: `Imported from ${filePath}`,
-      sourceOrigin: "CSV_IMPORT",
-      fileName: filePath,
-      totalRecords: parseResult.totalRows,
-      importedBy,
-    });
-
-    // 3. Actualizar estado a IN_PROGRESS
-    await this.repository.updateBatchStatus(batchId, "IN_PROGRESS", {
-      startedAt: new Date(),
-    });
+    // 2. Crear batch o usar el existente
+    let batchId: string;
+    if (existingBatchId) {
+      // Usar batch ya creado y actualizar total_records
+      console.log(`📦 Using existing batch: ${existingBatchId}`);
+      batchId = existingBatchId;
+      await this.repository.updateBatchStatus(batchId, "IN_PROGRESS", {
+        totalRecords: parseResult.totalRows,
+        successfulRecords: 0,
+        failedRecords: 0,
+        startedAt: new Date(),
+      });
+    } else {
+      // Crear batch nuevo (modo legacy)
+      console.log(`📦 Creating import batch: ${batchName}`);
+      batchId = await this.repository.createBatch({
+        name: batchName,
+        description: `Imported from ${filePath}`,
+        sourceOrigin: "CSV_IMPORT",
+        fileName: filePath,
+        totalRecords: parseResult.totalRows,
+        importedBy,
+      });
+      
+      await this.repository.updateBatchStatus(batchId, "IN_PROGRESS", {
+        startedAt: new Date(),
+      });
+    }
 
     let successCount = 0;
     let failCount = 0;
@@ -79,7 +95,7 @@ export class ImportDeaBatchUseCase {
         const globalRowNumber = chunkIndex * chunkSize + i + 2; // +2 por header y índice base 0
 
         try {
-          await this.processRecord(csvRow, batchId, sharePointAuth);
+          await this.processRecord(csvRow, batchId, mappings, sharePointAuth);
           successCount++;
 
           if (successCount % 10 === 0) {
@@ -102,6 +118,12 @@ export class ImportDeaBatchUseCase {
           console.error(`❌ Row ${globalRowNumber}: ${errorMessage}`);
         }
       }
+
+      // Actualizar progreso en BD cada chunk (cada 50 registros)
+      await this.repository.updateBatchStatus(batchId, "IN_PROGRESS", {
+        successfulRecords: successCount,
+        failedRecords: failCount,
+      });
     }
 
     // 5. Finalizar batch
@@ -125,26 +147,36 @@ export class ImportDeaBatchUseCase {
   private async processRecord(
     csvRow: CsvRow,
     batchId: string,
+    mappings?: Array<{csvColumn: string; systemField: string}>,
     sharePointAuth?: DownloadAuthConfig
   ): Promise<void> {
+    // Si hay mappings, construir DynamicCsvRow mapeado usando el servicio compartido
+    // Si no hay mappings, usar CsvRow legacy (hardcodeado para Madrid)
+    const row = mappings 
+      ? CsvRowMapper.buildDynamicRow(
+          csvRow.toJSON() as unknown as Record<string, string>, 
+          mappings
+        )
+      : csvRow;
+
     // 1. Validar campos mínimos
-    if (!csvRow.hasMinimumRequiredFields()) {
+    if (!row.hasMinimumRequiredFields()) {
       throw new Error("Missing minimum required fields");
     }
 
     // 2. Parsear coordenadas
-    const latitude = this.parseCoordinate(csvRow.latitude);
-    const longitude = this.parseCoordinate(csvRow.longitude);
+    const latitude = this.parseCoordinate(row.latitude);
+    const longitude = this.parseCoordinate(row.longitude);
 
-    // 3. Mapear distrito
-    const districtId = mapDistrictNameToId(csvRow.district);
+    // 3. Resolver distrito (solo si hay valor y es relevante)
+    const districtId = this.resolveDistrictId(row.district);
 
     // 4. Procesar imágenes (SharePoint → S3)
     const imageUrls: Array<{ url: string; type: string }> = [];
 
     for (const [photoUrl, type] of [
-      [csvRow.photo1Url, "FRONT"],
-      [csvRow.photo2Url, "LOCATION"],
+      [row.photo1Url, "FRONT"],
+      [row.photo2Url, "LOCATION"],
     ] as const) {
       if (photoUrl && this.imageDownloader.canHandle(photoUrl)) {
         try {
@@ -156,7 +188,7 @@ export class ImportDeaBatchUseCase {
 
           const uploaded = await this.imageStorage.upload({
             buffer: downloaded.buffer,
-            filename: `${csvRow.id}-${type.toLowerCase()}.jpg`,
+            filename: `${row.id || Date.now()}-${type.toLowerCase()}.jpg`,
             contentType: downloaded.contentType,
             prefix: `aeds/${batchId}`,
           });
@@ -171,7 +203,7 @@ export class ImportDeaBatchUseCase {
 
     // 5. Crear AED en DB
     await this.repository.createAedFromCsv({
-      csvRow,
+      csvRow: row,
       batchId,
       districtId,
       latitude,
@@ -181,7 +213,21 @@ export class ImportDeaBatchUseCase {
     });
   }
 
-  private parseCoordinate(value: string): number | null {
+  /**
+   * Resuelve el district_id solo si hay valor Y es válido
+   * Universal: No asume que todos los DEAs tengan distrito
+   */
+  private resolveDistrictId(districtName: string | null): number | null {
+    if (!districtName) {
+      return null;
+    }
+    
+    // Intentar mapear (solo funciona para Madrid)
+    // Si no encuentra match, retorna null (no error)
+    return mapDistrictNameToId(districtName);
+  }
+
+  private parseCoordinate(value: string | null): number | null {
     if (!value) return null;
     const parsed = parseFloat(value.replace(",", "."));
     return isNaN(parsed) ? null : parsed;

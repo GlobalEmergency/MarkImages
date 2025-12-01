@@ -19,6 +19,7 @@ export async function processImportAsync(
   batchId: string,
   filePath: string,
   userId: string,
+  mappings?: Array<{csvColumn: string; systemField: string}>,
   sharePointAuth?: any
 ): Promise<void> {
   const prisma = new PrismaClient();
@@ -51,9 +52,11 @@ export async function processImportAsync(
     // Ejecutar importación
     const startTime = Date.now();
     const result = await useCase.execute({
+      batchId, // Usar el batch ya creado (evitar duplicación)
       filePath,
       batchName: "", // El batch ya existe
       importedBy: userId,
+      mappings, // Pasar mappings del usuario
       sharePointAuth,
       chunkSize: 50,
     });

@@ -30,14 +30,6 @@ export const REQUIRED_FIELDS: FieldDefinition[] = [
     examples: ['Hospital General', 'Centro Comercial Plaza', 'Ayuntamiento'],
   },
   {
-    key: 'district',
-    label: 'Distrito',
-    required: true,
-    type: 'string',
-    description: 'Distrito de Madrid donde se ubica el DEA',
-    examples: ['Centro', '1. Centro', 'Retiro', '3. Retiro'],
-  },
-  {
     key: 'streetName',
     label: 'Nombre de la vía',
     required: true,
@@ -60,6 +52,14 @@ export const REQUIRED_FIELDS: FieldDefinition[] = [
  * Mejoran la información pero no son obligatorios
  */
 export const OPTIONAL_FIELDS: FieldDefinition[] = [
+  {
+    key: 'district',
+    label: 'Distrito',
+    required: false,
+    type: 'string',
+    description: 'Distrito de Madrid donde se ubica el DEA',
+    examples: ['Centro', '1. Centro', 'Retiro', '3. Retiro'],
+  },
   {
     key: 'submitterEmail',
     label: 'Correo electrónico',
