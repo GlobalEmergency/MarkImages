@@ -4,8 +4,11 @@ const nextConfig: NextConfig = {
   // Ensure proper static optimization
   experimental: {
     optimizePackageImports: ['lucide-react'],
+    serverActions: {
+      bodySizeLimit: '10mb', // Límite de 10MB para uploads
+    },
   },
-  
+
   // Image optimization settings
   images: {
     remotePatterns: [
@@ -15,7 +18,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  
+
+  // API routes configuration
+  serverRuntimeConfig: {
+    maxDuration: 60, // 60 segundos para rutas API
+  },
+
   // Output configuration for Vercel
   output: 'standalone',
   
