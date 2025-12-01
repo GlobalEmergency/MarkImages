@@ -1,6 +1,9 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #dc2626;
+  --color-secondary: #1f2937;
+}
 
 /* Custom animations for DEA map screens */
 @keyframes slide-up {

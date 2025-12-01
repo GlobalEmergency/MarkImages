@@ -4,10 +4,9 @@
  * API to list and create AEDs (Automated External Defibrillators)
  */
 
-import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/db";
 
 /**
  * Types for creating a new AED

@@ -1,11 +1,9 @@
-import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
+import { prisma } from "@/lib/db";
 import { createToken, setAuthCookie } from "@/lib/jwt";
 import { verifyPassword } from "@/lib/password";
 import type { AuthResponse, LoginRequest, UserPublic } from "@/types";
-
-const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
   try {
@@ -97,7 +95,5 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

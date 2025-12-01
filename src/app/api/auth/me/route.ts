@@ -1,10 +1,8 @@
-import { PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
 
+import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/jwt";
 import type { UserPublic } from "@/types";
-
-const prisma = new PrismaClient();
 
 export async function GET() {
   try {
@@ -59,7 +57,5 @@ export async function GET() {
       { error: "Error al obtener usuario" },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
