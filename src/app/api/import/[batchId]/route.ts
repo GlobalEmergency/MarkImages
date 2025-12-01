@@ -3,12 +3,11 @@
  * Consulta el estado de un batch de importación
  */
 
-import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
+import { getCurrentUser } from "@/lib/jwt";
+import { prisma } from "@/lib/db";
 import { PrismaImportRepository } from "@/infrastructure/import/repositories/PrismaImportRepository";
-
-const prisma = new PrismaClient();
 
 export async function GET(
   request: NextRequest,

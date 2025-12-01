@@ -4,12 +4,10 @@
  * POST - Inicia la importación de un batch de DEAs desde CSV
  */
 
-import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 import { getCurrentUser } from "@/lib/jwt";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/db";
 
 /**
  * GET /api/import

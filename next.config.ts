@@ -19,11 +19,6 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // API routes configuration
-  serverRuntimeConfig: {
-    maxDuration: 60, // 60 segundos para rutas API
-  },
-
   // Output configuration for Vercel
   output: 'standalone',
   
