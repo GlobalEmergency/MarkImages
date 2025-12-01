@@ -1,6 +1,18 @@
 "use client";
 
-import { Home, MapPin, Menu, X, LogIn, UserPlus, LogOut, User } from "lucide-react";
+import {
+  Home,
+  MapPin,
+  Menu,
+  X,
+  LogIn,
+  UserPlus,
+  LogOut,
+  User,
+  PlusCircle,
+  ClipboardCheck,
+  Upload,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -13,7 +25,10 @@ export default function Navigation() {
   const { user, logout, loading } = useAuth();
 
   const isActive = (path: string) => {
-    return pathname === path;
+    if (path === "/") {
+      return pathname === path;
+    }
+    return pathname.startsWith(path);
   };
 
   const handleLogout = async () => {
@@ -21,7 +36,18 @@ export default function Navigation() {
     setMobileMenuOpen(false);
   };
 
-  const navLinks = [{ href: "/", label: "DEAs", icon: Home }];
+  // Navigation links - public and authenticated
+  const publicNavLinks = [
+    { href: "/", label: "DEAs", icon: Home },
+    { href: "/dea/new-simple", label: "Agregar DEA", icon: PlusCircle },
+  ];
+
+  const authNavLinks = [
+    { href: "/verify", label: "Verificar", icon: ClipboardCheck },
+    { href: "/import", label: "Importar", icon: Upload },
+  ];
+
+  const navLinks = user ? [...publicNavLinks, ...authNavLinks] : publicNavLinks;
 
   return (
     <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
