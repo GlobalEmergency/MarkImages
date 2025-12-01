@@ -87,7 +87,6 @@ export default function LocationPickerMap({
         mapRef.current = null;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update marker when coordinates change externally
@@ -110,7 +109,6 @@ export default function LocationPickerMap({
 
       mapRef.current.setView([latitude, longitude], 15);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [latitude, longitude]);
 
   return (

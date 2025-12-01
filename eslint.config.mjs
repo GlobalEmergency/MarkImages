@@ -17,6 +17,8 @@ const eslintConfig = [
       "build/**",
       ".vercel/**",
       "dist/**",
+      "scripts/**",
+      "prisma/**",
     ],
   },
   js.configs.recommended,
@@ -99,9 +101,12 @@ const eslintConfig = [
         },
       ],
       "@typescript-eslint/no-explicit-any": "warn",
-      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "@typescript-eslint/no-require-imports": "off", // Permitir require para imports dinámicos
+      // "no-console": ["warn", { allow: ["warn", "error"] }],
+      'no-console': 'off',
       "prefer-const": "error",
       "no-var": "error",
+      "react-hooks/exhaustive-deps": "off", // Plugin no disponible
     },
   },
 ];

@@ -5,7 +5,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { getCurrentUser } from "@/lib/jwt";
 import { prisma } from "@/lib/db";
 import { PrismaImportRepository } from "@/infrastructure/import/repositories/PrismaImportRepository";
 
@@ -28,13 +27,12 @@ export async function GET(
     }
 
     // Calcular progreso
-    const progress = batchInfo.totalRecords > 0
-      ? Math.round(
-          ((batchInfo.successfulRecords + batchInfo.failedRecords) /
-            batchInfo.totalRecords) *
-            100
-        )
-      : 0;
+    const progress =
+      batchInfo.totalRecords > 0
+        ? Math.round(
+            ((batchInfo.successfulRecords + batchInfo.failedRecords) / batchInfo.totalRecords) * 100
+          )
+        : 0;
 
     // Calcular duración
     let durationSeconds = null;
