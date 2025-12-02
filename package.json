@@ -22,7 +22,7 @@
     "build": "node scripts/migrate.js && next build",
     "start": "next start",
     "postinstall": "prisma generate",
-    "lint": "next lint",
+    "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
