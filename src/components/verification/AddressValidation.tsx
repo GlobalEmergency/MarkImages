@@ -2,6 +2,7 @@
 
 import { CheckCircle, AlertTriangle, MapPin, Loader2, Search, Edit2, X } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import AddressComparisonModal from "./AddressComparisonModal";
 
 interface AddressValidationProps {
   _aedId: string;
@@ -56,6 +57,10 @@ export default function AddressValidation({
   const [validated, setValidated] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [editing, setEditing] = useState(false);
+
+  // Comparison modal state
+  const [showComparisonModal, setShowComparisonModal] = useState(false);
+  const [pendingSuggestedAddress, setPendingSuggestedAddress] = useState<SearchResult | null>(null);
 
   // Initialize search query with current address for pre-filling
   const initialSearchQuery = currentAddress
@@ -285,22 +290,42 @@ export default function AddressValidation({
   };
 
   const selectSearchResult = (result: SearchResult) => {
-    const parsedAddress = parseAddress(result);
-    setAddressForm(parsedAddress as any);
+    // Instead of applying directly, show comparison modal
+    setPendingSuggestedAddress(result);
+    setShowComparisonModal(true);
+    setShowResults(false);
+  };
+
+  const handleComparisonConfirm = (selectedAddress: {
+    street_type?: string;
+    street_name?: string;
+    street_number?: string;
+    postal_code?: string;
+    locality?: string;
+    latitude?: number;
+    longitude?: number;
+  }) => {
+    // Apply the selected address (can be original, suggested, or mixed)
+    setAddressForm(selectedAddress as any);
 
     // Update search query with the selected address for easy modification
     const selectedAddressText = [
-      parsedAddress.street_type,
-      parsedAddress.street_name,
-      parsedAddress.street_number,
+      selectedAddress.street_type,
+      selectedAddress.street_name,
+      selectedAddress.street_number,
     ]
       .filter(Boolean)
       .join(" ");
 
     setSearchQuery(selectedAddressText);
-    setShowResults(false);
-    setSearchResults([]);
+    setShowComparisonModal(false);
+    setPendingSuggestedAddress(null);
     setEditing(false);
+  };
+
+  const handleComparisonCancel = () => {
+    setShowComparisonModal(false);
+    setPendingSuggestedAddress(null);
   };
 
   const validateAddress = async () => {
@@ -378,6 +403,8 @@ export default function AddressValidation({
                   setShowResults(false);
                 }}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Limpiar búsqueda"
+                title="Limpiar búsqueda"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -685,6 +712,26 @@ export default function AddressValidation({
               : "Buscar en Google Maps (dirección)"}
           </a>
         </div>
+      )}
+
+      {/* Comparison Modal */}
+      {pendingSuggestedAddress && (
+        <AddressComparisonModal
+          isOpen={showComparisonModal}
+          currentAddress={{
+            street_type: addressForm.street_type,
+            street_name: addressForm.street_name,
+            street_number: addressForm.street_number,
+            postal_code: addressForm.postal_code,
+            locality: addressForm.locality,
+            latitude: addressForm.latitude,
+            longitude: addressForm.longitude,
+          }}
+          suggestedAddress={parseAddress(pendingSuggestedAddress)}
+          source={pendingSuggestedAddress.source || "osm"}
+          onConfirm={handleComparisonConfirm}
+          onCancel={handleComparisonCancel}
+        />
       )}
     </div>
   );

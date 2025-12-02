@@ -123,6 +123,8 @@ export interface AedData {
   longitude: number | null;
   internal_notes: string;
   origin_observations: string;
+  requires_attention?: boolean;
+  attention_reason?: string;
 }
 
 export interface LocationData {

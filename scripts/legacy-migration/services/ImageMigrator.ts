@@ -51,43 +51,63 @@ export class ImageMigrator {
    * @param aedId - UUID of the AED in the new system
    * @param legacyRecord - Legacy DEA record from old database
    * @param verificationSession - Verification session data (if exists)
+   * @returns Object with successfully migrated images and failed URLs
    */
   async migrateImages(
     aedId: string,
     legacyRecord: LegacyDeaRecord,
     verificationSession: LegacyVerificationSession | null
-  ): Promise<ImageData[]> {
+  ): Promise<{ images: ImageData[]; failedUrls: string[] }> {
     const images: ImageData[] = [];
+    const failedUrls: string[] = [];
 
     // Migrate Image 1 (FRONT)
-    const image1 = await this.migrateImagePair(
-      aedId,
-      legacyRecord.id,
-      "FRONT",
-      1,
-      legacyRecord.foto1,
-      verificationSession?.original_image_url || null,
-      verificationSession?.processed_image_url || null,
-      verificationSession?.status || null,
-      verificationSession?.completed_at || null
-    );
-    if (image1) images.push(image1);
+    try {
+      const image1 = await this.migrateImagePair(
+        aedId,
+        legacyRecord.id,
+        "FRONT",
+        1,
+        legacyRecord.foto1,
+        verificationSession?.original_image_url || null,
+        verificationSession?.processed_image_url || null,
+        verificationSession?.status || null,
+        verificationSession?.completed_at || null
+      );
+      if (image1) images.push(image1);
+    } catch (error) {
+      const sourceUrl = legacyRecord.foto1 || verificationSession?.original_image_url;
+      if (sourceUrl) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        failedUrls.push(`FRONT: ${sourceUrl} (${errorMsg})`);
+      }
+      console.warn(`    ⚠️  Imagen FRONT no disponible, se guardará URL para revisión manual`);
+    }
 
     // Migrate Image 2 (LOCATION)
-    const image2 = await this.migrateImagePair(
-      aedId,
-      legacyRecord.id,
-      "LOCATION",
-      2,
-      legacyRecord.foto2,
-      verificationSession?.second_image_url || null,
-      verificationSession?.second_processed_image_url || null,
-      verificationSession?.status || null,
-      verificationSession?.completed_at || null
-    );
-    if (image2) images.push(image2);
+    try {
+      const image2 = await this.migrateImagePair(
+        aedId,
+        legacyRecord.id,
+        "LOCATION",
+        2,
+        legacyRecord.foto2,
+        verificationSession?.second_image_url || null,
+        verificationSession?.second_processed_image_url || null,
+        verificationSession?.status || null,
+        verificationSession?.completed_at || null
+      );
+      if (image2) images.push(image2);
+    } catch (error) {
+      const sourceUrl = legacyRecord.foto2 || verificationSession?.second_image_url;
+      if (sourceUrl) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        failedUrls.push(`LOCATION: ${sourceUrl} (${errorMsg})`);
+      }
+      console.warn(`    ⚠️  Imagen LOCATION no disponible, se guardará URL para revisión manual`);
+    }
 
-    return images;
+    return { images, failedUrls };
   }
 
   /**
