@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import { Upload, X, Loader2 } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { Upload, X, Loader2 } from "lucide-react";
+import { useState, useRef } from "react";
 
-import { useImageUpload } from '@/hooks/useImageUpload';
+import { useImageUpload } from "@/hooks/useImageUpload";
 
 interface ImageUploadProps {
   label: string;
@@ -13,12 +13,12 @@ interface ImageUploadProps {
   required?: boolean;
 }
 
-export default function ImageUpload({ 
-  label, 
-  value, 
-  onChange, 
-  prefix, 
-  required = false 
+export default function ImageUpload({
+  label,
+  value,
+  onChange,
+  prefix,
+  required = false,
 }: ImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(value || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,7 +46,7 @@ export default function ImageUpload({
     setPreview(null);
     onChange(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -64,12 +64,8 @@ export default function ImageUpload({
       <div className="relative">
         {preview ? (
           // Mostrar imagen subida
-          <div className="relative group">
-            <img
-              src={preview}
-              alt={label}
-              className="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
-            />
+          <div className="relative group w-full aspect-square max-h-80 mx-auto bg-gray-100 rounded-lg border-2 border-gray-200 flex items-center justify-center overflow-hidden">
+            <img src={preview} alt={label} className="max-w-full max-h-full object-contain" />
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-lg flex items-center justify-center">
               <button
                 type="button"
@@ -92,7 +88,7 @@ export default function ImageUpload({
             onClick={handleClick}
             className={`
               w-full h-48 border-2 border-dashed rounded-lg cursor-pointer transition-colors
-              ${loading ? 'border-blue-300 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
+              ${loading ? "border-blue-300 bg-blue-50" : "border-gray-300 hover:border-gray-400"}
               flex flex-col items-center justify-center space-y-2
             `}
           >
@@ -110,9 +106,7 @@ export default function ImageUpload({
                   <p className="text-sm font-medium text-gray-700">
                     Haz clic para subir una imagen
                   </p>
-                  <p className="text-xs text-gray-500">
-                    JPG, PNG o WebP (máx. 5MB)
-                  </p>
+                  <p className="text-xs text-gray-500">JPG, PNG o WebP (máx. 5MB)</p>
                 </div>
               </>
             )}

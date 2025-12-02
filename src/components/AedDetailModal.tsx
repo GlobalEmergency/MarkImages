@@ -61,8 +61,12 @@ export default function AedDetailModal({ aed, isOpen, onClose }: AedDetailModalP
 
         {/* Image Gallery */}
         {displayImage && (
-          <div className="relative w-full h-64 sm:h-96 bg-gray-900">
-            <img src={displayImage} alt={aed.name} className="w-full h-full object-cover" />
+          <div className="relative w-full aspect-square max-h-[500px] mx-auto bg-gray-900 flex items-center justify-center">
+            <img
+              src={displayImage}
+              alt={aed.name}
+              className="max-w-full max-h-full object-contain"
+            />
 
             {/* Image Counter */}
             {aed.images && aed.images.length > 1 && (
@@ -95,7 +99,7 @@ export default function AedDetailModal({ aed, isOpen, onClose }: AedDetailModalP
                 <img
                   src={image.thumbnail_url || image.processed_url || image.original_url}
                   alt={`${aed.name} - ${image.type}`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain bg-gray-100"
                 />
               </button>
             ))}

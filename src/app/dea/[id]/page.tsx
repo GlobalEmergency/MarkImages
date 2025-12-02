@@ -9,6 +9,7 @@ import {
   AlertCircle,
   Phone,
   Navigation,
+  X,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -21,6 +22,7 @@ export default function DeaDetailPage() {
   const [aed, setAed] = useState<Aed | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showLightbox, setShowLightbox] = useState(false);
 
   useEffect(() => {
     const fetchAed = async () => {
@@ -93,9 +95,20 @@ export default function DeaDetailPage() {
       {/* Header */}
       <header className="relative">
         {/* Hero Image */}
-        <div className="relative h-64 bg-gradient-to-b from-gray-800 to-gray-700">
+        <div className="relative w-full aspect-square max-h-80 md:max-h-96 bg-gradient-to-b from-gray-800 to-gray-700 flex items-center justify-center">
           {heroImage ? (
-            <img src={heroImage} alt={aed.name} className="w-full h-full object-cover" />
+            <>
+              <img
+                src={heroImage}
+                alt={aed.name}
+                className="max-w-full max-h-full object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => setShowLightbox(true)}
+              />
+              <div className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-2 rounded-lg text-sm pointer-events-none flex items-center gap-2">
+                <span className="text-xl">🔍</span>
+                <span>Click para ampliar</span>
+              </div>
+            </>
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <MapPin className="w-20 h-20 text-gray-600" />
@@ -103,13 +116,14 @@ export default function DeaDetailPage() {
           )}
 
           {/* Overlay gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent pointer-events-none" />
         </div>
 
         {/* Back button */}
         <button
           onClick={() => router.back()}
           className="absolute top-4 left-4 bg-gray-900 bg-opacity-80 text-white rounded-full p-2 hover:bg-opacity-100 transition-all"
+          aria-label="Volver"
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
@@ -119,6 +133,28 @@ export default function DeaDetailPage() {
           <span className="text-white text-lg font-bold">deamap.es</span>
         </div>
       </header>
+
+      {/* Lightbox Modal */}
+      {showLightbox && heroImage && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4"
+          onClick={() => setShowLightbox(false)}
+        >
+          <button
+            onClick={() => setShowLightbox(false)}
+            className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white rounded-full p-3 transition-all"
+            aria-label="Cerrar lightbox"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <img
+            src={heroImage}
+            alt={aed.name}
+            className="max-w-full max-h-full object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
 
       {/* Content */}
       <div className="px-4 -mt-8 relative z-10">

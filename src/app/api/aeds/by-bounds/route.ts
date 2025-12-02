@@ -1,19 +1,25 @@
 /**
  * API Route: /api/aeds/by-bounds
  *
- * Geospatial API to fetch AEDs within a bounding box
+ * Geospatial API to fetch AEDs within a bounding box with server-side clustering
  * Optimized for map visualization with large datasets
+ *
+ * Arquitectura:
+ * - Capa de Interfaces (este archivo): Recibe requests HTTP
+ * - Capa de Aplicación: Caso de uso GetAedsWithClustersUseCase
+ * - Capa de Dominio: Puerto IClusteringService
+ * - Capa de Infraestructura: Adapter PostGISClusteringAdapter
  */
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { prisma } from "@/lib/db";
-import { getQueryStrategy, isValidBoundingBox, getStrategyDescription } from "@/lib/zoom-strategy";
-import type { AedsByBoundsResponse } from "@/types/aed";
+import { getQueryStrategy, isValidBoundingBox } from "@/lib/zoom-strategy";
+import { GetAedsWithClustersUseCase } from "@/application/clustering/use-cases/GetAedsWithClustersUseCase";
+import { PostGISClusteringAdapter } from "@/infrastructure/clustering/adapters/PostGISClusteringAdapter";
 
 /**
  * GET /api/aeds/by-bounds
- * Fetch AEDs within a geographic bounding box
+ * Fetch AEDs within a geographic bounding box with clustering
  *
  * Query params:
  * - minLat: minimum latitude (required)
@@ -21,6 +27,11 @@ import type { AedsByBoundsResponse } from "@/types/aed";
  * - minLng: minimum longitude (required)
  * - maxLng: maximum longitude (required)
  * - zoom: map zoom level 0-20 (optional, default: 12)
+ *
+ * Response:
+ * - clusters[]: Agrupaciones de DEAs con centro, conteo y bounds
+ * - markers[]: DEAs individuales con datos completos
+ * - stats: Estadísticas de total, clustered e individual
  */
 export async function GET(request: NextRequest) {
   try {
@@ -61,79 +72,21 @@ export async function GET(request: NextRequest) {
     // Get query strategy based on zoom level
     const strategy = getQueryStrategy(zoom);
 
-    // Build the query
-    let query = `
-      SELECT 
-        a.id,
-        a.code,
-        a.name,
-        a.latitude,
-        a.longitude,
-        a.establishment_type
-      FROM aeds a
-      WHERE 
-        a.status = 'PUBLISHED'
-        AND a.latitude IS NOT NULL
-        AND a.longitude IS NOT NULL
-        AND a.latitude BETWEEN $1 AND $2
-        AND a.longitude BETWEEN $3 AND $4
-    `;
+    // Dependency Injection: Crear instancias siguiendo SOLID
+    const clusteringService = new PostGISClusteringAdapter();
+    const useCase = new GetAedsWithClustersUseCase(clusteringService);
 
-    // Apply sampling if needed (for low zoom levels)
-    if (strategy.sampling) {
-      // Use ST_SnapToGrid for consistent spatial sampling
-      const gridSize = parseFloat(strategy.sampling.replace("grid_", ""));
-      query += `
-        AND ST_Within(
-          a.geom,
-          (SELECT ST_Union(
-            ST_SnapToGrid(a2.geom, ${gridSize})
-          ) FROM aeds a2
-          WHERE a2.status = 'PUBLISHED'
-            AND a2.latitude BETWEEN $1 AND $2
-            AND a2.longitude BETWEEN $3 AND $4
-          )
-        )
-      `;
-    }
-
-    // Add ordering
-    query += ` ORDER BY a.${strategy.orderBy} DESC`;
-
-    // Add limit
-    query += ` LIMIT $5`;
-
-    // Execute query
-    const aeds = await prisma.$queryRawUnsafe<
-      Array<{
-        id: string;
-        code: string;
-        name: string;
-        latitude: number;
-        longitude: number;
-        establishment_type: string;
-      }>
-    >(
-      query,
-      minLat,
-      maxLat,
-      minLng,
-      maxLng,
-      strategy.limit + 1 // Fetch one extra to know if truncated
-    );
-
-    // Check if results were truncated
-    const truncated = aeds.length > strategy.limit;
-    const data = truncated ? aeds.slice(0, strategy.limit) : aeds;
-
-    const response: AedsByBoundsResponse = {
-      success: true,
-      data,
-      count: data.length,
-      truncated,
-      zoom_level: zoom,
-      strategy: getStrategyDescription(strategy),
-    };
+    // Execute use case
+    const response = await useCase.execute({
+      bounds: {
+        minLat,
+        maxLat,
+        minLng,
+        maxLng,
+      },
+      zoom,
+      strategy,
+    });
 
     return NextResponse.json(response);
   } catch (error) {

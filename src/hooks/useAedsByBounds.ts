@@ -1,17 +1,22 @@
 /**
- * Hook to fetch AEDs by geographic bounding box
+ * Hook to fetch AEDs by geographic bounding box with server-side clustering
  * Optimized for map visualization with debouncing and caching
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
 
-import type { AedMapMarker, BoundingBox, AedsByBoundsResponse } from "@/types/aed";
+import type { AedMapMarker, AedCluster, BoundingBox, ClusteredAedsResponse } from "@/types/aed";
 
 interface UseAedsByBoundsResult {
   aeds: AedMapMarker[];
+  clusters: AedCluster[];
   loading: boolean;
   error: string | null;
-  truncated: boolean;
+  stats: {
+    total_in_view: number;
+    clustered: number;
+    individual: number;
+  };
   strategy: string;
   refetch: () => void;
 }
@@ -30,9 +35,14 @@ export function useAedsByBounds(
   debounceMs: number = 300
 ): UseAedsByBoundsResult {
   const [aeds, setAeds] = useState<AedMapMarker[]>([]);
+  const [clusters, setClusters] = useState<AedCluster[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [truncated, setTruncated] = useState(false);
+  const [stats, setStats] = useState({
+    total_in_view: 0,
+    clustered: 0,
+    individual: 0,
+  });
   const [strategy, setStrategy] = useState<string>("full");
 
   // Ref to store the abort controller for cancellation
@@ -73,11 +83,12 @@ export function useAedsByBounds(
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data: AedsByBoundsResponse = await response.json();
+      const data: ClusteredAedsResponse = await response.json();
 
       if (data.success) {
-        setAeds(data.data);
-        setTruncated(data.truncated);
+        setAeds(data.data.markers);
+        setClusters(data.data.clusters);
+        setStats(data.stats);
         setStrategy(data.strategy);
       } else {
         throw new Error("Invalid response from server");
@@ -137,9 +148,10 @@ export function useAedsByBounds(
 
   return {
     aeds,
+    clusters,
     loading,
     error,
-    truncated,
+    stats,
     strategy,
     refetch,
   };

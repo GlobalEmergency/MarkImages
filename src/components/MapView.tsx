@@ -1,6 +1,6 @@
 /**
- * MapView - Dynamic map component with clustering and geospatial queries
- * Optimized for large datasets (500K+ markers)
+ * MapView - Dynamic map component with server-side clustering
+ * Optimized for large datasets with hybrid rendering (clusters + individual markers)
  */
 
 "use client";
@@ -8,12 +8,12 @@
 import L from "leaflet";
 import { AlertCircle, Loader2, MapPin } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
-import MarkerClusterGroup from "react-leaflet-cluster";
+import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 
 import { MapEventHandler } from "@/components/MapEventHandler";
+import { ClusterMarker } from "@/components/ClusterMarker";
 import { useAedsByBounds } from "@/hooks/useAedsByBounds";
-import type { AedMapMarker, BoundingBox } from "@/types/aed";
+import type { AedMapMarker, AedCluster, BoundingBox } from "@/types/aed";
 
 import "leaflet/dist/leaflet.css";
 
@@ -60,12 +60,33 @@ const createCustomIcon = () => {
   });
 };
 
+/**
+ * Component helper to fit map bounds when cluster is clicked
+ */
+function MapController({ targetBounds }: { targetBounds: L.LatLngBounds | null }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (targetBounds) {
+      map.fitBounds(targetBounds, {
+        padding: [50, 50],
+        maxZoom: 15,
+        animate: true,
+        duration: 0.5,
+      });
+    }
+  }, [targetBounds, map]);
+
+  return null;
+}
+
 export default function MapView({ onAedClick }: MapViewProps) {
   const [bounds, setBounds] = useState<BoundingBox | null>(null);
   const [zoom, setZoom] = useState(12);
+  const [targetBounds, setTargetBounds] = useState<L.LatLngBounds | null>(null);
 
-  // Fetch AEDs within bounds
-  const { aeds, loading, error, truncated, strategy } = useAedsByBounds(bounds, zoom);
+  // Fetch AEDs within bounds with clustering
+  const { aeds, clusters, loading, error, stats, strategy } = useAedsByBounds(bounds, zoom);
 
   useEffect(() => {
     // Ensure Leaflet styles are loaded
@@ -76,23 +97,9 @@ export default function MapView({ onAedClick }: MapViewProps) {
     link.crossOrigin = "";
     document.head.appendChild(link);
 
-    // Load marker cluster styles
-    const clusterLink = document.createElement("link");
-    clusterLink.rel = "stylesheet";
-    clusterLink.href = "https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css";
-    document.head.appendChild(clusterLink);
-
-    const clusterDefaultLink = document.createElement("link");
-    clusterDefaultLink.rel = "stylesheet";
-    clusterDefaultLink.href =
-      "https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css";
-    document.head.appendChild(clusterDefaultLink);
-
     return () => {
       try {
         document.head.removeChild(link);
-        document.head.removeChild(clusterLink);
-        document.head.removeChild(clusterDefaultLink);
       } catch {
         // Ignore errors during cleanup
       }
@@ -119,6 +126,15 @@ export default function MapView({ onAedClick }: MapViewProps) {
     [onAedClick]
   );
 
+  const handleClusterClick = useCallback((cluster: AedCluster) => {
+    // Create Leaflet bounds from cluster bounds
+    const clusterBounds = L.latLngBounds(
+      [cluster.bounds.minLat, cluster.bounds.minLng],
+      [cluster.bounds.maxLat, cluster.bounds.maxLng]
+    );
+    setTargetBounds(clusterBounds);
+  }, []);
+
   return (
     <div className="relative w-full h-[600px] rounded-xl overflow-hidden shadow-xl">
       <MapContainer
@@ -136,48 +152,48 @@ export default function MapView({ onAedClick }: MapViewProps) {
         {/* Map event handler */}
         <MapEventHandler onMove={handleMapMove} />
 
-        {/* Marker clustering */}
-        <MarkerClusterGroup
-          chunkedLoading
-          maxClusterRadius={50}
-          spiderfyOnMaxZoom={true}
-          showCoverageOnHover={false}
-          zoomToBoundsOnClick={true}
-        >
-          {aeds.map((aed) => (
-            <Marker
-              key={aed.id}
-              position={[aed.latitude, aed.longitude]}
-              icon={createCustomIcon()}
-              eventHandlers={{
-                click: () => handleMarkerClick(aed),
-              }}
-            >
-              <Popup>
-                <div className="min-w-[200px]">
-                  <h3 className="font-bold text-gray-900 mb-2">{aed.name}</h3>
-                  <p className="text-sm text-gray-600 mb-2">{aed.code}</p>
+        {/* Map controller for zoom animations */}
+        <MapController targetBounds={targetBounds} />
 
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-start gap-2">
-                      <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-gray-700">{aed.establishment_type}</p>
-                      </div>
+        {/* Render server-side clusters */}
+        {clusters.map((cluster) => (
+          <ClusterMarker key={cluster.id} cluster={cluster} onClusterClick={handleClusterClick} />
+        ))}
+
+        {/* Render individual AED markers */}
+        {aeds.map((aed) => (
+          <Marker
+            key={aed.id}
+            position={[aed.latitude, aed.longitude]}
+            icon={createCustomIcon()}
+            eventHandlers={{
+              click: () => handleMarkerClick(aed),
+            }}
+          >
+            <Popup>
+              <div className="min-w-[200px]">
+                <h3 className="font-bold text-gray-900 mb-2">{aed.name}</h3>
+                <p className="text-sm text-gray-600 mb-2">{aed.code}</p>
+
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-start gap-2">
+                    <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-gray-700">{aed.establishment_type}</p>
                     </div>
                   </div>
-
-                  <button
-                    onClick={() => handleMarkerClick(aed)}
-                    className="w-full mt-3 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all"
-                  >
-                    Ver detalles
-                  </button>
                 </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MarkerClusterGroup>
+
+                <button
+                  onClick={() => handleMarkerClick(aed)}
+                  className="w-full mt-3 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all"
+                >
+                  Ver detalles
+                </button>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
       </MapContainer>
 
       {/* Loading indicator */}
@@ -197,26 +213,31 @@ export default function MapView({ onAedClick }: MapViewProps) {
       )}
 
       {/* Info indicator */}
-      {!loading && !error && aeds.length > 0 && (
+      {!loading && !error && (aeds.length > 0 || clusters.length > 0) && (
         <div className="absolute bottom-4 left-4 z-[1000] bg-white rounded-lg shadow-lg px-4 py-2 flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 text-blue-600" />
             <span className="text-sm font-medium text-gray-700">
-              {aeds.length} DEA{aeds.length !== 1 ? "s" : ""} visibles
+              {stats.total_in_view} DEA{stats.total_in_view !== 1 ? "s" : ""} en vista
             </span>
           </div>
-          {truncated && (
-            <span className="text-xs text-amber-600 flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" />
-              Hay más DEAs. Aumenta el zoom para ver todos
-            </span>
+          {clusters.length > 0 && (
+            <div className="text-xs text-gray-600 space-y-0.5">
+              <p>
+                • {clusters.length} cluster{clusters.length !== 1 ? "s" : ""} ({stats.clustered}{" "}
+                DEAs)
+              </p>
+              <p>
+                • {aeds.length} individual{aeds.length !== 1 ? "es" : ""}
+              </p>
+            </div>
           )}
           <span className="text-xs text-gray-500">Estrategia: {strategy}</span>
         </div>
       )}
 
       {/* No results indicator */}
-      {!loading && !error && aeds.length === 0 && bounds && (
+      {!loading && !error && aeds.length === 0 && clusters.length === 0 && bounds && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[1000] bg-white rounded-lg shadow-lg px-6 py-4 text-center">
           <MapPin className="w-8 h-8 text-gray-400 mx-auto mb-2" />
           <p className="text-sm font-medium text-gray-700">No hay DEAs en esta área</p>

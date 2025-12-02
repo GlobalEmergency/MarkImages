@@ -92,4 +92,41 @@ export interface ZoomStrategy {
   limit: number;
   sampling: string | null;
   orderBy: string;
+  clusteringEnabled: boolean;
+  clusterGridSize: number | null;
+  minClusterSize: number;
+}
+
+// ============================================
+// CLUSTER TYPES - For server-side clustering
+// ============================================
+
+export interface AedCluster {
+  id: string;
+  center: {
+    lat: number;
+    lng: number;
+  };
+  count: number;
+  bounds: {
+    minLat: number;
+    maxLat: number;
+    minLng: number;
+    maxLng: number;
+  };
+}
+
+export interface ClusteredAedsResponse {
+  success: boolean;
+  data: {
+    clusters: AedCluster[];
+    markers: AedMapMarker[];
+  };
+  stats: {
+    total_in_view: number;
+    clustered: number;
+    individual: number;
+  };
+  zoom_level: number;
+  strategy: string;
 }
