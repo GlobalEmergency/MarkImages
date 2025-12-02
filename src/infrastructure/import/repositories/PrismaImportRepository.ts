@@ -3,7 +3,7 @@
  * Capa de Infraestructura
  */
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@/generated/client";
 
 import {
   IImportRepository,
@@ -136,7 +136,9 @@ export class PrismaImportRepository implements IImportRepository {
       // 4. Crear AED
       const aedData: any = {
         name: csvRow.name || "Sin nombre",
-        provisional_number: csvRow.provisionalNumber ? parseInt(csvRow.provisionalNumber) : undefined,
+        provisional_number: csvRow.provisionalNumber
+          ? parseInt(csvRow.provisionalNumber)
+          : undefined,
         establishment_type: csvRow.establishmentType || undefined,
         status: "DRAFT",
         source_origin: "CSV_IMPORT",

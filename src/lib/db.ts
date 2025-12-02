@@ -1,44 +1,17 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@/generated/client";
 
 const globalForPrisma = globalThis as unknown as {
-	prisma: PrismaClient | undefined
-}
+  prisma: PrismaClient | undefined;
+};
 
-function createPrismaClient() {
-	const connectionString = process.env.DATABASE_URL
+// Prisma 7 - Requiere adapter obligatorio con el generator prisma-client
+const connectionString = process.env.DATABASE_URL || "";
+const adapter = new PrismaPg({ connectionString });
 
-	// Durante el build de Next.js, puede no haber DATABASE_URL
-	// En ese caso, crear un cliente básico que no se usará realmente
-	if (!connectionString) {
-		console.warn('DATABASE_URL not set, creating client without adapter')
-		return new PrismaClient({
-			log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-		})
-	}
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter });
 
-	// En runtime con DATABASE_URL, usar adapter dinámicamente
-	try {
-		// Importación dinámica para evitar errores en build
-		const { Pool } = require('pg')
-		const { PrismaPg } = require('@prisma/adapter-pg')
-
-		const pool = new Pool({ connectionString })
-		const adapter = new PrismaPg(pool)
-
-		return new PrismaClient({
-			adapter,
-			log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-		})
-	} catch (error) {
-		console.warn('Failed to create adapter, using standard client:', error)
-		return new PrismaClient({
-			log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-		})
-	}
-}
-
-export const prisma = globalForPrisma.prisma ?? createPrismaClient()
-
-if (process.env.NODE_ENV !== 'production') {
-	globalForPrisma.prisma = prisma
+// Store instance globally in development
+if (!globalForPrisma.prisma) {
+  globalForPrisma.prisma = prisma;
 }

@@ -4,13 +4,12 @@
  * Capa de Aplicación
  */
 
-import { PrismaClient } from '@prisma/client';
-
-import { mapDistrictNameToId } from '@/domain/import/constants/DistrictMapping';
-import { CsvRowMapper } from '@/domain/import/services/CsvRowMapper';
-import { ColumnMapping } from '@/domain/import/value-objects/ColumnMapping';
-import { CsvPreview } from '@/domain/import/value-objects/CsvPreview';
-import { ValidationIssue, ValidationResult } from '@/domain/import/value-objects/ValidationResult';
+import { mapDistrictNameToId } from "@/domain/import/constants/DistrictMapping";
+import { prisma } from "@/lib/db";
+import { CsvRowMapper } from "@/domain/import/services/CsvRowMapper";
+import { ColumnMapping } from "@/domain/import/value-objects/ColumnMapping";
+import { CsvPreview } from "@/domain/import/value-objects/CsvPreview";
+import { ValidationIssue, ValidationResult } from "@/domain/import/value-objects/ValidationResult";
 
 export interface PreValidateDataRequest {
   preview: CsvPreview;
@@ -31,11 +30,7 @@ export interface PreValidateDataResponse {
 }
 
 export class PreValidateDataUseCase {
-  private readonly prisma: PrismaClient;
-
-  constructor() {
-    this.prisma = new PrismaClient();
-  }
+  constructor() {}
 
   /**
    * Ejecuta la pre-validación de datos
@@ -58,12 +53,7 @@ export class PreValidateDataUseCase {
         const rowNumber = i + 2; // +2 porque 1-based y saltamos header
 
         // Validar campos requeridos
-        const requiredIssues = this.validateRequiredFields(
-          row,
-          mappingMap,
-          preview,
-          rowNumber
-        );
+        const requiredIssues = this.validateRequiredFields(row, mappingMap, preview, rowNumber);
         issues.push(...requiredIssues);
 
         // Validar distrito
@@ -94,16 +84,15 @@ export class PreValidateDataUseCase {
         },
       };
     } catch (error) {
-      console.error('Error during pre-validation:', error);
+      console.error("Error during pre-validation:", error);
 
       // Retornar error crítico
       const criticalIssue: ValidationIssue = {
         row: 0,
-        field: 'system',
-        value: '',
-        severity: 'CRITICAL',
-        message:
-          error instanceof Error ? error.message : 'Error crítico durante la validación',
+        field: "system",
+        value: "",
+        severity: "CRITICAL",
+        message: error instanceof Error ? error.message : "Error crítico durante la validación",
       };
 
       const validation = ValidationResult.withSingleIssue(criticalIssue);
@@ -119,7 +108,7 @@ export class PreValidateDataUseCase {
         },
       };
     } finally {
-      await this.prisma.$disconnect();
+      // No need to disconnect when using shared prisma instance
     }
   }
 
@@ -131,9 +120,9 @@ export class PreValidateDataUseCase {
     delimiter: string,
     maxRows: number
   ): Promise<string[][]> {
-    const fs = await import('fs/promises');
-    const content = await fs.readFile(filePath, 'utf-8');
-    const lines = content.split('\n').filter((line) => line.trim());
+    const fs = await import("fs/promises");
+    const content = await fs.readFile(filePath, "utf-8");
+    const lines = content.split("\n").filter((line) => line.trim());
 
     // Saltar header y tomar hasta maxRows
     const dataLines = lines.slice(1, Math.min(lines.length, maxRows + 1));
@@ -146,7 +135,7 @@ export class PreValidateDataUseCase {
    */
   private parseRow(line: string, delimiter: string): string[] {
     const result: string[] = [];
-    let current = '';
+    let current = "";
     let inQuotes = false;
 
     for (let i = 0; i < line.length; i++) {
@@ -162,7 +151,7 @@ export class PreValidateDataUseCase {
         }
       } else if (char === delimiter && !inQuotes) {
         result.push(current.trim());
-        current = '';
+        current = "";
       } else {
         current += char;
       }
@@ -189,7 +178,7 @@ export class PreValidateDataUseCase {
     for (const [_systemField, csvColumn] of mappingMap.entries()) {
       const columnIndex = preview.getColumnIndex(csvColumn);
       if (columnIndex !== -1) {
-        rawData[csvColumn] = row[columnIndex] || '';
+        rawData[csvColumn] = row[columnIndex] || "";
       }
     }
 
@@ -207,10 +196,10 @@ export class PreValidateDataUseCase {
     if (!dynamicRow.hasMinimumRequiredFields()) {
       issues.push({
         row: rowNumber,
-        field: 'system',
-        value: '',
-        severity: 'ERROR',
-        message: 'Missing minimum required fields (proposedName, streetName, streetNumber)',
+        field: "system",
+        value: "",
+        severity: "ERROR",
+        message: "Missing minimum required fields (proposedName, streetName, streetNumber)",
       });
     }
 
@@ -228,7 +217,7 @@ export class PreValidateDataUseCase {
     rowNumber: number
   ): Promise<ValidationIssue[]> {
     const issues: ValidationIssue[] = [];
-    const csvColumn = mappingMap.get('district');
+    const csvColumn = mappingMap.get("district");
 
     // Si no está mapeado, no validar (es opcional)
     if (!csvColumn) return issues;
@@ -236,8 +225,8 @@ export class PreValidateDataUseCase {
     const columnIndex = preview.getColumnIndex(csvColumn);
     if (columnIndex === -1) return issues;
 
-    const districtValue = row[columnIndex] || '';
-    
+    const districtValue = row[columnIndex] || "";
+
     // Si está vacío, no es un error (es opcional)
     if (!districtValue.trim()) return issues;
 
@@ -247,24 +236,25 @@ export class PreValidateDataUseCase {
     if (districtId === null) {
       issues.push({
         row: rowNumber,
-        field: 'district',
+        field: "district",
         value: districtValue,
-        severity: 'WARNING', // Cambiar a WARNING porque es opcional
+        severity: "WARNING", // Cambiar a WARNING porque es opcional
         message: `Distrito "${districtValue}" no encontrado en el sistema`,
-        suggestion: 'Verifica el nombre del distrito. Formatos válidos: "Centro", "1. Centro", etc.',
+        suggestion:
+          'Verifica el nombre del distrito. Formatos válidos: "Centro", "1. Centro", etc.',
       });
     } else {
       // Verificar que el distrito exista en BD
-      const districtExists = await this.prisma.district.findFirst({
+      const districtExists = await prisma.district.findFirst({
         where: { id: districtId },
       });
 
       if (!districtExists) {
         issues.push({
           row: rowNumber,
-          field: 'district',
+          field: "district",
           value: districtValue,
-          severity: 'WARNING', // Cambiar a WARNING porque es opcional
+          severity: "WARNING", // Cambiar a WARNING porque es opcional
           message: `Distrito con ID ${districtId} no existe en la base de datos`,
         });
       }
@@ -285,20 +275,20 @@ export class PreValidateDataUseCase {
     const issues: ValidationIssue[] = [];
 
     // Validar latitud
-    const latColumn = mappingMap.get('latitude');
+    const latColumn = mappingMap.get("latitude");
     if (latColumn) {
       const latIndex = preview.getColumnIndex(latColumn);
       if (latIndex !== -1) {
-        const latValue = row[latIndex] || '';
+        const latValue = row[latIndex] || "";
         if (latValue.trim()) {
-          const lat = parseFloat(latValue.replace(',', '.'));
+          const lat = parseFloat(latValue.replace(",", "."));
           if (isNaN(lat) || lat < -90 || lat > 90) {
             issues.push({
               row: rowNumber,
-              field: 'latitude',
+              field: "latitude",
               value: latValue,
-              severity: 'ERROR',
-              message: 'Latitud inválida (debe estar entre -90 y 90)',
+              severity: "ERROR",
+              message: "Latitud inválida (debe estar entre -90 y 90)",
             });
           }
         }
@@ -306,20 +296,20 @@ export class PreValidateDataUseCase {
     }
 
     // Validar longitud
-    const lonColumn = mappingMap.get('longitude');
+    const lonColumn = mappingMap.get("longitude");
     if (lonColumn) {
       const lonIndex = preview.getColumnIndex(lonColumn);
       if (lonIndex !== -1) {
-        const lonValue = row[lonIndex] || '';
+        const lonValue = row[lonIndex] || "";
         if (lonValue.trim()) {
-          const lon = parseFloat(lonValue.replace(',', '.'));
+          const lon = parseFloat(lonValue.replace(",", "."));
           if (isNaN(lon) || lon < -180 || lon > 180) {
             issues.push({
               row: rowNumber,
-              field: 'longitude',
+              field: "longitude",
               value: lonValue,
-              severity: 'ERROR',
-              message: 'Longitud inválida (debe estar entre -180 y 180)',
+              severity: "ERROR",
+              message: "Longitud inválida (debe estar entre -180 y 180)",
             });
           }
         }
@@ -339,24 +329,24 @@ export class PreValidateDataUseCase {
     rowNumber: number
   ): ValidationIssue[] {
     const issues: ValidationIssue[] = [];
-    const csvColumn = mappingMap.get('postalCode');
+    const csvColumn = mappingMap.get("postalCode");
 
     if (!csvColumn) return issues;
 
     const columnIndex = preview.getColumnIndex(csvColumn);
     if (columnIndex === -1) return issues;
 
-    const postalCode = row[columnIndex] || '';
+    const postalCode = row[columnIndex] || "";
     if (!postalCode.trim()) return issues;
 
     // Validar formato de código postal (5 dígitos)
     if (!/^\d{5}$/.test(postalCode.trim())) {
       issues.push({
         row: rowNumber,
-        field: 'postalCode',
+        field: "postalCode",
         value: postalCode,
-        severity: 'WARNING',
-        message: 'Código postal debe tener 5 dígitos',
+        severity: "WARNING",
+        message: "Código postal debe tener 5 dígitos",
       });
     }
 

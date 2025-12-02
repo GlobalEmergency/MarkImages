@@ -3,7 +3,7 @@
  * Ejecuta importaciones de manera asíncrona y actualiza el progreso
  */
 
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/db";
 
 import { ImportDeaBatchUseCase } from "@/application/import/use-cases/ImportDeaBatchUseCase";
 import { CsvParserAdapter } from "@/infrastructure/import/parsers/CsvParserAdapter";
@@ -19,11 +19,9 @@ export async function processImportAsync(
   batchId: string,
   filePath: string,
   userId: string,
-  mappings?: Array<{csvColumn: string; systemField: string}>,
+  mappings?: Array<{ csvColumn: string; systemField: string }>,
   sharePointAuth?: any
 ): Promise<void> {
-  const prisma = new PrismaClient();
-
   try {
     console.log(`🚀 Starting async import for batch ${batchId}`);
 
@@ -42,12 +40,7 @@ export async function processImportAsync(
     const imageDownloader = new SharePointImageDownloader();
     const imageStorage = new S3ImageStorageAdapter();
 
-    const useCase = new ImportDeaBatchUseCase(
-      repository,
-      csvParser,
-      imageDownloader,
-      imageStorage
-    );
+    const useCase = new ImportDeaBatchUseCase(repository, csvParser, imageDownloader, imageStorage);
 
     // Ejecutar importación
     const startTime = Date.now();

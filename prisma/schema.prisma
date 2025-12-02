@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/client"
   previewFeatures = ["postgresqlExtensions"]
 }
 
@@ -39,6 +40,7 @@ model Aed {
 
   // General status
   status                    AedStatus                @default(DRAFT)
+  status_metadata           Json?
   published_at              DateTime?
 
   // Creation sequence
@@ -82,10 +84,8 @@ model Aed {
 enum AedStatus {
   DRAFT
   PENDING_REVIEW
-  VERIFIED
   PUBLISHED
-  SUSPENDED
-  ARCHIVED
+  INACTIVE
 }
 
 enum SourceOrigin {

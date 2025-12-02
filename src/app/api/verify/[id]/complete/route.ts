@@ -41,7 +41,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     await prisma.aed.update({
       where: { id },
       data: {
-        status: "VERIFIED",
+        status: "PUBLISHED",
         updated_by: user.userId,
       },
     });

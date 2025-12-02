@@ -54,3 +54,6 @@ next-env.d.ts
 data/exports/*
 backups/*
 logs/*
+
+# Prisma generated client
+src/generated/

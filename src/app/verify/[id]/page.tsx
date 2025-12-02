@@ -9,13 +9,14 @@ import type {
   District,
   Neighborhood,
   Street,
-} from "@prisma/client";
+} from "@/generated/client";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 
 import AddressValidation from "@/components/verification/AddressValidation";
 import ArrowPlacer from "@/components/verification/ArrowPlacer";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import ImageCropper from "@/components/verification/ImageCropper";
 import ImagePairSelector, { ImageSelection } from "@/components/verification/ImagePairSelector";
 import ResponsibleForm from "@/components/verification/ResponsibleForm";
@@ -50,6 +51,8 @@ export default function VerifyPage({ params }: VerifyPageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [completing, setCompleting] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
   const router = useRouter();
   const resolvedParams = use(params);
 
@@ -163,11 +166,7 @@ export default function VerifyPage({ params }: VerifyPageProps) {
     }
   };
 
-  const cancelVerification = async () => {
-    if (!confirm("¿Estás seguro de que quieres cancelar la verificación?")) {
-      return;
-    }
-
+  const handleCancelVerification = async () => {
     try {
       const response = await fetch(`/api/verify/${resolvedParams.id}`, {
         method: "DELETE",
@@ -180,21 +179,13 @@ export default function VerifyPage({ params }: VerifyPageProps) {
       router.push("/verify");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cancelar verificación");
+    } finally {
+      setShowCancelDialog(false);
     }
   };
 
-  const rejectDea = async () => {
-    const reason = prompt(
-      "¿Por qué deseas rechazar este DEA? (Por ej: datos insuficientes, información incorrecta, duplicado, etc.)"
-    );
-
-    if (!reason) {
-      return; // User cancelled
-    }
-
-    if (!confirm(`¿Estás seguro de que quieres rechazar este DEA?\n\nMotivo: ${reason}`)) {
-      return;
-    }
+  const handleRejectDea = async (reason?: string) => {
+    if (!reason) return;
 
     try {
       setLoading(true);
@@ -220,12 +211,12 @@ export default function VerifyPage({ params }: VerifyPageProps) {
         method: "DELETE",
       });
 
-      alert("DEA rechazado correctamente");
       router.push("/verify");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al rechazar DEA");
     } finally {
       setLoading(false);
+      setShowRejectDialog(false);
     }
   };
 
@@ -627,14 +618,14 @@ export default function VerifyPage({ params }: VerifyPageProps) {
             <h1 className="text-3xl font-bold text-gray-900">Verificación de DEA</h1>
             <div className="flex items-center space-x-3">
               <button
-                onClick={rejectDea}
+                onClick={() => setShowRejectDialog(true)}
                 disabled={loading}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed font-medium text-sm transition-colors"
               >
                 Rechazar DEA
               </button>
               <button
-                onClick={cancelVerification}
+                onClick={() => setShowCancelDialog(true)}
                 className="text-gray-600 hover:text-gray-700 font-medium text-sm"
               >
                 Cancelar Verificación
@@ -707,6 +698,32 @@ export default function VerifyPage({ params }: VerifyPageProps) {
 
         {/* Step Content */}
         {renderStepContent()}
+
+        {/* Confirmation Dialogs */}
+        <ConfirmDialog
+          isOpen={showCancelDialog}
+          title="Cancelar Verificación"
+          message="¿Estás seguro de que quieres cancelar la verificación? Se perderá todo el progreso actual."
+          confirmText="Sí, cancelar"
+          cancelText="No, continuar"
+          confirmColor="red"
+          onConfirm={handleCancelVerification}
+          onCancel={() => setShowCancelDialog(false)}
+        />
+
+        <ConfirmDialog
+          isOpen={showRejectDialog}
+          title="Rechazar DEA"
+          message="Por favor, indica el motivo por el cual deseas rechazar este DEA. Esta acción marcará el DEA como rechazado y cancelará la verificación."
+          confirmText="Rechazar DEA"
+          cancelText="Cancelar"
+          confirmColor="red"
+          requiresInput
+          inputLabel="Motivo del rechazo *"
+          inputPlaceholder="Ej: Datos insuficientes, información incorrecta, duplicado..."
+          onConfirm={handleRejectDea}
+          onCancel={() => setShowRejectDialog(false)}
+        />
       </div>
     </div>
   );
