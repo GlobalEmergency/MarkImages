@@ -248,10 +248,13 @@ model AedLocation {
   longitude               Float?
   coordinates_precision   String?
 
-  // Relationships with official address system
-  street_id               Int?
-  district_id             Int?
-  neighborhood_id         Int?
+  // Geographic information by city (no FK - multi-city support)
+  city_name               String?
+  city_code               String?
+  district_code           String?
+  district_name           String?
+  neighborhood_code       String?
+  neighborhood_name       String?
 
   // Access information
   access_description      String?
@@ -263,19 +266,15 @@ model AedLocation {
   location_observations   String?
   access_warnings         String?
 
-  street                  Street?                     @relation(fields: [street_id], references: [id])
-  district                District?                   @relation(fields: [district_id], references: [id])
-  neighborhood            Neighborhood?               @relation(fields: [neighborhood_id], references: [id])
   aed                     Aed?
   address_validation      AedAddressValidation?
 
   created_at              DateTime                    @default(now())
   updated_at              DateTime                    @updatedAt
 
-  @@index([district_id, neighborhood_id])
   @@index([postal_code])
   @@index([latitude, longitude], map: "idx_location_spatial")
-  @@index([street_id])
+  @@index([city_code, district_code])
   @@map("aed_locations")
 }
 
@@ -503,12 +502,16 @@ model AedAddressValidation {
   suggested_latitude        Float?
   suggested_longitude       Float?
 
-  // Official address found
-  official_street_id        Int?
+  // Official address found (no FK - multi-city support)
+  official_street_name      String?
   official_number           String?
   official_postal_code      String?
-  official_district_id      Int?
-  official_neighborhood_id  Int?
+  official_city_name        String?
+  official_city_code        String?
+  official_district_code    String?
+  official_district_name    String?
+  official_neighborhood_code String?
+  official_neighborhood_name String?
 
   // Suggested addresses
   suggestions               Json            @default("[]")
@@ -558,143 +561,6 @@ model AedCodeHistory {
   @@index([code])
   @@index([is_active])
   @@map("aed_code_history")
-}
-
-// ============================================
-// ADDRESS SYSTEM - Official data (integers)
-// ============================================
-
-model District {
-  id                  Int                     @id @default(autoincrement())
-  district_code       Int                     @unique
-  text_code           String
-  name                String
-  normalized_name     String
-  shape_length        Float?
-  shape_area          Float?
-  effective_date      DateTime?
-  end_date            DateTime?
-  observations        String?
-  created_at          DateTime                @default(now())
-
-  neighborhoods       Neighborhood[]
-  addresses           Address[]
-  street_ranges       StreetNumberRange[]
-  aed_locations       AedLocation[]
-
-  @@index([district_code])
-  @@index([normalized_name])
-  @@map("districts")
-}
-
-model Neighborhood {
-  id                      Int                     @id @default(autoincrement())
-  district_id             Int
-  neighborhood_code       Int
-  district_neighborhood_code Int                  @unique
-  neighborhood_number     Int
-  name                    String
-  normalized_name         String
-  uppercase_name          String
-  shape_length            Float?
-  shape_area              Float?
-  effective_date          DateTime?
-  end_date                DateTime?
-  created_at              DateTime                @default(now())
-
-  district                District                @relation(fields: [district_id], references: [id], onDelete: Cascade)
-  addresses               Address[]
-  street_ranges           StreetNumberRange[]
-  aed_locations           AedLocation[]
-
-  @@index([district_id, neighborhood_code])
-  @@index([normalized_name])
-  @@map("neighborhoods")
-}
-
-model Street {
-  id                  Int                     @id @default(autoincrement())
-  street_code         Int                     @unique
-  street_class        String
-  particle            String?
-  name                String
-  name_with_accents   String
-  normalized_name     String
-  start_street_code   Int?
-  start_class         String?
-  start_particle      String?
-  start_name          String?
-  end_street_code     Int?
-  end_class           String?
-  end_particle        String?
-  end_name            String?
-  created_at          DateTime                @default(now())
-
-  addresses           Address[]
-  number_ranges       StreetNumberRange[]
-  aed_locations       AedLocation[]
-
-  @@index([street_code])
-  @@index([street_class])
-  @@index([normalized_name])
-  @@index([start_street_code])
-  @@index([end_street_code])
-  @@map("streets")
-}
-
-model StreetNumberRange {
-  id                Int           @id @default(autoincrement())
-  street_id         Int
-  district_id       Int
-  neighborhood_id   Int?
-  odd_min           Int?
-  odd_max           Int?
-  even_min          Int?
-  even_max          Int?
-  created_at        DateTime      @default(now())
-
-  neighborhood      Neighborhood? @relation(fields: [neighborhood_id], references: [id])
-  district          District      @relation(fields: [district_id], references: [id])
-  street            Street        @relation(fields: [street_id], references: [id], onDelete: Cascade)
-
-  @@index([street_id, district_id])
-  @@index([odd_min, odd_max])
-  @@index([even_min, even_max])
-  @@index([street_id, district_id, neighborhood_id])
-  @@map("street_number_ranges")
-}
-
-model Address {
-  id                  Int           @id @default(autoincrement())
-  street_id           Int
-  district_id         Int
-  neighborhood_id     Int?
-  application_class   String?
-  number              Int?
-  qualifier           String?
-  point_type          String?
-  point_code          Int?
-  postal_code         String?
-  latitude            Float
-  longitude           Float
-  utm_x_etrs          Float?
-  utm_y_etrs          Float?
-  utm_x_ed            Float?
-  utm_y_ed            Float?
-  label_angle         Float?
-  created_at          DateTime      @default(now())
-
-  neighborhood        Neighborhood? @relation(fields: [neighborhood_id], references: [id])
-  district            District      @relation(fields: [district_id], references: [id])
-  street              Street        @relation(fields: [street_id], references: [id])
-
-  @@index([street_id, number])
-  @@index([district_id, neighborhood_id])
-  @@index([postal_code])
-  @@index([latitude, longitude])
-  @@index([street_id, district_id, number, postal_code])
-  @@index([latitude, longitude], map: "idx_addresses_spatial")
-  @@map("addresses")
 }
 
 // ============================================

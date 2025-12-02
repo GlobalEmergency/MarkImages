@@ -137,7 +137,8 @@ export default function AedDetailModal({ aed, isOpen, onClose }: AedDetailModalP
                   {aed.location.street_type} {aed.location.street_name} {aed.location.street_number}
                 </p>
                 <p className="text-sm text-gray-600 mt-1">
-                  {aed.location.postal_code} - {aed.location.district.name}
+                  {aed.location.postal_code}
+                  {aed.location.district_name && ` - ${aed.location.district_name}`}
                 </p>
                 {aed.location.access_description && (
                   <p className="text-sm text-gray-600 mt-2 italic">

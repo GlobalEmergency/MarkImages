@@ -4,8 +4,6 @@
  * Capa de Aplicación
  */
 
-import { mapDistrictNameToId } from "@/domain/import/constants/DistrictMapping";
-import { prisma } from "@/lib/db";
 import { CsvRowMapper } from "@/domain/import/services/CsvRowMapper";
 import { ColumnMapping } from "@/domain/import/value-objects/ColumnMapping";
 import { CsvPreview } from "@/domain/import/value-objects/CsvPreview";
@@ -56,10 +54,6 @@ export class PreValidateDataUseCase {
         const requiredIssues = this.validateRequiredFields(row, mappingMap, preview, rowNumber);
         issues.push(...requiredIssues);
 
-        // Validar distrito
-        const districtIssues = await this.validateDistrict(row, mappingMap, preview, rowNumber);
-        issues.push(...districtIssues);
-
         // Validar coordenadas
         const coordinateIssues = this.validateCoordinates(row, mappingMap, preview, rowNumber);
         issues.push(...coordinateIssues);
@@ -107,8 +101,6 @@ export class PreValidateDataUseCase {
           canProceed: false,
         },
       };
-    } finally {
-      // No need to disconnect when using shared prisma instance
     }
   }
 
@@ -150,14 +142,14 @@ export class PreValidateDataUseCase {
           inQuotes = !inQuotes;
         }
       } else if (char === delimiter && !inQuotes) {
-        result.push(current.trim());
+        result.push(current);
         current = "";
       } else {
         current += char;
       }
     }
 
-    result.push(current.trim());
+    result.push(current);
     return result;
   }
 
@@ -201,63 +193,6 @@ export class PreValidateDataUseCase {
         severity: "ERROR",
         message: "Missing minimum required fields (proposedName, streetName, streetNumber)",
       });
-    }
-
-    return issues;
-  }
-
-  /**
-   * Valida que el distrito exista en la base de datos
-   * Nota: El distrito es OPCIONAL, solo se valida si está presente
-   */
-  private async validateDistrict(
-    row: string[],
-    mappingMap: Map<string, string>,
-    preview: CsvPreview,
-    rowNumber: number
-  ): Promise<ValidationIssue[]> {
-    const issues: ValidationIssue[] = [];
-    const csvColumn = mappingMap.get("district");
-
-    // Si no está mapeado, no validar (es opcional)
-    if (!csvColumn) return issues;
-
-    const columnIndex = preview.getColumnIndex(csvColumn);
-    if (columnIndex === -1) return issues;
-
-    const districtValue = row[columnIndex] || "";
-
-    // Si está vacío, no es un error (es opcional)
-    if (!districtValue.trim()) return issues;
-
-    // Si hay valor, validarlo
-    const districtId = mapDistrictNameToId(districtValue);
-
-    if (districtId === null) {
-      issues.push({
-        row: rowNumber,
-        field: "district",
-        value: districtValue,
-        severity: "WARNING", // Cambiar a WARNING porque es opcional
-        message: `Distrito "${districtValue}" no encontrado en el sistema`,
-        suggestion:
-          'Verifica el nombre del distrito. Formatos válidos: "Centro", "1. Centro", etc.',
-      });
-    } else {
-      // Verificar que el distrito exista en BD
-      const districtExists = await prisma.district.findFirst({
-        where: { id: districtId },
-      });
-
-      if (!districtExists) {
-        issues.push({
-          row: rowNumber,
-          field: "district",
-          value: districtValue,
-          severity: "WARNING", // Cambiar a WARNING porque es opcional
-          message: `Distrito con ID ${districtId} no existe en la base de datos`,
-        });
-      }
     }
 
     return issues;

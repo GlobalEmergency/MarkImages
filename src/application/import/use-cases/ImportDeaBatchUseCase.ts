@@ -3,7 +3,6 @@
  * Capa de Aplicación - Versión simplificada para MVP
  */
 
-import { mapDistrictNameToId } from "@/domain/import/constants/DistrictMapping";
 import { IImportRepository } from "@/domain/import/ports/IImportRepository";
 import { CsvRowMapper } from "@/domain/import/services/CsvRowMapper";
 import { CsvRow } from "@/domain/import/value-objects/CsvRow";
@@ -16,7 +15,7 @@ export interface ImportDeaBatchRequest {
   filePath: string;
   batchName: string;
   importedBy: string;
-  mappings?: Array<{csvColumn: string; systemField: string}>; // Mapeo de columnas del usuario
+  mappings?: Array<{ csvColumn: string; systemField: string }>; // Mapeo de columnas del usuario
   sharePointAuth?: DownloadAuthConfig;
   chunkSize?: number;
 }
@@ -38,7 +37,15 @@ export class ImportDeaBatchUseCase {
   ) {}
 
   async execute(request: ImportDeaBatchRequest): Promise<ImportDeaBatchResponse> {
-    const { batchId: existingBatchId, filePath, batchName, importedBy, mappings, sharePointAuth, chunkSize = 50 } = request;
+    const {
+      batchId: existingBatchId,
+      filePath,
+      batchName,
+      importedBy,
+      mappings,
+      sharePointAuth,
+      chunkSize = 50,
+    } = request;
 
     // 1. Parsear CSV
     console.log(`📄 Parsing CSV file: ${filePath}`);
@@ -71,7 +78,7 @@ export class ImportDeaBatchUseCase {
         totalRecords: parseResult.totalRows,
         importedBy,
       });
-      
+
       await this.repository.updateBatchStatus(batchId, "IN_PROGRESS", {
         startedAt: new Date(),
       });
@@ -147,16 +154,13 @@ export class ImportDeaBatchUseCase {
   private async processRecord(
     csvRow: CsvRow,
     batchId: string,
-    mappings?: Array<{csvColumn: string; systemField: string}>,
+    mappings?: Array<{ csvColumn: string; systemField: string }>,
     sharePointAuth?: DownloadAuthConfig
   ): Promise<void> {
     // Si hay mappings, construir DynamicCsvRow mapeado usando el servicio compartido
     // Si no hay mappings, usar CsvRow legacy (hardcodeado para Madrid)
-    const row = mappings 
-      ? CsvRowMapper.buildDynamicRow(
-          csvRow.toJSON() as unknown as Record<string, string>, 
-          mappings
-        )
+    const row = mappings
+      ? CsvRowMapper.buildDynamicRow(csvRow.toJSON() as unknown as Record<string, string>, mappings)
       : csvRow;
 
     // 1. Validar campos mínimos
@@ -168,10 +172,7 @@ export class ImportDeaBatchUseCase {
     const latitude = this.parseCoordinate(row.latitude);
     const longitude = this.parseCoordinate(row.longitude);
 
-    // 3. Resolver distrito (solo si hay valor y es relevante)
-    const districtId = this.resolveDistrictId(row.district);
-
-    // 4. Procesar imágenes (SharePoint → S3)
+    // 3. Procesar imágenes (SharePoint → S3)
     const imageUrls: Array<{ url: string; type: string }> = [];
 
     for (const [photoUrl, type] of [
@@ -201,30 +202,15 @@ export class ImportDeaBatchUseCase {
       }
     }
 
-    // 5. Crear AED en DB
+    // 4. Crear AED en DB
     await this.repository.createAedFromCsv({
       csvRow: row,
       batchId,
-      districtId,
       latitude,
       longitude,
       addressValidationFailed: false, // Por ahora, validación posterior
       imageUrls,
     });
-  }
-
-  /**
-   * Resuelve el district_id solo si hay valor Y es válido
-   * Universal: No asume que todos los DEAs tengan distrito
-   */
-  private resolveDistrictId(districtName: string | null): number | null {
-    if (!districtName) {
-      return null;
-    }
-    
-    // Intentar mapear (solo funciona para Madrid)
-    // Si no encuentra match, retorna null (no error)
-    return mapDistrictNameToId(districtName);
   }
 
   private parseCoordinate(value: string | null): number | null {

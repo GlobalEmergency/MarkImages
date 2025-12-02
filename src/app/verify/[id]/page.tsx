@@ -1,15 +1,6 @@
 "use client";
 
-import type {
-  Aed,
-  AedLocation,
-  AedImage,
-  AedResponsible,
-  AedValidation,
-  District,
-  Neighborhood,
-  Street,
-} from "@/generated/client";
+import type { Aed, AedLocation, AedImage, AedResponsible, AedValidation } from "@/generated/client";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
@@ -27,13 +18,7 @@ import { VerificationStep, VERIFICATION_STEPS_CONFIG } from "@/types/verificatio
 
 interface VerificationData {
   aed: Aed & {
-    location:
-      | (AedLocation & {
-          district: District | null;
-          neighborhood: Neighborhood | null;
-          street: Street | null;
-        })
-      | null;
+    location: AedLocation | null;
     images: AedImage[];
     responsible: AedResponsible | null;
   };
@@ -482,9 +467,9 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                   {data.aed.location?.street_type} {data.aed.location?.street_name}{" "}
                   {data.aed.location?.street_number}
                 </p>
-                {data.aed.location?.district && (
+                {data.aed.location?.district_name && (
                   <p className="text-sm text-gray-700">
-                    Distrito: {data.aed.location.district.name}
+                    Distrito: {data.aed.location.district_name}
                   </p>
                 )}
               </div>
@@ -677,7 +662,7 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                 <p className="font-medium text-gray-900">
                   {data.aed.location.street_type} {data.aed.location.street_name}{" "}
                   {data.aed.location.street_number}
-                  {data.aed.location.district && ` - ${data.aed.location.district.name}`}
+                  {data.aed.location.district_name && ` - ${data.aed.location.district_name}`}
                 </p>
               </div>
             )}

@@ -79,8 +79,7 @@ export class PrismaImportRepository implements IImportRepository {
   }
 
   async createAedFromCsv(data: CreateAedFromCsvData): Promise<string> {
-    const { csvRow, batchId, districtId, latitude, longitude, addressValidationFailed, imageUrls } =
-      data;
+    const { csvRow, batchId, latitude, longitude, addressValidationFailed, imageUrls } = data;
 
     // Crear el AED con todas sus relaciones en una transacción
     const result = await this.prisma.$transaction(async (tx) => {
@@ -103,7 +102,7 @@ export class PrismaImportRepository implements IImportRepository {
         });
       }
 
-      // 2. Crear location
+      // 2. Crear location con soporte multi-ciudad
       const location = await tx.aedLocation.create({
         data: {
           street_type: csvRow.streetType || undefined,
@@ -113,8 +112,10 @@ export class PrismaImportRepository implements IImportRepository {
           postal_code: csvRow.postalCode || undefined,
           latitude: latitude ?? undefined,
           longitude: longitude ?? undefined,
-          // Solo asignar district_id si existe Y es válido (no null)
-          district_id: districtId !== null ? districtId : undefined,
+          // Multi-ciudad: Por ahora solo guardamos el distrito como texto
+          // TODO: Cuando el CSV tenga más campos, agregar getters a CsvRow para:
+          // cityName, cityCode, districtCode, districtName, neighborhoodCode, neighborhoodName
+          district_name: csvRow.district || undefined,
           access_description: csvRow.accessDescription || undefined,
         },
       });

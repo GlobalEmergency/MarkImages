@@ -10,6 +10,7 @@ import {
   ImageUploadOptions,
   ImageUploadResult,
 } from "@/domain/storage/ports/IImageStorage";
+import { buildImageKey, buildS3Url, extractExtension } from "@/lib/s3-utils";
 
 export class S3ImageStorageAdapter implements IImageStorage {
   private readonly s3Client: S3Client;
@@ -34,12 +35,30 @@ export class S3ImageStorageAdapter implements IImageStorage {
   }
 
   async upload(options: ImageUploadOptions): Promise<ImageUploadResult> {
-    const { buffer, filename, contentType, prefix = "dea-foto", metadata } = options;
+    const {
+      buffer,
+      filename,
+      contentType,
+      prefix = "dea-foto",
+      metadata,
+      aedId,
+      imageId,
+      variant = "original",
+    } = options;
 
-    // Generate unique filename with timestamp
-    const timestamp = Date.now();
-    const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const key = `${prefix}/${timestamp}-${sanitizedFilename}`;
+    let key: string;
+
+    // New structure: /AEDID/IMAGEID_variant_hash.ext
+    if (aedId && imageId) {
+      const extension = extractExtension(filename);
+      key = buildImageKey(aedId, imageId, variant, extension);
+    }
+    // Backward compatibility: Legacy structure
+    else {
+      const timestamp = Date.now();
+      const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, "_");
+      key = `${prefix}/${timestamp}-${sanitizedFilename}`;
+    }
 
     const command = new PutObjectCommand({
       Bucket: this.bucketName,
@@ -52,7 +71,7 @@ export class S3ImageStorageAdapter implements IImageStorage {
 
     await this.s3Client.send(command);
 
-    const url = this.getPublicUrl(key);
+    const url = buildS3Url(this.bucketName, this.region, key);
 
     return {
       url,

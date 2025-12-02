@@ -30,7 +30,6 @@ export interface ImportBatchInfo {
 export interface CreateAedFromCsvData {
   csvRow: CsvRow | DynamicCsvRow; // Soporta ambos tipos (legacy y dinámico)
   batchId: string;
-  districtId: number | null;
   latitude: number | null;
   longitude: number | null;
   addressValidationFailed: boolean;

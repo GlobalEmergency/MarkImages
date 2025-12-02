@@ -1,20 +1,27 @@
+/**
+ * MapView - Dynamic map component with clustering and geospatial queries
+ * Optimized for large datasets (500K+ markers)
+ */
+
 "use client";
 
 import L from "leaflet";
-import { Clock, MapPin, Phone } from "lucide-react";
-import { useEffect } from "react";
+import { AlertCircle, Loader2, MapPin } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
 
-import type { Aed } from "@/types/aed";
+import { MapEventHandler } from "@/components/MapEventHandler";
+import { useAedsByBounds } from "@/hooks/useAedsByBounds";
+import type { AedMapMarker, BoundingBox } from "@/types/aed";
 
 import "leaflet/dist/leaflet.css";
 
 interface MapViewProps {
-  aeds: Aed[];
-  onAedClick: (aed: Aed) => void;
+  onAedClick?: (aed: { id: string; code: string; name: string }) => void;
 }
 
-// Fix for default marker icon in Leaflet with Next.js
+// Custom marker icon
 const createCustomIcon = () => {
   return L.divIcon({
     className: "custom-marker",
@@ -53,7 +60,13 @@ const createCustomIcon = () => {
   });
 };
 
-export default function MapView({ aeds, onAedClick }: MapViewProps) {
+export default function MapView({ onAedClick }: MapViewProps) {
+  const [bounds, setBounds] = useState<BoundingBox | null>(null);
+  const [zoom, setZoom] = useState(12);
+
+  // Fetch AEDs within bounds
+  const { aeds, loading, error, truncated, strategy } = useAedsByBounds(bounds, zoom);
+
   useEffect(() => {
     // Ensure Leaflet styles are loaded
     const link = document.createElement("link");
@@ -63,24 +76,53 @@ export default function MapView({ aeds, onAedClick }: MapViewProps) {
     link.crossOrigin = "";
     document.head.appendChild(link);
 
+    // Load marker cluster styles
+    const clusterLink = document.createElement("link");
+    clusterLink.rel = "stylesheet";
+    clusterLink.href = "https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css";
+    document.head.appendChild(clusterLink);
+
+    const clusterDefaultLink = document.createElement("link");
+    clusterDefaultLink.rel = "stylesheet";
+    clusterDefaultLink.href =
+      "https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css";
+    document.head.appendChild(clusterDefaultLink);
+
     return () => {
-      document.head.removeChild(link);
+      try {
+        document.head.removeChild(link);
+        document.head.removeChild(clusterLink);
+        document.head.removeChild(clusterDefaultLink);
+      } catch {
+        // Ignore errors during cleanup
+      }
     };
   }, []);
 
-  // Calculate center of Madrid from all AEDs
-  const center: [number, number] =
-    aeds.length > 0
-      ? [
-          aeds.reduce((sum, aed) => sum + aed.latitude, 0) / aeds.length,
-          aeds.reduce((sum, aed) => sum + aed.longitude, 0) / aeds.length,
-        ]
-      : [40.4168, -3.7038]; // Default Madrid center
+  const handleMapMove = useCallback((map: L.Map) => {
+    const mapBounds = map.getBounds();
+    setBounds({
+      minLat: mapBounds.getSouth(),
+      maxLat: mapBounds.getNorth(),
+      minLng: mapBounds.getWest(),
+      maxLng: mapBounds.getEast(),
+    });
+    setZoom(map.getZoom());
+  }, []);
+
+  const handleMarkerClick = useCallback(
+    (aed: AedMapMarker) => {
+      if (onAedClick) {
+        onAedClick({ id: aed.id, code: aed.code, name: aed.name });
+      }
+    },
+    [onAedClick]
+  );
 
   return (
-    <div className="w-full h-[600px] rounded-xl overflow-hidden shadow-xl">
+    <div className="relative w-full h-[600px] rounded-xl overflow-hidden shadow-xl">
       <MapContainer
-        center={center}
+        center={[40.4168, -3.7038]} // Madrid center
         zoom={12}
         scrollWheelZoom={true}
         className="w-full h-full"
@@ -90,66 +132,97 @@ export default function MapView({ aeds, onAedClick }: MapViewProps) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {aeds.map((aed) => (
-          <Marker
-            key={aed.id}
-            position={[aed.latitude, aed.longitude]}
-            icon={createCustomIcon()}
-            eventHandlers={{
-              click: () => onAedClick(aed),
-            }}
-          >
-            <Popup>
-              <div className="min-w-[200px]">
-                <h3 className="font-bold text-gray-900 mb-2">{aed.name}</h3>
-                <p className="text-sm text-gray-600 mb-2">{aed.code}</p>
 
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-start gap-2">
-                    <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-gray-700">
-                        {aed.location.street_type} {aed.location.street_name}{" "}
-                        {aed.location.street_number}
-                      </p>
-                      <p className="text-gray-500 text-xs">
-                        {aed.location.postal_code} - {aed.location.district.name}
-                      </p>
+        {/* Map event handler */}
+        <MapEventHandler onMove={handleMapMove} />
+
+        {/* Marker clustering */}
+        <MarkerClusterGroup
+          chunkedLoading
+          maxClusterRadius={50}
+          spiderfyOnMaxZoom={true}
+          showCoverageOnHover={false}
+          zoomToBoundsOnClick={true}
+        >
+          {aeds.map((aed) => (
+            <Marker
+              key={aed.id}
+              position={[aed.latitude, aed.longitude]}
+              icon={createCustomIcon()}
+              eventHandlers={{
+                click: () => handleMarkerClick(aed),
+              }}
+            >
+              <Popup>
+                <div className="min-w-[200px]">
+                  <h3 className="font-bold text-gray-900 mb-2">{aed.name}</h3>
+                  <p className="text-sm text-gray-600 mb-2">{aed.code}</p>
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-start gap-2">
+                      <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-gray-700">{aed.establishment_type}</p>
+                      </div>
                     </div>
                   </div>
 
-                  {aed.schedule && (
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                      <p className="text-gray-700">
-                        {aed.schedule.has_24h_surveillance
-                          ? "24h Vigilancia"
-                          : aed.schedule.weekday_opening && aed.schedule.weekday_closing
-                            ? `${aed.schedule.weekday_opening} - ${aed.schedule.weekday_closing}`
-                            : "Horario no especificado"}
-                      </p>
-                    </div>
-                  )}
-
-                  {aed.responsible.phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-green-500 flex-shrink-0" />
-                      <p className="text-gray-700">{aed.responsible.phone}</p>
-                    </div>
-                  )}
+                  <button
+                    onClick={() => handleMarkerClick(aed)}
+                    className="w-full mt-3 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all"
+                  >
+                    Ver detalles
+                  </button>
                 </div>
-
-                <button
-                  onClick={() => onAedClick(aed)}
-                  className="w-full mt-3 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all"
-                >
-                  Ver detalles
-                </button>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+              </Popup>
+            </Marker>
+          ))}
+        </MarkerClusterGroup>
       </MapContainer>
+
+      {/* Loading indicator */}
+      {loading && (
+        <div className="absolute top-4 left-4 z-[1000] bg-white rounded-lg shadow-lg px-4 py-2 flex items-center gap-2">
+          <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+          <span className="text-sm font-medium text-gray-700">Cargando DEAs...</span>
+        </div>
+      )}
+
+      {/* Error indicator */}
+      {error && (
+        <div className="absolute top-4 left-4 z-[1000] bg-red-50 border border-red-200 rounded-lg shadow-lg px-4 py-2 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-red-600" />
+          <span className="text-sm font-medium text-red-700">{error}</span>
+        </div>
+      )}
+
+      {/* Info indicator */}
+      {!loading && !error && aeds.length > 0 && (
+        <div className="absolute bottom-4 left-4 z-[1000] bg-white rounded-lg shadow-lg px-4 py-2 flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-blue-600" />
+            <span className="text-sm font-medium text-gray-700">
+              {aeds.length} DEA{aeds.length !== 1 ? "s" : ""} visibles
+            </span>
+          </div>
+          {truncated && (
+            <span className="text-xs text-amber-600 flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              Hay más DEAs. Aumenta el zoom para ver todos
+            </span>
+          )}
+          <span className="text-xs text-gray-500">Estrategia: {strategy}</span>
+        </div>
+      )}
+
+      {/* No results indicator */}
+      {!loading && !error && aeds.length === 0 && bounds && (
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[1000] bg-white rounded-lg shadow-lg px-6 py-4 text-center">
+          <MapPin className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+          <p className="text-sm font-medium text-gray-700">No hay DEAs en esta área</p>
+          <p className="text-xs text-gray-500 mt-1">Mueve o reduce el zoom del mapa</p>
+        </div>
+      )}
     </div>
   );
 }

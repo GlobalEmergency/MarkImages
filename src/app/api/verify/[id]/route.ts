@@ -19,9 +19,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       include: {
         location: {
           include: {
-            district: true,
-            neighborhood: true,
-            street: true,
             address_validation: true,
           },
         },

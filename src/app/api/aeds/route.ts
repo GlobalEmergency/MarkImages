@@ -128,11 +128,9 @@ export async function GET(request: NextRequest) {
               street_number: true,
               postal_code: true,
               access_description: true,
-              district: {
-                select: {
-                  name: true,
-                },
-              },
+              district_name: true,
+              neighborhood_name: true,
+              city_name: true,
             },
           },
           schedule: {
@@ -162,7 +160,7 @@ export async function GET(request: NextRequest) {
               is_verified: true,
             },
             orderBy: {
-              order: 'asc',
+              order: "asc",
             },
             take: 5,
           },
@@ -268,8 +266,6 @@ export async function POST(request: NextRequest) {
         latitude: body.latitude,
         longitude: body.longitude,
         coordinates_precision: body.latitude && body.longitude ? "medium" : undefined,
-        district_id: body.location?.district_id,
-        neighborhood_id: body.location?.neighborhood_id,
         access_description: body.location?.access_description,
         visible_references: body.location?.visible_references,
         floor: body.location?.floor,
@@ -323,12 +319,7 @@ export async function POST(request: NextRequest) {
         coordinates_precision: body.latitude && body.longitude ? "medium" : undefined,
       },
       include: {
-        location: {
-          include: {
-            district: true,
-            neighborhood: true,
-          },
-        },
+        location: true,
         responsible: true,
         schedule: true,
       },

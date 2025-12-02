@@ -3,12 +3,18 @@
  * Capa de Dominio - No depende de ninguna implementación
  */
 
+import type { ImageVariant } from "@/lib/s3-utils";
+
 export interface ImageUploadOptions {
   buffer: Buffer;
   filename: string;
   contentType: string;
   prefix?: string;
   metadata?: Record<string, string>;
+  // New structure parameters
+  aedId?: string;
+  imageId?: string;
+  variant?: ImageVariant;
 }
 
 export interface ImageUploadResult {

@@ -4,7 +4,7 @@
 
 export interface AedImage {
   id: string;
-  type: 'FRONT' | 'LOCATION' | 'ACCESS' | 'SIGNAGE' | 'CONTEXT' | 'PLATE';
+  type: "FRONT" | "LOCATION" | "ACCESS" | "SIGNAGE" | "CONTEXT" | "PLATE";
   original_url: string;
   processed_url: string | null;
   thumbnail_url: string | null;
@@ -24,9 +24,9 @@ export interface Aed {
     street_name: string;
     street_number: string | null;
     postal_code: string;
-    district: {
-      name: string;
-    };
+    district_name?: string | null;
+    neighborhood_name?: string | null;
+    city_name?: string | null;
     access_description?: string | null;
   };
   schedule: {
@@ -57,4 +57,39 @@ export interface AedFilters {
   page?: number;
   limit?: number;
   search?: string;
+}
+
+// ============================================
+// MAP TYPES - For geospatial queries
+// ============================================
+
+export interface BoundingBox {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+}
+
+export interface AedMapMarker {
+  id: string;
+  code: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  establishment_type: string;
+}
+
+export interface AedsByBoundsResponse {
+  success: boolean;
+  data: AedMapMarker[];
+  count: number;
+  truncated: boolean; // true if there are more records not returned
+  zoom_level: number;
+  strategy: string;
+}
+
+export interface ZoomStrategy {
+  limit: number;
+  sampling: string | null;
+  orderBy: string;
 }

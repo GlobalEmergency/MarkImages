@@ -1,53 +1,58 @@
-'use client'
+"use client";
 
-import { ArrowLeft, MapPin, Clock, Users, Settings, AlertCircle, Phone, Navigation } from 'lucide-react'
-import dynamic from 'next/dynamic'
-import { useParams, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import {
+  ArrowLeft,
+  MapPin,
+  Clock,
+  Users,
+  Settings,
+  AlertCircle,
+  Phone,
+  Navigation,
+} from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-import type { Aed } from '@/types/aed'
-
-// Dynamic import to avoid SSR issues with Leaflet
-const MapView = dynamic(() => import('@/components/MapView'), {
-  ssr: false,
-  loading: () => <div className="h-48 w-full bg-gray-200 animate-pulse rounded-lg" />
-})
+import type { Aed } from "@/types/aed";
 
 export default function DeaDetailPage() {
-  const params = useParams()
-  const router = useRouter()
-  const [aed, setAed] = useState<Aed | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const params = useParams();
+  const router = useRouter();
+  const [aed, setAed] = useState<Aed | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAed = async () => {
       try {
-        const response = await fetch(`/api/aeds/${params.id}`)
-        if (!response.ok) throw new Error('Failed to fetch AED')
-        const data = await response.json()
-        setAed(data.success ? data.data : data)
+        const response = await fetch(`/api/aeds/${params.id}`);
+        if (!response.ok) throw new Error("Failed to fetch AED");
+        const data = await response.json();
+        setAed(data.success ? data.data : data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred')
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
     if (params.id) {
-      fetchAed()
+      fetchAed();
     }
-  }, [params.id])
+  }, [params.id]);
 
   const handleCallEmergency = () => {
-    window.location.href = 'tel:112'
-  }
+    window.location.href = "tel:112";
+  };
 
   const handleGetDirections = () => {
     if (aed) {
-      window.open(`https://www.google.com/maps/dir/?api=1&destination=${aed.latitude},${aed.longitude}`, '_blank')
+      window.open(
+        `https://www.google.com/maps/dir/?api=1&destination=${aed.latitude},${aed.longitude}`,
+        "_blank"
+      );
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -57,7 +62,7 @@ export default function DeaDetailPage() {
           <p className="text-white">Cargando...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !aed) {
@@ -74,13 +79,14 @@ export default function DeaDetailPage() {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
-  const address = `${aed.location.street_type} ${aed.location.street_name}, ${aed.location.street_number || ''}`
-  const is24h = aed.schedule?.has_24h_surveillance || false
-  const hasImage = aed.images && aed.images.length > 0
-  const heroImage = hasImage && aed.images ? (aed.images[0]?.processed_url || aed.images[0]?.original_url) : null
+  const address = `${aed.location.street_type} ${aed.location.street_name}, ${aed.location.street_number || ""}`;
+  const is24h = aed.schedule?.has_24h_surveillance || false;
+  const hasImage = aed.images && aed.images.length > 0;
+  const heroImage =
+    hasImage && aed.images ? aed.images[0]?.processed_url || aed.images[0]?.original_url : null;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white pb-24">
@@ -89,11 +95,7 @@ export default function DeaDetailPage() {
         {/* Hero Image */}
         <div className="relative h-64 bg-gradient-to-b from-gray-800 to-gray-700">
           {heroImage ? (
-            <img
-              src={heroImage}
-              alt={aed.name}
-              className="w-full h-full object-cover"
-            />
+            <img src={heroImage} alt={aed.name} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <MapPin className="w-20 h-20 text-gray-600" />
@@ -129,9 +131,7 @@ export default function DeaDetailPage() {
         )}
 
         {/* Title */}
-        <h1 className="text-2xl font-bold mb-6">
-          {aed.name}
-        </h1>
+        <h1 className="text-2xl font-bold mb-6">{aed.name}</h1>
 
         {/* Location Section */}
         <section className="bg-gray-800 rounded-2xl p-5 mb-4">
@@ -139,24 +139,24 @@ export default function DeaDetailPage() {
 
           <div className="flex items-start gap-3 mb-4">
             <MapPin className="w-5 h-5 text-teal-500 mt-1 flex-shrink-0" />
-            <div>
+            <div className="flex-1">
               <p className="text-white font-medium">{address}</p>
-              <p className="text-gray-400 text-sm">
-                {aed.location.postal_code} Madrid
-              </p>
-              <p className="text-gray-500 text-xs mt-1">
-                {aed.location.district.name}
+              <p className="text-gray-400 text-sm">{aed.location.postal_code} Madrid</p>
+              <p className="text-gray-500 text-xs mt-1">{aed.location.district_name}</p>
+              <p className="text-gray-500 text-xs mt-2">
+                📍 {aed.latitude.toFixed(6)}, {aed.longitude.toFixed(6)}
               </p>
             </div>
           </div>
 
-          {/* Mini map */}
-          <div className="h-48 rounded-lg overflow-hidden">
-            <MapView
-              aeds={[aed]}
-              onAedClick={() => {}}
-            />
-          </div>
+          {/* Quick actions */}
+          <button
+            onClick={handleGetDirections}
+            className="w-full bg-teal-600 text-white py-3 rounded-lg font-medium hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
+          >
+            <Navigation className="w-5 h-5" />
+            Ver en el mapa
+          </button>
         </section>
 
         {/* Details Section */}
@@ -170,13 +170,14 @@ export default function DeaDetailPage() {
             </div>
             <div className="flex-1">
               <p className="text-white font-medium">
-                {is24h ? 'Lunes a Domingo: 24 horas' :
-                  aed.schedule?.weekday_opening && aed.schedule?.weekday_closing
+                {is24h
+                  ? "Lunes a Domingo: 24 horas"
+                  : aed.schedule?.weekday_opening && aed.schedule?.weekday_closing
                     ? `${aed.schedule.weekday_opening} - ${aed.schedule.weekday_closing}`
-                    : 'Horario no especificado'}
+                    : "Horario no especificado"}
               </p>
               <p className="text-gray-400 text-sm">
-                {is24h ? 'Disponible las 24 horas' : 'Horario de servicio'}
+                {is24h ? "Disponible las 24 horas" : "Horario de servicio"}
               </p>
             </div>
           </div>
@@ -189,7 +190,7 @@ export default function DeaDetailPage() {
             <div className="flex-1">
               <p className="text-white font-medium">Acceso Público</p>
               <p className="text-gray-400 text-sm">
-                {aed.location.access_description || 'No requiere solicitar al personal'}
+                {aed.location.access_description || "No requiere solicitar al personal"}
               </p>
             </div>
           </div>
@@ -201,7 +202,10 @@ export default function DeaDetailPage() {
             </div>
             <div className="flex-1">
               <p className="text-white font-medium">
-                Última revisión: {aed.published_at ? new Date(aed.published_at).toLocaleDateString('es-ES') : 'No disponible'}
+                Última revisión:{" "}
+                {aed.published_at
+                  ? new Date(aed.published_at).toLocaleDateString("es-ES")
+                  : "No disponible"}
               </p>
               <p className="text-gray-400 text-sm">Estado verificado por la comunidad</p>
             </div>
@@ -263,5 +267,5 @@ export default function DeaDetailPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

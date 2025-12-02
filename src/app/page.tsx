@@ -38,7 +38,7 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [selectedAed, setSelectedAed] = useState<Aed | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [viewMode, setViewMode] = useState<"list" | "map">("map");
 
   const { aeds, loading, error, pagination, refetch } = useAeds({
     page,
@@ -49,6 +49,22 @@ export default function Home() {
   const handleCardClick = (aed: Aed) => {
     setSelectedAed(aed);
     setModalOpen(true);
+  };
+
+  const handleMapMarkerClick = async (aed: { id: string; code: string; name: string }) => {
+    // Fetch full AED data when clicking from map
+    try {
+      const response = await fetch(`/api/aeds?search=${aed.code}&limit=1`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data.length > 0) {
+          setSelectedAed(data.data[0]);
+          setModalOpen(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching AED details:", error);
+    }
   };
 
   const handleCloseModal = () => {
@@ -228,7 +244,7 @@ export default function Home() {
       {/* Content */}
       <main className="container mx-auto px-3 sm:px-4 md:px-6 py-4 pb-12">
         {viewMode === "map" ? (
-          <MapView aeds={aeds} onAedClick={handleCardClick} />
+          <MapView onAedClick={handleMapMarkerClick} />
         ) : (
           <>
             <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
@@ -395,7 +411,8 @@ function AedCard({ aed, onClick }: { aed: Aed; onClick: () => void }) {
                 {aed.location.street_type} {aed.location.street_name} {aed.location.street_number}
               </p>
               <p className="text-xs sm:text-sm text-gray-500 mt-1">
-                {aed.location.postal_code} - {aed.location.district.name}
+                {aed.location.postal_code}
+                {aed.location.district_name && ` - ${aed.location.district_name}`}
               </p>
             </div>
           </div>

@@ -17,9 +17,9 @@ interface AedForVerification {
     street_name?: string;
     street_number?: string;
     postal_code?: string;
-    district?: {
-      name: string;
-    };
+    district_name?: string | null;
+    neighborhood_name?: string | null;
+    city_name?: string | null;
   };
   images?: Array<{
     id: string;
@@ -219,10 +219,10 @@ export default function VerifyPage() {
                               {aed.location.street_type} {aed.location.street_name}{" "}
                               {aed.location.street_number}
                             </p>
-                            {aed.location.district && (
+                            {aed.location.district_name && (
                               <p className="text-sm text-gray-600">
                                 <span className="font-medium">Distrito:</span>{" "}
-                                {aed.location.district.name}
+                                {aed.location.district_name}
                               </p>
                             )}
                           </>
