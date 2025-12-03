@@ -3,6 +3,59 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
+/**
+ * GET /api/aeds/[id]
+ * Get a single AED by ID with all relationships
+ */
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+
+    const aed = await prisma.aed.findUnique({
+      where: { id },
+      include: {
+        location: true,
+        responsible: true,
+        schedule: true,
+        images: {
+          where: {
+            is_verified: true,
+          },
+          orderBy: {
+            order: "asc",
+          },
+        },
+      },
+    });
+
+    if (!aed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "AED not found",
+          message: `No AED found with ID: ${id}`,
+        },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: aed,
+    });
+  } catch (error) {
+    console.error("Error fetching AED:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to fetch AED",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireAuth(request);

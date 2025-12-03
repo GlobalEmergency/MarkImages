@@ -8,6 +8,7 @@ import { prisma } from "@/lib/db";
 import { ImportDeaBatchUseCase } from "@/application/import/use-cases/ImportDeaBatchUseCase";
 import { CsvParserAdapter } from "@/infrastructure/import/parsers/CsvParserAdapter";
 import { PrismaImportRepository } from "@/infrastructure/import/repositories/PrismaImportRepository";
+import { PrismaDuplicateDetectionAdapter } from "@/infrastructure/import/adapters/PrismaDuplicateDetectionAdapter";
 import { S3ImageStorageAdapter } from "@/infrastructure/storage/adapters/S3ImageStorageAdapter";
 import { SharePointImageDownloader } from "@/infrastructure/storage/adapters/SharePointImageDownloader";
 
@@ -39,8 +40,15 @@ export async function processImportAsync(
     const csvParser = new CsvParserAdapter();
     const imageDownloader = new SharePointImageDownloader();
     const imageStorage = new S3ImageStorageAdapter();
+    const duplicateDetector = new PrismaDuplicateDetectionAdapter(prisma);
 
-    const useCase = new ImportDeaBatchUseCase(repository, csvParser, imageDownloader, imageStorage);
+    const useCase = new ImportDeaBatchUseCase(
+      repository,
+      csvParser,
+      imageDownloader,
+      imageStorage,
+      duplicateDetector
+    );
 
     // Ejecutar importación
     const startTime = Date.now();
@@ -52,9 +60,15 @@ export async function processImportAsync(
       mappings, // Pasar mappings del usuario
       sharePointAuth,
       chunkSize: 50,
+      dryRun: false, // Siempre importación real en este flujo
     });
 
     const durationSeconds = Math.floor((Date.now() - startTime) / 1000);
+
+    // Type guard: verificar que es RealImportResponse
+    if (result.dryRun) {
+      throw new Error("Unexpected dry run result in real import process");
+    }
 
     // Determinar estado final
     const finalStatus =

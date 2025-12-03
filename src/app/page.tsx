@@ -52,13 +52,13 @@ export default function Home() {
   };
 
   const handleMapMarkerClick = async (aed: { id: string; code: string; name: string }) => {
-    // Fetch full AED data when clicking from map
+    // Fetch full AED data by ID when clicking from map
     try {
-      const response = await fetch(`/api/aeds?search=${aed.code}&limit=1`);
+      const response = await fetch(`/api/aeds/${aed.id}`);
       if (response.ok) {
         const data = await response.json();
-        if (data.success && data.data.length > 0) {
-          setSelectedAed(data.data[0]);
+        if (data.success && data.data) {
+          setSelectedAed(data.data);
           setModalOpen(true);
         }
       }

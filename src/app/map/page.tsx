@@ -118,13 +118,13 @@ export default function MapPage() {
       <div className="flex-1 relative">
         <MapView
           onAedClick={async (aed) => {
-            // Fetch full AED data when clicking from map
+            // Fetch full AED data by ID when clicking from map
             try {
-              const response = await fetch(`/api/aeds?search=${aed.code}&limit=1`);
+              const response = await fetch(`/api/aeds/${aed.id}`);
               if (response.ok) {
                 const data = await response.json();
-                if (data.success && data.data.length > 0) {
-                  setSelectedAed(data.data[0]);
+                if (data.success && data.data) {
+                  setSelectedAed(data.data);
                 }
               }
             } catch (error) {
