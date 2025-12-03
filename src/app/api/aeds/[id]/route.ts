@@ -13,6 +13,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { id } = await params;
     const body = await request.json();
 
+    // Extraer deleteImageIds y addImages del body
+    const { deleteImageIds, addImages, ...updateFields } = body;
+
     // Verificar si hay cambio de estado
     const currentAed = await prisma.aed.findUnique({
       where: { id },
@@ -23,11 +26,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ error: "DEA no encontrado" }, { status: 404 });
     }
 
-    const hasStatusChange = body.status && body.status !== currentAed.status;
+    const hasStatusChange = updateFields.status && updateFields.status !== currentAed.status;
+    const hasImageChanges =
+      (deleteImageIds && deleteImageIds.length > 0) || (addImages && addImages.length > 0);
 
     // Preparar datos de actualización
     const updateData: any = {
-      ...body,
+      ...updateFields,
       updated_by: user.userId,
       updated_at: new Date(),
     };
@@ -41,26 +46,58 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       updateData.published_at = new Date();
     }
 
-    // Usar transacción si hay cambio de estado
-    if (hasStatusChange) {
+    // Usar transacción si hay cambio de estado o cambio de imágenes
+    if (hasStatusChange || hasImageChanges) {
       const result = await prisma.$transaction(async (tx: any) => {
-        // Actualizar el AED
+        // Eliminar imágenes si se especificaron
+        if (deleteImageIds && deleteImageIds.length > 0) {
+          await tx.aedImage.deleteMany({
+            where: {
+              id: { in: deleteImageIds },
+              aed_id: id,
+            },
+          });
+        }
+
+        // Agregar nuevas imágenes si se especificaron
+        if (addImages && addImages.length > 0) {
+          await tx.aedImage.createMany({
+            data: addImages.map((img: any) => ({
+              aed_id: id,
+              original_url: img.original_url,
+              type: img.type || "general",
+              order: img.order,
+              created_at: new Date(),
+            })),
+          });
+        }
+
+        // Actualizar el AED si hay cambios en los campos
         const updatedAed = await tx.aed.update({
           where: { id },
           data: updateData,
-        });
-
-        // Registrar cambio de estado en el historial
-        await tx.aedStatusChange.create({
-          data: {
-            aed_id: id,
-            previous_status: currentAed.status,
-            new_status: body.status,
-            reason: body.status_metadata?.reason || null,
-            notes: body.status_metadata?.details || null,
-            modified_by: user.userId,
+          include: {
+            images: {
+              orderBy: { order: "asc" },
+            },
+            location: true,
+            responsible: true,
           },
         });
+
+        // Registrar cambio de estado en el historial si aplica
+        if (hasStatusChange) {
+          await tx.aedStatusChange.create({
+            data: {
+              aed_id: id,
+              previous_status: currentAed.status,
+              new_status: updateFields.status,
+              reason: updateFields.status_metadata?.reason || null,
+              notes: updateFields.status_metadata?.details || null,
+              modified_by: user.userId,
+            },
+          });
+        }
 
         return updatedAed;
       });
@@ -68,10 +105,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json(result);
     }
 
-    // Si no hay cambio de estado, actualizar directamente
+    // Si no hay cambios especiales, actualizar directamente
     const updatedAed = await prisma.aed.update({
       where: { id },
       data: updateData,
+      include: {
+        images: {
+          orderBy: { order: "asc" },
+        },
+        location: true,
+        responsible: true,
+      },
     });
 
     return NextResponse.json(updatedAed);

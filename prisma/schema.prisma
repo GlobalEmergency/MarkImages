@@ -37,6 +37,7 @@ model Aed {
   internal_notes            String?
   requires_attention        Boolean                  @default(false)
   attention_reason          String?
+  rejection_reason          String?
 
   // General status
   status                    AedStatus                @default(DRAFT)
@@ -86,6 +87,7 @@ enum AedStatus {
   PENDING_REVIEW
   PUBLISHED
   INACTIVE
+  REJECTED
 }
 
 enum SourceOrigin {
