@@ -6,13 +6,20 @@ Esta aplicación cuenta con una suite de tests completa que incluye tests unitar
 
 ```
 tests/
-├── unit/              # Tests unitarios
-│   ├── domain/       # Tests de entidades y value objects del dominio
+├── unit/                      # Tests unitarios (104 tests)
+│   ├── domain/
+│   │   ├── entities/         # Tests de entidades
+│   │   └── value-objects/    # Tests de value objects
 │   └── ...
-├── integration/       # Tests de integración
-│   └── application/  # Tests de casos de uso
-├── e2e/              # Tests end-to-end con Playwright
-└── setup.ts          # Configuración global de tests
+├── integration/               # Tests de integración (11 tests)
+│   └── application/          # Tests de casos de uso
+├── e2e/                      # Tests end-to-end con Playwright (60+ tests)
+│   ├── home.spec.ts          # Tests de página principal
+│   ├── navigation.spec.ts    # Tests de navegación
+│   ├── search-and-filter.spec.ts  # Tests de búsqueda y filtros
+│   ├── performance.spec.ts   # Tests de performance y SEO
+│   └── user-interactions.spec.ts  # Tests de interacciones de usuario
+└── setup.ts                  # Configuración global de tests
 ```
 
 ## Tecnologías Utilizadas
@@ -45,16 +52,44 @@ npm run test:integration
 
 ### Tests End-to-End
 
+Los tests E2E verifican flujos completos de usuario en la aplicación real.
+
+**Archivos de test:**
+- `home.spec.ts` - Página principal, elementos básicos, responsive design
+- `navigation.spec.ts` - Navegación entre páginas, accesibilidad
+- `search-and-filter.spec.ts` - Búsqueda, filtros, paginación, responsive
+- `performance.spec.ts` - Performance, carga, optimizaciones, SEO
+- `user-interactions.spec.ts` - Interacciones de usuario, accesibilidad
+
 ```bash
-# Ejecutar tests E2E
+# Ejecutar todos los tests E2E
 npm run test:e2e
 
-# Ejecutar tests E2E con interfaz visual
+# Ejecutar con interfaz visual (recomendado para desarrollo)
 npm run test:e2e:ui
 
-# Ejecutar tests E2E con navegador visible
+# Ejecutar con navegador visible (útil para debugging)
 npm run test:e2e:headed
+
+# Ejecutar un archivo específico
+npx playwright test tests/e2e/home.spec.ts
+
+# Ejecutar en modo debug
+npx playwright test --debug
 ```
+
+**Cobertura de tests E2E (60+ tests):**
+- ✅ Página principal y header
+- ✅ Navegación entre vistas (Lista/Mapa)
+- ✅ Búsqueda y filtrado en tiempo real
+- ✅ Paginación de resultados
+- ✅ Responsive design (móvil, tablet, desktop)
+- ✅ Accesibilidad y navegación por teclado
+- ✅ Performance y tiempo de carga
+- ✅ Manejo de errores
+- ✅ SEO y meta tags
+- ✅ Interacciones de usuario
+- ✅ Estados de carga
 
 ### Ejecutar Todos los Tests
 
