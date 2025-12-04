@@ -39,8 +39,8 @@ export default function ImportProgressBar({
             width: `${failurePercentage}%`,
           }}
         />
-        {/* Animación para IN_PROGRESS */}
-        {status === "IN_PROGRESS" && (
+        {/* Animación para IN_PROGRESS y RESUMING */}
+        {(status === "IN_PROGRESS" || status === "RESUMING") && (
           <div
             className="absolute top-0 left-0 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"
             style={{ width: "30%", animation: "slideProgress 1.5s infinite" }}

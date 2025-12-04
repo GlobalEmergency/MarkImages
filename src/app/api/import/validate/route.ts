@@ -4,11 +4,11 @@
  * Pre-valida los datos usando los mapeos configurados
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
-import { PreValidateDataUseCase } from '@/application/import/use-cases/PreValidateDataUseCase';
-import { ColumnMapping } from '@/domain/import/value-objects/ColumnMapping';
-import { CsvPreview } from '@/domain/import/value-objects/CsvPreview';
+import { PreValidateDataUseCase } from "@/application/import/use-cases/PreValidateDataUseCase";
+import { ColumnMapping } from "@/domain/import/value-objects/ColumnMapping";
+import { CsvPreview } from "@/domain/import/value-objects/CsvPreview";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,10 +16,7 @@ export async function POST(request: NextRequest) {
     const { filePath, preview, mappings, maxRowsToValidate } = body;
 
     if (!filePath || !preview || !mappings) {
-      return NextResponse.json(
-        { error: 'Faltan parámetros requeridos' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Faltan parámetros requeridos" }, { status: 400 });
     }
 
     // Reconstruir objetos de dominio desde JSON
@@ -38,12 +35,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       validation: result.validation.toJSON(),
       summary: result.summary,
+      sharepoint: result.sharepoint,
     });
   } catch (error) {
-    console.error('Error in validate API:', error);
+    console.error("Error in validate API:", error);
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
+        error: error instanceof Error ? error.message : "Error interno del servidor",
       },
       { status: 500 }
     );

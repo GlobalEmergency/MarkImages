@@ -9,6 +9,8 @@ import {
   Loader2,
   AlertCircle,
   Ban,
+  PauseCircle,
+  PlayCircle,
 } from "lucide-react";
 
 import type { ImportStatus } from "@/types/import";
@@ -55,24 +57,35 @@ const statusConfig = {
     text: "Cancelado",
     animate: false,
   },
-};
+  INTERRUPTED: {
+    color: "bg-orange-100 text-orange-800 border-orange-300",
+    icon: PauseCircle,
+    text: "Interrumpido",
+    animate: false,
+  },
+  RESUMING: {
+    color: "bg-blue-100 text-blue-800 border-blue-300",
+    icon: PlayCircle,
+    text: "Reanudando",
+    animate: true,
+  },
+} as const;
 
-export default function ImportStatusBadge({
-  status,
-  showIcon = true,
-}: ImportStatusBadgeProps) {
-  const config = statusConfig[status];
+export default function ImportStatusBadge({ status, showIcon = true }: ImportStatusBadgeProps) {
+  // Código defensivo: usar configuración por defecto si el estado no existe
+  const config = statusConfig[status] || {
+    color: "bg-gray-100 text-gray-800 border-gray-300",
+    icon: AlertCircle,
+    text: status || "Desconocido",
+    animate: false,
+  };
   const Icon = config.icon;
 
   return (
     <span
       className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${config.color}`}
     >
-      {showIcon && (
-        <Icon
-          className={`w-3.5 h-3.5 ${config.animate ? "animate-spin" : ""}`}
-        />
-      )}
+      {showIcon && <Icon className={`w-3.5 h-3.5 ${config.animate ? "animate-spin" : ""}`} />}
       {config.text}
     </span>
   );

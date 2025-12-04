@@ -1,6 +1,7 @@
 /**
  * MapView - Dynamic map component with server-side clustering
  * Optimized for large datasets with hybrid rendering (clusters + individual markers)
+ * Includes spiderfy for overlapping markers
  */
 
 "use client";
@@ -9,6 +10,7 @@ import L from "leaflet";
 import { AlertCircle, Loader2, MapPin } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
 
 import { MapEventHandler } from "@/components/MapEventHandler";
 import { ClusterMarker } from "@/components/ClusterMarker";
@@ -16,6 +18,8 @@ import { useAedsByBounds } from "@/hooks/useAedsByBounds";
 import type { AedMapMarker, AedCluster, BoundingBox } from "@/types/aed";
 
 import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
 interface MapViewProps {
   onAedClick?: (aed: { id: string; code: string; name: string }) => void;
@@ -160,40 +164,71 @@ export default function MapView({ onAedClick }: MapViewProps) {
           <ClusterMarker key={cluster.id} cluster={cluster} onClusterClick={handleClusterClick} />
         ))}
 
-        {/* Render individual AED markers */}
-        {aeds.map((aed) => (
-          <Marker
-            key={aed.id}
-            position={[aed.latitude, aed.longitude]}
-            icon={createCustomIcon()}
-            eventHandlers={{
-              click: () => handleMarkerClick(aed),
-            }}
-          >
-            <Popup>
-              <div className="min-w-[200px]">
-                <h3 className="font-bold text-gray-900 mb-2">{aed.name}</h3>
-                <p className="text-sm text-gray-600 mb-2">{aed.code}</p>
+        {/* Render individual AED markers with client-side spiderfy ONLY for overlapping markers */}
+        <MarkerClusterGroup
+          showCoverageOnHover={false}
+          spiderfyOnMaxZoom={true}
+          disableClusteringAtZoom={16}
+          maxClusterRadius={15}
+          spiderfyDistanceMultiplier={1.5}
+          zoomToBoundsOnClick={false}
+          iconCreateFunction={(cluster: any) => {
+            const count = cluster.getChildCount();
+            // Cluster ultra pequeño solo para marcadores LITERALMENTE superpuestos
+            return L.divIcon({
+              html: `<div style="
+                background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+                width: 34px;
+                height: 34px;
+                border-radius: 50%;
+                border: 3px solid white;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                font-size: 13px;
+              ">${count}</div>`,
+              className: "client-marker-cluster",
+              iconSize: L.point(34, 34, true),
+            });
+          }}
+        >
+          {aeds.map((aed) => (
+            <Marker
+              key={aed.id}
+              position={[aed.latitude, aed.longitude]}
+              icon={createCustomIcon()}
+              eventHandlers={{
+                click: () => handleMarkerClick(aed),
+              }}
+            >
+              <Popup>
+                <div className="min-w-[200px]">
+                  <h3 className="font-bold text-gray-900 mb-2">{aed.name}</h3>
+                  <p className="text-sm text-gray-600 mb-2">{aed.code}</p>
 
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-start gap-2">
-                    <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-gray-700">{aed.establishment_type}</p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-start gap-2">
+                      <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-gray-700">{aed.establishment_type}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <button
-                  onClick={() => handleMarkerClick(aed)}
-                  className="w-full mt-3 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all"
-                >
-                  Ver detalles
-                </button>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+                  <button
+                    onClick={() => handleMarkerClick(aed)}
+                    className="w-full mt-3 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all"
+                  >
+                    Ver detalles
+                  </button>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MarkerClusterGroup>
       </MapContainer>
 
       {/* Loading indicator */}

@@ -1,13 +1,13 @@
 export enum VerificationStep {
-  ADDRESS_VALIDATION = 'address_validation',
-  IMAGE_SELECTION = 'image_selection',
-  IMAGE_CROP_FRONT = 'image_crop_front',
-  IMAGE_ARROW_FRONT = 'image_arrow_front',
-  IMAGE_CROP_INTERIOR = 'image_crop_interior',
-  IMAGE_ARROW_INTERIOR = 'image_arrow_interior',
-  RESPONSIBLE_ASSIGNMENT = 'responsible_assignment',
-  REVIEW = 'review',
-  COMPLETED = 'completed'
+  ADDRESS_VALIDATION = "address_validation",
+  IMAGE_SELECTION = "image_selection",
+  IMAGE_CROP_FRONT = "image_crop_front",
+  IMAGE_ARROW_FRONT = "image_arrow_front",
+  IMAGE_CROP_INTERIOR = "image_crop_interior",
+  IMAGE_ARROW_INTERIOR = "image_arrow_interior",
+  RESPONSIBLE_ASSIGNMENT = "responsible_assignment",
+  REVIEW = "review",
+  COMPLETED = "completed",
 }
 
 export interface VerificationSession {
@@ -15,7 +15,7 @@ export interface VerificationSession {
   aed_id: string;
   user_id: string;
   current_step: VerificationStep;
-  status: 'in_progress' | 'completed' | 'cancelled';
+  status: "in_progress" | "completed" | "cancelled";
 
   // Address validation data
   address_validated: boolean;
@@ -83,50 +83,69 @@ export interface ArrowData {
   thickness?: number;
 }
 
+// Multi-image validation types
+export interface ImageValidationItem {
+  id: string;
+  url: string;
+  order: number;
+  isValid: boolean;
+  type?: string;
+}
+
+export interface ImagesValidationResult {
+  validImages: ImageValidationItem[];
+  deletedImageIds: string[];
+  newImages?: Array<{
+    url: string;
+    order: number;
+    type?: string;
+  }>;
+}
+
 export const VERIFICATION_STEPS_CONFIG = {
   [VerificationStep.ADDRESS_VALIDATION]: {
-    title: 'Validación de Dirección',
-    description: 'Verifica la dirección del DEA con Google Maps u OpenStreetMap',
-    required: true
+    title: "Validación de Dirección",
+    description: "Verifica la dirección del DEA con Google Maps u OpenStreetMap",
+    required: true,
   },
   [VerificationStep.IMAGE_SELECTION]: {
-    title: 'Selección de Imágenes',
-    description: 'Selecciona las imágenes del frontal/acceso y del interior',
-    required: true
+    title: "Selección de Imágenes",
+    description: "Selecciona las imágenes del frontal/acceso y del interior",
+    required: true,
   },
   [VerificationStep.IMAGE_CROP_FRONT]: {
-    title: 'Recortar Imagen Frontal',
-    description: 'Recorta la imagen del frontal o acceso al DEA',
-    required: true
+    title: "Recortar Imagen Frontal",
+    description: "Recorta la imagen del frontal o acceso al DEA",
+    required: true,
   },
   [VerificationStep.IMAGE_ARROW_FRONT]: {
-    title: 'Marcar DEA en Imagen Frontal',
-    description: 'Coloca una flecha señalando el DEA en la imagen frontal',
-    required: true
+    title: "Marcar DEA en Imagen Frontal",
+    description: "Coloca una flecha señalando el DEA en la imagen frontal",
+    required: true,
   },
   [VerificationStep.IMAGE_CROP_INTERIOR]: {
-    title: 'Recortar Imagen Interior',
-    description: 'Recorta la imagen del interior donde se ubica el DEA',
-    required: false
+    title: "Recortar Imagen Interior",
+    description: "Recorta la imagen del interior donde se ubica el DEA",
+    required: false,
   },
   [VerificationStep.IMAGE_ARROW_INTERIOR]: {
-    title: 'Marcar DEA en Imagen Interior',
-    description: 'Coloca una flecha señalando el DEA en la imagen interior',
-    required: false
+    title: "Marcar DEA en Imagen Interior",
+    description: "Coloca una flecha señalando el DEA en la imagen interior",
+    required: false,
   },
   [VerificationStep.RESPONSIBLE_ASSIGNMENT]: {
-    title: 'Asignar Responsable',
-    description: 'Asigna la entidad responsable y persona de contacto',
-    required: true
+    title: "Asignar Responsable",
+    description: "Asigna la entidad responsable y persona de contacto",
+    required: true,
   },
   [VerificationStep.REVIEW]: {
-    title: 'Revisión Final',
-    description: 'Revisa toda la información antes de finalizar',
-    required: true
+    title: "Revisión Final",
+    description: "Revisa toda la información antes de finalizar",
+    required: true,
   },
   [VerificationStep.COMPLETED]: {
-    title: 'Completado',
-    description: 'La verificación ha sido completada exitosamente',
-    required: false
-  }
+    title: "Completado",
+    description: "La verificación ha sido completada exitosamente",
+    required: false,
+  },
 };

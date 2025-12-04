@@ -10,6 +10,7 @@ import type { ImportBatch } from "@/types/import";
 
 import ImportProgressBar from "./ImportProgressBar";
 import ImportStatusBadge from "./ImportStatusBadge";
+import ImportActionButtons from "./ImportActionButtons";
 
 interface ImportHistoryTableProps {
   batches: ImportBatch[];
@@ -52,9 +53,7 @@ export default function ImportHistoryTable({
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Package className="w-8 h-8 text-gray-400" />
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
-          No hay importaciones aún
-        </h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No hay importaciones aún</h3>
         <p className="text-sm text-gray-500 max-w-sm mx-auto">
           Sube tu primer archivo CSV para comenzar a importar DEAs al sistema
         </p>
@@ -86,9 +85,7 @@ export default function ImportHistoryTable({
       {/* Header */}
       <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">
-            Historial de Importaciones
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900">Historial de Importaciones</h2>
           <p className="text-sm text-gray-500 mt-1">
             {batches.length} importación{batches.length !== 1 ? "es" : ""}
           </p>
@@ -142,9 +139,7 @@ export default function ImportHistoryTable({
                       <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
                         {batch.name}
                       </p>
-                      <p className="text-xs text-gray-500 hidden sm:block">
-                        {batch.file_name}
-                      </p>
+                      <p className="text-xs text-gray-500 hidden sm:block">{batch.file_name}</p>
                     </div>
                   </div>
                 </td>
@@ -179,9 +174,7 @@ export default function ImportHistoryTable({
                   <div className="text-sm space-y-1">
                     <div className="flex items-center space-x-2">
                       <span className="text-gray-500">Total:</span>
-                      <span className="font-medium text-gray-900">
-                        {batch.total_records}
-                      </span>
+                      <span className="font-medium text-gray-900">{batch.total_records}</span>
                     </div>
                     {batch.status !== "PENDING" && (
                       <>
@@ -194,9 +187,7 @@ export default function ImportHistoryTable({
                         {batch.failed_records > 0 && (
                           <div className="flex items-center space-x-2">
                             <span className="text-red-600">✗</span>
-                            <span className="text-red-600 font-medium">
-                              {batch.failed_records}
-                            </span>
+                            <span className="text-red-600 font-medium">{batch.failed_records}</span>
                           </div>
                         )}
                       </>
@@ -206,13 +197,20 @@ export default function ImportHistoryTable({
 
                 {/* Acciones */}
                 <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
-                    onClick={() => onViewDetails(batch.id)}
-                    className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 transition-colors"
-                  >
-                    <Eye className="w-4 h-4" />
-                    <span className="hidden sm:inline">Detalles</span>
-                  </button>
+                  <div className="flex items-center justify-end gap-2">
+                    <ImportActionButtons
+                      batchId={batch.id}
+                      status={batch.status}
+                      onActionComplete={onRefresh}
+                    />
+                    <button
+                      onClick={() => onViewDetails(batch.id)}
+                      className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                      <Eye className="w-4 h-4" />
+                      <span className="hidden sm:inline">Detalles</span>
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

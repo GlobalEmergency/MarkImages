@@ -34,6 +34,8 @@ export interface CreateAedFromCsvData {
   longitude: number | null;
   addressValidationFailed: boolean;
   imageUrls: Array<{ url: string; type: string }>;
+  requiresAttention?: boolean; // Marcar como posible duplicado (score 60-79)
+  attentionReason?: string; // Motivo de la atención requerida
 }
 
 export interface ImportErrorData {

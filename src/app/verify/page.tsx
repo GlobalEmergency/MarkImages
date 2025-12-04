@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -127,10 +127,21 @@ export default function VerifyPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Verificación de DEAs</h1>
-          <p className="text-gray-600 mb-6">
-            Selecciona un DEA para iniciar el proceso de verificación
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Verificación de DEAs</h1>
+              <p className="text-gray-600">
+                Selecciona un DEA para iniciar el proceso de verificación
+              </p>
+            </div>
+            <button
+              onClick={() => router.push("/verify/duplicates")}
+              className="flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-800 border border-yellow-300 rounded-lg hover:bg-yellow-200 transition-colors font-medium"
+            >
+              <AlertTriangle className="w-5 h-5" />
+              Ver Posibles Duplicados
+            </button>
+          </div>
 
           {pagination && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">

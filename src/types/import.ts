@@ -27,12 +27,14 @@ export interface ImportBatch {
 }
 
 export type ImportStatus =
-  | 'PENDING'
-  | 'IN_PROGRESS'
-  | 'COMPLETED'
-  | 'COMPLETED_WITH_ERRORS'
-  | 'FAILED'
-  | 'CANCELLED';
+  | "PENDING"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "COMPLETED_WITH_ERRORS"
+  | "FAILED"
+  | "CANCELLED"
+  | "INTERRUPTED"
+  | "RESUMING";
 
 export interface ImportError {
   id: string;
@@ -49,21 +51,67 @@ export interface ImportError {
 }
 
 export type ImportErrorType =
-  | 'VALIDATION'
-  | 'FORMAT'
-  | 'DUPLICATE_DATA'
-  | 'MISSING_DATA'
-  | 'INVALID_DATA'
-  | 'RELATION_NOT_FOUND'
-  | 'INVALID_COORDINATES'
-  | 'ADDRESS_NOT_FOUND'
-  | 'SYSTEM_ERROR';
+  | "VALIDATION"
+  | "FORMAT"
+  | "DUPLICATE_DATA"
+  | "MISSING_DATA"
+  | "INVALID_DATA"
+  | "RELATION_NOT_FOUND"
+  | "INVALID_COORDINATES"
+  | "ADDRESS_NOT_FOUND"
+  | "SYSTEM_ERROR";
 
-export type ErrorSeverity = 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
+export type ErrorSeverity = "INFO" | "WARNING" | "ERROR" | "CRITICAL";
 
 export interface Pagination {
   page: number;
   limit: number;
   total: number;
   totalPages: number;
+}
+
+// Dry-run validation report
+export interface ValidationIssueData {
+  rowNumber: number;
+  issueType: "DUPLICATE" | "VALIDATION" | "IMAGE_ERROR" | "MISSING_FIELD";
+  severity: "ERROR" | "WARNING";
+  field?: string;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
+export interface DryRunReport {
+  dryRun: true;
+  totalRecords: number;
+  validRecords: number;
+  invalidRecords: number;
+
+  issues: {
+    duplicates: number;
+    validationErrors: number;
+    imageErrors: number;
+    missingFields: number;
+  };
+
+  // Solo primeros N para mostrar en UI
+  sampleIssues: ValidationIssueData[];
+
+  // Resumen
+  summary: {
+    wouldImport: number;
+    wouldSkip: number;
+    estimatedDurationSeconds: number;
+  };
+
+  // Para exportar reporte completo
+  exportUrl?: string;
+}
+
+export interface RealImportResponse {
+  dryRun: false;
+  batchId: string;
+  totalRecords: number;
+  successfulRecords: number;
+  failedRecords: number;
+  errors: Array<{ row: number; message: string }>;
 }

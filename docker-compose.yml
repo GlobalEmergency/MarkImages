@@ -1,7 +1,7 @@
-version: '3.8'
+version: "3.8"
 services:
   postgres:
-    image: postgres:15
+    image: postgis/postgis:17-3.4
     container_name: dea-postgres
     environment:
       POSTGRES_USER: root
@@ -10,7 +10,7 @@ services:
     ports:
       - "5555:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data1:/var/lib/postgresql/data
     restart: unless-stopped
 
   face-blur:
@@ -38,5 +38,5 @@ services:
               capabilities: [gpu]
 
 volumes:
-  postgres_data:
+  postgres_data1:
   face_blur_models:

@@ -9,7 +9,7 @@ import AddressValidation from "@/components/verification/AddressValidation";
 import ArrowPlacer from "@/components/verification/ArrowPlacer";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import ImageCropper from "@/components/verification/ImageCropper";
-import ImagePairSelector, { ImageSelection } from "@/components/verification/ImagePairSelector";
+import ImageMultiSelector from "@/components/verification/ImageMultiSelector";
 import ResponsibleForm from "@/components/verification/ResponsibleForm";
 import { useAuth } from "@/contexts/AuthContext";
 import type { CropData, ArrowData } from "@/types/shared";
@@ -261,53 +261,55 @@ export default function VerifyPage({ params }: VerifyPageProps) {
             <h2 className="text-2xl font-bold mb-4">{stepConfig.title}</h2>
             <p className="text-gray-600 mb-6">{stepConfig.description}</p>
 
-            <ImagePairSelector
-              image1Url={data.aed.images[0]?.original_url}
-              image2Url={data.aed.images[1]?.original_url}
+            <ImageMultiSelector
+              images={data.aed.images.map((img) => ({
+                id: img.id,
+                original_url: img.original_url,
+                type: img.type || undefined,
+                order: img.order,
+              }))}
               descripcionAcceso={data.aed.location?.access_description || undefined}
-              onSelectionComplete={(selection: ImageSelection) => {
-                // Determine next step based on selection
-                if (selection.markedAsInvalid) {
-                  updateStep(VerificationStep.RESPONSIBLE_ASSIGNMENT, {
-                    images_invalid: true,
-                  });
-                } else if (selection.image1Valid) {
-                  updateStep(VerificationStep.IMAGE_CROP_FRONT, {
-                    image_selection: selection,
-                  });
-                } else {
-                  updateStep(VerificationStep.RESPONSIBLE_ASSIGNMENT, {
-                    images_invalid: true,
-                  });
-                }
-              }}
-              onUploadNewImages={async (image1Url: string | null, image2Url: string | null) => {
-                // Update AED with new images
-                const imageUrls = [image1Url, image2Url].filter(Boolean) as string[];
-
+              onValidationComplete={async (result) => {
                 try {
-                  const response = await fetch(`/api/aeds/${resolvedParams.id}`, {
-                    method: "PATCH",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                      images: imageUrls.map((url, index) => ({
-                        original_url: url,
-                        order: index,
-                      })),
-                    }),
-                  });
+                  // Si hay imágenes eliminadas o nuevas, actualizar el DEA
+                  if (result.deletedImageIds.length > 0 || result.newImages) {
+                    const response = await fetch(`/api/aeds/${resolvedParams.id}`, {
+                      method: "PATCH",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        deleteImageIds: result.deletedImageIds,
+                        addImages: result.newImages?.map((img) => ({
+                          original_url: img.url,
+                          order: img.order,
+                          type: img.type || "general",
+                        })),
+                      }),
+                    });
 
-                  if (!response.ok) {
-                    throw new Error("Error al actualizar las imágenes");
+                    if (!response.ok) {
+                      throw new Error("Error al actualizar las imágenes");
+                    }
+
+                    // Refrescar datos para mostrar imágenes actualizadas
+                    await fetchVerificationData();
                   }
 
-                  // Refresh verification data to show new images
-                  await fetchVerificationData();
+                  // Si hay imágenes válidas, continuar con crop
+                  if (result.validImages.length > 0) {
+                    updateStep(VerificationStep.IMAGE_CROP_FRONT, {
+                      validated_images: result.validImages,
+                    });
+                  } else {
+                    // Si no hay imágenes válidas, saltar a asignación de responsable
+                    updateStep(VerificationStep.RESPONSIBLE_ASSIGNMENT, {
+                      images_invalid: true,
+                    });
+                  }
                 } catch (err) {
-                  console.error("Error uploading new images:", err);
-                  setError(err instanceof Error ? err.message : "Error al subir las imágenes");
+                  console.error("Error processing images:", err);
+                  setError(err instanceof Error ? err.message : "Error al procesar las imágenes");
                 }
               }}
               onCancel={() => updateStep(VerificationStep.ADDRESS_VALIDATION)}

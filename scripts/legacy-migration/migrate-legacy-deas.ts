@@ -119,12 +119,31 @@ async function main() {
           // Migrate images with the generated aedId
           if (!config.skipImages && imageMigrator) {
             console.log(`  📸 Migrating images for DEA #${record.id}...`);
-            transformed.images = await imageMigrator.migrateImages(
+            const { images, failedUrls } = await imageMigrator.migrateImages(
               aedId,
               record,
               verificationSession
             );
-            console.log(`     ✅ Migrated ${transformed.images.length} images`);
+
+            transformed.images = images;
+
+            // Si hay imágenes fallidas, marcar para revisión
+            if (failedUrls.length > 0) {
+              transformed.aed.status = "PENDING_REVIEW";
+              transformed.aed.requires_attention = true;
+              transformed.aed.attention_reason = "Imágenes no disponibles en origen";
+
+              // Agregar URLs fallidas a internal_notes
+              const failedUrlsText = `\n\n[URLs de imágenes no disponibles]\n${failedUrls.join("\n")}`;
+              transformed.aed.internal_notes =
+                (transformed.aed.internal_notes || "") + failedUrlsText;
+
+              console.log(
+                `     ⚠️  ${failedUrls.length} imagen(es) no disponible(s), DEA marcado para revisión`
+              );
+            }
+
+            console.log(`     ✅ Migrated ${images.length} images`);
           }
 
           // Save to database with the pre-generated UUID
@@ -285,6 +304,8 @@ async function saveAed(
         longitude: data.aed.longitude,
         internal_notes: data.aed.internal_notes,
         origin_observations: data.aed.origin_observations,
+        requires_attention: data.aed.requires_attention || false,
+        attention_reason: data.aed.attention_reason,
         location_id: location.id,
         schedule_id: schedule.id,
         responsible_id: responsible.id,

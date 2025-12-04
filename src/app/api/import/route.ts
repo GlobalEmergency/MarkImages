@@ -18,10 +18,7 @@ export async function GET(request: NextRequest) {
     // Verificar autenticación
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json(
-        { error: "No autenticado" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
     // Obtener parámetros de paginación
@@ -88,26 +85,26 @@ export async function POST(request: NextRequest) {
 
     const contentType = request.headers.get("content-type") || "";
     const { processImportAsync } = await import("@/lib/importProcessor");
-    
+
     let tempFilePath: string;
     let fileName: string;
     let fileSize: number;
     let batchName: string;
-    let mappings: Array<{csvColumn: string; systemField: string}> | undefined;
+    let mappings: Array<{ csvColumn: string; systemField: string }> | undefined;
+    let sharepointCookies: Record<string, string> | undefined;
 
     // Detectar si es JSON (wizard flow) o FormData (direct upload)
     if (contentType.includes("application/json")) {
       // Flujo del wizard: archivo ya guardado en servidor
       const body = await request.json();
       const filePath = body.filePath as string | undefined;
-      mappings = body.mappings as Array<{csvColumn: string; systemField: string}> | undefined;
-      batchName = body.batchName as string | undefined || `Importación ${new Date().toLocaleString()}`;
+      mappings = body.mappings as Array<{ csvColumn: string; systemField: string }> | undefined;
+      sharepointCookies = body.sharepointCookies as Record<string, string> | undefined;
+      batchName =
+        (body.batchName as string | undefined) || `Importación ${new Date().toLocaleString()}`;
 
       if (!filePath) {
-        return NextResponse.json(
-          { error: "El filePath es requerido" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "El filePath es requerido" }, { status: 400 });
       }
 
       // Validaciones de seguridad
@@ -118,12 +115,9 @@ export async function POST(request: NextRequest) {
       // Normalizar y validar que el path esté dentro del directorio temporal
       const normalizedPath = path.normalize(filePath);
       const tempDir = os.tmpdir();
-      
+
       if (!normalizedPath.startsWith(tempDir)) {
-        return NextResponse.json(
-          { error: "Ruta de archivo no válida" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "Ruta de archivo no válida" }, { status: 400 });
       }
 
       // Verificar que el archivo existe
@@ -133,39 +127,29 @@ export async function POST(request: NextRequest) {
         fileName = path.basename(normalizedPath);
         tempFilePath = normalizedPath;
       } catch {
-        return NextResponse.json(
-          { error: "El archivo especificado no existe" },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: "El archivo especificado no existe" }, { status: 404 });
       }
     } else {
       // Flujo tradicional: FormData con archivo
       const formData = await request.formData();
       const file = formData.get("file") as File | null;
-      batchName = formData.get("batchName") as string | null || `Importación ${new Date().toLocaleString()}`;
+      batchName =
+        (formData.get("batchName") as string | null) ||
+        `Importación ${new Date().toLocaleString()}`;
 
       if (!file) {
-        return NextResponse.json(
-          { error: "El archivo CSV es requerido" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "El archivo CSV es requerido" }, { status: 400 });
       }
 
       // Validar tipo de archivo
       if (!file.name.endsWith(".csv")) {
-        return NextResponse.json(
-          { error: "Solo se permiten archivos CSV" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "Solo se permiten archivos CSV" }, { status: 400 });
       }
 
       // Validar tamaño (10MB máximo)
       const maxSize = 10 * 1024 * 1024; // 10MB
       if (file.size > maxSize) {
-        return NextResponse.json(
-          { error: "El archivo no debe superar los 10MB" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "El archivo no debe superar los 10MB" }, { status: 400 });
       }
 
       // Guardar archivo temporalmente
@@ -173,6 +157,18 @@ export async function POST(request: NextRequest) {
       tempFilePath = await saveTempFile(file);
       fileName = file.name;
       fileSize = file.size;
+    }
+
+    // Preparar import_parameters
+    const importParameters: any = {};
+    if (mappings) {
+      importParameters.mappings = mappings;
+    }
+    if (sharepointCookies) {
+      importParameters.sharepointAuth = {
+        cookies: sharepointCookies,
+        validatedAt: new Date().toISOString(),
+      };
     }
 
     // Crear batch inicial con estado PENDING
@@ -189,6 +185,7 @@ export async function POST(request: NextRequest) {
         failed_records: 0,
         warning_records: 0,
         imported_by: user.userId,
+        import_parameters: Object.keys(importParameters).length > 0 ? importParameters : undefined,
       },
     });
 
