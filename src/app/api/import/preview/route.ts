@@ -4,34 +4,31 @@
  * Genera un preview del CSV subido y sugerencias de mapeo
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
-import { ParseCsvPreviewUseCase } from '@/application/import/use-cases/ParseCsvPreviewUseCase';
-import { SuggestColumnMappingUseCase } from '@/application/import/use-cases/SuggestColumnMappingUseCase';
+import { ParseCsvPreviewUseCase } from "@/application/import/use-cases/ParseCsvPreviewUseCase";
+import { SuggestColumnMappingUseCase } from "@/application/import/use-cases/SuggestColumnMappingUseCase";
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const file = formData.get('file') as File;
+    const file = formData.get("file") as File;
 
     if (!file) {
-      return NextResponse.json({ error: 'No se proporcionó ningún archivo' }, { status: 400 });
+      return NextResponse.json({ error: "No se proporcionó ningún archivo" }, { status: 400 });
     }
 
     // Validar que sea CSV
-    if (!file.name.endsWith('.csv')) {
-      return NextResponse.json(
-        { error: 'Solo se permiten archivos CSV' },
-        { status: 400 }
-      );
+    if (!file.name.endsWith(".csv")) {
+      return NextResponse.json({ error: "Solo se permiten archivos CSV" }, { status: 400 });
     }
 
     // Guardar archivo temporalmente
-    const fs = await import('fs/promises');
-    const path = await import('path');
-    const os = await import('os');
+    const fs = await import("fs/promises");
+    const path = await import("path");
+    const os = await import("os");
 
-    const tmpDir = path.join(os.tmpdir(), 'dea-imports');
+    const tmpDir = path.join(os.tmpdir(), "dea-imports");
     await fs.mkdir(tmpDir, { recursive: true });
 
     const timestamp = Date.now();
@@ -51,14 +48,14 @@ export async function POST(request: NextRequest) {
     const parseResult = await parseUseCase.execute({
       filePath,
       sampleSize: 5,
-      delimiter: ';',
+      delimiter: ";",
     });
 
     if (!parseResult.success || !parseResult.preview) {
       // Limpiar archivo
       await fs.unlink(filePath);
       return NextResponse.json(
-        { error: parseResult.error || 'Error al parsear el CSV' },
+        { error: parseResult.error || "Error al parsear el CSV" },
         { status: 400 }
       );
     }
@@ -67,7 +64,7 @@ export async function POST(request: NextRequest) {
     const suggestUseCase = new SuggestColumnMappingUseCase();
     const suggestions = suggestUseCase.execute({
       preview: parseResult.preview,
-      prioritizeRequired: true,
+      prioritizeRequired: false, // Buscar en TODOS los campos (requeridos + opcionales)
     });
 
     // Retornar preview, sugerencias y sessionId
@@ -84,10 +81,10 @@ export async function POST(request: NextRequest) {
       missingRequiredFields: suggestions.missingRequiredFields,
     });
   } catch (error) {
-    console.error('Error in preview API:', error);
+    console.error("Error in preview API:", error);
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
+        error: error instanceof Error ? error.message : "Error interno del servidor",
       },
       { status: 500 }
     );

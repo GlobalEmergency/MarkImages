@@ -17,11 +17,23 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Get AEDs that are pending verification (DRAFT or PENDING_REVIEW status)
+    // Exclude possible duplicates (they have their own review page)
     const [aeds, totalCount] = await Promise.all([
       prisma.aed.findMany({
         where: {
           status: {
             in: ["DRAFT", "PENDING_REVIEW"],
+          },
+          NOT: {
+            AND: [
+              { requires_attention: true },
+              {
+                attention_reason: {
+                  contains: "duplicado",
+                  mode: "insensitive",
+                },
+              },
+            ],
           },
         },
         include: {
@@ -46,6 +58,17 @@ export async function GET(request: NextRequest) {
         where: {
           status: {
             in: ["DRAFT", "PENDING_REVIEW"],
+          },
+          NOT: {
+            AND: [
+              { requires_attention: true },
+              {
+                attention_reason: {
+                  contains: "duplicado",
+                  mode: "insensitive",
+                },
+              },
+            ],
           },
         },
       }),

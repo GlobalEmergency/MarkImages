@@ -154,6 +154,12 @@ model ImportBatch {
   completed_at          DateTime?
   duration_seconds      Int?
 
+  // Recovery & Resume
+  last_heartbeat        DateTime?
+  last_checkpoint_index Int                     @default(0)
+  resumed_count         Int                     @default(0)
+  cancelled_manually    Boolean                 @default(false)
+
   // Metadata
   import_parameters     Json?
   error_summary         Json?
@@ -165,6 +171,7 @@ model ImportBatch {
 
   aeds                  Aed[]
   errors                ImportError[]
+  checkpoints           ImportCheckpoint[]
 
   created_at            DateTime                @default(now())
 
@@ -172,6 +179,7 @@ model ImportBatch {
   @@index([source_origin])
   @@index([created_at])
   @@index([imported_by])
+  @@index([status, last_heartbeat])
   @@map("import_batches")
 }
 
@@ -182,6 +190,8 @@ enum ImportStatus {
   COMPLETED_WITH_ERRORS
   FAILED
   CANCELLED
+  INTERRUPTED
+  RESUMING
 }
 
 // ============================================
@@ -230,6 +240,39 @@ enum ErrorSeverity {
   WARNING
   ERROR
   CRITICAL
+}
+
+// ============================================
+// IMPORT CHECKPOINTS - For resumable imports
+// ============================================
+model ImportCheckpoint {
+  id                  String              @id @default(uuid()) @db.Uuid
+  import_batch_id     String              @db.Uuid
+  record_index        Int
+  record_reference    String?
+  record_hash         String?
+  
+  status              CheckpointStatus
+  error_message       String?
+  processing_time_ms  Int?
+
+  // Context data
+  record_data         Json?
+
+  import_batch        ImportBatch         @relation(fields: [import_batch_id], references: [id], onDelete: Cascade)
+
+  created_at          DateTime            @default(now())
+
+  @@unique([import_batch_id, record_index])
+  @@index([import_batch_id, status])
+  @@index([record_hash])
+  @@map("import_checkpoints")
+}
+
+enum CheckpointStatus {
+  SUCCESS
+  FAILED
+  SKIPPED
 }
 
 // ============================================

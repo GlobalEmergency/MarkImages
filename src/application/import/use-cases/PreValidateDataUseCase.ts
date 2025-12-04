@@ -25,6 +25,11 @@ export interface PreValidateDataResponse {
     warnings: number;
     canProceed: boolean;
   };
+  sharepoint?: {
+    detected: boolean;
+    sampleUrls: string[];
+    imageFields: string[];
+  };
 }
 
 export class PreValidateDataUseCase {
@@ -42,6 +47,9 @@ export class PreValidateDataUseCase {
 
       // Leer archivo completo (o primeras N filas)
       const rows = await this.readCsvRows(filePath, preview.csvDelimiter, maxRowsToValidate);
+
+      // Detectar URLs de SharePoint en campos de imagen
+      const sharepointInfo = this.detectSharePointUrls(rows, mappingMap, preview);
 
       const issues: ValidationIssue[] = [];
 
@@ -76,6 +84,7 @@ export class PreValidateDataUseCase {
           warnings: summary.warningCount,
           canProceed: summary.canProceed,
         },
+        sharepoint: sharepointInfo.detected ? sharepointInfo : undefined,
       };
     } catch (error) {
       console.error("Error during pre-validation:", error);
@@ -286,5 +295,90 @@ export class PreValidateDataUseCase {
     }
 
     return issues;
+  }
+
+  /**
+   * Detecta URLs de SharePoint en campos de imagen
+   */
+  private detectSharePointUrls(
+    rows: string[][],
+    mappingMap: Map<string, string>,
+    preview: CsvPreview
+  ): { detected: boolean; sampleUrls: string[]; imageFields: string[] } {
+    const SHAREPOINT_DOMAINS = ["sharepoint.com", "sharepoint-df.com", "microsoft.sharepoint.com"];
+
+    const IMAGE_FIELDS = [
+      "photo1Url",
+      "photo2Url",
+      "frontImageUrl",
+      "locationImageUrl",
+      "accessImageUrl",
+      "signageImageUrl",
+      "contextImageUrl",
+      "plateImageUrl",
+    ];
+
+    const sharepointUrls = new Set<string>();
+    const detectedFields = new Set<string>();
+
+    console.log(`🔍 Detecting SharePoint URLs...`);
+    console.log(`   - Rows to scan: ${Math.min(rows.length, 10)}`);
+    console.log(`   - Mapped fields:`, Array.from(mappingMap.entries()));
+
+    // Revisar solo las primeras 10 filas para detectar SharePoint
+    const sampleSize = Math.min(rows.length, 10);
+
+    for (let i = 0; i < sampleSize; i++) {
+      const row = rows[i]!;
+
+      // Revisar cada campo de imagen
+      for (const imageField of IMAGE_FIELDS) {
+        const csvColumn = mappingMap.get(imageField);
+        if (!csvColumn) continue;
+
+        const columnIndex = preview.getColumnIndex(csvColumn);
+        if (columnIndex === -1) {
+          console.log(`   ⚠️ Column not found: ${csvColumn} for field ${imageField}`);
+          continue;
+        }
+
+        const value = row[columnIndex] || "";
+        if (!value.trim()) continue;
+
+        console.log(
+          `   📋 Checking field ${imageField} (${csvColumn}): ${value.substring(0, 50)}...`
+        );
+
+        // Verificar si es una URL de SharePoint
+        try {
+          const url = new URL(value);
+          const isSharePoint = SHAREPOINT_DOMAINS.some((domain) =>
+            url.hostname.toLowerCase().includes(domain)
+          );
+
+          if (isSharePoint) {
+            console.log(`   ✅ SharePoint URL detected in ${imageField}: ${value}`);
+            sharepointUrls.add(value);
+            detectedFields.add(imageField);
+          }
+        } catch {
+          console.log(`   ❌ Invalid URL in ${imageField}: ${value}`);
+          // No es una URL válida, ignorar
+        }
+      }
+
+      // Si ya encontramos suficientes muestras, salir
+      if (sharepointUrls.size >= 3) break;
+    }
+
+    const result = {
+      detected: sharepointUrls.size > 0,
+      sampleUrls: Array.from(sharepointUrls).slice(0, 3),
+      imageFields: Array.from(detectedFields),
+    };
+
+    console.log(`🔍 SharePoint detection result:`, result);
+
+    return result;
   }
 }

@@ -1,9 +1,10 @@
 /**
  * Value Object: Mapeo de una columna CSV a un campo del sistema
+ * Algoritmo mejorado con keywords expandidas y pattern matching
  * Capa de Dominio
  */
 
-import { FieldDefinition } from './FieldDefinition';
+import { FieldDefinition } from "./FieldDefinition";
 
 export class ColumnMapping {
   private constructor(
@@ -12,7 +13,7 @@ export class ColumnMapping {
     private readonly confidence: number
   ) {
     if (confidence < 0 || confidence > 1) {
-      throw new Error('Confidence must be between 0 and 1');
+      throw new Error("Confidence must be between 0 and 1");
     }
   }
 
@@ -46,53 +47,252 @@ export class ColumnMapping {
   /**
    * Crea un mapeo sugerido con nivel de confianza calculado
    */
-  static suggest(
-    csvColumn: string,
-    systemField: string,
-    confidence: number
-  ): ColumnMapping {
+  static suggest(csvColumn: string, systemField: string, confidence: number): ColumnMapping {
     return new ColumnMapping(csvColumn, systemField, confidence);
   }
 
   /**
    * Intenta sugerir un mapeo automático basado en similitud de nombres
+   * ALGORITMO MEJORADO con keywords expandidas y pattern matching
    */
   static autoSuggest(
     csvColumn: string,
-    fieldDefinitions: FieldDefinition[]
+    fieldDefinitions: FieldDefinition[],
+    sampleData?: string[]
   ): ColumnMapping | null {
     const normalizedCsvColumn = this.normalizeColumnName(csvColumn);
     let bestMatch: { field: FieldDefinition; score: number } | null = null;
 
     for (const field of fieldDefinitions) {
-      const normalizedFieldLabel = this.normalizeColumnName(field.label);
-      const normalizedFieldKey = this.normalizeColumnName(field.key);
+      // 1. Score por similitud de nombres (40%)
+      const nameScore = this.calculateNameSimilarity(normalizedCsvColumn, field);
 
-      // Calcular similitud con label
-      const labelScore = this.calculateSimilarity(normalizedCsvColumn, normalizedFieldLabel);
+      // 2. Score por keywords expandidas (30%)
+      const keywordScore = this.calculateKeywordScore(normalizedCsvColumn, field);
 
-      // Calcular similitud con key
-      const keyScore = this.calculateSimilarity(normalizedCsvColumn, normalizedFieldKey);
+      // 3. Score por pattern matching de datos (20%)
+      const dataPatternScore = sampleData ? this.calculateDataPatternScore(sampleData, field) : 0;
 
-      // Tomar la mejor puntuación
-      const score = Math.max(labelScore, keyScore);
+      // 4. Score por contexto (10%) - reservado para futuras mejoras
+      const contextScore = 0;
 
-      // Bonus si contiene palabras clave del field
-      const bonusScore = this.calculateKeywordBonus(normalizedCsvColumn, field);
-
-      const finalScore = Math.min(score + bonusScore, 1.0);
+      // Score compuesto ponderado
+      const finalScore = Math.min(
+        nameScore * 0.4 + keywordScore * 0.3 + dataPatternScore * 0.2 + contextScore * 0.1,
+        1.0
+      );
 
       if (!bestMatch || finalScore > bestMatch.score) {
         bestMatch = { field, score: finalScore };
       }
     }
 
-    // Solo sugerir si hay un match razonable
-    if (bestMatch && bestMatch.score > 0.5) {
+    // Solo sugerir si hay un match razonable (threshold bajado de 0.5 a 0.4)
+    if (bestMatch && bestMatch.score >= 0.4) {
       return new ColumnMapping(csvColumn, bestMatch.field.key, bestMatch.score);
     }
 
     return null;
+  }
+
+  /**
+   * Calcula score de similitud de nombres (label + key)
+   */
+  private static calculateNameSimilarity(
+    normalizedCsvColumn: string,
+    field: FieldDefinition
+  ): number {
+    const normalizedFieldLabel = this.normalizeColumnName(field.label);
+    const normalizedFieldKey = this.normalizeColumnName(field.key);
+
+    // Calcular similitud con label
+    const labelScore = this.calculateSimilarity(normalizedCsvColumn, normalizedFieldLabel);
+
+    // Calcular similitud con key
+    const keyScore = this.calculateSimilarity(normalizedCsvColumn, normalizedFieldKey);
+
+    // Retornar la mejor puntuación
+    return Math.max(labelScore, keyScore);
+  }
+
+  /**
+   * Calcula score por keywords del campo (MEJORADO)
+   * Usa las keywords definidas en FieldDefinition
+   */
+  private static calculateKeywordScore(
+    normalizedCsvColumn: string,
+    field: FieldDefinition
+  ): number {
+    if (!field.keywords || field.keywords.length === 0) {
+      return 0;
+    }
+
+    let maxScore = 0;
+
+    for (const keyword of field.keywords) {
+      const normalizedKeyword = this.normalizeColumnName(keyword);
+
+      // Match exacto completo
+      if (normalizedCsvColumn === normalizedKeyword) {
+        return 1.0;
+      }
+
+      // Contiene la keyword completa
+      if (normalizedCsvColumn.includes(normalizedKeyword)) {
+        const score = normalizedKeyword.length / normalizedCsvColumn.length;
+        maxScore = Math.max(maxScore, score * 0.9); // 90% si contiene
+        continue;
+      }
+
+      // La keyword contiene la columna
+      if (normalizedKeyword.includes(normalizedCsvColumn)) {
+        const score = normalizedCsvColumn.length / normalizedKeyword.length;
+        maxScore = Math.max(maxScore, score * 0.85); // 85% si está contenida
+        continue;
+      }
+
+      // Similitud parcial (usando Levenshtein)
+      const similarity = this.calculateSimilarity(normalizedCsvColumn, normalizedKeyword);
+      if (similarity > 0.7) {
+        maxScore = Math.max(maxScore, similarity * 0.8); // 80% de similitud alta
+      }
+    }
+
+    return maxScore;
+  }
+
+  /**
+   * Calcula score basándose en patrones de datos (NUEVO)
+   * Analiza una muestra de datos para inferir el tipo de campo
+   */
+  private static calculateDataPatternScore(sampleData: string[], field: FieldDefinition): number {
+    if (!sampleData || sampleData.length === 0) {
+      return 0;
+    }
+
+    // Filtrar valores vacíos
+    const validSamples = sampleData.filter((val) => val && val.trim().length > 0);
+    if (validSamples.length === 0) {
+      return 0;
+    }
+
+    let matchCount = 0;
+
+    for (const sample of validSamples) {
+      const trimmedSample = sample.trim();
+
+      switch (field.type) {
+        case "email":
+          if (this.isEmailPattern(trimmedSample)) {
+            matchCount++;
+          }
+          break;
+
+        case "url":
+          if (this.isUrlPattern(trimmedSample)) {
+            matchCount++;
+          }
+          break;
+
+        case "number":
+          if (this.isNumberPattern(trimmedSample)) {
+            matchCount++;
+          }
+          break;
+
+        case "boolean":
+          if (this.isBooleanPattern(trimmedSample)) {
+            matchCount++;
+          }
+          break;
+
+        case "date":
+          if (this.isDatePattern(trimmedSample)) {
+            matchCount++;
+          }
+          break;
+
+        case "string":
+          // Para strings, verificar patrones específicos basados en el key
+          if (this.isStringPatternMatch(trimmedSample, field.key)) {
+            matchCount++;
+          }
+          break;
+      }
+    }
+
+    // Retornar porcentaje de coincidencias
+    return matchCount / validSamples.length;
+  }
+
+  /**
+   * Patrones de validación por tipo
+   */
+  private static isEmailPattern(value: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(value);
+  }
+
+  private static isUrlPattern(value: string): boolean {
+    try {
+      new URL(value);
+      return true;
+    } catch {
+      return value.startsWith("http://") || value.startsWith("https://");
+    }
+  }
+
+  private static isNumberPattern(value: string): boolean {
+    // Números decimales con punto o coma
+    const numberRegex = /^-?\d+([.,]\d+)?$/;
+    return numberRegex.test(value);
+  }
+
+  private static isBooleanPattern(value: string): boolean {
+    const normalized = value.toLowerCase();
+    return ["si", "sí", "no", "yes", "true", "false", "1", "0"].includes(normalized);
+  }
+
+  private static isDatePattern(value: string): boolean {
+    // Patrones comunes de fecha
+    const datePatterns = [
+      /^\d{4}-\d{2}-\d{2}/, // ISO: 2024-12-03
+      /^\d{2}\/\d{2}\/\d{4}/, // DD/MM/YYYY
+      /^\d{2}-\d{2}-\d{4}/, // DD-MM-YYYY
+    ];
+    return datePatterns.some((pattern) => pattern.test(value));
+  }
+
+  private static isStringPatternMatch(value: string, fieldKey: string): boolean {
+    // Patrones específicos por campo
+    if (fieldKey === "postalCode") {
+      return /^\d{5}$/.test(value); // 5 dígitos
+    }
+
+    if (fieldKey === "latitude" || fieldKey === "longitude") {
+      return this.isNumberPattern(value) && Math.abs(parseFloat(value)) < 180;
+    }
+
+    if (fieldKey.includes("phone") || fieldKey.includes("Phone")) {
+      return /[\d\s+\-()]{7,}/.test(value); // Teléfonos
+    }
+
+    if (
+      fieldKey.includes("time") ||
+      fieldKey.includes("Time") ||
+      fieldKey.includes("Opening") ||
+      fieldKey.includes("Closing")
+    ) {
+      return /^\d{1,2}:\d{2}/.test(value); // HH:MM
+    }
+
+    if (fieldKey === "district" || fieldKey === "districtName") {
+      // Distritos de Madrid suelen tener formatos específicos
+      return /^\d{1,2}\.?\s?[A-Za-zÁ-ú\s]+$/.test(value) || /^[A-Za-zÁ-ú\s]+$/.test(value);
+    }
+
+    // Por defecto, aceptar cualquier string no vacío
+    return value.length > 0;
   }
 
   /**
@@ -101,9 +301,9 @@ export class ColumnMapping {
   private static normalizeColumnName(name: string): string {
     return name
       .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
-      .replace(/[^a-z0-9]/g, '') // Solo letras y números
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // Eliminar acentos
+      .replace(/[^a-z0-9]/g, "") // Solo letras y números
       .trim();
   }
 
@@ -115,11 +315,11 @@ export class ColumnMapping {
     if (str1 === str2) return 1.0;
     if (str1.length === 0 || str2.length === 0) return 0.0;
 
-    // Coincidencia exacta de substring
+    // Coincidencia exacta de substring (prioritaria)
     if (str1.includes(str2) || str2.includes(str1)) {
       const minLen = Math.min(str1.length, str2.length);
       const maxLen = Math.max(str1.length, str2.length);
-      return minLen / maxLen;
+      return 0.7 + (minLen / maxLen) * 0.3; // Entre 0.7 y 1.0
     }
 
     // Levenshtein distance
@@ -157,45 +357,6 @@ export class ColumnMapping {
     }
 
     return matrix[str2.length]![str1.length]!;
-  }
-
-  /**
-   * Calcula bonus por palabras clave en el nombre del campo
-   */
-  private static calculateKeywordBonus(
-    normalizedCsvColumn: string,
-    field: FieldDefinition
-  ): number {
-    const keywords: Record<string, string[]> = {
-      email: ['correo', 'email', 'mail'],
-      district: ['distrito'],
-      street: ['calle', 'via', 'street'],
-      number: ['numero', 'num'],
-      postal: ['postal', 'cp'],
-      latitude: ['latitud', 'lat', 'coordenada'],
-      longitude: ['longitud', 'lon', 'lng', 'coordenada'],
-      phone: ['telefono', 'tel', 'phone'],
-      photo: ['foto', 'photo', 'imagen', 'image'],
-      schedule: ['horario', 'schedule', 'hora'],
-      name: ['nombre', 'name', 'denominacion'],
-      ownership: ['titularidad', 'ownership'],
-      surveillance: ['vigilancia', 'vigilante'],
-    };
-
-    let bonus = 0.0;
-
-    for (const [category, words] of Object.entries(keywords)) {
-      if (field.key.toLowerCase().includes(category)) {
-        for (const word of words) {
-          if (normalizedCsvColumn.includes(word)) {
-            bonus += 0.2;
-            break;
-          }
-        }
-      }
-    }
-
-    return Math.min(bonus, 0.3); // Max bonus de 0.3
   }
 
   /**

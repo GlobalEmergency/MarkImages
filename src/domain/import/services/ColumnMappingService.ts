@@ -4,26 +4,26 @@
  * Capa de Dominio
  */
 
-import { ColumnMapping } from '../value-objects/ColumnMapping';
-import { CsvPreview } from '../value-objects/CsvPreview';
-import {
-  FieldDefinition,
-  getAllFields,
-  REQUIRED_FIELDS,
-} from '../value-objects/FieldDefinition';
+import { ColumnMapping } from "../value-objects/ColumnMapping";
+import { CsvPreview } from "../value-objects/CsvPreview";
+import { FieldDefinition, getAllFields, REQUIRED_FIELDS } from "../value-objects/FieldDefinition";
 
 export class ColumnMappingService {
   /**
    * Genera sugerencias automáticas de mapeo para todas las columnas del CSV
+   * MEJORADO: Ahora pasa datos de muestra para pattern matching
    */
   suggestMappings(csvPreview: CsvPreview): ColumnMapping[] {
     const suggestions: ColumnMapping[] = [];
     const allFields = getAllFields();
     const csvHeaders = csvPreview.columnHeaders;
 
-    // Intentar mapear cada columna del CSV
+    // Intentar mapear cada columna del CSV con datos de muestra
     for (const csvHeader of csvHeaders) {
-      const suggestion = ColumnMapping.autoSuggest(csvHeader, allFields);
+      // Usar el método público para obtener datos de muestra de esta columna
+      const sampleData = csvPreview.getColumnSampleValues(csvHeader);
+
+      const suggestion = ColumnMapping.autoSuggest(csvHeader, allFields, sampleData);
 
       if (suggestion && suggestion.isConfident()) {
         suggestions.push(suggestion);
@@ -36,14 +36,16 @@ export class ColumnMappingService {
   /**
    * Genera sugerencias solo para campos requeridos
    * Prioriza los campos críticos
+   * MEJORADO: Ahora también pasa datos de muestra
    */
   suggestRequiredMappings(csvPreview: CsvPreview): ColumnMapping[] {
     const suggestions: ColumnMapping[] = [];
     const csvHeaders = csvPreview.columnHeaders;
 
-    // Intentar mapear solo campos requeridos
+    // Intentar mapear solo campos requeridos con datos de muestra
     for (const csvHeader of csvHeaders) {
-      const suggestion = ColumnMapping.autoSuggest(csvHeader, REQUIRED_FIELDS);
+      const sampleData = csvPreview.getColumnSampleValues(csvHeader);
+      const suggestion = ColumnMapping.autoSuggest(csvHeader, REQUIRED_FIELDS, sampleData);
 
       if (suggestion && suggestion.isConfident()) {
         suggestions.push(suggestion);

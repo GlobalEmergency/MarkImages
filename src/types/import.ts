@@ -32,7 +32,9 @@ export type ImportStatus =
   | "COMPLETED"
   | "COMPLETED_WITH_ERRORS"
   | "FAILED"
-  | "CANCELLED";
+  | "CANCELLED"
+  | "INTERRUPTED"
+  | "RESUMING";
 
 export interface ImportError {
   id: string;

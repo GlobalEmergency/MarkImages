@@ -79,7 +79,16 @@ export class PrismaImportRepository implements IImportRepository {
   }
 
   async createAedFromCsv(data: CreateAedFromCsvData): Promise<string> {
-    const { csvRow, batchId, latitude, longitude, addressValidationFailed, imageUrls } = data;
+    const {
+      csvRow,
+      batchId,
+      latitude,
+      longitude,
+      addressValidationFailed,
+      imageUrls,
+      requiresAttention,
+      attentionReason,
+    } = data;
 
     // Crear el AED con todas sus relaciones en una transacción
     const result = await this.prisma.$transaction(async (tx) => {
@@ -148,10 +157,12 @@ export class PrismaImportRepository implements IImportRepository {
         location_id: location.id,
         responsible_id: responsible.id,
         schedule_id: schedule.id,
-        requires_attention: true,
-        attention_reason: addressValidationFailed
-          ? "Imported - Address validation failed"
-          : "Imported - Pending verification",
+        // Marcar si requiere atención (posible duplicado o validación fallida)
+        requires_attention: requiresAttention || addressValidationFailed || true,
+        attention_reason:
+          attentionReason || // Prioridad 1: mensaje de posible duplicado
+          (addressValidationFailed ? "Imported - Address validation failed" : null) || // Prioridad 2: validación fallida
+          "Imported - Pending verification", // Prioridad 3: default
         origin_observations: JSON.stringify(csvRow.toJSON()),
       };
 

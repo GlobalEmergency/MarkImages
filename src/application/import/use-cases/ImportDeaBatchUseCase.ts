@@ -11,6 +11,7 @@ import { IImageDownloader, DownloadAuthConfig } from "@/domain/storage/ports/IIm
 import { IImageStorage } from "@/domain/storage/ports/IImageStorage";
 import { CsvParserAdapter } from "@/infrastructure/import/parsers/CsvParserAdapter";
 import { DryRunReport, RealImportResponse } from "@/types/import";
+import { CheckpointManager } from "@/lib/recovery/CheckpointManager";
 
 export interface ImportDeaBatchRequest {
   batchId?: string; // ID del batch ya creado (opcional, para evitar duplicación)
@@ -23,6 +24,11 @@ export interface ImportDeaBatchRequest {
   skipDuplicates?: boolean; // Activar/desactivar detección de duplicados (default: true)
   duplicateDetectionMode?: "exact" | "fuzzy"; // Modo de detección (default: 'exact')
   dryRun?: boolean; // Modo simulación - no crea registros (default: false)
+
+  // Recovery & Checkpoints
+  checkpointManager?: CheckpointManager;
+  startFromIndex?: number; // Índice desde donde reanudar (para recuperación)
+  checkpointFrequency?: number; // Guardar checkpoint cada N registros (default: 10)
 }
 
 export type ImportDeaBatchResponse = DryRunReport | RealImportResponse;
@@ -90,6 +96,23 @@ export class ImportDeaBatchUseCase {
     let failCount = 0;
     const errors: Array<{ row: number; message: string }> = [];
 
+    // 3. Determinar índice de inicio (para reanudación)
+    const startFromIndex = request.startFromIndex ?? 0;
+    const checkpointFrequency = request.checkpointFrequency ?? 10;
+    const checkpointManager = request.checkpointManager;
+
+    if (startFromIndex > 0) {
+      console.log(`🔄 Resuming from index ${startFromIndex}`);
+
+      // Si tenemos checkpoint manager, obtener estadísticas actuales
+      if (checkpointManager) {
+        const stats = await checkpointManager.getCheckpointStats(batchId);
+        successCount = stats.success;
+        failCount = stats.failed;
+        console.log(`📊 Current progress: ${successCount} success, ${failCount} failed`);
+      }
+    }
+
     // 4. Procesar en chunks
     const chunks = this.chunkArray(parseResult.rows, chunkSize);
 
@@ -102,6 +125,25 @@ export class ImportDeaBatchUseCase {
       for (let i = 0; i < chunk.length; i++) {
         const csvRow = chunk[i];
         const globalRowNumber = chunkIndex * chunkSize + i + 2; // +2 por header y índice base 0
+        const recordIndex = chunkIndex * chunkSize + i; // Índice base 0
+
+        // Saltar registros ya procesados (si estamos reanudando)
+        if (recordIndex < startFromIndex) {
+          continue;
+        }
+
+        // Verificar si este registro ya fue procesado (checkpoint)
+        if (checkpointManager) {
+          const alreadyProcessed = await checkpointManager.isRecordProcessed(batchId, recordIndex);
+          if (alreadyProcessed) {
+            console.log(`⏭️  Skipping already processed record at index ${recordIndex}`);
+            continue;
+          }
+        }
+
+        const startTime = Date.now();
+        let recordStatus: "SUCCESS" | "FAILED" | "SKIPPED" = "SUCCESS";
+        let errorMessage: string | undefined;
 
         try {
           await this.processRecord(
@@ -119,7 +161,8 @@ export class ImportDeaBatchUseCase {
           }
         } catch (error) {
           failCount++;
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          recordStatus = "FAILED";
+          errorMessage = error instanceof Error ? error.message : String(error);
           errors.push({ row: globalRowNumber, message: errorMessage });
 
           // Determinar el tipo de error basado en el mensaje
@@ -139,13 +182,47 @@ export class ImportDeaBatchUseCase {
           const icon = isDuplicateError ? "⚠️" : "❌";
           console.error(`${icon} Row ${globalRowNumber}: ${errorMessage}`);
         }
+
+        // Guardar checkpoint (cada N registros o si falló)
+        if (
+          checkpointManager &&
+          ((recordIndex + 1) % checkpointFrequency === 0 || recordStatus === "FAILED")
+        ) {
+          const processingTime = Date.now() - startTime;
+          const rowData = csvRow.toJSON();
+          await checkpointManager.saveCheckpoint({
+            importBatchId: batchId,
+            recordIndex,
+            recordReference:
+              (rowData as any).name || (rowData as any).nombre || `Row ${globalRowNumber}`,
+            status: recordStatus,
+            errorMessage,
+            processingTimeMs: processingTime,
+            recordData: rowData,
+          });
+        }
       }
 
-      // Actualizar progreso en BD cada chunk (cada 50 registros)
+      // Actualizar progreso en BD cada chunk
       await this.repository.updateBatchStatus(batchId, "IN_PROGRESS", {
         successfulRecords: successCount,
         failedRecords: failCount,
       });
+
+      // Guardar checkpoint del último registro del chunk
+      if (checkpointManager && chunk.length > 0) {
+        const lastRecordIndex = chunkIndex * chunkSize + chunk.length - 1;
+        if (lastRecordIndex >= startFromIndex) {
+          // Solo si procesamos al menos un registro en este chunk
+          await checkpointManager.saveCheckpoint({
+            importBatchId: batchId,
+            recordIndex: lastRecordIndex,
+            recordReference: `Chunk ${chunkIndex + 1} end`,
+            status: "SUCCESS",
+            processingTimeMs: 0,
+          });
+        }
+      }
     }
 
     // 5. Finalizar batch
@@ -173,7 +250,7 @@ export class ImportDeaBatchUseCase {
     mappings?: Array<{ csvColumn: string; systemField: string }>,
     sharePointAuth?: DownloadAuthConfig,
     skipDuplicates: boolean = true,
-    duplicateDetectionMode: "exact" | "fuzzy" = "exact"
+    _duplicateDetectionMode: "exact" | "fuzzy" = "exact"
   ): Promise<void> {
     // Si hay mappings, construir DynamicCsvRow mapeado usando el servicio compartido
     // Si no hay mappings, usar CsvRow legacy (hardcodeado para Madrid)
@@ -186,26 +263,53 @@ export class ImportDeaBatchUseCase {
       throw new Error("Missing minimum required fields");
     }
 
-    // 2. Verificar duplicados (si está activado)
+    // 2. Parsear coordenadas (necesarias para el check de duplicados)
+    const latitude = this.parseCoordinate(row.latitude);
+    const longitude = this.parseCoordinate(row.longitude);
+
+    // 3. Verificar duplicados (si está activado)
+    let requiresAttention = false;
+    let attentionReason: string | undefined;
+
     if (skipDuplicates) {
       const duplicateCheck = await this.duplicateDetector.checkDuplicate({
+        // Campos básicos
         name: row.name || "",
         streetType: row.streetType,
         streetName: row.streetName,
         streetNumber: row.streetNumber,
-        exactMatch: duplicateDetectionMode === "exact",
-        similarityThreshold: 0.9,
+        postalCode: row.postalCode,
+
+        // Campos para sistema de scoring
+        provisionalNumber: row.provisionalNumber ? parseInt(row.provisionalNumber) : null,
+        establishmentType: row.establishmentType,
+        latitude: latitude,
+        longitude: longitude,
+
+        // Campos diferenciadores (ubicación específica)
+        accessDescription: row.accessDescription,
+        specificLocation: row.additionalInfo, // Complemento de dirección
+        floor: undefined, // No disponible en CSV actual
+        visibleReferences: undefined, // No disponible en CSV actual
       });
 
       if (duplicateCheck.isDuplicate) {
-        // Lanzar error específico de duplicado
-        throw new Error(duplicateCheck.toErrorMessage());
+        // Score >= 75: DUPLICADO CONFIRMADO - RECHAZAR
+        // Construir mensaje detallado con información de scoring
+        const duplicateDetails = this.buildDuplicateDetailsMessage(duplicateCheck);
+        throw new Error(duplicateDetails);
+      }
+
+      if (duplicateCheck.isPossibleDuplicate) {
+        // Score 60-74: POSIBLE DUPLICADO - IMPORTAR CON MARCA
+        requiresAttention = true;
+        attentionReason = duplicateCheck.toWarningMessage();
+
+        // Registrar WARNING (no rechazar)
+        // Log deshabilitado - información disponible en import_errors
+        // console.warn(`⚠️ ${attentionReason}`);
       }
     }
-
-    // 3. Parsear coordenadas
-    const latitude = this.parseCoordinate(row.latitude);
-    const longitude = this.parseCoordinate(row.longitude);
 
     // 4. Procesar imágenes (SharePoint → S3)
     const imageUrls: Array<{ url: string; type: string }> = [];
@@ -245,6 +349,8 @@ export class ImportDeaBatchUseCase {
       longitude,
       addressValidationFailed: false, // Por ahora, validación posterior
       imageUrls,
+      requiresAttention, // Marcar si es posible duplicado
+      attentionReason, // Motivo de la atención requerida
     });
   }
 
@@ -260,5 +366,36 @@ export class ImportDeaBatchUseCase {
       chunks.push(array.slice(i, i + size));
     }
     return chunks;
+  }
+
+  /**
+   * Construye un mensaje detallado sobre el duplicado detectado
+   * Incluye información de scoring para debugging
+   */
+  private buildDuplicateDetailsMessage(duplicateCheck: any): string {
+    const match = duplicateCheck.bestMatch || duplicateCheck.matches[0]; // Mejor match
+
+    let message = `Duplicado detectado: Ya existe un DEA con nombre "${duplicateCheck.checkedName}" y dirección "${duplicateCheck.checkedAddress}"`;
+
+    if (match) {
+      const date = match.createdAt
+        ? new Date(match.createdAt).toLocaleDateString("es-ES")
+        : "desconocida";
+      message += `\nDEA existente: ID ${match.aedId}, Score: ${match.score}/100, Registrado: ${date}`;
+
+      // Agregar información de scoring si el score es muy alto
+      if (match.score >= 90) {
+        message += `\nCoincidencia exacta en todos los campos principales`;
+      } else if (match.score >= 75) {
+        message += `\nCoincidencia muy alta en campos principales`;
+      }
+    }
+
+    // Si hay múltiples duplicados, mencionarlo
+    if (duplicateCheck.matches.length > 1) {
+      message += `\nAdvertencia: Se encontraron ${duplicateCheck.matches.length} posibles duplicados en la base de datos`;
+    }
+
+    return message;
   }
 }

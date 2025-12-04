@@ -1,6 +1,10 @@
 /**
  * Adapter: Detección de duplicados con Prisma
  * Capa de Infraestructura
+ *
+ * Implementa búsqueda híbrida:
+ * - CON coordenadas: búsqueda espacial PostGIS (radio configurable)
+ * - SIN coordenadas: fallback por código postal + scoring exhaustivo
  */
 
 import { PrismaClient } from "@/generated/client";
@@ -12,7 +16,8 @@ import {
   DuplicateCheckResult,
   DuplicateMatch,
 } from "@/domain/import/value-objects/DuplicateCheckResult";
-import { TextNormalizer } from "@/domain/import/services/TextNormalizer";
+import { DuplicateScoringService } from "@/domain/import/services/DuplicateScoringService";
+import { DuplicateDetectionConfig } from "@/domain/import/config/DuplicateDetectionConfig";
 
 export class PrismaDuplicateDetectionAdapter implements IDuplicateDetectionService {
   constructor(private readonly prisma: PrismaClient) {}
@@ -23,94 +28,159 @@ export class PrismaDuplicateDetectionAdapter implements IDuplicateDetectionServi
       streetType,
       streetName,
       streetNumber,
-      exactMatch = true,
-      similarityThreshold = 0.9,
+      postalCode,
+      provisionalNumber,
+      establishmentType,
+      latitude,
+      longitude,
+      accessDescription,
+      specificLocation,
+      floor,
+      visibleReferences,
     } = criteria;
 
-    // Normalizar criterios de búsqueda
-    const normalizedName = TextNormalizer.normalize(name);
-    const normalizedAddress = TextNormalizer.normalizeAddress(streetType, streetName, streetNumber);
+    const address = this.formatAddress(streetType, streetName, streetNumber);
 
-    if (!normalizedName || !normalizedAddress) {
-      // Si no hay datos suficientes para comparar, no es duplicado
-      return DuplicateCheckResult.noDuplicate(name, normalizedAddress);
+    if (!name) {
+      // Si no hay nombre, no podemos comparar
+      return DuplicateCheckResult.noDuplicate(name, address);
     }
 
-    // Buscar DEAs similares en la base de datos
-    // Estrategia: Buscar por nombre similar primero (más selectivo)
-    const potentialDuplicates = await this.prisma.aed.findMany({
-      where: {
-        // Buscar solo en registros activos (no eliminados)
-        status: {
-          in: ["DRAFT", "PENDING_REVIEW", "PUBLISHED"],
-        },
-      },
-      include: {
-        location: true,
-      },
-      // Limitar resultados para performance
-      take: 100,
-    });
+    // ========================================
+    // ESTRATEGIA 1: Búsqueda espacial con PostGIS (si hay coordenadas)
+    // ========================================
+    let potentialDuplicates: any[] = [];
 
-    // Filtrar y calcular similitudes
-    const matches: DuplicateMatch[] = [];
+    if (latitude && longitude) {
+      // Intentar búsqueda espacial primero (más eficiente si hay geom)
+      potentialDuplicates = await this.findByCoordinates(latitude, longitude);
+
+      // Si no encuentra nada con geom, buscar por código postal como fallback
+      if (potentialDuplicates.length === 0 && postalCode) {
+        // Log deshabilitado para producción
+        // console.log(`⚠️ No se encontraron registros con geom. Fallback a búsqueda por código postal: ${postalCode}`);
+        potentialDuplicates = await this.findByPostalCode(postalCode);
+      }
+    }
+    // ========================================
+    // ESTRATEGIA 2: Fallback por código postal (sin coordenadas)
+    // ========================================
+    else if (postalCode && DuplicateDetectionConfig.fallback.usePostalCodeFilter) {
+      // Buscar por código postal
+      potentialDuplicates = await this.findByPostalCode(postalCode);
+    }
+    // ========================================
+    // ESTRATEGIA 3: Búsqueda completa (último recurso)
+    // ========================================
+    else if (DuplicateDetectionConfig.fallback.searchAllIfNoPostalCode) {
+      // Sin coordenadas ni código postal - buscar en toda la BD
+      // ADVERTENCIA: Esto puede ser muy lento (2-5 segundos)
+      potentialDuplicates = await this.findAll();
+    } else {
+      // No se puede verificar duplicados sin coordenadas o código postal
+      // Retornar como no duplicado (pero podría requerir revisión manual)
+      return DuplicateCheckResult.noDuplicate(name, address);
+    }
+
+    // ========================================
+    // SCORING: Calcular puntuación para cada candidato
+    // ========================================
+    const confirmedMatches: DuplicateMatch[] = [];
+    const possibleMatches: DuplicateMatch[] = [];
+
+    const newAedData = {
+      name,
+      streetType,
+      streetName,
+      streetNumber,
+      postalCode,
+      provisionalNumber,
+      establishmentType,
+      latitude,
+      longitude,
+      accessDescription,
+      specificLocation,
+      floor,
+      visibleReferences,
+    };
 
     for (const aed of potentialDuplicates) {
-      const aedNormalizedName = TextNormalizer.normalize(aed.name);
-      const aedNormalizedAddress = TextNormalizer.normalizeAddress(
-        aed.location?.street_type,
-        aed.location?.street_name,
-        aed.location?.street_number
-      );
+      const existingAedData = {
+        name: aed.name,
+        streetType: aed.street_type ?? aed.location?.street_type,
+        streetName: aed.street_name ?? aed.location?.street_name,
+        streetNumber: aed.street_number ?? aed.location?.street_number,
+        postalCode: aed.postal_code ?? aed.location?.postal_code,
+        provisionalNumber: aed.provisional_number,
+        establishmentType: aed.establishment_type,
+        latitude: aed.latitude,
+        longitude: aed.longitude,
+        accessDescription: aed.access_description ?? aed.location?.access_description,
+        specificLocation: aed.specific_location ?? aed.location?.specific_location,
+        floor: aed.floor ?? aed.location?.floor,
+        visibleReferences: aed.visible_references ?? aed.location?.visible_references,
+      };
 
-      // Calcular similitudes
-      const nameSimilarity = TextNormalizer.calculateSimilarity(normalizedName, aedNormalizedName);
-      const addressSimilarity = TextNormalizer.calculateSimilarity(
-        normalizedAddress,
-        aedNormalizedAddress
-      );
+      // Calcular score usando el servicio de scoring
+      const score = DuplicateScoringService.calculateScore(newAedData, existingAedData);
 
-      // Decidir si es duplicado según el modo
-      let isDuplicate = false;
-
-      if (exactMatch) {
-        // Modo exacto: ambos deben coincidir exactamente después de normalización
-        isDuplicate =
-          TextNormalizer.areExactMatch(name, aed.name) &&
-          TextNormalizer.areExactMatch(normalizedAddress, aedNormalizedAddress);
-      } else {
-        // Modo fuzzy: ambos deben superar el umbral de similitud
-        isDuplicate =
-          nameSimilarity >= similarityThreshold && addressSimilarity >= similarityThreshold;
+      // 🔍 Log detallado del scoring para candidatos relevantes (deshabilitado para producción)
+      // Descomentar solo para debugging:
+      /*
+      if (score >= DuplicateDetectionConfig.thresholds.possible) {
+        const explanation = DuplicateScoringService.explainScore(newAedData, existingAedData, score);
+        console.log(`\n🔍 Candidato duplicado encontrado:`);
+        console.log(`   AED existente: ${aed.name} (ID: ${aed.id})`);
+        console.log(`   Score: ${score}/100`);
+        console.log(explanation);
       }
+      */
 
-      if (isDuplicate) {
-        // Calcular similitud promedio para ordenar matches
-        const avgSimilarity = (nameSimilarity + addressSimilarity) / 2;
+      // Clasificar según umbrales configurables
+      const match: DuplicateMatch = {
+        aedId: aed.id,
+        name: aed.name,
+        address: this.formatAddress(
+          existingAedData.streetType,
+          existingAedData.streetName,
+          existingAedData.streetNumber
+        ),
+        similarity: score / 100, // Compatibilidad (0-1)
+        score: score, // Score real (0-100)
+        createdAt: aed.created_at,
+      };
 
-        matches.push({
-          aedId: aed.id,
-          name: aed.name,
-          address: this.formatAddress(
-            aed.location?.street_type,
-            aed.location?.street_name,
-            aed.location?.street_number
-          ),
-          similarity: avgSimilarity,
-          createdAt: aed.created_at,
-        });
+      // Aplicar umbrales configurables
+      if (score >= DuplicateDetectionConfig.thresholds.confirmed) {
+        // Score >= 80: DUPLICADO CONFIRMADO
+        confirmedMatches.push(match);
+      } else if (score >= DuplicateDetectionConfig.thresholds.possible) {
+        // Score 60-79: POSIBLE DUPLICADO
+        possibleMatches.push(match);
       }
+      // Score < 60: ignorar (no es duplicado)
     }
 
-    // Ordenar matches por similitud descendente
-    matches.sort((a, b) => b.similarity - a.similarity);
+    // Ordenar por score descendente
+    confirmedMatches.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+    possibleMatches.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
 
-    // Retornar resultado
-    if (matches.length > 0) {
-      return DuplicateCheckResult.foundDuplicate(name, normalizedAddress, matches);
+    // ========================================
+    // RETORNAR RESULTADO SEGÚN PRIORIDAD
+    // ========================================
+
+    // Prioridad 1: Duplicados confirmados (rechazar)
+    if (confirmedMatches.length > 0) {
+      return DuplicateCheckResult.foundDuplicate(name, address, confirmedMatches);
     }
 
-    return DuplicateCheckResult.noDuplicate(name, normalizedAddress);
+    // Prioridad 2: Posibles duplicados (revisar manualmente)
+    if (possibleMatches.length > 0) {
+      return DuplicateCheckResult.foundPossibleDuplicate(name, address, possibleMatches);
+    }
+
+    // No hay duplicados
+    return DuplicateCheckResult.noDuplicate(name, address);
   }
 
   async checkMultipleDuplicates(
@@ -126,6 +196,85 @@ export class PrismaDuplicateDetectionAdapter implements IDuplicateDetectionServi
     }
 
     return results;
+  }
+
+  /**
+   * ESTRATEGIA 1: Búsqueda espacial con PostGIS
+   * Busca DEAs dentro del radio configurado (100m)
+   * Más eficiente: solo revisa ~5-15 registros cercanos
+   */
+  private async findByCoordinates(latitude: number, longitude: number): Promise<any[]> {
+    const { radiusDegrees, srid } = DuplicateDetectionConfig.spatial;
+
+    try {
+      // Query raw con PostGIS - búsqueda por radio
+      const results = await this.prisma.$queryRaw<any[]>`
+        SELECT 
+          a.id,
+          a.name,
+          a.status,
+          a.latitude,
+          a.longitude,
+          a.provisional_number,
+          a.establishment_type,
+          a.created_at,
+          l.id as location_id,
+          l.street_type,
+          l.street_name,
+          l.street_number,
+          l.postal_code,
+          l.access_description,
+          l.specific_location,
+          l.floor,
+          l.visible_references
+        FROM aeds a
+        LEFT JOIN aed_locations l ON a.location_id = l.id
+        WHERE
+          a.geom IS NOT NULL
+          AND ST_DWithin(
+            a.geom,
+            ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), ${srid}),
+            ${radiusDegrees}
+          )
+      `;
+
+      return results;
+    } catch (error) {
+      console.error("Error en búsqueda espacial PostGIS:", error);
+      // Fallback: buscar todos (menos eficiente pero funcional)
+      return this.findAll();
+    }
+  }
+
+  /**
+   * ESTRATEGIA 2: Búsqueda por código postal
+   * Cuando no hay coordenadas pero sí código postal
+   * Moderadamente eficiente: ~100-300 registros por código postal
+   */
+  private async findByPostalCode(postalCode: string): Promise<any[]> {
+    return this.prisma.aed.findMany({
+      where: {
+        location: {
+          postal_code: postalCode,
+        },
+      },
+      include: {
+        location: true,
+      },
+    });
+  }
+
+  /**
+   * ESTRATEGIA 3: Búsqueda completa
+   * Último recurso cuando no hay coordenadas ni código postal
+   * ADVERTENCIA: Muy lento (~2-5 segundos), revisa TODOS los registros activos
+   */
+  private async findAll(): Promise<any[]> {
+    return this.prisma.aed.findMany({
+      include: {
+        location: true,
+      },
+    });
   }
 
   /**
