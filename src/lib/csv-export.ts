@@ -5,6 +5,8 @@
 interface AedExportData {
   id?: string | null;
   status?: string | null;
+  requires_attention?: boolean | null;
+  attention_reason?: string | null;
   provisional_number?: number | null;
   code?: string | null;
   establishment_type?: string | null;
@@ -117,6 +119,8 @@ export function aedsToCsv(aeds: AedExportData[]): string {
   const headers = [
     "db_id",
     "dea_status",
+    "possible_duplicate",
+    "duplicate_info",
     "provisional_id",
     "RM_ID",
     "type",
@@ -161,6 +165,8 @@ export function aedsToCsv(aeds: AedExportData[]): string {
     return [
       aed.id ?? "", // db_id
       aed.status ?? "", // dea_status
+      aed.requires_attention ? "SÍ" : "NO", // possible_duplicate
+      aed.attention_reason ?? "", // duplicate_info
       aed.provisional_number ?? "", // provisional_id
       aed.code ?? "", // RM_ID
       aed.establishment_type ?? "", // type

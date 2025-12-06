@@ -18,6 +18,8 @@ interface GenerateExportParams {
 interface AedForExport {
   id?: string | null;
   status?: string | null;
+  requires_attention?: boolean | null;
+  attention_reason?: string | null;
   provisional_number?: number | null;
   code?: string | null;
   establishment_type?: string | null;
@@ -116,6 +118,8 @@ export class GenerateExportUseCase {
       const aedsForExport: AedForExport[] = aeds.map((aed) => ({
         id: aed.id,
         status: aed.status,
+        requires_attention: aed.requires_attention,
+        attention_reason: aed.attention_reason,
         provisional_number: aed.provisional_number,
         code: aed.code,
         establishment_type: aed.establishment_type,
