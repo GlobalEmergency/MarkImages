@@ -16,6 +16,8 @@ interface GenerateExportParams {
 }
 
 interface AedForExport {
+  id?: string | null;
+  status?: string | null;
   provisional_number?: number | null;
   code?: string | null;
   establishment_type?: string | null;
@@ -112,6 +114,8 @@ export class GenerateExportUseCase {
 
       // 5. Convertir a formato para export
       const aedsForExport: AedForExport[] = aeds.map((aed) => ({
+        id: aed.id,
+        status: aed.status,
         provisional_number: aed.provisional_number,
         code: aed.code,
         establishment_type: aed.establishment_type,
@@ -190,8 +194,7 @@ export class GenerateExportUseCase {
       // Marcar como fallido
       await this.exportRepository.updateBatch(batchId, {
         status: "FAILED",
-        errorMessage:
-          error instanceof Error ? error.message : "Unknown error occurred",
+        errorMessage: error instanceof Error ? error.message : "Unknown error occurred",
         errorDetails: {
           error: error instanceof Error ? error.stack : String(error),
           timestamp: new Date().toISOString(),

@@ -3,6 +3,8 @@
  */
 
 interface AedExportData {
+  id?: string | null;
+  status?: string | null;
   provisional_number?: number | null;
   code?: string | null;
   establishment_type?: string | null;
@@ -113,6 +115,8 @@ function parseNotesContent(notes: string): {
 export function aedsToCsv(aeds: AedExportData[]): string {
   // Definir las columnas del CSV según los requisitos + columnas adicionales para información estructurada
   const headers = [
+    "db_id",
+    "dea_status",
     "provisional_id",
     "RM_ID",
     "type",
@@ -155,6 +159,8 @@ export function aedsToCsv(aeds: AedExportData[]): string {
     const parsedNotes = parseNotesContent(notesContent);
 
     return [
+      aed.id ?? "", // db_id
+      aed.status ?? "", // dea_status
       aed.provisional_number ?? "", // provisional_id
       aed.code ?? "", // RM_ID
       aed.establishment_type ?? "", // type
