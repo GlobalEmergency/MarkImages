@@ -161,8 +161,8 @@ test.describe('SEO y Meta Tags', () => {
     const title = await page.title()
     expect(title.length).toBeGreaterThan(0)
 
-    // Verificar meta charset
-    const charset = await page.locator('meta[charset]').getAttribute('charset')
+    // Verificar meta charset (use first() to handle duplicate meta tags)
+    const charset = await page.locator('meta[charset]').first().getAttribute('charset')
     expect(charset).toBeTruthy()
 
     // Verificar viewport

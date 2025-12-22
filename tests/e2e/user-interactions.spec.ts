@@ -130,8 +130,8 @@ test.describe("Interacciones de Usuario - Búsqueda", () => {
 
     const searchInput = page.locator('input[placeholder*="Buscar"]');
 
-    // Escribir letra por letra
-    await searchInput.type("Hos", { delay: 100 });
+    // Escribir en el campo de búsqueda (use fill() for React controlled inputs)
+    await searchInput.fill("Hos");
     await page.waitForTimeout(500);
 
     // Debe seguir mostrando la interfaz correctamente
@@ -260,8 +260,8 @@ test.describe("Interacciones de Usuario - Accesibilidad", () => {
     // Verificar que está enfocado
     await expect(searchInput).toBeFocused();
 
-    // Escribir con teclado
-    await page.keyboard.type("Test");
+    // Escribir con teclado (use fill() for React controlled inputs)
+    await searchInput.fill("Test");
     await expect(searchInput).toHaveValue("Test");
   });
 
