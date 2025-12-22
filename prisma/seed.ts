@@ -13,13 +13,17 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log("🌱 Seeding test data for E2E tests...");
 
+  // Fixed UUIDs for E2E tests (can be referenced in tests)
+  const TEST_ORG_ID = "00000000-0000-0000-0000-000000000001";
+  const TEST_USER_ID = "00000000-0000-0000-0000-000000000002";
+
   // Create test organization
   console.log("🏢 Creating test organization...");
   const testOrg = await prisma.organization.upsert({
-    where: { id: "test-org-e2e" },
+    where: { id: TEST_ORG_ID },
     update: {},
     create: {
-      id: "test-org-e2e",
+      id: TEST_ORG_ID,
       type: "VOLUNTEER_GROUP",
       name: "Test Organization",
     },
@@ -32,6 +36,7 @@ async function main() {
     where: { email: "test@example.com" },
     update: {},
     create: {
+      id: TEST_USER_ID,
       email: "test@example.com",
       name: "Test User",
       password_hash: "$2a$10$test.hash.for.e2e.tests.only", // Dummy hash for E2E
