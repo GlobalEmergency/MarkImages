@@ -52,19 +52,20 @@ export const CsvFactory = {
       ])
     }
 
-    return CsvPreview.fromRawData(headers, rows)
+    return CsvPreview.create(headers, rows, rowCount)
   },
 
   /**
    * Create minimal required CSV preview
    */
   createMinimalCsvPreview(): CsvPreview {
-    return CsvPreview.fromRawData(
+    return CsvPreview.create(
       ['Nombre', 'Calle', 'Número'],
       [
         ['Hospital Central', 'Gran Vía', '123'],
         ['Centro Comercial', 'Mayor', '45'],
-      ]
+      ],
+      2
     )
   },
 
@@ -72,7 +73,7 @@ export const CsvFactory = {
    * Create CSV preview with custom headers and data
    */
   createCustomCsvPreview(headers: string[], rows: string[][]): CsvPreview {
-    return CsvPreview.fromRawData(headers, rows)
+    return CsvPreview.create(headers, rows, rows.length)
   },
 }
 
@@ -85,9 +86,9 @@ export const MappingFactory = {
    */
   createRequiredMappings(): ColumnMapping[] {
     return [
-      ColumnMapping.create('Nombre', 'proposedName', 1.0),
-      ColumnMapping.create('Calle', 'streetName', 0.95),
-      ColumnMapping.create('Número', 'streetNumber', 0.95),
+      ColumnMapping.suggest('Nombre', 'proposedName', 1.0),
+      ColumnMapping.suggest('Calle', 'streetName', 0.95),
+      ColumnMapping.suggest('Número', 'streetNumber', 0.95),
     ]
   },
 
@@ -97,10 +98,10 @@ export const MappingFactory = {
   createCompleteMappings(): ColumnMapping[] {
     return [
       ...MappingFactory.createRequiredMappings(),
-      ColumnMapping.create('Email', 'submitterEmail', 0.9),
-      ColumnMapping.create('Teléfono', 'submitterPhone', 0.85),
-      ColumnMapping.create('Distrito', 'district', 0.8),
-      ColumnMapping.create('Código postal', 'postalCode', 0.9),
+      ColumnMapping.suggest('Email', 'submitterEmail', 0.9),
+      ColumnMapping.suggest('Teléfono', 'submitterPhone', 0.85),
+      ColumnMapping.suggest('Distrito', 'district', 0.8),
+      ColumnMapping.suggest('Código postal', 'postalCode', 0.9),
     ]
   },
 
@@ -112,7 +113,7 @@ export const MappingFactory = {
     systemField: string,
     confidence: number = 1.0
   ): ColumnMapping {
-    return ColumnMapping.create(csvColumn, systemField, confidence)
+    return ColumnMapping.suggest(csvColumn, systemField, confidence)
   },
 }
 
@@ -125,7 +126,7 @@ export const BatchJobFactory = {
    */
   createJob(overrides: Partial<CreateBatchJobParams> = {}): BatchJob {
     const params: CreateBatchJobParams = {
-      type: JobType.AED_EXPORT,
+      type: JobType.AED_CSV_EXPORT,
       name: 'Test Job ' + faker.string.uuid(),
       description: faker.lorem.sentence(),
       config: {

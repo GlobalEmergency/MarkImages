@@ -110,9 +110,9 @@ describe('ColumnMappingService', () => {
   describe('validateRequiredMappings', () => {
     it('should validate complete required mappings', () => {
       const mappings = [
-        ColumnMapping.create('Nombre', 'proposedName', 1.0),
-        ColumnMapping.create('Calle', 'streetName', 1.0),
-        ColumnMapping.create('Número', 'streetNumber', 1.0),
+        ColumnMapping.suggest('Nombre', 'proposedName', 1.0),
+        ColumnMapping.suggest('Calle', 'streetName', 1.0),
+        ColumnMapping.suggest('Número', 'streetNumber', 1.0),
       ]
 
       const result = service.validateRequiredMappings(mappings)
@@ -123,7 +123,7 @@ describe('ColumnMappingService', () => {
 
     it('should detect missing required fields', () => {
       const mappings = [
-        ColumnMapping.create('Nombre', 'proposedName', 1.0),
+        ColumnMapping.suggest('Nombre', 'proposedName', 1.0),
         // Missing streetName and streetNumber
       ]
 
@@ -146,9 +146,9 @@ describe('ColumnMappingService', () => {
   describe('detectDuplicateMappings', () => {
     it('should detect no duplicates in clean mappings', () => {
       const mappings = [
-        ColumnMapping.create('Nombre', 'proposedName', 1.0),
-        ColumnMapping.create('Calle', 'streetName', 1.0),
-        ColumnMapping.create('Número', 'streetNumber', 1.0),
+        ColumnMapping.suggest('Nombre', 'proposedName', 1.0),
+        ColumnMapping.suggest('Calle', 'streetName', 1.0),
+        ColumnMapping.suggest('Número', 'streetNumber', 1.0),
       ]
 
       const result = service.detectDuplicateMappings(mappings)
@@ -159,8 +159,8 @@ describe('ColumnMappingService', () => {
 
     it('should detect same CSV column mapped to multiple fields', () => {
       const mappings = [
-        ColumnMapping.create('Coordenadas', 'latitude', 0.8),
-        ColumnMapping.create('Coordenadas', 'longitude', 0.8),
+        ColumnMapping.suggest('Coordenadas', 'latitude', 0.8),
+        ColumnMapping.suggest('Coordenadas', 'longitude', 0.8),
       ]
 
       const result = service.detectDuplicateMappings(mappings)
@@ -176,9 +176,9 @@ describe('ColumnMappingService', () => {
   describe('detectConflictingMappings', () => {
     it('should detect no conflicts in clean mappings', () => {
       const mappings = [
-        ColumnMapping.create('Nombre', 'proposedName', 1.0),
-        ColumnMapping.create('Calle', 'streetName', 1.0),
-        ColumnMapping.create('Número', 'streetNumber', 1.0),
+        ColumnMapping.suggest('Nombre', 'proposedName', 1.0),
+        ColumnMapping.suggest('Calle', 'streetName', 1.0),
+        ColumnMapping.suggest('Número', 'streetNumber', 1.0),
       ]
 
       const result = service.detectConflictingMappings(mappings)
@@ -189,8 +189,8 @@ describe('ColumnMappingService', () => {
 
     it('should detect multiple CSV columns mapped to same system field', () => {
       const mappings = [
-        ColumnMapping.create('Nombre1', 'proposedName', 0.9),
-        ColumnMapping.create('Nombre2', 'proposedName', 0.85),
+        ColumnMapping.suggest('Nombre1', 'proposedName', 0.9),
+        ColumnMapping.suggest('Nombre2', 'proposedName', 0.85),
       ]
 
       const result = service.detectConflictingMappings(mappings)
@@ -206,8 +206,8 @@ describe('ColumnMappingService', () => {
   describe('resolveConflicts', () => {
     it('should keep mappings without conflicts', () => {
       const mappings = [
-        ColumnMapping.create('Nombre', 'proposedName', 1.0),
-        ColumnMapping.create('Calle', 'streetName', 1.0),
+        ColumnMapping.suggest('Nombre', 'proposedName', 1.0),
+        ColumnMapping.suggest('Calle', 'streetName', 1.0),
       ]
 
       const resolved = service.resolveConflicts(mappings)
@@ -218,9 +218,9 @@ describe('ColumnMappingService', () => {
 
     it('should choose highest confidence mapping in conflicts', () => {
       const mappings = [
-        ColumnMapping.create('Nombre1', 'proposedName', 0.85),
-        ColumnMapping.create('Nombre2', 'proposedName', 0.95), // Higher confidence
-        ColumnMapping.create('Calle', 'streetName', 1.0),
+        ColumnMapping.suggest('Nombre1', 'proposedName', 0.85),
+        ColumnMapping.suggest('Nombre2', 'proposedName', 0.95), // Higher confidence
+        ColumnMapping.suggest('Calle', 'streetName', 1.0),
       ]
 
       const resolved = service.resolveConflicts(mappings)
@@ -233,11 +233,11 @@ describe('ColumnMappingService', () => {
 
     it('should handle multiple conflicts', () => {
       const mappings = [
-        ColumnMapping.create('Nombre1', 'proposedName', 0.85),
-        ColumnMapping.create('Nombre2', 'proposedName', 0.95),
-        ColumnMapping.create('Calle1', 'streetName', 0.8),
-        ColumnMapping.create('Calle2', 'streetName', 0.9),
-        ColumnMapping.create('Num', 'streetNumber', 1.0),
+        ColumnMapping.suggest('Nombre1', 'proposedName', 0.85),
+        ColumnMapping.suggest('Nombre2', 'proposedName', 0.95),
+        ColumnMapping.suggest('Calle1', 'streetName', 0.8),
+        ColumnMapping.suggest('Calle2', 'streetName', 0.9),
+        ColumnMapping.suggest('Num', 'streetNumber', 1.0),
       ]
 
       const resolved = service.resolveConflicts(mappings)
@@ -253,10 +253,10 @@ describe('ColumnMappingService', () => {
   describe('getMappingStats', () => {
     it('should calculate correct statistics', () => {
       const mappings = [
-        ColumnMapping.create('Nombre', 'proposedName', 1.0),
-        ColumnMapping.create('Calle', 'streetName', 0.95),
-        ColumnMapping.create('Número', 'streetNumber', 0.9),
-        ColumnMapping.create('Email', 'submitterEmail', 0.8),
+        ColumnMapping.suggest('Nombre', 'proposedName', 1.0),
+        ColumnMapping.suggest('Calle', 'streetName', 0.95),
+        ColumnMapping.suggest('Número', 'streetNumber', 0.9),
+        ColumnMapping.suggest('Email', 'submitterEmail', 0.8),
       ]
 
       const stats = service.getMappingStats(mappings)
@@ -281,9 +281,9 @@ describe('ColumnMappingService', () => {
 
     it('should correctly count high confidence mappings', () => {
       const mappings = [
-        ColumnMapping.create('Nombre', 'proposedName', 1.0),
-        ColumnMapping.create('Calle', 'streetName', 0.85),
-        ColumnMapping.create('Número', 'streetNumber', 0.5), // Low confidence
+        ColumnMapping.suggest('Nombre', 'proposedName', 1.0),
+        ColumnMapping.suggest('Calle', 'streetName', 0.85),
+        ColumnMapping.suggest('Número', 'streetNumber', 0.5), // Low confidence
       ]
 
       const stats = service.getMappingStats(mappings)
@@ -295,7 +295,7 @@ describe('ColumnMappingService', () => {
   describe('suggestForUnmappedColumns', () => {
     it('should suggest fields for unmapped columns', () => {
       const csvHeaders = ['Nombre', 'Calle', 'Email', 'Teléfono']
-      const existingMappings = [ColumnMapping.create('Nombre', 'proposedName', 1.0)]
+      const existingMappings = [ColumnMapping.suggest('Nombre', 'proposedName', 1.0)]
 
       const suggestions = service.suggestForUnmappedColumns(csvHeaders, existingMappings)
 
@@ -320,8 +320,8 @@ describe('ColumnMappingService', () => {
     it('should handle all columns already mapped', () => {
       const csvHeaders = ['Nombre', 'Calle']
       const existingMappings = [
-        ColumnMapping.create('Nombre', 'proposedName', 1.0),
-        ColumnMapping.create('Calle', 'streetName', 1.0),
+        ColumnMapping.suggest('Nombre', 'proposedName', 1.0),
+        ColumnMapping.suggest('Calle', 'streetName', 1.0),
       ]
 
       const suggestions = service.suggestForUnmappedColumns(csvHeaders, existingMappings)

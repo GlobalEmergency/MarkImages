@@ -10,7 +10,7 @@ describe('BatchJob Entity', () => {
     vi.setSystemTime(new Date('2024-01-01T00:00:00.000Z'))
 
     baseParams = {
-      type: JobType.AED_EXPORT,
+      type: JobType.AED_CSV_EXPORT,
       name: 'Test Export Job',
       description: 'Test job description',
       config: {
@@ -33,7 +33,7 @@ describe('BatchJob Entity', () => {
       const job = BatchJob.create(baseParams)
 
       expect(job.status).toBe(JobStatus.PENDING)
-      expect(job.type).toBe(JobType.AED_EXPORT)
+      expect(job.type).toBe(JobType.AED_CSV_EXPORT)
       expect(job.name).toBe('Test Export Job')
       expect(job.createdBy).toBe('user-123')
     })
@@ -431,7 +431,7 @@ describe('BatchJob Entity', () => {
       const json = job.toJSON()
 
       expect(json.id).toBeDefined()
-      expect(json.type).toBe(JobType.AED_EXPORT)
+      expect(json.type).toBe(JobType.AED_CSV_EXPORT)
       expect(json.name).toBe('Test Export Job')
       expect(json.status).toBe(JobStatus.PENDING)
       expect(typeof json.createdAt).toBe('string')
