@@ -1,9 +1,13 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+import tsconfigPaths from 'vite-tsconfig-paths'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    tsconfigPaths(), // Automatically reads path mappings from tsconfig.json
+  ],
   test: {
     environment: 'jsdom',
     globals: true,
@@ -25,6 +29,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      // Manual alias as fallback since tests/**/* is excluded from tsconfig
       '@': path.resolve(process.cwd(), './src'),
     },
   },
