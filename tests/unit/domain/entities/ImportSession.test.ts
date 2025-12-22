@@ -33,8 +33,8 @@ describe("ImportSession", () => {
       const preview = CsvPreview.create(
         ["codigo", "direccion"],
         [
-          { codigo: "DEA-001", direccion: "Calle Test 1" },
-          { codigo: "DEA-002", direccion: "Calle Test 2" },
+          ["DEA-001", "Calle Test 1"],
+          ["DEA-002", "Calle Test 2"],
         ],
         10
       );
@@ -46,7 +46,7 @@ describe("ImportSession", () => {
     });
 
     it("debe lanzar error al establecer preview en estado incorrecto", () => {
-      const preview = CsvPreview.create(["codigo"], [{ codigo: "DEA-001" }], 1);
+      const preview = CsvPreview.create(["codigo"], [["DEA-001"]], 1);
       session.setPreview(preview);
 
       expect(() => session.setPreview(preview)).toThrow("Can only set preview in PREVIEW status");
@@ -55,7 +55,7 @@ describe("ImportSession", () => {
 
   describe("Flujo de estados: Mapping -> Validating", () => {
     beforeEach(() => {
-      const preview = CsvPreview.create(["codigo"], [{ codigo: "DEA-001" }], 1);
+      const preview = CsvPreview.create(["codigo"], [["DEA-001"]], 1);
       session.setPreview(preview);
     });
 
@@ -102,7 +102,7 @@ describe("ImportSession", () => {
 
   describe("Flujo de estados: Validating -> Ready", () => {
     beforeEach(() => {
-      const preview = CsvPreview.create(["codigo"], [{ codigo: "DEA-001" }], 1);
+      const preview = CsvPreview.create(["codigo"], [["DEA-001"]], 1);
       session.setPreview(preview);
 
       const mappings = [ColumnMapping.create("codigo", "codigo_dea")];
@@ -157,7 +157,7 @@ describe("ImportSession", () => {
 
   describe("Flujo de estados: Ready -> Importing -> Completed", () => {
     beforeEach(() => {
-      const preview = CsvPreview.create(["codigo"], [{ codigo: "DEA-001" }], 1);
+      const preview = CsvPreview.create(["codigo"], [["DEA-001"]], 1);
       session.setPreview(preview);
 
       const mappings = [ColumnMapping.create("codigo", "codigo_dea")];
@@ -202,7 +202,7 @@ describe("ImportSession", () => {
 
   describe("Navegación hacia atrás", () => {
     beforeEach(() => {
-      const preview = CsvPreview.create(["codigo"], [{ codigo: "DEA-001" }], 1);
+      const preview = CsvPreview.create(["codigo"], [["DEA-001"]], 1);
       session.setPreview(preview);
 
       const mappings = [ColumnMapping.create("codigo", "codigo_dea")];
@@ -238,7 +238,7 @@ describe("ImportSession", () => {
 
   describe("Validación de campos requeridos", () => {
     beforeEach(() => {
-      const preview = CsvPreview.create(["codigo"], [{ codigo: "DEA-001" }], 1);
+      const preview = CsvPreview.create(["codigo"], [["DEA-001"]], 1);
       session.setPreview(preview);
     });
 
@@ -275,7 +275,7 @@ describe("ImportSession", () => {
 
   describe("Verificaciones de estado", () => {
     it("debe verificar si puede validar", () => {
-      const preview = CsvPreview.create(["codigo"], [{ codigo: "DEA-001" }], 1);
+      const preview = CsvPreview.create(["codigo"], [["DEA-001"]], 1);
       session.setPreview(preview);
 
       const requiredFields = ["codigo_dea"];
@@ -290,7 +290,7 @@ describe("ImportSession", () => {
     it("debe verificar si puede importar", () => {
       expect(session.canImport()).toBe(false);
 
-      const preview = CsvPreview.create(["codigo"], [{ codigo: "DEA-001" }], 1);
+      const preview = CsvPreview.create(["codigo"], [["DEA-001"]], 1);
       session.setPreview(preview);
 
       const mappings = [ColumnMapping.create("codigo", "codigo_dea")];
@@ -303,7 +303,7 @@ describe("ImportSession", () => {
     });
 
     it("no debe poder importar si hay errores críticos", () => {
-      const preview = CsvPreview.create(["codigo"], [{ codigo: "DEA-001" }], 1);
+      const preview = CsvPreview.create(["codigo"], [["DEA-001"]], 1);
       session.setPreview(preview);
 
       const mappings = [ColumnMapping.create("codigo", "codigo_dea")];
@@ -324,7 +324,7 @@ describe("ImportSession", () => {
 
   describe("Serialización", () => {
     it("debe serializar y deserializar correctamente", () => {
-      const preview = CsvPreview.create(["codigo"], [{ codigo: "DEA-001" }], 1);
+      const preview = CsvPreview.create(["codigo"], [["DEA-001"]], 1);
       session.setPreview(preview);
 
       const mappings = [ColumnMapping.create("codigo", "codigo_dea")];
