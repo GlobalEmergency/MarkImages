@@ -17,7 +17,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        image: postgis/postgis:16-3.4
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -47,6 +47,13 @@ jobs:
         run: |
           cp .env.example .env.test || echo "No .env.example found"
           echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/deamap_test" >> .env.test
+
+      - name: Enable PostgreSQL extensions
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d deamap_test -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d deamap_test -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d deamap_test -c "CREATE EXTENSION IF NOT EXISTS unaccent;"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d deamap_test -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
 
       - name: Run Prisma migrations
         run: npx prisma migrate deploy
@@ -96,7 +103,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        image: postgis/postgis:16-3.4
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -130,6 +137,13 @@ jobs:
           cp .env.example .env.test || echo "No .env.example found"
           echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/deamap_e2e" >> .env.test
           echo "NEXT_PUBLIC_API_URL=http://localhost:3000" >> .env.test
+
+      - name: Enable PostgreSQL extensions
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d deamap_e2e -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d deamap_e2e -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d deamap_e2e -c "CREATE EXTENSION IF NOT EXISTS unaccent;"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d deamap_e2e -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
 
       - name: Run Prisma migrations
         run: npx prisma migrate deploy
