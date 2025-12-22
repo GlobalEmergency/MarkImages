@@ -38,6 +38,7 @@
     "test-*.ts",
     "check-*.js",
     "prisma/seed.ts",
-    "prisma/seed-dummy.ts"
+    "prisma/seed-dummy.ts",
+    "tests/**/*"
   ]
 }
