@@ -14,6 +14,9 @@ import { IDataSourceRepository } from "@/import/domain/ports/IDataSourceReposito
 import { ExternalSyncProcessor } from "./ExternalSyncProcessor";
 import { AedCsvImportProcessor } from "./AedCsvImportProcessor";
 import { AedExportProcessor } from "./AedExportProcessor";
+import { HttpImageDownloader } from "@/storage/infrastructure/adapters/HttpImageDownloader";
+import { S3ImageStorageAdapter } from "@/storage/infrastructure/adapters/S3ImageStorageAdapter";
+import { DownloadAndUploadImageUseCase } from "@/storage/application/use-cases/DownloadAndUploadImageUseCase";
 
 /**
  * Initialize and register all processors
@@ -24,13 +27,28 @@ export function initializeProcessors(
 ): void {
   const registry = getProcessorRegistry();
 
+  // ========================================
+  // Initialize image download/upload infrastructure
+  // ========================================
+  const imageDownloader = new HttpImageDownloader();
+  const imageStorage = new S3ImageStorageAdapter();
+  const downloadAndUploadImageUseCase = new DownloadAndUploadImageUseCase(
+    imageDownloader,
+    imageStorage
+  );
+
+  // ========================================
   // Register processors
+  // ========================================
   registry.register(
     JobType.AED_EXTERNAL_SYNC,
     new ExternalSyncProcessor(prisma, dataSourceRepository)
   );
 
-  registry.register(JobType.AED_CSV_IMPORT, new AedCsvImportProcessor(prisma));
+  registry.register(
+    JobType.AED_CSV_IMPORT,
+    new AedCsvImportProcessor(prisma, downloadAndUploadImageUseCase)
+  );
 
   registry.register(JobType.AED_CSV_EXPORT, new AedExportProcessor(prisma));
 

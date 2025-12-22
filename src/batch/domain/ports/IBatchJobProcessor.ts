@@ -22,10 +22,15 @@ export interface ProcessRecordResult {
   recordId?: string;
   recordReference?: string;
   error?: {
+    index: number;
     type: string;
     message: string;
     severity: "info" | "warning" | "error" | "critical";
     correctionSuggestion?: string;
+    field?: string;
+    csvColumn?: string;
+    value?: string;
+    rowData?: Record<string, unknown>;
   };
   data?: Record<string, unknown>;
 }
@@ -189,16 +194,30 @@ export abstract class BaseBatchJobProcessor<
     recordReference: string,
     errorType: string,
     errorMessage: string,
-    severity: "info" | "warning" | "error" | "critical" = "error"
+    severity: "info" | "warning" | "error" | "critical" = "error",
+    index: number = -1,
+    additionalData?: {
+      field?: string;
+      csvColumn?: string;
+      value?: string;
+      correctionSuggestion?: string;
+      rowData?: Record<string, unknown>;
+    }
   ): ProcessRecordResult {
     return {
       success: false,
       action: "failed",
       recordReference,
       error: {
+        index,
         type: errorType,
         message: errorMessage,
         severity,
+        field: additionalData?.field,
+        csvColumn: additionalData?.csvColumn,
+        value: additionalData?.value,
+        correctionSuggestion: additionalData?.correctionSuggestion,
+        rowData: additionalData?.rowData,
       },
     };
   }

@@ -415,7 +415,7 @@ export class BatchJobOrchestrator {
         .advanceChunk()
         .calculateEstimatedRemaining();
 
-      // Update detailed counts
+      // Update detailed counts and collect errors
       for (const result of chunkResult.results) {
         if (result.success) {
           if (result.action === "skipped") {
@@ -426,10 +426,22 @@ export class BatchJobOrchestrator {
         } else {
           progress = progress.incrementFailed();
           if (result.error) {
-            // Log error to database
+            // Add error to JobResult for user feedback
+            const currentResult = job.result.addError({
+              index: result.error.index,
+              recordReference: result.recordReference,
+              errorType: result.error.type,
+              errorMessage: result.error.message,
+              severity: result.error.severity,
+              rowData: result.error.rowData,
+              correctionSuggestion: result.error.correctionSuggestion,
+            });
+            job.updateResult(currentResult);
+
+            // Log error to database checkpoint
             await this.repository.saveCheckpoint({
               jobId: job.id,
-              recordIndex: chunkResult.nextIndex - 1,
+              recordIndex: result.error.index,
               recordReference: result.recordReference,
               status: "FAILED",
               errorMessage: result.error.message,
@@ -445,6 +457,13 @@ export class BatchJobOrchestrator {
         // All done - finalize
         const finalResult = await processor.finalize(job);
         job.updateResult(finalResult);
+        
+        // If job is in WAITING state, transition to IN_PROGRESS before completing
+        // to avoid invalid state transition error
+        if (job.status === JobStatus.WAITING) {
+          job.continueProcessing();
+        }
+        
         job.complete();
         await processor.cleanup(job);
       } else if (!chunkResult.shouldContinue) {

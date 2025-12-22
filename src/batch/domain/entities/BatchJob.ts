@@ -257,9 +257,13 @@ export class BatchJob {
   }
 
   /**
-   * Mark job as waiting for next chunk
+   * Mark job as waiting for next chunk (idempotent)
    */
   markWaiting(): void {
+    // Idempotent - if already waiting, do nothing
+    if (this.data.status === JobStatus.WAITING) {
+      return;
+    }
     this.transitionTo(JobStatus.WAITING);
   }
 

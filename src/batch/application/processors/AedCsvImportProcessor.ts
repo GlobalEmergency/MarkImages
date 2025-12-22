@@ -19,18 +19,29 @@ import {
 import { BatchJob } from "@/batch/domain/entities";
 import { PrismaClient } from "@/generated/client/client";
 import * as fs from "fs";
+import { randomUUID } from "crypto";
+import { DownloadAndUploadImageUseCase } from "@/storage/application/use-cases/DownloadAndUploadImageUseCase";
 
 interface CsvRecord {
   [key: string]: string;
 }
 
+// Minimal outcome for duplicate checks
+interface DuplicateCheckOutcome {
+  isDuplicate: boolean;
+  matchedBy?: "id" | "code" | "externalReference";
+  matchedAedId?: string;
+  matchedCode?: string | null;
+  matchedExternalReference?: string | null;
+}
+
 export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportConfig> {
   readonly jobType = JobType.AED_CSV_IMPORT;
 
-  private records: CsvRecord[] = [];
-  private headers: string[] = [];
-
-  constructor(private readonly prisma: PrismaClient) {
+  constructor(
+    private readonly prisma: PrismaClient,
+    private readonly downloadAndUploadImageUseCase?: DownloadAndUploadImageUseCase
+  ) {
     super();
   }
 
@@ -50,7 +61,7 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
 
     // Check required field mappings
     const mappedFields = config.columnMappings?.map((m) => m.systemField) || [];
-    const requiredFields = ["name"];
+    const requiredFields = ["proposedName"];
 
     for (const field of requiredFields) {
       if (!mappedFields.includes(field)) {
@@ -63,13 +74,9 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
 
   async initialize(config: AedCsvImportConfig): Promise<ProcessorInitResult> {
     try {
-      // Read and parse CSV file
-      const content = fs.readFileSync(config.filePath, "utf-8");
-      const delimiter = config.delimiter || ";";
+      const { totalRecords, headers } = this.readCsvFile(config);
 
-      const lines = content.split("\n").filter((line) => line.trim());
-
-      if (lines.length === 0) {
+      if (totalRecords === 0) {
         return {
           success: false,
           totalRecords: 0,
@@ -77,27 +84,11 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
         };
       }
 
-      // Parse headers
-      this.headers = this.parseCsvLine(lines[0], delimiter);
-
-      // Parse records
-      this.records = [];
-      for (let i = 1; i < lines.length; i++) {
-        const values = this.parseCsvLine(lines[i], delimiter);
-        const record: CsvRecord = {};
-
-        this.headers.forEach((header, index) => {
-          record[header] = values[index] || "";
-        });
-
-        this.records.push(record);
-      }
-
       return {
         success: true,
-        totalRecords: this.records.length,
+        totalRecords,
         metadata: {
-          headers: this.headers,
+          headers,
           fileName: config.filePath.split("/").pop(),
         },
       };
@@ -110,25 +101,68 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
     }
   }
 
+  /**
+   * Read CSV file and return records (stateless - reads on demand)
+   */
+  private readCsvFile(config: AedCsvImportConfig): {
+    records: CsvRecord[];
+    headers: string[];
+    totalRecords: number;
+  } {
+    const content = fs.readFileSync(config.filePath, "utf-8");
+    const delimiter = config.delimiter || ";";
+    const lines = content.split("\n").filter((line) => line.trim());
+
+    if (lines.length === 0) {
+      return { records: [], headers: [], totalRecords: 0 };
+    }
+
+    // Parse headers
+    const headers = this.parseCsvLine(lines[0], delimiter);
+
+    // Parse records
+    const records: CsvRecord[] = [];
+    for (let i = 1; i < lines.length; i++) {
+      const values = this.parseCsvLine(lines[i], delimiter);
+      const record: CsvRecord = {};
+
+      headers.forEach((header, index) => {
+        record[header] = values[index] || "";
+      });
+
+      records.push(record);
+    }
+
+    return { records, headers, totalRecords: records.length };
+  }
+
   async processChunk(context: ProcessorContext): Promise<ProcessChunkResult> {
     const { job, startIndex, chunkSize, onCheckpoint, onHeartbeat } = context;
     const config = job.config as AedCsvImportConfig;
     const results: ProcessRecordResult[] = [];
+
+    // Read CSV file on-demand (stateless)
+    const { records } = this.readCsvFile(config);
 
     let processedCount = 0;
     let successCount = 0;
     let failedCount = 0;
     let skippedCount = 0;
 
-    const endIndex = Math.min(startIndex + chunkSize, this.records.length);
+    const endIndex = Math.min(startIndex + chunkSize, records.length);
+
+    console.log(
+      `📋 [AedCsvImportProcessor] Processing records ${startIndex}-${endIndex - 1} of ${records.length}`
+    );
 
     for (let i = startIndex; i < endIndex; i++) {
       // Check timeout
       if (this.isApproachingTimeout(context)) {
+        console.log(`⏰ [AedCsvImportProcessor] Approaching timeout at record ${i}`);
         break;
       }
 
-      const record = this.records[i];
+      const record = records[i];
       const result = await this.processRecord(record, config, i);
       results.push(result);
 
@@ -162,7 +196,11 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
       await onCheckpoint(startIndex + processedCount - 1);
     }
 
-    const hasMore = startIndex + processedCount < this.records.length;
+    const hasMore = startIndex + processedCount < records.length;
+
+    console.log(
+      `✅ [AedCsvImportProcessor] Processed ${processedCount} records (success: ${successCount}, failed: ${failedCount}, skipped: ${skippedCount}, hasMore: ${hasMore})`
+    );
 
     return {
       processedCount,
@@ -184,19 +222,136 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
     try {
       // Map CSV columns to system fields
       const mappedData = this.mapRecord(record, config.columnMappings);
-      const recordRef = mappedData.name || `row-${index + 2}`;
+      const recordRef = mappedData.proposedName || `Fila ${index + 2}`;
+      const rowNumber = index + 2; // +2 porque Excel empieza en 1 y tiene header
 
       // Validate required fields
-      if (!mappedData.name) {
-        return this.createFailedResult(recordRef, "MISSING_DATA", "Name is required", "error");
+      if (!mappedData.proposedName) {
+        const nameMapping = config.columnMappings.find((m) => m.systemField === "proposedName");
+        return this.createFailedResult(
+          recordRef,
+          "MISSING_DATA",
+          "El campo 'nombre' es obligatorio y no puede estar vacío",
+          "error",
+          rowNumber,
+          {
+            field: "proposedName",
+            csvColumn: nameMapping?.csvColumn || "proposedName",
+            value: mappedData.proposedName || "",
+            correctionSuggestion: `Completa el campo '${nameMapping?.csvColumn || "proposedName"}' en la fila ${rowNumber}`,
+            rowData: record,
+          }
+        );
+      }
+
+      // Validate coordinates if provided
+      if (mappedData.latitude) {
+        const lat = mappedData.latitude.replace(",", ".");
+        if (isNaN(parseFloat(lat))) {
+          const latMapping = config.columnMappings.find((m) => m.systemField === "latitude");
+          return this.createFailedResult(
+            recordRef,
+            "INVALID_COORDINATE",
+            `La latitud "${mappedData.latitude}" no es un número válido`,
+            "error",
+            rowNumber,
+            {
+              field: "latitude",
+              csvColumn: latMapping?.csvColumn || "latitude",
+              value: mappedData.latitude,
+              correctionSuggestion: `Usa formato decimal con punto (ej: 40.4165). Si usas coma, reemplázala por punto.`,
+              rowData: record,
+            }
+          );
+        }
+        const latValue = parseFloat(lat);
+        if (latValue < -90 || latValue > 90) {
+          const latMapping = config.columnMappings.find((m) => m.systemField === "latitude");
+          return this.createFailedResult(
+            recordRef,
+            "INVALID_COORDINATE",
+            `La latitud ${latValue} está fuera del rango válido (-90 a 90)`,
+            "error",
+            rowNumber,
+            {
+              field: "latitude",
+              csvColumn: latMapping?.csvColumn || "latitude",
+              value: mappedData.latitude,
+              correctionSuggestion: `Verifica las coordenadas. Para Madrid, la latitud debe estar cerca de 40.4`,
+              rowData: record,
+            }
+          );
+        }
+      }
+
+      if (mappedData.longitude) {
+        const lon = mappedData.longitude.replace(",", ".");
+        if (isNaN(parseFloat(lon))) {
+          const lonMapping = config.columnMappings.find((m) => m.systemField === "longitude");
+          return this.createFailedResult(
+            recordRef,
+            "INVALID_COORDINATE",
+            `La longitud "${mappedData.longitude}" no es un número válido`,
+            "error",
+            rowNumber,
+            {
+              field: "longitude",
+              csvColumn: lonMapping?.csvColumn || "longitude",
+              value: mappedData.longitude,
+              correctionSuggestion: `Usa formato decimal con punto (ej: -3.7038). Si usas coma, reemplázala por punto.`,
+              rowData: record,
+            }
+          );
+        }
+        const lonValue = parseFloat(lon);
+        if (lonValue < -180 || lonValue > 180) {
+          const lonMapping = config.columnMappings.find((m) => m.systemField === "longitude");
+          return this.createFailedResult(
+            recordRef,
+            "INVALID_COORDINATE",
+            `La longitud ${lonValue} está fuera del rango válido (-180 a 180)`,
+            "error",
+            rowNumber,
+            {
+              field: "longitude",
+              csvColumn: lonMapping?.csvColumn || "longitude",
+              value: mappedData.longitude,
+              correctionSuggestion: `Verifica las coordenadas. Para Madrid, la longitud debe estar cerca de -3.7`,
+              rowData: record,
+            }
+          );
+        }
+      }
+
+      // Validate postal code format
+      if (mappedData.postalCode && mappedData.postalCode.length !== 5) {
+        const pcMapping = config.columnMappings.find((m) => m.systemField === "postalCode");
+        return this.createFailedResult(
+          recordRef,
+          "INVALID_POSTAL_CODE",
+          `El código postal "${mappedData.postalCode}" debe tener exactamente 5 dígitos`,
+          "error",
+          rowNumber,
+          {
+            field: "postalCode",
+            csvColumn: pcMapping?.csvColumn || "postalCode",
+            value: mappedData.postalCode,
+            correctionSuggestion: `Los códigos postales de Madrid tienen 5 dígitos (ej: 28001, 28042)`,
+            rowData: record,
+          }
+        );
       }
 
       // Check for duplicates if enabled
       if (config.skipDuplicates) {
-        const isDuplicate = await this.checkDuplicate(mappedData, config.duplicateThreshold);
-        if (isDuplicate) {
+        const duplicate = await this.checkDuplicate(mappedData, config.duplicateThreshold);
+        if (duplicate.isDuplicate) {
           return this.createSuccessResult("skipped", undefined, recordRef, {
             reason: "duplicate",
+            matchedBy: duplicate.matchedBy,
+            matchedAedId: duplicate.matchedAedId,
+            matchedCode: duplicate.matchedCode,
+            matchedExternalReference: duplicate.matchedExternalReference,
           });
         }
       }
@@ -214,10 +369,15 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
       return this.createSuccessResult("created", aed.id, recordRef);
     } catch (error) {
       return this.createFailedResult(
-        `row-${index + 2}`,
+        `Fila ${index + 2}`,
         "PROCESSING_ERROR",
-        error instanceof Error ? error.message : "Unknown error",
-        "error"
+        error instanceof Error ? error.message : "Error desconocido",
+        "error",
+        index + 2,
+        {
+          correctionSuggestion: "Contacta con soporte si el error persiste",
+          rowData: record,
+        }
       );
     }
   }
@@ -238,57 +398,349 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
     return result;
   }
 
-  private async checkDuplicate(data: Record<string, string>, _threshold: number): Promise<boolean> {
-    // Simple duplicate check by name and location
-    if (!data.name) return false;
+  /**
+   * Verifica duplicados con cascada de matching:
+   * 1. Por ID (si el usuario lo proporciona)
+   * 2. Por code
+   * 3. Por external_reference
+   * 
+   * Esto permite re-ejecutar importaciones de forma segura
+   */
+  private async checkDuplicate(
+    data: Record<string, string>,
+    _threshold: number
+  ): Promise<DuplicateCheckOutcome> {
+    const outcome: DuplicateCheckOutcome = { isDuplicate: false };
 
-    const existing = await this.prisma.aed.findFirst({
-      where: {
-        name: {
-          equals: data.name,
-          mode: "insensitive",
+    const id = data.id?.trim();
+    const code = data.code?.trim();
+    const externalRef = data.externalReference?.trim();
+
+    // Si no hay ningún identificador, no podemos verificar duplicados
+    if (!id && !code && !externalRef) return outcome;
+
+    // ========================================
+    // PRIORIDAD 1: Buscar por ID
+    // ========================================
+    if (id) {
+      try {
+        const existingById = await this.prisma.aed.findUnique({
+          where: { id },
+          select: {
+            id: true,
+            code: true,
+            external_reference: true,
+          },
+        });
+
+        if (existingById) {
+          return {
+            isDuplicate: true,
+            matchedBy: "id",
+            matchedAedId: existingById.id,
+            matchedCode: existingById.code,
+            matchedExternalReference: existingById.external_reference,
+          };
+        }
+      } catch (error) {
+        // ID no válido o no es UUID, continuar con otros métodos
+        console.warn(`Invalid ID format: ${id}`, error);
+      }
+    }
+
+    // ========================================
+    // PRIORIDAD 2: Buscar por code
+    // ========================================
+    if (code) {
+      const existingByCode = await this.prisma.aed.findFirst({
+        where: {
+          code: {
+            equals: code,
+            mode: "insensitive",
+          },
         },
-      },
-    });
+        select: {
+          id: true,
+          code: true,
+          external_reference: true,
+        },
+      });
 
-    return !!existing;
+      if (existingByCode) {
+        return {
+          isDuplicate: true,
+          matchedBy: "code",
+          matchedAedId: existingByCode.id,
+          matchedCode: existingByCode.code,
+          matchedExternalReference: existingByCode.external_reference,
+        };
+      }
+    }
+
+    // ========================================
+    // PRIORIDAD 3: Buscar por external_reference
+    // ========================================
+    if (externalRef) {
+      const existingByExtRef = await this.prisma.aed.findFirst({
+        where: {
+          external_reference: {
+            equals: externalRef,
+            mode: "insensitive",
+          },
+        },
+        select: {
+          id: true,
+          code: true,
+          external_reference: true,
+        },
+      });
+
+      if (existingByExtRef) {
+        return {
+          isDuplicate: true,
+          matchedBy: "externalReference",
+          matchedAedId: existingByExtRef.id,
+          matchedCode: existingByExtRef.code,
+          matchedExternalReference: existingByExtRef.external_reference,
+        };
+      }
+    }
+
+    // No se encontró ningún duplicado
+    return outcome;
   }
 
   private async createAed(
     data: Record<string, string>,
-    _config: AedCsvImportConfig
+    config: AedCsvImportConfig
   ): Promise<{ id: string }> {
     // Parse coordinates
-    const latitude = data.latitude ? parseFloat(data.latitude) : undefined;
-    const longitude = data.longitude ? parseFloat(data.longitude) : undefined;
+    const latitude = data.latitude ? parseFloat(data.latitude.replace(",", ".")) : undefined;
+    const longitude = data.longitude ? parseFloat(data.longitude.replace(",", ".")) : undefined;
 
-    // Create location (coordinates are now only in Aed table)
+    // ========================================
+    // 1. CREATE LOCATION
+    // ========================================
     const location = await this.prisma.aedLocation.create({
       data: {
-        street_name: data.streetName,
-        street_number: data.streetNumber,
-        postal_code: data.postalCode,
-        city_name: data.city,
-        city_code: data.cityCode,
-        district_name: data.district,
+        street_type: data.streetType || null,
+        street_name: data.streetName || null,
+        street_number: data.streetNumber || null,
+        postal_code: data.postalCode || null,
+        city_name: data.city || data.cityName || null,
+        city_code: data.cityCode || null,
+        district_code: data.districtCode || null,
+        district_name: data.district || null,
+        neighborhood_code: data.neighborhoodCode || null,
+        neighborhood_name: data.neighborhood || data.neighborhoodName || null,
+        floor: data.floor || null,
+        location_details: data.locationDetails || null,
+        access_instructions: data.accessDescription || null,
       },
     });
 
-    // Create AED
+    // ========================================
+    // 2. CREATE SCHEDULE (if schedule data exists)
+    // ========================================
+    let scheduleId: string | undefined = undefined;
+    
+    const hasScheduleData = 
+      data.is24x7 || 
+      data.openingMonFri || 
+      data.closingMonFri || 
+      data.openingSat || 
+      data.closingSat || 
+      data.openingSun || 
+      data.closingSun ||
+      data.has24hSurveillance;
+
+    if (hasScheduleData) {
+      const schedule = await this.prisma.aedSchedule.create({
+        data: {
+          weekday_opening: data.openingMonFri || null,
+          weekday_closing: data.closingMonFri || null,
+          saturday_opening: data.openingSat || null,
+          saturday_closing: data.closingSat || null,
+          sunday_opening: data.openingSun || null,
+          sunday_closing: data.closingSun || null,
+          has_24h_surveillance: this.parseBoolean(data.has24hSurveillance),
+          has_restricted_access: this.parseBoolean(data.hasRestrictedAccess),
+          description: data.scheduleDescription || null,
+          notes: data.scheduleNotes || null,
+        },
+      });
+      scheduleId = schedule.id;
+    }
+
+    // ========================================
+    // 3. CREATE RESPONSIBLE (if responsible data exists)
+    // ========================================
+    let responsibleId: string | undefined = undefined;
+
+    const hasResponsibleData = 
+      data.responsibleName || 
+      data.responsibleEmail || 
+      data.responsiblePhone ||
+      data.ownership ||
+      data.localOwnership;
+
+    if (hasResponsibleData) {
+      const responsible = await this.prisma.aedResponsible.create({
+        data: {
+          name: data.responsibleName || "Sin especificar",
+          email: data.responsibleEmail || null,
+          phone: data.responsiblePhone || null,
+          alternative_phone: data.responsibleAlternativePhone || null,
+          ownership: data.ownership || null,
+          local_ownership: data.localOwnership || null,
+          local_use: data.localUse || null,
+          organization: data.responsibleOrganization || null,
+          position: data.responsiblePosition || null,
+          department: data.responsibleDepartment || null,
+        },
+      });
+      responsibleId = responsible.id;
+    }
+
+    // ========================================
+    // 0. GENERATE UUIDs BEFORE CREATING AED
+    // ========================================
+    const aedId = randomUUID();
+
+    // ========================================
+    // 4. CREATE AED WITH PRE-GENERATED UUID
+    // ========================================
     const aed = await this.prisma.aed.create({
       data: {
-        name: data.name,
-        establishment_type: data.establishmentType,
+        id: aedId, // ← UUID pre-generado para que las imágenes puedan usarlo
+        
+        // Código e identificadores
+        code: data.code || null,
+        external_reference: data.externalReference || null,
+        
+        // Datos básicos
+        name: data.proposedName,
+        establishment_type: data.establishmentType || null,
+        
+        // Coordenadas
         latitude,
         longitude,
+        coordinates_precision: data.coordinatesPrecision || null,
+        
+        // Relaciones
         location_id: location.id,
+        schedule_id: scheduleId,
+        responsible_id: responsibleId,
+        
+        // Origen y trazabilidad
         source_origin: "CSV_IMPORT",
+        source_details: `Importación CSV: ${config.filePath.split("/").pop()}`,
+        // batch_job_id will be set by the orchestrator when processing
+        
+        // Notas
+        public_notes: data.publicNotes || data.freeComment || null,
+        
+        // Estado inicial
         status: "DRAFT",
       },
       select: { id: true },
     });
 
+    // ========================================
+    // 5. DOWNLOAD AND UPLOAD IMAGES TO S3 (if image URLs exist)
+    // ========================================
+    const imageUrls = [
+      { url: data.photo1Url, type: "FRONT" as const, imageId: randomUUID() },
+      { url: data.photo2Url, type: "LOCATION" as const, imageId: randomUUID() },
+      { url: data.photo3Url, type: "CONTEXT" as const, imageId: randomUUID() },
+    ].filter((img) => img.url && img.url.trim() !== "");
+
+    if (imageUrls.length > 0) {
+      // Process images sequentially to avoid overwhelming the system
+      for (const [index, img] of imageUrls.entries()) {
+        try {
+          // If use case is available, download and upload to S3
+          if (this.downloadAndUploadImageUseCase) {
+            console.log(`📸 [AedCsvImportProcessor] Processing image ${index + 1}/${imageUrls.length} for AED ${aedId}`);
+            
+            const s3Result = await this.downloadAndUploadImageUseCase.execute({
+              url: img.url,
+              aedId: aedId,
+              imageId: img.imageId,
+              sharePointAuth: config.sharePointAuth,
+            });
+
+            // Create image record with S3 URL
+            // original_url = imagen sin procesar en S3
+            // processed_url = NULL (se llenará durante verificación con marcadores)
+            await this.prisma.aedImage.create({
+              data: {
+                id: img.imageId,
+                aed_id: aedId,
+                type: img.type,
+                order: index + 1,
+                original_url: s3Result.url, // ✅ URL en S3 sin procesar
+                processed_url: null, // Se llenará durante verificación
+                is_verified: false,
+              },
+            });
+
+            console.log(`✅ [AedCsvImportProcessor] Image ${index + 1} uploaded to S3: ${s3Result.url}`);
+          } else {
+            // Fallback: crear registro con URL original si no hay use case
+            console.warn(
+              `⚠️ [AedCsvImportProcessor] Image download use case not available. Saving original URL for image ${index + 1}`
+            );
+            await this.prisma.aedImage.create({
+              data: {
+                id: img.imageId,
+                aed_id: aedId,
+                type: img.type,
+                order: index + 1,
+                original_url: img.url,
+                is_verified: false,
+              },
+            });
+          }
+        } catch (error) {
+          // Log error but don't fail the entire AED import
+          console.error(
+            `❌ [AedCsvImportProcessor] Failed to process image ${index + 1} from ${img.url}:`,
+            error instanceof Error ? error.message : error
+          );
+          // Optionally, create a record with original URL as fallback
+          try {
+            await this.prisma.aedImage.create({
+              data: {
+                id: img.imageId,
+                aed_id: aedId,
+                type: img.type,
+                order: index + 1,
+                original_url: img.url,
+                is_verified: false,
+              },
+            });
+            console.log(`📝 [AedCsvImportProcessor] Created fallback image record with original URL`);
+          } catch (fallbackError) {
+            console.error(
+              `❌ [AedCsvImportProcessor] Failed to create fallback image record:`,
+              fallbackError
+            );
+          }
+        }
+      }
+    }
+
     return aed;
+  }
+
+  /**
+   * Helper para parsear valores booleanos desde strings
+   */
+  private parseBoolean(value: string | undefined): boolean {
+    if (!value) return false;
+    const normalized = value.toLowerCase().trim();
+    return ["true", "1", "sí", "si", "yes", "y", "s"].includes(normalized);
   }
 
   private parseCsvLine(line: string, delimiter: string): string[] {
@@ -323,8 +775,7 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
   }
 
   async cleanup(_job: BatchJob): Promise<void> {
-    this.records = [];
-    this.headers = [];
+    // No cleanup needed - stateless processor
   }
 
   async preview(

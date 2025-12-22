@@ -3,25 +3,37 @@
  * POST /api/import/validate
  * Pre-valida los datos usando los mapeos configurados
  *
- * Uses the new batch job system with dryRun mode
+ * NO crea BatchJob, solo valida en memoria (rápido y limpio)
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { PrismaBatchJobRepository } from "@/batch/infrastructure";
-import { BatchJobOrchestrator } from "@/batch/application";
-import { CreateBatchJobUseCase } from "@/batch/application/use-cases";
-import { initializeProcessors } from "@/batch/application/processors";
-import { PrismaDataSourceRepository } from "@/import/infrastructure/repositories/PrismaDataSourceRepository";
-import { JobType, AedCsvImportConfig } from "@/batch/domain";
+import { ValidateAedImportUseCase } from "@/import/application/use-cases/ValidateAedImportUseCase";
+import { AedImportOrchestrator } from "@/import/application/services/AedImportOrchestrator";
+import { CsvParsingService } from "@/import/application/services/CsvParsingService";
+import { ColumnMappingService } from "@/import/application/services/ColumnMappingService";
+import { AedValidationService } from "@/import/domain/services/AedValidationService";
+import { CoordinateValidationService } from "@/import/domain/services/CoordinateValidationService";
+import { DuplicateDetectionService } from "@/import/domain/services/DuplicateDetectionService";
+import { PrismaAedRepository } from "@/import/infrastructure/repositories/PrismaAedRepository";
 
-const repository = new PrismaBatchJobRepository(prisma);
-const dataSourceRepository = new PrismaDataSourceRepository(prisma);
+// Crear instancias de servicios (Dependency Injection manual)
+const csvParser = new CsvParsingService();
+const mapper = new ColumnMappingService();
+const aedValidator = new AedValidationService();
+const coordValidator = new CoordinateValidationService();
+const aedRepository = new PrismaAedRepository(prisma);
+const duplicateDetector = new DuplicateDetectionService(aedRepository);
 
-// Initialize processors
-initializeProcessors(prisma, dataSourceRepository);
+const orchestrator = new AedImportOrchestrator(
+  csvParser,
+  mapper,
+  aedValidator,
+  coordValidator,
+  duplicateDetector
+);
 
-const orchestrator = new BatchJobOrchestrator(repository);
+const validateUseCase = new ValidateAedImportUseCase(orchestrator);
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,7 +47,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert mappings to the new format
+    // Convert mappings to the format expected by the use case
     const columnMappings = mappings.map(
       (m: { csvColumn: string; systemFieldKey?: string; systemField?: string }) => ({
         csvColumn: m.csvColumn,
@@ -43,70 +55,40 @@ export async function POST(request: NextRequest) {
       })
     );
 
-    // Create a dry-run job to validate
-    const config: AedCsvImportConfig = {
-      type: JobType.AED_CSV_IMPORT,
+    // Execute validation (NO BatchJob created)
+    const validationResult = await validateUseCase.execute({
       filePath,
-      columnMappings,
+      mappings: columnMappings,
       delimiter: ";",
+      maxRows: maxRowsToValidate,
       skipDuplicates: true,
-      duplicateThreshold: 75,
-      // Base config
-      chunkSize: maxRowsToValidate,
-      maxRetries: 0,
-      retryDelayMs: 0,
-      timeoutMs: 30000,
-      checkpointFrequency: 100,
-      heartbeatIntervalMs: 30000,
-      skipOnError: true,
-      dryRun: true, // DRY RUN - don't create anything
-      validateOnly: true, // Only validate, no writes
-      notifyOnComplete: false,
-      notifyOnError: false,
-    };
-
-    const useCase = new CreateBatchJobUseCase(orchestrator);
-    const result = await useCase.execute({
-      type: JobType.AED_CSV_IMPORT,
-      name: "Validación de CSV",
-      description: "Validación previa de datos CSV",
-      config,
-      createdBy: "system", // Validation is a system operation
-      startImmediately: true,
     });
 
-    if (!result.success) {
-      return NextResponse.json(
-        { error: result.error || "Error en la validación" },
-        { status: 400 }
-      );
-    }
-
-    // Get the validation results from the job
-    const job = result.job;
-    const progress = job?.progress;
-    const jobResult = job?.result;
+    // Transform to API response format
+    const summary = validationResult.toSummary(50, 20);
 
     return NextResponse.json({
       success: true,
       validation: {
-        isValid: progress?.failedRecords === 0,
-        totalRecords: progress?.totalRecords || 0,
-        validRecords: progress?.successfulRecords || 0,
-        invalidRecords: progress?.failedRecords || 0,
-        skippedRecords: progress?.skippedRecords || 0,
-        warningRecords: progress?.warningRecords || 0,
+        isValid: summary.isValid,
+        totalRecords: summary.totalRecords,
+        validRecords: summary.validRecords,
+        invalidRecords: summary.invalidRecords,
+        skippedRecords: summary.skippedRecords,
+        warningRecords: summary.warningRecords,
       },
       summary: {
-        recordsAnalyzed: progress?.processedRecords || 0,
-        wouldCreate: progress?.successfulRecords || 0,
-        wouldSkip: progress?.skippedRecords || 0,
-        errors: jobResult?.errorCount || 0,
-        warnings: jobResult?.warningCount || 0,
+        recordsAnalyzed: summary.processedRecords,
+        wouldCreate: summary.wouldCreate,
+        wouldSkip: summary.wouldSkip,
+        errors: summary.errors.length,
+        warnings: summary.warnings.length,
       },
-      errors: jobResult?.errors?.slice(0, 20) || [],
-      warnings: jobResult?.warnings?.slice(0, 20) || [],
-      jobId: job?.id,
+      errors: summary.errors,
+      errorSummary: summary.errorSummary,
+      warnings: summary.warnings,
+      previewRecords: summary.previewRecords,
+      sharepoint: summary.sharepoint,
     });
   } catch (error) {
     console.error("Error in validate API:", error);

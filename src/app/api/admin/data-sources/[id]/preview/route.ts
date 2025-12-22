@@ -51,11 +51,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Validar configuración
     const validation = await adapter.validateConfig(config);
-    if (validation.hasCriticalErrors()) {
+    if (!validation.isValid) {
       return NextResponse.json(
         {
           error: "Configuración inválida",
-          issues: validation.criticalErrors,
+          issues: validation.getErrors().map(e => e.toJSON()),
         },
         { status: 400 }
       );

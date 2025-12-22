@@ -60,8 +60,8 @@ export async function POST(request: NextRequest) {
     // Validar autenticación usando SharePointImageDownloader
     const downloader = new SharePointImageDownloader();
     const validationResult = await downloader.validateAuthentication(testImageUrl, {
-      type: "cookies",
-      cookies: sharepointCookies,
+      fedAuth: sharepointCookies.FedAuth,
+      rtFa: sharepointCookies.rtFa,
     });
 
     // Devolver resultado de validación

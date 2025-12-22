@@ -11,6 +11,8 @@ import toast from "react-hot-toast";
 
 import ColumnMappingEditor from "./ColumnMappingEditor";
 import SharePointCookiesModal from "./SharePointCookiesModal";
+import ValidationErrorsTable from "./ValidationErrorsTable";
+import ImportPreviewTable from "./ImportPreviewTable";
 
 type Step = "upload" | "preview" | "mapping" | "validation";
 
@@ -67,7 +69,7 @@ export default function ImportWizard({ onComplete: _onComplete }: ImportWizardPr
 
   const handleValidationComplete = (validation: any) => {
     setSessionData((prev: any) => ({ ...prev, validation }));
-    if (!validation.summary.canProceed) {
+    if (!(validation.validation?.isValid && validation.summary?.errors === 0)) {
       toast.error("❌ Hay errores que deben corregirse antes de importar");
     }
   };
@@ -202,6 +204,7 @@ export default function ImportWizard({ onComplete: _onComplete }: ImportWizardPr
             <ColumnMappingEditor
               preview={sessionData.preview}
               suggestions={sessionData.suggestions}
+              initialMappings={sessionData.mappings}
               onMappingsConfirmed={handleMappingComplete}
             />
           </div>
@@ -355,43 +358,77 @@ function ValidationStep({
             {/* Resumen de validación */}
             <div
               className={`p-4 rounded-lg border ${
-                validationResult.summary?.canProceed
+                validationResult.validation?.isValid && validationResult.summary?.errors === 0
                   ? "bg-green-50 border-green-200"
                   : "bg-red-50 border-red-200"
               }`}
             >
               <h3
                 className={`font-bold mb-2 ${
-                  validationResult.summary?.canProceed ? "text-green-900" : "text-red-900"
+                  validationResult.validation?.isValid && validationResult.summary?.errors === 0 ? "text-green-900" : "text-red-900"
                 }`}
               >
-                {validationResult.summary?.canProceed
+                {validationResult.validation?.isValid && validationResult.summary?.errors === 0
                   ? "✅ Validación exitosa"
                   : "❌ Se encontraron errores"}
               </h3>
               <p
                 className={`text-sm ${
-                  validationResult.summary?.canProceed ? "text-green-700" : "text-red-700"
+                  validationResult.validation?.isValid && validationResult.summary?.errors === 0 ? "text-green-700" : "text-red-700"
                 }`}
               >
-                {validationResult.summary?.canProceed
+                {validationResult.validation?.isValid && validationResult.summary?.errors === 0
                   ? "Los datos están listos para importarse"
                   : "Debes corregir los errores antes de continuar"}
               </p>
             </div>
 
-            {/* Mostrar errores si existen */}
-            {validationResult.validation && (
-              <div className="bg-white border rounded-lg p-4 max-h-96 overflow-y-auto">
-                <h4 className="font-medium text-gray-900 mb-3">Resultados de validación</h4>
-                <pre className="text-xs text-gray-700 whitespace-pre-wrap">
-                  {JSON.stringify(validationResult.validation, null, 2)}
-                </pre>
+            {/* Estadísticas de validación */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-white border rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-gray-900">
+                  {validationResult.validation?.totalRecords || 0}
+                </div>
+                <div className="text-sm text-gray-600">Total registros</div>
+              </div>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-green-900">
+                  {validationResult.validation?.validRecords || 0}
+                </div>
+                <div className="text-sm text-green-700">Válidos</div>
+              </div>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-red-900">
+                  {validationResult.validation?.invalidRecords || 0}
+                </div>
+                <div className="text-sm text-red-700">Con errores</div>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-blue-900">
+                  {validationResult.validation?.skippedRecords || 0}
+                </div>
+                <div className="text-sm text-blue-700">Omitidos</div>
+              </div>
+            </div>
+
+            {/* Preview de registros */}
+            <ImportPreviewTable previewRecords={validationResult.previewRecords} />
+
+            {/* Mostrar errores detallados si existen */}
+            {validationResult.errors && validationResult.errors.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                  Errores encontrados ({validationResult.errors.length})
+                </h4>
+                <ValidationErrorsTable
+                  errors={validationResult.errors}
+                  errorSummary={validationResult.errorSummary}
+                />
               </div>
             )}
 
             {/* Botón para iniciar importación */}
-            {validationResult.summary?.canProceed && (
+            {validationResult.validation?.isValid && validationResult.summary?.errors === 0 && (
               <div className="flex justify-center pt-6">
                 <button
                   onClick={onStartImport}

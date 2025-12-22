@@ -10,10 +10,7 @@ import type {
   ConnectionTestResult,
 } from "@/import/domain/ports/IDataSourceAdapter";
 import { ImportRecord } from "@/import/domain/value-objects/ImportRecord";
-import {
-  ValidationResult,
-  type ValidationIssue,
-} from "@/import/domain/value-objects/ValidationResult";
+import { ValidationResult } from "@/import/domain/value-objects/ValidationResult";
 
 /**
  * Respuesta de la API CKAN datastore_search
@@ -323,7 +320,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
   }
 
   async validateConfig(config: DataSourceConfig): Promise<ValidationResult> {
-    const issues: ValidationIssue[] = [];
+    const issues: Array<{ severity: string; message: string; row?: number; field?: string; value?: string }> = [];
 
     // Verificar si es URL directa o API CKAN
     const hasDirectUrl = config.apiEndpoint && this.isDirectJsonUrl(config.apiEndpoint);
@@ -334,7 +331,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
         row: 0,
         field: "config",
         value: "",
-        severity: "CRITICAL",
+        severity: "ERROR",
         message: "Se requiere apiEndpoint (URL JSON directa) o baseUrl + resourceId (API CKAN)",
       });
     }
@@ -348,7 +345,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
           row: 0,
           field: "apiEndpoint",
           value: config.apiEndpoint,
-          severity: "CRITICAL",
+          severity: "ERROR",
           message: "El endpoint de la API no es una URL válida",
         });
       }
@@ -363,7 +360,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
           row: 0,
           field: "baseUrl",
           value: config.baseUrl,
-          severity: "CRITICAL",
+          severity: "ERROR",
           message: "La URL base no es válida",
         });
       }

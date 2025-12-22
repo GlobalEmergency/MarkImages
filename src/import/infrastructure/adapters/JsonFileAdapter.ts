@@ -14,10 +14,7 @@ import type {
   ConnectionTestResult,
 } from "@/import/domain/ports/IDataSourceAdapter";
 import { ImportRecord } from "@/import/domain/value-objects/ImportRecord";
-import {
-  ValidationResult,
-  type ValidationIssue,
-} from "@/import/domain/value-objects/ValidationResult";
+import { ValidationResult } from "@/import/domain/value-objects/ValidationResult";
 
 export class JsonFileAdapter implements IDataSourceAdapter {
   readonly type = "JSON_FILE" as const;
@@ -165,7 +162,7 @@ export class JsonFileAdapter implements IDataSourceAdapter {
   }
 
   async validateConfig(config: DataSourceConfig): Promise<ValidationResult> {
-    const issues: ValidationIssue[] = [];
+    const issues: Array<{ severity: string; message: string; row?: number; field?: string; value?: string }> = [];
 
     const url = config.fileUrl || config.apiEndpoint;
 

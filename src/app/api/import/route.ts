@@ -11,7 +11,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
-import { JobType } from "@/batch/domain";
+import { JobType, type JobConfig, mergeWithDefaults } from "@/batch/domain";
+import { BatchJobOrchestrator } from "@/batch/application/orchestrator/BatchJobOrchestrator";
+import { PrismaBatchJobRepository } from "@/batch/infrastructure/repositories/PrismaBatchJobRepository";
+import { initializeProcessors } from "@/batch/application/processors";
+import { PrismaDataSourceRepository } from "@/import/infrastructure/repositories/PrismaDataSourceRepository";
 
 /**
  * GET /api/import
@@ -110,6 +114,89 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "Error desconocido",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * POST /api/import
+ * Create and start a new import batch job
+ */
+export async function POST(request: NextRequest) {
+  try {
+    // Verify authentication
+    const user = await requireAuth(request);
+    if (!user) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    }
+
+    // Parse request body
+    const body = await request.json();
+    const { filePath, mappings, batchName, sharepointCookies } = body;
+
+    if (!filePath || !mappings || !Array.isArray(mappings)) {
+      return NextResponse.json(
+        { error: "Faltan parámetros requeridos (filePath, mappings)" },
+        { status: 400 }
+      );
+    }
+
+    // Initialize processors
+    const dataSourceRepository = new PrismaDataSourceRepository(prisma);
+    initializeProcessors(prisma, dataSourceRepository);
+
+    // Create orchestrator and repository
+    const repository = new PrismaBatchJobRepository(prisma);
+    const orchestrator = new BatchJobOrchestrator(repository);
+
+    // Create configuration with defaults
+    const config: JobConfig = mergeWithDefaults({
+      type: JobType.AED_CSV_IMPORT,
+      filePath,
+      columnMappings: mappings.map((m: { csvColumn: string; systemField: string }) => ({
+        csvColumn: m.csvColumn,
+        systemField: m.systemField,
+      })),
+      delimiter: ";",
+      skipDuplicates: true,
+      duplicateThreshold: 0.9,
+      chunkSize: 50, // Process 50 records per chunk
+      sharePointAuth: sharepointCookies
+        ? {
+            fedAuth: sharepointCookies.FedAuth || "",
+            rtFa: sharepointCookies.rtFa,
+          }
+        : undefined,
+    });
+
+    // Create and start the batch job
+    const job = await orchestrator.create({
+      type: JobType.AED_CSV_IMPORT,
+      name: batchName || `Importación CSV ${new Date().toISOString()}`,
+      description: `Importación de ${filePath}`,
+      config,
+      createdBy: user.userId, // JWT payload has userId as UUID
+      tags: ["csv-import", "manual-upload"],
+    });
+
+    // Start the job (process first chunk)
+    const { job: startedJob, chunkResult } = await orchestrator.start(job.id);
+
+    return NextResponse.json({
+      success: true,
+      batchId: startedJob.id,
+      status: startedJob.status,
+      progress: chunkResult.progress,
+      shouldContinue: chunkResult.shouldContinue,
+      message: "Importación iniciada correctamente",
+    });
+  } catch (error) {
+    console.error("Error creating import batch:", error);
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "Error al crear la importación",
       },
       { status: 500 }
     );

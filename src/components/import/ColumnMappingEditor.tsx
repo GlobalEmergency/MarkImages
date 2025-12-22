@@ -24,6 +24,11 @@ interface ColumnMappingEditorProps {
     systemField: string;
     confidence: number;
   }>;
+  initialMappings?: Array<{
+    csvColumn: string;
+    systemField: string;
+    confidence: number;
+  }>;
   onMappingsConfirmed: (
     mappings: Array<{ csvColumn: string; systemField: string; confidence: number }>
   ) => void;
@@ -32,6 +37,7 @@ interface ColumnMappingEditorProps {
 export default function ColumnMappingEditor({
   preview,
   suggestions,
+  initialMappings,
   onMappingsConfirmed,
 }: ColumnMappingEditorProps) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -43,7 +49,7 @@ export default function ColumnMappingEditor({
     clearAllMappings,
     isFieldMapped,
     getMappingsForSubmit,
-  } = useColumnMapping(preview.headers, suggestions);
+  } = useColumnMapping(preview.headers, initialMappings || suggestions);
 
   // Filtrar columnas según término de búsqueda
   const filteredMappingStates = useMemo(() => {

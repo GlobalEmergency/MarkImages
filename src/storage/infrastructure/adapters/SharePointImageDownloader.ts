@@ -9,6 +9,7 @@ import {
   IImageDownloader,
   ImageDownloadOptions,
   ImageDownloadResult,
+  SharePointAuthConfig,
 } from "@/storage/domain/ports/IImageDownloader";
 
 export class SharePointImageDownloader implements IImageDownloader {
@@ -28,6 +29,10 @@ export class SharePointImageDownloader implements IImageDownloader {
     "accessdenied",
   ];
 
+  supports(url: string): boolean {
+    return this.canHandle(url);
+  }
+
   canHandle(url: string): boolean {
     try {
       const urlObj = new URL(url);
@@ -40,7 +45,8 @@ export class SharePointImageDownloader implements IImageDownloader {
   }
 
   async download(options: ImageDownloadOptions): Promise<ImageDownloadResult> {
-    const { url, auth, timeout = 30000, maxRetries = 2 } = options;
+    const { url, sharePointAuth, timeoutMs = 30000 } = options;
+    const maxRetries = 2;
 
     if (!this.canHandle(url)) {
       throw new Error(`URL no es de SharePoint: ${url}`);
@@ -50,7 +56,7 @@ export class SharePointImageDownloader implements IImageDownloader {
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        const config = this.buildRequestConfig(auth, timeout);
+        const config = this.buildRequestConfig(sharePointAuth, timeoutMs);
         const response = await axios.get(url, {
           ...config,
           responseType: "arraybuffer",
@@ -95,11 +101,14 @@ export class SharePointImageDownloader implements IImageDownloader {
           );
         }
 
+        // Extraer filename de la URL
+        const filename = this.extractFilename(url);
+        
         return {
           buffer,
           contentType,
+          filename,
           size: buffer.length,
-          originalUrl: url,
         };
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
@@ -126,7 +135,7 @@ export class SharePointImageDownloader implements IImageDownloader {
   }
 
   private buildRequestConfig(
-    auth?: ImageDownloadOptions["auth"],
+    auth?: SharePointAuthConfig,
     timeout?: number
   ): AxiosRequestConfig {
     const config: AxiosRequestConfig = {
@@ -136,28 +145,23 @@ export class SharePointImageDownloader implements IImageDownloader {
       },
     };
 
-    if (!auth || auth.type === "none") {
+    if (!auth) {
       return config;
     }
 
-    if (auth.type === "cookies" && auth.cookies) {
-      const cookieString = Object.entries(auth.cookies)
-        .map(([key, value]) => `${key}=${value}`)
-        .join("; ");
+    // Construir cookie string con FedAuth y rtFa
+    const cookies: string[] = [];
+    if (auth.fedAuth) {
+      cookies.push(`FedAuth=${auth.fedAuth}`);
+    }
+    if (auth.rtFa) {
+      cookies.push(`rtFa=${auth.rtFa}`);
+    }
 
+    if (cookies.length > 0) {
       config.headers = {
         ...config.headers,
-        Cookie: cookieString,
-      };
-    } else if (auth.type === "bearer" && auth.token) {
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${auth.token}`,
-      };
-    } else if (auth.type === "basic" && auth.username && auth.password) {
-      config.auth = {
-        username: auth.username,
-        password: auth.password,
+        Cookie: cookies.join("; "),
       };
     }
 
@@ -166,6 +170,21 @@ export class SharePointImageDownloader implements IImageDownloader {
 
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Extrae el nombre del archivo de una URL
+   */
+  private extractFilename(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      const pathname = urlObj.pathname;
+      const parts = pathname.split('/');
+      const filename = parts[parts.length - 1] || 'image.jpg';
+      return filename;
+    } catch {
+      return 'image.jpg';
+    }
   }
 
   /**
@@ -249,7 +268,7 @@ export class SharePointImageDownloader implements IImageDownloader {
    */
   async validateAuthentication(
     testImageUrl: string,
-    auth?: ImageDownloadOptions["auth"]
+    auth?: SharePointAuthConfig
   ): Promise<{
     valid: boolean;
     message: string;

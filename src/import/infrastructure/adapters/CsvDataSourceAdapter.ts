@@ -9,10 +9,7 @@ import type {
   ConnectionTestResult,
 } from "@/import/domain/ports/IDataSourceAdapter";
 import { ImportRecord } from "@/import/domain/value-objects/ImportRecord";
-import {
-  ValidationResult,
-  type ValidationIssue,
-} from "@/import/domain/value-objects/ValidationResult";
+import { ValidationResult } from "@/import/domain/value-objects/ValidationResult";
 import type { CsvParserAdapter, CsvParseResult } from "../parsers/CsvParserAdapter";
 
 export class CsvDataSourceAdapter implements IDataSourceAdapter {
@@ -47,14 +44,14 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
   }
 
   async validateConfig(config: DataSourceConfig): Promise<ValidationResult> {
-    const issues: ValidationIssue[] = [];
+    const issues: Array<{ severity: string; message: string; row?: number; field?: string; value?: string }> = [];
 
     if (!config.filePath) {
       issues.push({
         row: 0,
         field: "filePath",
         value: "",
-        severity: "CRITICAL",
+        severity: "ERROR",
         message: "El archivo CSV es requerido",
       });
       return ValidationResult.withIssues(issues);
@@ -70,7 +67,7 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
           row: 0,
           field: "filePath",
           value: config.filePath,
-          severity: "CRITICAL",
+          severity: "ERROR",
           message: "La ruta no es un archivo válido",
         });
       }
@@ -102,7 +99,7 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
         row: 0,
         field: "filePath",
         value: config.filePath,
-        severity: "CRITICAL",
+        severity: "ERROR",
         message: `El archivo no existe o no es accesible: ${error instanceof Error ? error.message : "Error desconocido"}`,
       });
     }

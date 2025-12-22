@@ -1,38 +1,36 @@
 /**
- * Puerto (Interface) para descarga de imágenes desde fuentes externas
+ * Puerto (Interface) para descarga de imágenes desde URLs externas
  * Capa de Dominio - No depende de ninguna implementación
  */
 
-export interface DownloadAuthConfig {
-  type: "cookies" | "bearer" | "basic" | "none";
-  cookies?: Record<string, string>;
-  token?: string;
-  username?: string;
-  password?: string;
+export interface SharePointAuthConfig {
+  rtFa?: string;
+  fedAuth?: string;
 }
 
 export interface ImageDownloadOptions {
   url: string;
-  auth?: DownloadAuthConfig;
-  timeout?: number;
-  maxRetries?: number;
+  sharePointAuth?: SharePointAuthConfig;
+  timeoutMs?: number;
+  maxSizeBytes?: number;
 }
 
 export interface ImageDownloadResult {
   buffer: Buffer;
   contentType: string;
+  filename: string;
   size: number;
-  originalUrl: string;
 }
 
 export interface IImageDownloader {
   /**
-   * Verifica si este downloader puede manejar la URL dada
-   */
-  canHandle(url: string): boolean;
-
-  /**
    * Descarga una imagen desde una URL externa
+   * @throws Error si la URL no es válida, la descarga falla, o el contenido no es una imagen
    */
   download(options: ImageDownloadOptions): Promise<ImageDownloadResult>;
+
+  /**
+   * Verifica si una URL es soportada por este downloader
+   */
+  supports(url: string): boolean;
 }

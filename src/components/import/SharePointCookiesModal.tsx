@@ -170,6 +170,8 @@ export default function SharePointCookiesModal({
           <button
             onClick={handleSkip}
             className="text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label="Cerrar modal"
+            title="Cerrar"
           >
             <X className="w-6 h-6" />
           </button>
@@ -210,6 +212,54 @@ export default function SharePointCookiesModal({
               ))}
             </div>
           </div>
+
+          {/* Enlace directo a la imagen de prueba */}
+          {testImageUrl && (
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-5">
+              <div className="flex items-start space-x-3 mb-3">
+                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+                  <span className="text-2xl">🖼️</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-900 mb-1">
+                    Accede directamente a una imagen de prueba
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    Haz clic en el botón para abrir la imagen en SharePoint y obtener las cookies desde allí
+                  </p>
+                </div>
+              </div>
+
+              <a
+                href={testImageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02] mb-3"
+              >
+                <span>🔗 Abrir imagen en SharePoint</span>
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+              </a>
+
+              <div className="bg-white/60 rounded px-3 py-2 border border-blue-100">
+                <p className="text-xs font-medium text-gray-600 mb-1">URL:</p>
+                <p className="text-xs font-mono text-gray-700 break-all line-clamp-2">
+                  {testImageUrl}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Instrucciones */}
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">

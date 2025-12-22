@@ -145,7 +145,7 @@ export class ImportSession {
     this.validationResult = validation;
 
     // Si la validación tiene errores críticos, volver a MAPPING
-    if (validation.hasCriticalErrors()) {
+    if (!validation.isValid) {
       this.status = "MAPPING";
     } else {
       this.status = "READY";
@@ -228,7 +228,7 @@ export class ImportSession {
     return (
       this.status === "READY" &&
       this.validationResult !== null &&
-      !this.validationResult.hasCriticalErrors()
+      this.validationResult.isValid
     );
   }
 
