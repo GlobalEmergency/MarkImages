@@ -20,10 +20,8 @@ async function main() {
     update: {},
     create: {
       id: "test-org-e2e",
+      type: "VOLUNTEER_GROUP",
       name: "Test Organization",
-      normalizedName: "test organization",
-      createdAt: new Date(),
-      updatedAt: new Date(),
     },
   });
   console.log(`✅ Organization created: ${testOrg.name}`);
@@ -36,10 +34,8 @@ async function main() {
     create: {
       email: "test@example.com",
       name: "Test User",
-      normalizedName: "test user",
+      password_hash: "$2a$10$test.hash.for.e2e.tests.only", // Dummy hash for E2E
       role: "USER",
-      createdAt: new Date(),
-      updatedAt: new Date(),
     },
   });
   console.log(`✅ User created: ${testUser.email}`);
@@ -47,17 +43,16 @@ async function main() {
   // Create organization member
   await prisma.organizationMember.upsert({
     where: {
-      organizationId_userId: {
-        organizationId: testOrg.id,
-        userId: testUser.id,
+      organization_id_user_id: {
+        organization_id: testOrg.id,
+        user_id: testUser.id,
       },
     },
     update: {},
     create: {
-      organizationId: testOrg.id,
-      userId: testUser.id,
+      organization_id: testOrg.id,
+      user_id: testUser.id,
       role: "ADMIN",
-      joinedAt: new Date(),
     },
   });
 
