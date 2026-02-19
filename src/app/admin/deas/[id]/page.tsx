@@ -32,11 +32,11 @@ import {
   RefreshCw,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-import type { ImageProcessingResult } from "@/components/admin/AdminImageProcessor";
+import type { ImageProcessingResult } from "@/components/dea/DeaImageProcessor";
 
 // Lazy-load to avoid SSR issues with canvas/leaflet
-const AdminImageProcessor = dynamic(
-  () => import("@/components/admin/AdminImageProcessor"),
+const DeaImageProcessor = dynamic(
+  () => import("@/components/dea/DeaImageProcessor"),
   { ssr: false }
 );
 
@@ -743,7 +743,7 @@ export default function AdminDeaDetailPage() {
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Image Processor Modal */}
       {imageProcessor.isOpen && (
-        <AdminImageProcessor
+        <DeaImageProcessor
           imageUrl={imageProcessor.imageUrl}
           imageId={imageProcessor.imageId || undefined}
           imageLabel={imageProcessor.label}

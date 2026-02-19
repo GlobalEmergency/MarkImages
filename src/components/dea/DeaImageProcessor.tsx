@@ -1,7 +1,7 @@
 /**
- * AdminImageProcessor - Reusable image processing pipeline for admin
+ * DeaImageProcessor - Reusable image processing pipeline for DEA images
  * Chains: CROP → BLUR → ARROW for a single image
- * Used by admin DEA edit page for both new uploads and reprocessing existing images
+ * Used by any user with permissions on the DEA (admin, verifier, etc.)
  *
  * After client-side processing, sends metadata to server for Sharp-based processing.
  */
@@ -24,7 +24,7 @@ export interface ImageProcessingResult {
   previewUrl?: string; // Client-side preview (data URL from arrow step)
 }
 
-interface AdminImageProcessorProps {
+interface DeaImageProcessorProps {
   /** URL of the image to process (original_url for existing, data URL for new) */
   imageUrl: string;
   /** Image ID (for existing images) */
@@ -37,13 +37,13 @@ interface AdminImageProcessorProps {
   onCancel: () => void;
 }
 
-export default function AdminImageProcessor({
+export default function DeaImageProcessor({
   imageUrl,
   imageId: _imageId,
   imageLabel = "Imagen",
   onComplete,
   onCancel,
-}: AdminImageProcessorProps) {
+}: DeaImageProcessorProps) {
   const [step, setStep] = useState<ProcessingStep>("crop");
   const [cropData, setCropData] = useState<CropData | undefined>();
   const [blurAreas, setBlurAreas] = useState<BlurArea[]>([]);
