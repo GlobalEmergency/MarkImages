@@ -22,6 +22,7 @@ export default function ArrowPlacer({ imageUrl, onArrowComplete, onCancel }: Arr
   const [arrowEnd, setArrowEnd] = useState<Point | null>(null);
   const [previewEnd, setPreviewEnd] = useState<Point | null>(null);
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
+  const [processing, setProcessing] = useState(false);
 
   // Cargar imagen
   useEffect(() => {
@@ -84,24 +85,29 @@ export default function ArrowPlacer({ imageUrl, onArrowComplete, onCancel }: Arr
 
   const handleAccept = async () => {
     if (arrowStart && arrowEnd) {
-      const arrowData: ArrowData = {
-        id: `arrow_${Date.now()}`,
-        startX: arrowStart.x,
-        startY: arrowStart.y,
-        endX: arrowEnd.x,
-        endY: arrowEnd.y,
-        color: "#dc2626",
-        width: 40,
-      };
-
-      // Generar imagen procesada con la flecha dibujada
+      setProcessing(true);
       try {
-        const processedImageUrl = await generateProcessedImage(imageUrl, arrowData, imageDimensions);
-        onArrowComplete(arrowData, processedImageUrl);
-      } catch (error) {
-        console.error("Error generating processed image:", error);
-        // Continuar sin la imagen procesada
-        onArrowComplete(arrowData);
+        const arrowData: ArrowData = {
+          id: `arrow_${Date.now()}`,
+          startX: arrowStart.x,
+          startY: arrowStart.y,
+          endX: arrowEnd.x,
+          endY: arrowEnd.y,
+          color: "#dc2626",
+          width: 40,
+        };
+
+        // Generar imagen procesada con la flecha dibujada
+        try {
+          const processedImageUrl = await generateProcessedImage(imageUrl, arrowData, imageDimensions);
+          onArrowComplete(arrowData, processedImageUrl);
+        } catch (error) {
+          console.error("Error generating processed image:", error);
+          // Continuar sin la imagen procesada
+          onArrowComplete(arrowData);
+        }
+      } finally {
+        setProcessing(false);
       }
     }
   };
@@ -383,23 +389,34 @@ export default function ArrowPlacer({ imageUrl, onArrowComplete, onCancel }: Arr
       <div className="flex flex-col sm:flex-row gap-3 justify-center w-full max-w-md">
         <button
           onClick={reset}
-          disabled={!arrowStart}
+          disabled={!arrowStart || processing}
           className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Reiniciar
         </button>
         <button
           onClick={onCancel}
-          className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+          disabled={processing}
+          className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Cancelar
         </button>
         <button
           onClick={handleAccept}
-          disabled={!arrowStart || !arrowEnd}
-          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          disabled={!arrowStart || !arrowEnd || processing}
+          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
         >
-          Aceptar Flecha
+          {processing ? (
+            <>
+              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Procesando...
+            </>
+          ) : (
+            "Aceptar Flecha"
+          )}
         </button>
       </div>
 

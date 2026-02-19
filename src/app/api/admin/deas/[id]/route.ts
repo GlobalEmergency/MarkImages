@@ -259,6 +259,9 @@ export async function PATCH(
       });
     }
 
+    // Detect image changes for verification date refresh
+    const hasImageChanges = deleteImageIds && deleteImageIds.length > 0;
+
     // Update in transaction with audit trail
     const result = await prisma.$transaction(async (tx) => {
       // Delete images if specified (S3 files remain, only DB records are deleted)
@@ -271,11 +274,18 @@ export async function PATCH(
         });
       }
 
+      // When images change on an already-verified DEA, refresh the verification date
+      const verificationRefresh =
+        hasImageChanges && currentAed.last_verified_at
+          ? { last_verified_at: new Date(), verification_method: "photo_verification" }
+          : {};
+
       // Update AED (without deleteImageIds in data)
       const updatedAed = await tx.aed.update({
         where: { id },
         data: {
           ...updateFields,
+          ...verificationRefresh,
           updated_by: user.userId,
           updated_at: new Date(),
         },

@@ -102,7 +102,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     // Verificar si hay cambio de estado
     const currentAed = await prisma.aed.findUnique({
       where: { id },
-      select: { status: true },
+      select: { status: true, last_verified_at: true },
     });
 
     if (!currentAed) {
@@ -127,6 +127,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       !currentAed.status.includes("PUBLISHED")
     ) {
       updateData.published_at = new Date();
+    }
+
+    // When images change on an already-verified DEA, refresh the verification date
+    if (hasImageChanges && currentAed.last_verified_at) {
+      updateData.last_verified_at = new Date();
+      updateData.verification_method = "photo_verification";
     }
 
     // Usar transacción si hay cambio de estado o cambio de imágenes

@@ -56,6 +56,17 @@ interface VerifyPageProps {
   params: Promise<{ id: string }>;
 }
 
+// Temporary image URLs (blob:/data:) are kept client-side only so they
+// never bloat the JSON payload sent to the server on each step update.
+interface LocalImageUrls {
+  /** blob: URL produced by ImageCropper */
+  croppedImageUrl?: string;
+  /** blob: URL produced by ImageBlur */
+  blurredImageUrl?: string;
+  /** data: URL per processed image (keyed by image_id), produced by ArrowPlacer for preview */
+  processedUrls: Record<string, string>;
+}
+
 export default function VerifyPage({ params }: VerifyPageProps) {
   const { user, loading: authLoading } = useAuth();
   const [data, setData] = useState<VerificationData | null>(null);
@@ -64,6 +75,10 @@ export default function VerifyPage({ params }: VerifyPageProps) {
   const [completing, setCompleting] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  // Client-only temp image URLs — never sent to the server
+  const [localImageUrls, setLocalImageUrls] = useState<LocalImageUrls>({ processedUrls: {} });
+  // Background save indicator (non-blocking)
+  const [savingStep, setSavingStep] = useState(false);
   const router = useRouter();
   const resolvedParams = use(params);
 
@@ -109,55 +124,42 @@ export default function VerifyPage({ params }: VerifyPageProps) {
     }
   };
 
-  const updateStep = async (step: VerificationStep, stepData?: Record<string, unknown>) => {
-    console.log("=== updateStep called ===");
-    console.log("Step:", step);
-    console.log("Step data:", stepData);
+  const updateStep = (step: VerificationStep, stepData?: Record<string, unknown>) => {
+    if (!data) return;
 
-    try {
-      const response = await fetch(`/api/verify/${resolvedParams.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ step, data: stepData || {} }),
-      });
+    // ── Optimistic update: render the next step immediately ──
+    const mergedData = {
+      ...((data.validation.data as object) || {}),
+      ...stepData,
+      current_step: step,
+    };
 
-      console.log("Update response status:", response.status);
+    setData({
+      ...data,
+      validation: { ...data.validation, data: mergedData },
+      current_step: step,
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Update error response:", errorData);
-        throw new Error("Error al actualizar paso");
-      }
-
-      const updatedValidation = await response.json();
-      console.log("Update successful, response:", updatedValidation);
-
-      // Extract current_step from the updated validation data
-      const validationData = updatedValidation.data as {
-        current_step?: string;
-        user_id?: string;
-      } | null;
-      const newStep = validationData?.current_step || VerificationStep.ADDRESS_VALIDATION;
-
-      console.log("New step from PUT response:", newStep);
-
-      // Update state directly with the new step (avoid GET request and caching issues)
-      if (data) {
-        const updatedData = {
-          ...data,
-          validation: updatedValidation,
-          current_step: newStep as VerificationStep,
-        };
-        console.log("Updating state with new step:", newStep);
-        setData(updatedData);
-        console.log("State updated successfully");
-      }
-    } catch (err) {
-      console.error("Error in updateStep:", err);
-      setError(err instanceof Error ? err.message : "Error al actualizar paso");
-    }
+    // ── Persist to server in the background (non-blocking) ──
+    setSavingStep(true);
+    fetch(`/api/verify/${resolvedParams.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ step, data: stepData || {} }),
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          console.error("Background save failed:", response.status);
+          // Show a transient warning but don't block the user
+          setSavingStep(false);
+          return;
+        }
+        await response.json(); // consume body
+      })
+      .catch((err) => {
+        console.error("Background save error:", err);
+      })
+      .finally(() => setSavingStep(false));
   };
 
   const completeVerification = async () => {
@@ -313,21 +315,22 @@ export default function VerifyPage({ params }: VerifyPageProps) {
               descripcionAcceso={data.aed.location?.access_instructions || undefined}
               onValidationComplete={async (result) => {
                 try {
+                  // IDs of images the user marked as valid (existing images)
+                  const validImageIds = new Set(result.validImages.map((img) => img.id));
                   let finalImages: AedImage[] = data.aed.images;
 
-                  // Si hay imágenes eliminadas o nuevas, actualizar el DEA
-                  if (result.deletedImageIds.length > 0 || result.newImages) {
+                  // Persist image changes (add/delete) if needed — single PATCH, no extra GETs
+                  const hasChanges = result.deletedImageIds.length > 0 || (result.newImages && result.newImages.length > 0);
+                  if (hasChanges) {
                     const response = await fetch(`/api/aeds/${resolvedParams.id}`, {
                       method: "PATCH",
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
+                      headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
                         deleteImageIds: result.deletedImageIds,
                         addImages: result.newImages?.map((img) => ({
                           original_url: img.url,
                           order: img.order,
-                          type: img.type, // Tipo siempre debe venir del selector
+                          type: img.type,
                         })),
                       }),
                     });
@@ -336,34 +339,24 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                       throw new Error("Error al actualizar las imágenes");
                     }
 
-                    // Refrescar datos para obtener imágenes actualizadas
-                    await fetchVerificationData();
+                    // Use the PATCH response directly — it already contains updated images
+                    const updatedAed = await response.json();
+                    finalImages = updatedAed.images || [];
 
-                    // Esperar a que el estado se actualice
-                    await new Promise((resolve) => setTimeout(resolve, 100));
-
-                    // Obtener imágenes actualizadas desde el estado
-                    const refreshResponse = await fetch(`/api/verify/${resolvedParams.id}`);
-                    if (refreshResponse.ok) {
-                      const refreshedData = await refreshResponse.json();
-                      finalImages = refreshedData.aed.images;
-                    }
+                    // Sync local data so subsequent steps see the fresh image list
+                    setData((prev) =>
+                      prev ? { ...prev, aed: { ...prev.aed, images: finalImages } } : prev
+                    );
                   }
 
-                  // Construir lista de imágenes válidas usando los IDs de result.validImages
-                  // pero combinando con newImages si existen
-                  const validImageIds = new Set(result.validImages.map((img) => img.id));
-
-                  // Filtrar las imágenes finales para obtener solo las válidas
+                  // Build the list of images to process:
+                  // - existing images the user marked valid (by ID)
+                  // - newly added images (not in the original set)
+                  const originalIds = new Set(data.aed.images.map((img) => img.id));
                   const allValidImages = finalImages.filter(
-                    (img) =>
-                      validImageIds.has(img.id) ||
-                      result.newImages?.some((newImg) => newImg.url === img.original_url)
+                    (img) => validImageIds.has(img.id) || !originalIds.has(img.id)
                   );
 
-                  console.log("Valid images after refresh:", allValidImages);
-
-                  // Si hay imágenes válidas, iniciar procesamiento secuencial
                   if (allValidImages.length > 0) {
                     const validatedImages: ValidatedImageData[] = allValidImages.map((img) => ({
                       id: img.id,
@@ -372,15 +365,12 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                       type: img.type || "FRONT",
                     }));
 
-                    console.log("Starting image processing with:", validatedImages);
-
                     updateStep(VerificationStep.IMAGE_CROP, {
                       validated_images: validatedImages,
                       current_image_index: 0,
                       processed_images: [],
                     });
                   } else {
-                    // Si no hay imágenes válidas, saltar a asignación de responsable
                     updateStep(VerificationStep.RESPONSIBLE_ASSIGNMENT, {
                       validated_images: [],
                       processed_images: [],
@@ -428,11 +418,15 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                 // Track crop changes
               }}
               onCropComplete={async (cropData: CropData, croppedImageUrl?: string) => {
-                // Guardar crop data, imagen recortada y pasar al siguiente paso (blur)
+                // Keep the blob: URL client-side only (never send to server)
+                setLocalImageUrls(prev => ({
+                  ...prev,
+                  croppedImageUrl: croppedImageUrl || currentImage.url,
+                }));
+                // Only send the lightweight crop coordinates to the server
                 updateStep(VerificationStep.IMAGE_BLUR, {
                   ...validationData,
                   current_crop_data: cropData,
-                  current_cropped_image_url: croppedImageUrl || currentImage.url,
                 });
               }}
               onCancel={() => updateStep(VerificationStep.IMAGE_SELECTION)}
@@ -446,14 +440,14 @@ export default function VerifyPage({ params }: VerifyPageProps) {
         const validationData = data.validation.data as
           | (ImageProcessingState & {
               current_crop_data?: CropData;
-              current_cropped_image_url?: string;
             })
           | null;
         const validatedImages = validationData?.validated_images || [];
         const currentIndex = validationData?.current_image_index || 0;
         const currentImage = validatedImages[currentIndex];
         const currentCropData = validationData?.current_crop_data;
-        const currentCroppedImageUrl = validationData?.current_cropped_image_url;
+        // Use client-side blob: URL from crop step (never stored on server)
+        const currentCroppedImageUrl = localImageUrls.croppedImageUrl;
 
         if (!currentImage) {
           console.error("No current image found for blur");
@@ -476,23 +470,28 @@ export default function VerifyPage({ params }: VerifyPageProps) {
             <ImageBlur
               imageUrl={currentCroppedImageUrl || currentImage.url}
               onBlurComplete={async (blurAreas: BlurArea[], blurredImageUrl?: string) => {
-                // Guardar blur areas, imagen con blur y pasar al siguiente paso (arrow)
+                // Keep blob: URL client-side only
+                setLocalImageUrls(prev => ({
+                  ...prev,
+                  blurredImageUrl: blurredImageUrl || currentCroppedImageUrl || currentImage.url,
+                }));
+                // Only send lightweight blur coordinates to the server
                 updateStep(VerificationStep.IMAGE_ARROW, {
                   ...validationData,
                   current_crop_data: currentCropData,
-                  current_cropped_image_url: currentCroppedImageUrl,
                   current_blur_areas: blurAreas,
-                  current_blurred_image_url: blurredImageUrl || currentCroppedImageUrl || currentImage.url,
                 });
               }}
               onSkip={async () => {
-                // Continuar sin blur (usar imagen recortada)
+                // Continue without blur — carry forward cropped image URL locally
+                setLocalImageUrls(prev => ({
+                  ...prev,
+                  blurredImageUrl: currentCroppedImageUrl || currentImage.url,
+                }));
                 updateStep(VerificationStep.IMAGE_ARROW, {
                   ...validationData,
                   current_crop_data: currentCropData,
-                  current_cropped_image_url: currentCroppedImageUrl,
                   current_blur_areas: [],
-                  current_blurred_image_url: currentCroppedImageUrl || currentImage.url,
                 });
               }}
               onCancel={() => updateStep(VerificationStep.IMAGE_CROP)}
@@ -506,9 +505,7 @@ export default function VerifyPage({ params }: VerifyPageProps) {
         const validationData = data.validation.data as
           | (ImageProcessingState & {
               current_crop_data?: CropData;
-              current_cropped_image_url?: string;
               current_blur_areas?: BlurArea[];
-              current_blurred_image_url?: string;
             })
           | null;
         const validatedImages = validationData?.validated_images || [];
@@ -517,7 +514,8 @@ export default function VerifyPage({ params }: VerifyPageProps) {
         const currentImage = validatedImages[currentIndex];
         const currentCropData = validationData?.current_crop_data;
         const currentBlurAreas = validationData?.current_blur_areas || [];
-        const currentBlurredImageUrl = validationData?.current_blurred_image_url;
+        // Use client-side blob: URL from blur step (never stored on server)
+        const currentBlurredImageUrl = localImageUrls.blurredImageUrl;
 
         if (!currentImage) {
           console.error("No current image found for arrow placement");
@@ -538,18 +536,33 @@ export default function VerifyPage({ params }: VerifyPageProps) {
             </div>
 
             <ArrowPlacer
-              imageUrl={currentBlurredImageUrl || currentImage.url} // Usar imagen con blur si está disponible
+              imageUrl={currentBlurredImageUrl || currentImage.url}
               onArrowComplete={async (arrowData: ArrowData, processedImageUrl?: string) => {
-                // Guardar la imagen procesada con la URL generada
+                // Keep the data: URL for preview client-side only
+                if (processedImageUrl) {
+                  setLocalImageUrls(prev => ({
+                    ...prev,
+                    processedUrls: { ...prev.processedUrls, [currentImage.id]: processedImageUrl },
+                  }));
+                }
+
+                // Only send lightweight coordinates to the server (NO image data)
                 const newProcessedImage: ProcessedImageData = {
                   image_id: currentImage.id,
                   crop_data: currentCropData,
                   blur_areas: currentBlurAreas.length > 0 ? currentBlurAreas : undefined,
                   arrow_data: arrowData,
-                  processed_url: processedImageUrl, // Guardar la URL de la imagen procesada
+                  // processed_url deliberately omitted — kept client-side only
                 };
 
                 const updatedProcessedImages = [...processedImages, newProcessedImage];
+
+                // Reset per-image temp URLs for the next image
+                setLocalImageUrls(prev => ({
+                  ...prev,
+                  croppedImageUrl: undefined,
+                  blurredImageUrl: undefined,
+                }));
 
                 // Verificar si hay más imágenes por procesar
                 const nextIndex = currentIndex + 1;
@@ -632,7 +645,8 @@ export default function VerifyPage({ params }: VerifyPageProps) {
             hasCrop: !!processed?.crop_data,
             hasBlur: !!(processed?.blur_areas && processed.blur_areas.length > 0),
             hasArrow: !!processed?.arrow_data,
-            processedUrl: processed?.processed_url, // URL de la imagen procesada
+            // Use client-side preview URL (data: URL kept in local state, not on server)
+            processedUrl: localImageUrls.processedUrls[imageId],
           };
         };
 
@@ -914,7 +928,15 @@ export default function VerifyPage({ params }: VerifyPageProps) {
               <span className="text-sm font-medium text-gray-700">
                 Paso {progress.current} de {progress.total}
               </span>
-              <span className="text-sm text-gray-500">{progress.percentage}% completado</span>
+              <div className="flex items-center gap-2">
+                {savingStep && (
+                  <span className="flex items-center text-xs text-blue-600">
+                    <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                    Guardando...
+                  </span>
+                )}
+                <span className="text-sm text-gray-500">{progress.percentage}% completado</span>
+              </div>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
