@@ -79,6 +79,8 @@ export default function VerifyPage({ params }: VerifyPageProps) {
   const [localImageUrls, setLocalImageUrls] = useState<LocalImageUrls>({ processedUrls: {} });
   // Background save indicator (non-blocking)
   const [savingStep, setSavingStep] = useState(false);
+  // Lightbox for image preview in REVIEW step
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const router = useRouter();
   const resolvedParams = use(params);
 
@@ -164,6 +166,21 @@ export default function VerifyPage({ params }: VerifyPageProps) {
 
   const completeVerification = async () => {
     setCompleting(true);
+
+    // ── Optimistic: show the COMPLETED screen immediately ──
+    setData((prev) =>
+      prev
+        ? {
+            ...prev,
+            current_step: VerificationStep.COMPLETED,
+            validation: {
+              ...prev.validation,
+              data: { ...((prev.validation.data as object) || {}), current_step: VerificationStep.COMPLETED },
+            },
+          }
+        : prev
+    );
+
     try {
       const response = await fetch(`/api/verify/${resolvedParams.id}/complete`, {
         method: "POST",
@@ -179,6 +196,19 @@ export default function VerifyPage({ params }: VerifyPageProps) {
       }, 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al completar verificación");
+      // Revert to REVIEW on failure
+      setData((prev) =>
+        prev
+          ? {
+              ...prev,
+              current_step: VerificationStep.REVIEW,
+              validation: {
+                ...prev.validation,
+                data: { ...((prev.validation.data as object) || {}), current_step: VerificationStep.REVIEW },
+              },
+            }
+          : prev
+      );
     } finally {
       setCompleting(false);
     }
@@ -707,7 +737,7 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                                     src={displayUrl}
                                     alt={`Frontal ${img.order}`}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform cursor-pointer"
-                                    onClick={() => window.open(displayUrl, '_blank')}
+                                    onClick={() => setLightboxUrl(displayUrl)}
                                   />
                                 </div>
                                 <div className="mt-1 flex flex-wrap gap-1">
@@ -750,7 +780,7 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                                     src={displayUrl}
                                     alt={`Interior ${img.order}`}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform cursor-pointer"
-                                    onClick={() => window.open(displayUrl, '_blank')}
+                                    onClick={() => setLightboxUrl(displayUrl)}
                                   />
                                 </div>
                                 <div className="mt-1 flex flex-wrap gap-1">
@@ -821,6 +851,27 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                 )}
               </button>
             </div>
+
+            {/* Lightbox modal for image preview */}
+            {lightboxUrl && (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+                onClick={() => setLightboxUrl(null)}
+              >
+                <button
+                  className="absolute top-4 right-4 text-white bg-black/50 rounded-full w-10 h-10 flex items-center justify-center text-2xl hover:bg-black/70"
+                  onClick={() => setLightboxUrl(null)}
+                >
+                  ✕
+                </button>
+                <img
+                  src={lightboxUrl}
+                  alt="Vista ampliada"
+                  className="max-w-full max-h-[90vh] object-contain rounded-lg"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+            )}
           </div>
         );
       }
