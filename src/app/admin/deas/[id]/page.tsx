@@ -27,7 +27,18 @@ import {
   Clock,
   Upload,
   Eye,
+  Scissors,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
+import dynamic from "next/dynamic";
+import type { ImageProcessingResult } from "@/components/admin/AdminImageProcessor";
+
+// Lazy-load to avoid SSR issues with canvas/leaflet
+const AdminImageProcessor = dynamic(
+  () => import("@/components/admin/AdminImageProcessor"),
+  { ssr: false }
+);
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -180,10 +191,29 @@ interface AdminDeaData {
 }
 
 interface NewImage {
-  url: string; // data: URL for preview
+  url: string; // data: URL for preview (original)
   type: string;
   order: number;
   file?: File;
+  /** If image was processed via crop/blur/arrow pipeline */
+  processingResult?: ImageProcessingResult;
+  /** Preview URL after processing (from ArrowPlacer) */
+  processedPreviewUrl?: string;
+}
+
+/** State for the image processor modal */
+interface ImageProcessorState {
+  isOpen: boolean;
+  /** URL of the image being processed */
+  imageUrl: string;
+  /** ID of existing image (null for new uploads) */
+  imageId: string | null;
+  /** Label for the modal header */
+  label: string;
+  /** Index in newImages array (for new uploads) */
+  newImageIndex: number | null;
+  /** Image type */
+  imageType: string;
 }
 
 // ── Reusable UI Components ─────────────────────────────────────────────
@@ -329,6 +359,12 @@ export default function AdminDeaDetailPage() {
   // Lightbox
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
+  // Image processor modal
+  const [imageProcessor, setImageProcessor] = useState<ImageProcessorState>({
+    isOpen: false, imageUrl: "", imageId: null, label: "", newImageIndex: null, imageType: "FRONT",
+  });
+  const [processingImageId, setProcessingImageId] = useState<string | null>(null);
+
   // Image upload ref
   const imageInputRef = useRef<HTMLInputElement>(null);
 
@@ -425,6 +461,88 @@ export default function AdminDeaDetailPage() {
     setNewImages((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // ── Image processing ──
+
+  /** Open processor for an existing image (reprocess from original) */
+  const handleProcessExistingImage = (image: { id: string; original_url: string; type: string }) => {
+    setImageProcessor({
+      isOpen: true,
+      imageUrl: image.original_url,
+      imageId: image.id,
+      label: imageTypeOptions.find((o) => o.value === image.type)?.label || image.type,
+      newImageIndex: null,
+      imageType: image.type,
+    });
+  };
+
+  /** Open processor for a newly uploaded image */
+  const handleProcessNewImage = (index: number) => {
+    const img = newImages[index];
+    if (!img) return;
+    setImageProcessor({
+      isOpen: true,
+      imageUrl: img.url,
+      imageId: null,
+      label: `Nueva imagen (${imageTypeOptions.find((o) => o.value === img.type)?.label || img.type})`,
+      newImageIndex: index,
+      imageType: img.type,
+    });
+  };
+
+  /** Handle completion of image processing pipeline */
+  const handleProcessingComplete = async (result: ImageProcessingResult | null) => {
+    setImageProcessor((prev) => ({ ...prev, isOpen: false }));
+
+    if (!result) return;
+
+    if (imageProcessor.imageId) {
+      // ── Reprocess existing image: send to server API ──
+      setProcessingImageId(imageProcessor.imageId);
+      try {
+        const response = await fetch(`/api/admin/deas/${params.id}/process-image`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            imageId: imageProcessor.imageId,
+            imageType: imageProcessor.imageType,
+            cropData: result.cropData,
+            blurAreas: result.blurAreas,
+            arrowData: result.arrowData,
+          }),
+        });
+
+        const apiResult = await response.json();
+        if (!response.ok || !apiResult.success) {
+          throw new Error(apiResult.message || "Error al procesar imagen");
+        }
+
+        // Refresh data to show updated image
+        await fetchData();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error al procesar imagen");
+      } finally {
+        setProcessingImageId(null);
+      }
+    } else if (imageProcessor.newImageIndex !== null) {
+      // ── Process new upload: store result, will be sent on save ──
+      setNewImages((prev) =>
+        prev.map((img, i) =>
+          i === imageProcessor.newImageIndex
+            ? {
+                ...img,
+                processingResult: result,
+                processedPreviewUrl: result.previewUrl || img.url,
+              }
+            : img
+        )
+      );
+    }
+  };
+
+  const handleProcessingCancel = () => {
+    setImageProcessor((prev) => ({ ...prev, isOpen: false }));
+  };
+
   // ── Cancel editing ──
   const handleCancel = () => {
     setIsEditing(false);
@@ -471,15 +589,19 @@ export default function AdminDeaDetailPage() {
         payload.deleteImageIds = imagesToDelete;
       }
 
-      // New images
-      if (newImages.length > 0) {
-        payload.addImages = newImages.map((img) => ({
+      // New images: split into processed (go via process-image API) and unprocessed (go via PATCH)
+      const processedNewImages = newImages.filter((img) => img.processingResult);
+      const unprocessedNewImages = newImages.filter((img) => !img.processingResult);
+
+      if (unprocessedNewImages.length > 0) {
+        payload.addImages = unprocessedNewImages.map((img) => ({
           url: img.url,
           type: img.type,
           order: img.order,
         }));
       }
 
+      // 1. Save general fields via PATCH
       const response = await fetch(`/api/admin/deas/${params.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -490,6 +612,27 @@ export default function AdminDeaDetailPage() {
 
       if (!response.ok || !result.success) {
         throw new Error(result.message || result.error || "Error al guardar");
+      }
+
+      // 2. Process new images that went through crop/blur/arrow pipeline
+      for (const img of processedNewImages) {
+        const procResult = img.processingResult!;
+        const procResponse = await fetch(`/api/admin/deas/${params.id}/process-image`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            newImageDataUrl: img.url,
+            imageType: img.type,
+            cropData: procResult.cropData,
+            blurAreas: procResult.blurAreas,
+            arrowData: procResult.arrowData,
+          }),
+        });
+
+        const procApiResult = await procResponse.json();
+        if (!procResponse.ok || !procApiResult.success) {
+          console.error("Error processing new image:", procApiResult);
+        }
       }
 
       // Reload data
@@ -598,6 +741,17 @@ export default function AdminDeaDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Image Processor Modal */}
+      {imageProcessor.isOpen && (
+        <AdminImageProcessor
+          imageUrl={imageProcessor.imageUrl}
+          imageId={imageProcessor.imageId || undefined}
+          imageLabel={imageProcessor.label}
+          onComplete={handleProcessingComplete}
+          onCancel={handleProcessingCancel}
+        />
+      )}
+
       {/* Lightbox */}
       {lightboxUrl && (
         <div
@@ -1319,11 +1473,21 @@ export default function AdminDeaDetailPage() {
                 {/* Existing images */}
                 {aed.images.map((image) => {
                   const markedForDeletion = imagesToDelete.includes(image.id);
+                  const isProcessing = processingImageId === image.id;
                   return (
                     <div key={image.id} className={`relative group ${markedForDeletion ? "opacity-40" : ""}`}>
+                      {/* Loading overlay when processing */}
+                      {isProcessing && (
+                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 rounded-lg">
+                          <div className="text-center">
+                            <Loader2 className="w-6 h-6 text-blue-600 animate-spin mx-auto" />
+                            <p className="text-xs text-gray-600 mt-1">Procesando...</p>
+                          </div>
+                        </div>
+                      )}
                       <div
                         className="cursor-pointer"
-                        onClick={() => !markedForDeletion && setLightboxUrl(image.processed_url || image.original_url)}
+                        onClick={() => !markedForDeletion && !isProcessing && setLightboxUrl(image.processed_url || image.original_url)}
                       >
                         <img
                           src={image.processed_url || image.original_url}
@@ -1337,41 +1501,71 @@ export default function AdminDeaDetailPage() {
                         </span>
                       </div>
                       {image.is_verified && !markedForDeletion && (
-                        <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1">
+                        <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1" title="Verificada">
                           <CheckCircle className="w-3 h-3 text-white" />
                         </div>
                       )}
-                      {!markedForDeletion && !isEditing && (
-                        <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+
+                      {/* Hover actions: view */}
+                      {!markedForDeletion && !isEditing && !isProcessing && (
+                        <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                           <button
                             onClick={() => setLightboxUrl(image.processed_url || image.original_url)}
                             className="bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5"
+                            title="Ver imagen"
                           >
                             <Eye className="w-3 h-3" />
                           </button>
                         </div>
                       )}
-                      {isEditing && (
-                        <div className="absolute top-2 left-2">
+
+                      {/* Edit mode: delete + reprocess */}
+                      {isEditing && !isProcessing && (
+                        <div className="absolute top-2 left-2 flex gap-1">
                           {markedForDeletion ? (
                             <button
                               onClick={() => setImagesToDelete((prev) => prev.filter((i) => i !== image.id))}
                               className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-1.5 shadow-lg"
-                              title="Deshacer"
+                              title="Deshacer eliminación"
                             >
                               <X className="w-3 h-3" />
                             </button>
                           ) : (
+                            <>
+                              <button
+                                onClick={() => handleProcessExistingImage(image)}
+                                className="bg-purple-500 hover:bg-purple-600 text-white rounded-full p-1.5 shadow-lg"
+                                title="Reprocesar (recortar, difuminar, flecha)"
+                              >
+                                <Scissors className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => setImagesToDelete((prev) => [...prev, image.id])}
+                                className="bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg"
+                                title="Eliminar"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Not editing: show reprocess button on hover */}
+                      {!isEditing && !markedForDeletion && !isProcessing && (
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {!image.is_verified && (
                             <button
-                              onClick={() => setImagesToDelete((prev) => [...prev, image.id])}
-                              className="bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg"
-                              title="Eliminar"
+                              onClick={() => handleProcessExistingImage(image)}
+                              className="bg-purple-500 hover:bg-purple-600 text-white rounded-full p-1.5 shadow-lg"
+                              title="Procesar imagen (recortar, difuminar, flecha)"
                             >
-                              <Trash2 className="w-3 h-3" />
+                              <Scissors className="w-3 h-3" />
                             </button>
                           )}
                         </div>
                       )}
+
                       {markedForDeletion && (
                         <div className="absolute inset-0 flex items-center justify-center bg-red-500/60 rounded-lg">
                           <span className="text-white font-semibold text-sm">Se eliminará</span>
@@ -1385,9 +1579,11 @@ export default function AdminDeaDetailPage() {
                 {newImages.map((img, idx) => (
                   <div key={`new-${idx}`} className="relative group">
                     <img
-                      src={img.url}
+                      src={img.processedPreviewUrl || img.url}
                       alt="Nueva imagen"
-                      className="w-full h-40 object-cover rounded-lg border-2 border-blue-300"
+                      className={`w-full h-40 object-cover rounded-lg border-2 ${
+                        img.processingResult ? "border-green-400" : "border-blue-300"
+                      }`}
                     />
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-blue-900/70 to-transparent rounded-b-lg p-2">
                       <select
@@ -1402,15 +1598,33 @@ export default function AdminDeaDetailPage() {
                         ))}
                       </select>
                     </div>
-                    <div className="absolute top-1 right-1 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded">
-                      Nueva
+                    <div className="absolute top-1 right-1 flex gap-1">
+                      {img.processingResult ? (
+                        <span className="bg-green-500 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                          <CheckCircle className="w-3 h-3" /> Procesada
+                        </span>
+                      ) : (
+                        <span className="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded">
+                          Nueva
+                        </span>
+                      )}
                     </div>
-                    <button
-                      onClick={() => handleRemoveNewImage(idx)}
-                      className="absolute top-1 left-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-lg"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+                    <div className="absolute top-1 left-1 flex gap-1">
+                      <button
+                        onClick={() => handleProcessNewImage(idx)}
+                        className="bg-purple-500 hover:bg-purple-600 text-white rounded-full p-1 shadow-lg"
+                        title={img.processingResult ? "Reprocesar" : "Procesar (recortar, difuminar, flecha)"}
+                      >
+                        {img.processingResult ? <RefreshCw className="w-3 h-3" /> : <Scissors className="w-3 h-3" />}
+                      </button>
+                      <button
+                        onClick={() => handleRemoveNewImage(idx)}
+                        className="bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-lg"
+                        title="Quitar"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                 ))}
 
