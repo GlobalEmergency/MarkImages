@@ -96,6 +96,9 @@ export default function AddressValidation({
   const currentMarkerRef = useRef<any>(null);
   const suggestedMarkerRef = useRef<any>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Track whether the last coordinate change came from a marker drag
+  // to prevent the map useEffect from needlessly re-creating the map.
+  const dragOriginRef = useRef(false);
 
   // Editable address fields
   const [addressForm, setAddressForm] = useState<AddressData>({
@@ -211,6 +214,29 @@ export default function AddressValidation({
     if (!mapRef.current) return;
     if (!hasCoordinates && !suggestedAddress?.latitude) return;
 
+    // When coordinates changed via marker drag, just update the popup — don't
+    // tear down and rebuild the entire map (which causes a visual flash).
+    if (dragOriginRef.current) {
+      dragOriginRef.current = false;
+      // Update popup content with new coordinates
+      if (currentMarkerRef.current && addressForm.latitude && addressForm.longitude) {
+        currentMarkerRef.current.setPopupContent(`
+          <div style="min-width: 200px;">
+            <b style="color: #dc2626;">🔴 Ubicación Actual</b><br/>
+            <div style="margin-top: 8px; font-size: 12px;">
+              ${addressForm.street_type || ""} ${addressForm.street_name || ""} ${addressForm.street_number || ""}<br/>
+              <span style="font-family: monospace; color: #666;">
+                Lat: ${addressForm.latitude.toFixed(6)}<br/>
+                Lng: ${addressForm.longitude.toFixed(6)}
+              </span><br/>
+              <span style="color: #059669; font-size: 11px;">📍 Posición ajustada manualmente</span>
+            </div>
+          </div>
+        `);
+      }
+      return;
+    }
+
     const loadMap = async () => {
       if (!(window as any).L) {
         const link = document.createElement("link");
@@ -303,10 +329,13 @@ export default function AddressValidation({
         if (!showingComparison) {
           currentMarker.on("dragend", () => {
             const position = currentMarker.getLatLng();
+            // Flag so the map useEffect skips recreation on this change
+            dragOriginRef.current = true;
             setAddressForm((prev) => ({
               ...prev,
               latitude: position.lat,
               longitude: position.lng,
+              coordinates_precision: "USER_PLACED",
             }));
           });
         }
@@ -1087,9 +1116,18 @@ export default function AddressValidation({
                 )}
               </div>
               {hasCoordinates ? (
-                <p className="text-xs text-gray-500 mt-2 font-mono">
-                  📍 {addressForm.latitude!.toFixed(6)}, {addressForm.longitude!.toFixed(6)}
-                </p>
+                <div className="mt-2">
+                  <p className="text-xs text-gray-500 font-mono">
+                    📍 {addressForm.latitude!.toFixed(6)}, {addressForm.longitude!.toFixed(6)}
+                  </p>
+                  {currentAddress?.latitude && currentAddress?.longitude &&
+                   (Math.abs(addressForm.latitude! - currentAddress.latitude) > 0.00001 ||
+                    Math.abs(addressForm.longitude! - currentAddress.longitude) > 0.00001) && (
+                    <p className="text-xs text-green-700 mt-1 font-medium">
+                      ✅ Coordenadas ajustadas manualmente
+                    </p>
+                  )}
+                </div>
               ) : (
                 <p className="text-xs text-yellow-700 mt-2">
                   ⚠️ No hay coordenadas GPS - Usa el buscador
