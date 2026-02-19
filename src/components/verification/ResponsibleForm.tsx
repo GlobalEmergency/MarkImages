@@ -68,15 +68,13 @@ export default function ResponsibleForm({
 
     setSaving(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
       setSaved(true);
+      // Parent calls updateStep which triggers a re-render that unmounts us.
+      // Keep saving=true so the spinner stays visible until the step transitions.
       onAssignmentComplete(formData);
     } catch (error) {
       console.error('Error saving responsible:', error);
       alert('Error al guardar el responsable');
-    } finally {
       setSaving(false);
     }
   };

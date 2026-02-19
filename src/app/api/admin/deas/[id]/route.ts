@@ -151,7 +151,7 @@ export async function GET(
         where: { aed_id: id },
       }),
       active_assignments: aed.assignments.filter((a) => a.status === "ACTIVE").length,
-      verifications: aed.org_verifications.length,
+      verifications: aed.org_verifications.length + aed.validations.length,
       pending_proposals: aed.change_proposals.filter((p) => p.status === "PENDING").length,
       pending_claims: aed.ownership_claims.filter((c) => c.status === "PENDING").length,
     };

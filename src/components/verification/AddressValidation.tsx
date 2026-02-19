@@ -457,8 +457,6 @@ export default function AddressValidation({
 
     setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
       setValidated(true);
 
       const validatedAddress: AddressData = {
@@ -470,10 +468,11 @@ export default function AddressValidation({
       };
 
       console.log("Validated address:", validatedAddress);
+      // Parent calls updateStep which triggers a re-render that unmounts us.
+      // Keep loading=true so the spinner stays visible until the step transitions.
       onValidationComplete(validatedAddress);
     } catch (error) {
       console.error("Error validating address:", error);
-    } finally {
       setLoading(false);
     }
   };

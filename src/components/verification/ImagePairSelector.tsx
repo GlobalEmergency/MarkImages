@@ -199,11 +199,11 @@ export default function ImagePairSelector({
           throw new Error('Opción no válida');
       }
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Parent calls updateStep which triggers a re-render that unmounts us.
+      // Keep isProcessing=true so the spinner stays visible until the step transitions.
       onSelectionComplete(selection);
     } catch (error) {
       console.error('Error processing selection:', error);
-    } finally {
       setIsProcessing(false);
     }
   };

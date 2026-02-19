@@ -159,6 +159,50 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       },
     });
 
+    // ── Create AedOrganizationVerification so it appears in admin detail ──
+    // Find the user's organization (prefer the one that has this AED assigned)
+    const userAssignment = await prisma.aedOrganizationAssignment.findFirst({
+      where: {
+        aed_id: id,
+        organization: {
+          members: { some: { user_id: user.userId } },
+        },
+      },
+      select: { organization_id: true },
+    });
+
+    // Fallback: use any organization the user belongs to
+    const orgId = userAssignment?.organization_id
+      || (await prisma.organizationMember.findFirst({
+           where: { user_id: user.userId },
+           select: { organization_id: true },
+         }))?.organization_id;
+
+    if (orgId) {
+      // Mark any previous verification for this AED+org as superseded
+      await prisma.aedOrganizationVerification.updateMany({
+        where: { aed_id: id, organization_id: orgId, is_current: true },
+        data: { is_current: false, superseded_at: now },
+      });
+
+      await prisma.aedOrganizationVerification.create({
+        data: {
+          aed_id: id,
+          organization_id: orgId,
+          verification_type: "FIELD_INSPECTION",
+          verified_by: user.userId,
+          verified_at: now,
+          verified_photos: true,
+          verified_address: !!(validationData?.validated_address),
+          verified_access: false,
+          verified_schedule: false,
+          verified_signage: false,
+          is_current: true,
+          notes: `Verificación fotográfica completada. ${processedBuffers.size} imagen(es) procesada(s).`,
+        },
+      });
+    }
+
     console.log('🎉 Verificación completada exitosamente');
 
     return NextResponse.json(updatedValidation);

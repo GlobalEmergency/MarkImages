@@ -1084,41 +1084,127 @@ export default function AdminDeaDetailPage() {
 
         {/* Other tabs remain the same - Ver, Assign, History */}
         {activeTab === "verifications" && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Verificaciones ({aed.org_verifications.length})
-            </h2>
-            {aed.org_verifications.length === 0 ? (
-              <div className="text-center py-12">
-                <CheckCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600">No hay verificaciones registradas</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {aed.org_verifications.map((verification: any) => (
-                  <div key={verification.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {verification.organization.name}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {new Date(verification.verified_at).toLocaleDateString("es-ES", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })}
-                        </p>
+          <div className="space-y-6">
+            {/* Organization Verifications */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                Verificaciones de Organización ({aed.org_verifications.length})
+              </h2>
+              {aed.org_verifications.length === 0 ? (
+                <p className="text-sm text-gray-500 italic">Sin verificaciones de organización</p>
+              ) : (
+                <div className="space-y-4">
+                  {aed.org_verifications.map((verification: any) => (
+                    <div key={verification.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {verification.organization.name}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {new Date(verification.verified_at).toLocaleDateString("es-ES", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })}
+                          </p>
+                        </div>
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          {verification.verification_type}
+                        </span>
                       </div>
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                        {verification.verification_type}
-                      </span>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {verification.verified_photos && (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Fotos</span>
+                        )}
+                        {verification.verified_address && (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Dirección</span>
+                        )}
+                        {verification.verified_schedule && (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Horario</span>
+                        )}
+                        {verification.verified_access && (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Acceso</span>
+                        )}
+                        {verification.verified_signage && (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Señalización</span>
+                        )}
+                      </div>
+                      {verification.notes && (
+                        <p className="text-sm text-gray-600 mt-2">{verification.notes}</p>
+                      )}
                     </div>
-                    {verification.notes && (
-                      <p className="text-sm text-gray-600 mt-2">{verification.notes}</p>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Photo Validations (from /verify flow) */}
+            {aed.validations && aed.validations.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                  Validaciones Fotográficas ({aed.validations.length})
+                </h2>
+                <div className="space-y-4">
+                  {aed.validations.map((validation: any) => {
+                    const result = validation.result as any;
+                    return (
+                      <div key={validation.id} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              Validación de imágenes
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {validation.completed_at
+                                ? new Date(validation.completed_at).toLocaleDateString("es-ES", {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                : new Date(validation.started_at).toLocaleDateString("es-ES", {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                  })}
+                            </p>
+                          </div>
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${
+                              validation.status === "COMPLETED"
+                                ? "bg-green-100 text-green-800"
+                                : validation.status === "IN_PROGRESS"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {validation.status === "COMPLETED"
+                              ? "Completada"
+                              : validation.status === "IN_PROGRESS"
+                                ? "En progreso"
+                                : validation.status}
+                          </span>
+                        </div>
+                        {result?.processed_images_count != null && (
+                          <p className="text-sm text-gray-600">
+                            {result.processed_images_count} imagen(es) procesada(s)
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {aed.org_verifications.length === 0 && (!aed.validations || aed.validations.length === 0) && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="text-center py-12">
+                  <CheckCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-600">No hay verificaciones registradas</p>
+                </div>
               </div>
             )}
           </div>
