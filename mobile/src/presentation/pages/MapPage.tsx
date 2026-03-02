@@ -9,7 +9,6 @@ import {
   useIonToast,
 } from "@ionic/react";
 import { locate } from "ionicons/icons";
-import type { Map as LeafletMap } from "leaflet";
 
 import { AedMapMarker } from "../../domain/models/Aed";
 import MapView from "../components/map/MapView";
@@ -36,8 +35,7 @@ const MapPage: React.FC = () => {
       // Access the leaflet map instance through the DOM
       const mapContainer = mapContainerRef.current?.querySelector(".leaflet-container");
       if (mapContainer) {
-        const mapInstance = (mapContainer as unknown as { _leaflet_id: number })?._leaflet_id;
-        // Use a more reliable approach - dispatch a custom event
+        // Dispatch a custom event to fly the map to the user's location
         const event = new CustomEvent("fly-to-location", {
           detail: { lat: coords.latitude, lng: coords.longitude },
         });
