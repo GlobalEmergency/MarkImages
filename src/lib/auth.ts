@@ -3,32 +3,33 @@ import { NextRequest } from "next/server";
 
 import type { JWTPayload } from "@/types";
 
-import { getCurrentUser } from "./jwt";
+import { getCurrentUserFromRequest } from "./jwt";
 
 /**
- * Get the current user from the request without requiring authentication
- * Returns null if not authenticated, making it suitable for optional auth checks
+ * Get the current user from the request without requiring authentication.
+ * Checks Authorization Bearer header first, then falls back to session cookie.
+ * Returns null if not authenticated, making it suitable for optional auth checks.
  */
-export async function getUserFromRequest(_request: NextRequest): Promise<JWTPayload | null> {
-  return getCurrentUser();
+export async function getUserFromRequest(request: NextRequest): Promise<JWTPayload | null> {
+  return getCurrentUserFromRequest(request);
 }
 
 /**
- * Middleware to check if user is authenticated
+ * Middleware to check if user is authenticated.
+ * Checks Authorization Bearer header first, then falls back to session cookie.
  */
-export async function requireAuth(_request: NextRequest): Promise<JWTPayload | null> {
-  const user = await getCurrentUser();
-  return user;
+export async function requireAuth(request: NextRequest): Promise<JWTPayload | null> {
+  return getCurrentUserFromRequest(request);
 }
 
 /**
  * Middleware to check if user has specific role
  */
 export async function requireRole(
-  _request: NextRequest,
+  request: NextRequest,
   allowedRoles: UserRole[]
 ): Promise<JWTPayload | null> {
-  const user = await getCurrentUser();
+  const user = await getCurrentUserFromRequest(request);
 
   if (!user) {
     return null;
@@ -44,6 +45,6 @@ export async function requireRole(
 /**
  * Middleware to check if user is admin
  */
-export async function requireAdmin(_request: NextRequest): Promise<JWTPayload | null> {
-  return requireRole(_request, [UserRole.ADMIN]);
+export async function requireAdmin(request: NextRequest): Promise<JWTPayload | null> {
+  return requireRole(request, [UserRole.ADMIN]);
 }

@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
 
     const response: AuthResponse = {
       user: userPublic,
+      token,
       message: "Usuario registrado exitosamente",
     };
 

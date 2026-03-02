@@ -20,6 +20,7 @@ const eslintConfig = [
       "dist/**",
       "scripts/**",
       "prisma/**",
+      "mobile/**",
     ],
   },
   js.configs.recommended,

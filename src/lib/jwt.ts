@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { NextRequest } from "next/server";
 
 import type { JWTPayload } from "@/types";
 
@@ -86,4 +87,25 @@ export async function setAuthCookie(token: string): Promise<void> {
 export async function removeAuthCookie(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
+}
+
+/**
+ * Get the current user from a NextRequest.
+ * Checks the Authorization Bearer header first, then falls back to the session cookie.
+ * Use this in API route handlers where you have access to the request object.
+ */
+export async function getCurrentUserFromRequest(
+  request: NextRequest
+): Promise<JWTPayload | null> {
+  // 1. Try Authorization: Bearer <token> header
+  const authHeader = request.headers.get("Authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice(7);
+    if (token) {
+      return verifyToken(token);
+    }
+  }
+
+  // 2. Fallback to cookie
+  return getCurrentUser();
 }

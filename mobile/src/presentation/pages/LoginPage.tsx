@@ -1,0 +1,102 @@
+import React, { useState } from "react";
+import {
+  IonPage,
+  IonContent,
+  IonInput,
+  IonButton,
+  IonText,
+  IonLoading,
+  IonIcon,
+  useIonToast,
+} from "@ionic/react";
+import { heartCircle } from "ionicons/icons";
+import { useHistory } from "react-router-dom";
+
+import { useAuth } from "../hooks/useAuth";
+
+const LoginPage: React.FC = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const history = useHistory();
+  const [presentToast] = useIonToast();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await login(email, password);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Error al iniciar sesión";
+      presentToast({ message, duration: 3000, color: "danger", position: "top" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <IonPage>
+      <IonContent className="ion-padding" fullscreen>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "100%",
+            maxWidth: 400,
+            margin: "0 auto",
+          }}
+        >
+          <IonIcon icon={heartCircle} style={{ fontSize: 80, color: "var(--ion-color-primary)" }} />
+          <IonText>
+            <h1 style={{ textAlign: "center", marginBottom: 8 }}>DeaMap</h1>
+            <p style={{ textAlign: "center", color: "var(--ion-color-medium)", marginBottom: 32 }}>
+              Inicia sesión para continuar
+            </p>
+          </IonText>
+
+          <form onSubmit={handleLogin} style={{ width: "100%" }}>
+            <IonInput
+              type="email"
+              label="Email"
+              labelPlacement="floating"
+              fill="outline"
+              value={email}
+              onIonInput={(e) => setEmail(e.detail.value || "")}
+              required
+              style={{ marginBottom: 16 }}
+            />
+            <IonInput
+              type="password"
+              label="Contraseña"
+              labelPlacement="floating"
+              fill="outline"
+              value={password}
+              onIonInput={(e) => setPassword(e.detail.value || "")}
+              required
+              style={{ marginBottom: 24 }}
+            />
+            <IonButton expand="block" type="submit" disabled={loading}>
+              Iniciar sesión
+            </IonButton>
+          </form>
+
+          <IonButton
+            fill="clear"
+            size="small"
+            onClick={() => history.push("/register")}
+            style={{ marginTop: 16 }}
+          >
+            ¿No tienes cuenta? Regístrate
+          </IonButton>
+        </div>
+
+        <IonLoading isOpen={loading} message="Iniciando sesión..." />
+      </IonContent>
+    </IonPage>
+  );
+};
+
+export default LoginPage;

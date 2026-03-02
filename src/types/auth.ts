@@ -67,6 +67,7 @@ export interface LoginRequest {
 
 export interface AuthResponse {
   user: UserPublic;
+  token?: string;
   message?: string;
 }
 

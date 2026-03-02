@@ -53,13 +53,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Handle CORS preflight requests (OPTIONS)
+  if (request.method === "OPTIONS") {
+    return new NextResponse(null, { status: 204 });
+  }
+
   // Skip if not a protected path
   if (!isProtectedPath(pathname)) {
     return NextResponse.next();
   }
 
-  // Check for auth cookie
-  const token = request.cookies.get(COOKIE_NAME)?.value;
+  // Check for auth: Bearer token header first, then cookie
+  const authHeader = request.headers.get("Authorization");
+  const token = (authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null)
+    || request.cookies.get(COOKIE_NAME)?.value;
   if (!token) {
     return NextResponse.json(
       { error: "No autenticado" },
