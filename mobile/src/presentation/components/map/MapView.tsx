@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import type { Map as LeafletMap } from "leaflet";
-import "leaflet/dist/leaflet.css";
 
 import { AedCluster, AedMapMarker } from "../../../domain/models/Aed";
 import { Coordinates, BoundingBox } from "../../../domain/models/Location";

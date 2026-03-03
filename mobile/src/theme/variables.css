@@ -1,2 +1,24 @@
 /* For information on how to create your own theme, please refer to:
 http://ionicframework.com/docs/theming/ */
+
+/* ─── Leaflet inside Ionic fixes ─────────────────────────────────────────
+   Ensure Leaflet controls don't conflict with Ionic's z-index layers
+   and that tiles render crisply on retina displays. */
+
+.leaflet-container {
+  z-index: 0;
+}
+
+.leaflet-pane {
+  z-index: 1;
+}
+
+/* Prevent Ionic touch gestures from interfering with Leaflet dragging */
+.leaflet-container * {
+  touch-action: none;
+}
+
+/* Fix tile rendering on high-DPI screens */
+.leaflet-tile {
+  image-rendering: -webkit-optimize-contrast;
+}

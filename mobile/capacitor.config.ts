@@ -8,6 +8,12 @@ const config: CapacitorConfig = {
     androidScheme: "https",
   },
   plugins: {
+    // CapacitorHttp patches window.fetch on native platforms to route
+    // through the native HTTP layer, which bypasses CORS entirely.
+    // In dev (browser), the Vite proxy handles CORS instead.
+    CapacitorHttp: {
+      enabled: true,
+    },
     SplashScreen: {
       launchShowDuration: 2000,
       backgroundColor: "#ffffff",

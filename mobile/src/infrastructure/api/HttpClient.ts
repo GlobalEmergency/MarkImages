@@ -20,13 +20,15 @@ export class HttpClient {
   }
 
   async get<T>(path: string, params?: Record<string, string | number>): Promise<T> {
-    const url = new URL(`${this.baseUrl}${path}`);
+    let url = `${this.baseUrl}${path}`;
     if (params) {
+      const searchParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
-        url.searchParams.set(key, String(value));
+        searchParams.set(key, String(value));
       });
+      url += `?${searchParams.toString()}`;
     }
-    return this.request<T>(url.toString(), { method: "GET" });
+    return this.request<T>(url, { method: "GET" });
   }
 
   async post<T>(path: string, body?: unknown): Promise<T> {

@@ -8,6 +8,7 @@ import {
   IonModal,
   IonButton,
   useIonToast,
+  useIonViewDidEnter,
 } from "@ionic/react";
 import { useHistory } from "react-router-dom";
 import { locate, openOutline } from "ionicons/icons";
@@ -28,6 +29,12 @@ const MapPage: React.FC = () => {
   useEffect(() => {
     getCurrentPosition();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Leaflet needs a resize event after Ionic page transition animation
+  // to recalculate container dimensions and render tiles correctly
+  useIonViewDidEnter(() => {
+    window.dispatchEvent(new Event("resize"));
+  });
 
   const handleMarkerSelect = useCallback((aed: AedMapMarker) => {
     setSelectedAed(aed);
@@ -62,8 +69,10 @@ const MapPage: React.FC = () => {
 
   return (
     <IonPage>
-      <IonContent fullscreen>
-        <div style={{ width: "100%", height: "100%" }}>
+      <IonContent fullscreen scrollY={false}>
+        {/* Absolute positioning ensures the map gets real pixel dimensions
+            inside Ionic's shadow DOM scroll container */}
+        <div style={{ position: "absolute", inset: 0 }}>
           <MapView onMarkerSelect={handleMarkerSelect} userPosition={position} />
         </div>
 

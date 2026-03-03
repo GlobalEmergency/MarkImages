@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 
 import { Coordinates } from "../../domain/models/Location";
 
@@ -70,7 +69,14 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition, onChan
   );
 
   return (
-    <div style={{ height: 250, borderRadius: 12, overflow: "hidden", border: "1px solid var(--ion-color-light)" }}>
+    <div
+      style={{
+        height: 250,
+        borderRadius: 12,
+        overflow: "hidden",
+        border: "1px solid var(--ion-color-light)",
+      }}
+    >
       <MapContainer
         center={center}
         zoom={15}
