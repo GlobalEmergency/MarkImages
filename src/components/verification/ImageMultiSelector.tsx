@@ -17,7 +17,7 @@ interface ImageMultiSelectorProps {
     order?: number;
   }>;
   descripcionAcceso?: string;
-  onValidationComplete: (result: ImagesValidationResult) => void;
+  onValidationComplete: (result: ImagesValidationResult) => void | Promise<void>;
   onCancel: () => void;
 }
 
@@ -156,11 +156,14 @@ export default function ImageMultiSelector({
         newImages: newImages.length > 0 ? newImages : undefined,
       };
 
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      onValidationComplete(result);
+      // Await the parent callback — it performs the PATCH + updateStep.
+      // Keep isProcessing=true until the parent finishes so the user sees
+      // the spinner the whole time instead of a stale screen.
+      await onValidationComplete(result);
     } catch (error) {
       console.error("Error processing validation:", error);
-    } finally {
+      // Only reset processing on error — on success the parent will
+      // unmount this component by advancing to the next step.
       setIsProcessing(false);
     }
   };
@@ -367,7 +370,9 @@ export default function ImageMultiSelector({
                 if (file) {
                   try {
                     // Comprimir la imagen antes de subirla
-                    console.log(`📸 Subiendo imagen: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+                    console.log(
+                      `📸 Subiendo imagen: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`
+                    );
 
                     const compressedUrl = await compressImageFile(file, {
                       maxWidth: 1920,
@@ -378,8 +383,8 @@ export default function ImageMultiSelector({
 
                     handleAddNewImage(compressedUrl);
                   } catch (error) {
-                    console.error('Error comprimiendo imagen:', error);
-                    alert('Error al procesar la imagen. Por favor, intenta con otra imagen.');
+                    console.error("Error comprimiendo imagen:", error);
+                    alert("Error al procesar la imagen. Por favor, intenta con otra imagen.");
                   } finally {
                     // Limpiar el input para permitir subir el mismo archivo otra vez
                     e.target.value = "";
