@@ -71,13 +71,14 @@ const RegisterPage: React.FC = () => {
             </p>
           </IonText>
 
-          <form onSubmit={handleRegister} style={{ width: "100%" }}>
+          <form onSubmit={handleRegister} style={{ width: "100%" }} autoComplete="on">
             <IonInput
               type="text"
               label="Nombre"
               labelPlacement="floating"
               fill="outline"
               value={name}
+              autocomplete="name"
               onIonInput={(e) => setName(e.detail.value || "")}
               required
               style={{ marginBottom: 16 }}
@@ -88,6 +89,8 @@ const RegisterPage: React.FC = () => {
               labelPlacement="floating"
               fill="outline"
               value={email}
+              autocomplete="email"
+              inputMode="email"
               onIonInput={(e) => setEmail(e.detail.value || "")}
               required
               style={{ marginBottom: 16 }}
@@ -98,6 +101,7 @@ const RegisterPage: React.FC = () => {
               labelPlacement="floating"
               fill="outline"
               value={password}
+              autocomplete="new-password"
               onIonInput={(e) => setPassword(e.detail.value || "")}
               required
               helperText="Mínimo 8 caracteres, con mayúscula, minúscula y número"
@@ -109,6 +113,7 @@ const RegisterPage: React.FC = () => {
               labelPlacement="floating"
               fill="outline"
               value={confirmPassword}
+              autocomplete="new-password"
               onIonInput={(e) => setConfirmPassword(e.detail.value || "")}
               required
               style={{ marginBottom: 24 }}

@@ -17,9 +17,11 @@ const DEFAULT_ZOOM = 12;
 interface MapViewProps {
   onMarkerSelect: (aed: AedMapMarker) => void;
   userPosition?: Coordinates | null;
+  /** Increment this counter to force the map to fly to userPosition */
+  flyToCounter?: number;
 }
 
-const MapView: React.FC<MapViewProps> = ({ onMarkerSelect, userPosition }) => {
+const MapView: React.FC<MapViewProps> = ({ onMarkerSelect, userPosition, flyToCounter = 0 }) => {
   const mapRef = useRef<LeafletMap | null>(null);
   const hasCentered = useRef(false);
   const [bounds, setBounds] = useState<BoundingBox | null>(null);
@@ -44,10 +46,17 @@ const MapView: React.FC<MapViewProps> = ({ onMarkerSelect, userPosition }) => {
   // Auto-center on user position the first time
   useEffect(() => {
     if (userPosition && !hasCentered.current && mapRef.current) {
-      mapRef.current.flyTo([userPosition.latitude, userPosition.longitude], 14);
+      mapRef.current.flyTo([userPosition.latitude, userPosition.longitude], 15);
       hasCentered.current = true;
     }
   }, [userPosition]);
+
+  // Fly to user position when the locate button is pressed (flyToCounter increments)
+  useEffect(() => {
+    if (flyToCounter > 0 && userPosition && mapRef.current) {
+      mapRef.current.flyTo([userPosition.latitude, userPosition.longitude], 16);
+    }
+  }, [flyToCounter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>

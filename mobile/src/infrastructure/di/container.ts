@@ -11,7 +11,9 @@ import { GetAedDetailUseCase } from "../../application/use-cases/GetAedDetailUse
 import { CreateAedUseCase } from "../../application/use-cases/CreateAedUseCase";
 import { GetNearbyAedsUseCase } from "../../application/use-cases/GetNearbyAedsUseCase";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+// Use nullish coalescing (??) so an explicitly-empty VITE_API_BASE_URL
+// (set in .env.development) produces relative URLs routed through the Vite proxy.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
 // Infrastructure
 const tokenStorage = new CapacitorTokenStorage();

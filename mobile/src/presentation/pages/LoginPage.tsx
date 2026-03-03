@@ -58,13 +58,15 @@ const LoginPage: React.FC = () => {
             </p>
           </IonText>
 
-          <form onSubmit={handleLogin} style={{ width: "100%" }}>
+          <form onSubmit={handleLogin} style={{ width: "100%" }} autoComplete="on">
             <IonInput
               type="email"
               label="Email"
               labelPlacement="floating"
               fill="outline"
               value={email}
+              autocomplete="email"
+              inputMode="email"
               onIonInput={(e) => setEmail(e.detail.value || "")}
               required
               style={{ marginBottom: 16 }}
@@ -75,6 +77,7 @@ const LoginPage: React.FC = () => {
               labelPlacement="floating"
               fill="outline"
               value={password}
+              autocomplete="current-password"
               onIonInput={(e) => setPassword(e.detail.value || "")}
               required
               style={{ marginBottom: 24 }}

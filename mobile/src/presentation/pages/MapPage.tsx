@@ -21,6 +21,7 @@ import { useGeolocation } from "../hooks/useGeolocation";
 const MapPage: React.FC = () => {
   const [selectedAed, setSelectedAed] = useState<AedMapMarker | null>(null);
   const [showDetail, setShowDetail] = useState(false);
+  const [flyToCounter, setFlyToCounter] = useState(0);
   const { position, getCurrentPosition, loading: geoLoading } = useGeolocation();
   const [presentToast] = useIonToast();
   const history = useHistory();
@@ -44,6 +45,7 @@ const MapPage: React.FC = () => {
   const handleLocateMe = useCallback(async () => {
     const coords = await getCurrentPosition();
     if (coords) {
+      setFlyToCounter((c) => c + 1);
       presentToast({
         message: "Ubicación actualizada",
         duration: 1500,
@@ -73,7 +75,11 @@ const MapPage: React.FC = () => {
         {/* Absolute positioning ensures the map gets real pixel dimensions
             inside Ionic's shadow DOM scroll container */}
         <div style={{ position: "absolute", inset: 0 }}>
-          <MapView onMarkerSelect={handleMarkerSelect} userPosition={position} />
+          <MapView
+            onMarkerSelect={handleMarkerSelect}
+            userPosition={position}
+            flyToCounter={flyToCounter}
+          />
         </div>
 
         <IonFab vertical="bottom" horizontal="end" slot="fixed" style={{ marginBottom: 60 }}>

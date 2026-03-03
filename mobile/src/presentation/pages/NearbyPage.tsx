@@ -25,7 +25,7 @@ import { formatDistance } from "../utils/format";
 import ScheduleBadge from "../components/ScheduleBadge";
 
 const NearbyPage: React.FC = () => {
-  const { aeds, loading, error, refresh, locationDenied } = useNearbyAeds();
+  const { aeds, loading, error, refresh, locationDenied } = useNearbyAeds(5, 10);
   const history = useHistory();
 
   const handleRefresh = async (event: CustomEvent) => {

@@ -26,12 +26,23 @@ import {
   businessOutline,
   personOutline,
 } from "ionicons/icons";
-import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 
 import { useAedDetail } from "../hooks/useAedDetail";
 import ImageGallery from "../components/ImageGallery";
 import ScheduleBadge from "../components/ScheduleBadge";
+
+/** Forces Leaflet to recalculate container size after the card finishes layout */
+const InvalidateSize: React.FC = () => {
+  const map = useMap();
+  React.useEffect(() => {
+    // Small delay to let Ionic card finish its layout/animation
+    const timer = setTimeout(() => map.invalidateSize(), 300);
+    return () => clearTimeout(timer);
+  }, [map]);
+  return null;
+};
 
 const pinIcon = L.divIcon({
   className: "",
@@ -163,6 +174,7 @@ const DeaDetailPage: React.FC = () => {
               >
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 <Marker position={[aed.latitude, aed.longitude]} icon={pinIcon} />
+                <InvalidateSize />
               </MapContainer>
             </div>
           </IonCard>

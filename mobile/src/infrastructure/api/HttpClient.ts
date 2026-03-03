@@ -58,9 +58,11 @@ export class HttpClient {
     const response = await fetch(url, { ...init, headers });
 
     if (response.status === 401) {
+      // Read the actual server error before clearing auth state
+      const errorBody = await response.json().catch(() => ({}));
       await this.tokenStorage.removeToken();
       this.onUnauthorized?.();
-      throw new ApiError("Sesión expirada", 401);
+      throw new ApiError(errorBody.error || errorBody.message || "Sesión expirada", 401);
     }
 
     if (!response.ok) {
