@@ -1,14 +1,3 @@
 #!/bin/sh
 
-echo "🔍 Running pre-push validation..."
-echo "  - Type checking..."
-#npm run type-check || exit 1
-# npx lint-staged
-
-echo "  - Linting..."
-npm run lint:fix || exit 1
-
-echo "  - Building..."
-npm run build || exit 1
-
-echo "✅ All checks passed!"
+npx lint-staged

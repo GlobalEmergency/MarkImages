@@ -1,0 +1,61 @@
+name: Ensure Version Tags
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ensure-tags
+  cancel-in-progress: true
+
+jobs:
+  ensure-tags:
+    name: Create missing version tags
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Ensure mobile tag
+        run: |
+          if [ -f mobile/version.json ]; then
+            VERSION=$(node -e "console.log(require('./mobile/version.json').version)")
+            TAG="mobile@${VERSION}"
+
+            if git rev-parse "$TAG" >/dev/null 2>&1; then
+              echo "✅ Tag $TAG already exists — skipping"
+            else
+              echo "📦 Creating tag $TAG"
+              git tag "$TAG"
+              git push origin "$TAG"
+              echo "✅ Tag $TAG created and pushed"
+            fi
+          else
+            echo "⚠️ mobile/version.json not found — skipping mobile tag"
+          fi
+
+      - name: Ensure web tag
+        run: |
+          VERSION=$(node -e "console.log(require('./package.json').version)")
+          TAG="web@${VERSION}"
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "✅ Tag $TAG already exists — skipping"
+          else
+            echo "📦 Creating tag $TAG"
+            git tag "$TAG"
+            git push origin "$TAG"
+            echo "✅ Tag $TAG created and pushed"
+          fi
