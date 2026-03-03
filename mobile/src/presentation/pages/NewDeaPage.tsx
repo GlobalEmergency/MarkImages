@@ -83,7 +83,12 @@ const NewDeaPage: React.FC = () => {
     e.preventDefault();
 
     if (!coords) {
-      presentToast({ message: "Selecciona una ubicación en el mapa", duration: 3000, color: "warning", position: "top" });
+      presentToast({
+        message: "Selecciona una ubicación en el mapa",
+        duration: 3000,
+        color: "warning",
+        position: "top",
+      });
       return;
     }
 
@@ -109,7 +114,7 @@ const NewDeaPage: React.FC = () => {
         position: "top",
       });
 
-      history.push("/map");
+      history.push("/tabs/map");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error al registrar el DEA";
       presentToast({ message, duration: 3000, color: "danger", position: "top" });
@@ -162,19 +167,30 @@ const NewDeaPage: React.FC = () => {
 
           <IonText>
             <p style={{ fontWeight: 600, marginBottom: 8 }}>Ubicación *</p>
-            <p style={{ fontSize: 13, color: "var(--ion-color-medium)", marginTop: 0, marginBottom: 8 }}>
+            <p
+              style={{
+                fontSize: 13,
+                color: "var(--ion-color-medium)",
+                marginTop: 0,
+                marginBottom: 8,
+              }}
+            >
               Toca el mapa o arrastra el marcador para ajustar la posición
             </p>
           </IonText>
 
-          <LocationPicker
-            initialPosition={position || undefined}
-            onChange={handleLocationChange}
-          />
+          <LocationPicker initialPosition={position || undefined} onChange={handleLocationChange} />
 
           {coords && (
             <IonText>
-              <p style={{ fontSize: 12, color: "var(--ion-color-medium)", textAlign: "center", margin: "4px 0 16px" }}>
+              <p
+                style={{
+                  fontSize: 12,
+                  color: "var(--ion-color-medium)",
+                  textAlign: "center",
+                  margin: "4px 0 16px",
+                }}
+              >
                 {coords.latitude.toFixed(6)}, {coords.longitude.toFixed(6)}
               </p>
             </IonText>

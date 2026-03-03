@@ -27,6 +27,7 @@ const LoginPage: React.FC = () => {
     setLoading(true);
     try {
       await login(email, password);
+      history.replace("/tabs/profile");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error al iniciar sesión";
       presentToast({ message, duration: 3000, color: "danger", position: "top" });

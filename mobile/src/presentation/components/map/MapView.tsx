@@ -1,14 +1,15 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import type { Map as LeafletMap } from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 import { AedCluster, AedMapMarker } from "../../../domain/models/Aed";
-import { BoundingBox } from "../../../domain/models/Location";
+import { Coordinates, BoundingBox } from "../../../domain/models/Location";
 import { useAedsByBounds } from "../../hooks/useAedsByBounds";
 import MapEventHandler from "./MapEventHandler";
 import ClusterMarker from "./ClusterMarker";
 import DeaMarker from "./DeaMarker";
+import UserPositionMarker from "./UserPositionMarker";
 
 // Default center: Madrid
 const DEFAULT_CENTER: [number, number] = [40.4168, -3.7038];
@@ -16,10 +17,12 @@ const DEFAULT_ZOOM = 12;
 
 interface MapViewProps {
   onMarkerSelect: (aed: AedMapMarker) => void;
+  userPosition?: Coordinates | null;
 }
 
-const MapView: React.FC<MapViewProps> = ({ onMarkerSelect }) => {
+const MapView: React.FC<MapViewProps> = ({ onMarkerSelect, userPosition }) => {
   const mapRef = useRef<LeafletMap | null>(null);
+  const hasCentered = useRef(false);
   const [bounds, setBounds] = useState<BoundingBox | null>(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
 
@@ -39,6 +42,14 @@ const MapView: React.FC<MapViewProps> = ({ onMarkerSelect }) => {
     }
   }, []);
 
+  // Auto-center on user position the first time
+  useEffect(() => {
+    if (userPosition && !hasCentered.current && mapRef.current) {
+      mapRef.current.flyTo([userPosition.latitude, userPosition.longitude], 14);
+      hasCentered.current = true;
+    }
+  }, [userPosition]);
+
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <MapContainer
@@ -54,12 +65,10 @@ const MapView: React.FC<MapViewProps> = ({ onMarkerSelect }) => {
         />
         <MapEventHandler onBoundsChange={handleBoundsChange} />
 
+        {userPosition && <UserPositionMarker position={userPosition} />}
+
         {clusters.map((cluster) => (
-          <ClusterMarker
-            key={cluster.id}
-            cluster={cluster}
-            onZoomToCluster={handleZoomToCluster}
-          />
+          <ClusterMarker key={cluster.id} cluster={cluster} onZoomToCluster={handleZoomToCluster} />
         ))}
 
         {markers.map((aed) => (

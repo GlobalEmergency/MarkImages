@@ -1,7 +1,12 @@
 import { IAedRepository } from "../../domain/ports/IAedRepository";
-import { Aed, AedMapMarker } from "../../domain/models/Aed";
+import { Aed } from "../../domain/models/Aed";
 import { BoundingBox } from "../../domain/models/Location";
-import { ClusteredAedsResponse, CreateAedRequest } from "../../application/dto/AedDTO";
+import {
+  ClusteredAedsResponse,
+  CreateAedRequest,
+  NearbyAed,
+  NearbyAedsResponse,
+} from "../../application/dto/AedDTO";
 import { HttpClient, ApiResponse } from "./HttpClient";
 
 export class ApiAedRepository implements IAedRepository {
@@ -22,13 +27,8 @@ export class ApiAedRepository implements IAedRepository {
     return response.data;
   }
 
-  async getNearby(
-    lat: number,
-    lng: number,
-    radius = 5,
-    limit = 10
-  ): Promise<AedMapMarker[]> {
-    const response = await this.httpClient.get<ApiResponse<AedMapMarker[]>>("/api/aeds/nearby", {
+  async getNearby(lat: number, lng: number, radius = 5, limit = 20): Promise<NearbyAed[]> {
+    const response = await this.httpClient.get<NearbyAedsResponse>("/api/aeds/nearby", {
       lat,
       lng,
       radius,

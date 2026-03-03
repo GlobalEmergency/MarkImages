@@ -9,6 +9,7 @@ import { RegisterUseCase } from "../../application/use-cases/RegisterUseCase";
 import { GetAedsByBoundsUseCase } from "../../application/use-cases/GetAedsByBoundsUseCase";
 import { GetAedDetailUseCase } from "../../application/use-cases/GetAedDetailUseCase";
 import { CreateAedUseCase } from "../../application/use-cases/CreateAedUseCase";
+import { GetNearbyAedsUseCase } from "../../application/use-cases/GetNearbyAedsUseCase";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -25,6 +26,7 @@ const registerUseCase = new RegisterUseCase(authRepository);
 const getAedsByBoundsUseCase = new GetAedsByBoundsUseCase(aedRepository);
 const getAedDetailUseCase = new GetAedDetailUseCase(aedRepository);
 const createAedUseCase = new CreateAedUseCase(aedRepository);
+const getNearbyAedsUseCase = new GetNearbyAedsUseCase(aedRepository);
 
 export {
   // Infrastructure (exposed for AuthContext which needs direct repo access)
@@ -38,4 +40,5 @@ export {
   getAedsByBoundsUseCase,
   getAedDetailUseCase,
   createAedUseCase,
+  getNearbyAedsUseCase,
 };

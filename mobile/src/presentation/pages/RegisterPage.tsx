@@ -28,13 +28,19 @@ const RegisterPage: React.FC = () => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      presentToast({ message: "Las contraseñas no coinciden", duration: 3000, color: "warning", position: "top" });
+      presentToast({
+        message: "Las contraseñas no coinciden",
+        duration: 3000,
+        color: "warning",
+        position: "top",
+      });
       return;
     }
 
     setLoading(true);
     try {
       await register(name, email, password);
+      history.replace("/tabs/profile");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error al registrarse";
       presentToast({ message, duration: 3000, color: "danger", position: "top" });

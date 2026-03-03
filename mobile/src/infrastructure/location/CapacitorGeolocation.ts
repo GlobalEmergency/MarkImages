@@ -1,4 +1,5 @@
 import { Geolocation } from "@capacitor/geolocation";
+import { Capacitor } from "@capacitor/core";
 
 import { Coordinates } from "../../domain/models/Location";
 
@@ -18,9 +19,13 @@ export class CapacitorGeolocationService {
   async requestPermission(): Promise<boolean> {
     try {
       const status = await Geolocation.requestPermissions();
-      return status.location === "granted";
+      // On native: "granted" means user accepted the dialog
+      // On web: "prompt" means the browser will ask when getCurrentPosition() is called
+      //         (the web Permissions API cannot programmatically request geolocation)
+      return status.location === "granted" || status.location === "prompt";
     } catch {
-      return false;
+      // On web, if Permissions API is unavailable, we still try getCurrentPosition
+      return !Capacitor.isNativePlatform();
     }
   }
 

@@ -1,4 +1,4 @@
-import { AedCluster, AedMapMarker } from "../../domain/models/Aed";
+import { Aed, AedCluster, AedMapMarker } from "../../domain/models/Aed";
 
 export interface ClusteredAedsResponse {
   success: boolean;
@@ -13,6 +13,25 @@ export interface ClusteredAedsResponse {
   };
   zoom_level: number;
   strategy: string;
+}
+
+export interface NearbyAed extends Aed {
+  distance: number;
+}
+
+export interface NearbyAedsResponse {
+  success: boolean;
+  data: NearbyAed[];
+  query: {
+    lat: number;
+    lng: number;
+    radius: number;
+    limit: number;
+  };
+  stats: {
+    found: number;
+    searchRadius: number;
+  };
 }
 
 export interface CreateAedRequest {

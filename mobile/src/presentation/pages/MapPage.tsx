@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   IonPage,
   IonContent,
@@ -6,9 +6,11 @@ import {
   IonFabButton,
   IonIcon,
   IonModal,
+  IonButton,
   useIonToast,
 } from "@ionic/react";
-import { locate } from "ionicons/icons";
+import { useHistory } from "react-router-dom";
+import { locate, openOutline } from "ionicons/icons";
 
 import { AedMapMarker } from "../../domain/models/Aed";
 import MapView from "../components/map/MapView";
@@ -18,11 +20,14 @@ import { useGeolocation } from "../hooks/useGeolocation";
 const MapPage: React.FC = () => {
   const [selectedAed, setSelectedAed] = useState<AedMapMarker | null>(null);
   const [showDetail, setShowDetail] = useState(false);
-  const { getCurrentPosition, loading: geoLoading } = useGeolocation();
+  const { position, getCurrentPosition, loading: geoLoading } = useGeolocation();
   const [presentToast] = useIonToast();
+  const history = useHistory();
 
-  // We need a ref to the map to fly to user location
-  const mapContainerRef = useRef<HTMLDivElement>(null);
+  // Auto-request geolocation on mount
+  useEffect(() => {
+    getCurrentPosition();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleMarkerSelect = useCallback((aed: AedMapMarker) => {
     setSelectedAed(aed);
@@ -32,15 +37,6 @@ const MapPage: React.FC = () => {
   const handleLocateMe = useCallback(async () => {
     const coords = await getCurrentPosition();
     if (coords) {
-      // Access the leaflet map instance through the DOM
-      const mapContainer = mapContainerRef.current?.querySelector(".leaflet-container");
-      if (mapContainer) {
-        // Dispatch a custom event to fly the map to the user's location
-        const event = new CustomEvent("fly-to-location", {
-          detail: { lat: coords.latitude, lng: coords.longitude },
-        });
-        mapContainer.dispatchEvent(event);
-      }
       presentToast({
         message: "Ubicación actualizada",
         duration: 1500,
@@ -57,11 +53,18 @@ const MapPage: React.FC = () => {
     }
   }, [getCurrentPosition, presentToast]);
 
+  const handleViewDetail = useCallback(() => {
+    if (selectedAed) {
+      setShowDetail(false);
+      history.push(`/dea/${selectedAed.id}`);
+    }
+  }, [selectedAed, history]);
+
   return (
     <IonPage>
       <IonContent fullscreen>
-        <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }}>
-          <MapView onMarkerSelect={handleMarkerSelect} />
+        <div style={{ width: "100%", height: "100%" }}>
+          <MapView onMarkerSelect={handleMarkerSelect} userPosition={position} />
         </div>
 
         <IonFab vertical="bottom" horizontal="end" slot="fixed" style={{ marginBottom: 60 }}>
@@ -78,7 +81,15 @@ const MapPage: React.FC = () => {
           handleBehavior="cycle"
         >
           {selectedAed && (
-            <AedDetailSheet aedId={selectedAed.id} name={selectedAed.name} />
+            <>
+              <AedDetailSheet aedId={selectedAed.id} name={selectedAed.name} />
+              <div className="ion-padding" style={{ paddingTop: 0 }}>
+                <IonButton expand="block" fill="outline" onClick={handleViewDetail}>
+                  <IonIcon icon={openOutline} slot="start" />
+                  Ver detalle completo
+                </IonButton>
+              </div>
+            </>
           )}
         </IonModal>
       </IonContent>
