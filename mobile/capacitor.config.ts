@@ -1,23 +1,26 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: 'es.deamap.mobile',
-  appName: 'DeaMap',
-  webDir: 'dist',
+  appId: "es.deamap.mobile",
+  appName: "DeaMap",
+  webDir: "dist",
   server: {
-    androidScheme: 'https',
+    androidScheme: "https",
   },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
-      backgroundColor: '#3b82f6',
+      backgroundColor: "#ffffff",
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true,
     },
     Keyboard: {
-      resize: 'body',
+      resize: "body",
       resizeOnFullScreen: true,
     },
     StatusBar: {
-      style: 'dark' as const,
+      style: "dark" as const,
     },
   },
 };

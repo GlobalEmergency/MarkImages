@@ -23,7 +23,8 @@
     "ios:local": "vite build && npx cap sync ios && npx cap run ios",
     "ios:live": "npx cap run ios --livereload --external",
     "android:open": "npx cap open android",
-    "ios:open": "npx cap open ios"
+    "ios:open": "npx cap open ios",
+    "assets:generate": "npx @capacitor/assets generate --android --pwa"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
