@@ -36,9 +36,18 @@ const nextConfig: NextConfig = {
 
   // Security headers + CORS for mobile app
   async headers() {
-    const mobileCorsOrigins = process.env.MOBILE_CORS_ORIGINS || "capacitor://localhost,http://localhost";
+    const mobileCorsOrigins =
+      process.env.MOBILE_CORS_ORIGINS || "capacitor://localhost,http://localhost";
 
     return [
+      // .well-known files for iOS/Android app-domain association (credential autofill)
+      {
+        source: "/.well-known/:path*",
+        headers: [
+          { key: "Content-Type", value: "application/json" },
+          { key: "Cache-Control", value: "public, max-age=3600" },
+        ],
+      },
       // CORS headers for API routes (mobile app support)
       {
         source: "/api/:path*",

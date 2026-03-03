@@ -5,6 +5,9 @@ const config: CapacitorConfig = {
   appName: "DeaMap",
   webDir: "dist",
   server: {
+    // hostname must match the real domain so iOS/Android credential managers
+    // can associate saved passwords with this app (autofill).
+    hostname: "deamap.es",
     androidScheme: "https",
   },
   plugins: {

@@ -13,6 +13,7 @@ import { heartCircle } from "ionicons/icons";
 import { useHistory } from "react-router-dom";
 
 import { useAuth } from "../hooks/useAuth";
+import { promptSaveCredentials } from "../../infrastructure/auth/CredentialService";
 
 const RegisterPage: React.FC = () => {
   const [name, setName] = useState("");
@@ -40,6 +41,7 @@ const RegisterPage: React.FC = () => {
     setLoading(true);
     try {
       await register(name, email, password);
+      await promptSaveCredentials(email, password);
       history.replace("/tabs/profile");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error al registrarse";
@@ -74,6 +76,7 @@ const RegisterPage: React.FC = () => {
           <form onSubmit={handleRegister} style={{ width: "100%" }} autoComplete="on">
             <IonInput
               type="text"
+              name="name"
               label="Nombre"
               labelPlacement="floating"
               fill="outline"
@@ -85,6 +88,7 @@ const RegisterPage: React.FC = () => {
             />
             <IonInput
               type="email"
+              name="email"
               label="Email"
               labelPlacement="floating"
               fill="outline"
@@ -97,6 +101,7 @@ const RegisterPage: React.FC = () => {
             />
             <IonInput
               type="password"
+              name="password"
               label="Contraseña"
               labelPlacement="floating"
               fill="outline"
@@ -109,6 +114,7 @@ const RegisterPage: React.FC = () => {
             />
             <IonInput
               type="password"
+              name="confirm-password"
               label="Confirmar contraseña"
               labelPlacement="floating"
               fill="outline"

@@ -13,6 +13,7 @@ import { heartCircle } from "ionicons/icons";
 import { useHistory } from "react-router-dom";
 
 import { useAuth } from "../hooks/useAuth";
+import { promptSaveCredentials } from "../../infrastructure/auth/CredentialService";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -27,6 +28,7 @@ const LoginPage: React.FC = () => {
     setLoading(true);
     try {
       await login(email, password);
+      await promptSaveCredentials(email, password);
       history.replace("/tabs/profile");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error al iniciar sesión";
@@ -61,6 +63,7 @@ const LoginPage: React.FC = () => {
           <form onSubmit={handleLogin} style={{ width: "100%" }} autoComplete="on">
             <IonInput
               type="email"
+              name="email"
               label="Email"
               labelPlacement="floating"
               fill="outline"
@@ -73,6 +76,7 @@ const LoginPage: React.FC = () => {
             />
             <IonInput
               type="password"
+              name="password"
               label="Contraseña"
               labelPlacement="floating"
               fill="outline"
