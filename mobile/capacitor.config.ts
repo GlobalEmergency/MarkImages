@@ -11,11 +11,12 @@ const config: CapacitorConfig = {
     androidScheme: "https",
   },
   plugins: {
-    // CapacitorHttp patches window.fetch on native platforms to route
-    // through the native HTTP layer, which bypasses CORS entirely.
-    // In dev (browser), the Vite proxy handles CORS instead.
+    // CapacitorHttp auto-patching of fetch is DISABLED because it does
+    // NOT intercept requests to the same hostname as the WebView (deamap.es).
+    // Instead, HttpClient calls CapacitorHttp.request() directly on native
+    // to bypass the WebView's local server interception.
     CapacitorHttp: {
-      enabled: true,
+      enabled: false,
     },
     SplashScreen: {
       launchShowDuration: 2000,
