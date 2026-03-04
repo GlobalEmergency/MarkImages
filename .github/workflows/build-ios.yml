@@ -1,0 +1,310 @@
+name: Build iOS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "mobile/**"
+    tags:
+      - "mobile@*"
+  workflow_dispatch:
+    inputs:
+      deploy_to_testflight:
+        description: "Deploy to TestFlight"
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: build-ios-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-ios:
+    name: Build iOS IPA
+    runs-on: macos-15
+    timeout-minutes: 60
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: mobile
+
+      - name: Build web assets (Vite)
+        run: npm run build
+        working-directory: mobile
+        env:
+          VITE_API_BASE_URL: "https://deamap.es"
+
+      - name: Sync Capacitor
+        run: npx cap sync ios
+        working-directory: mobile
+
+      - name: Run native setup script
+        run: bash scripts/setup-native.sh
+        working-directory: mobile
+
+      - name: Cache SPM packages
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ runner.temp }}/spm-cache
+          key: ${{ runner.os }}-spm-${{ hashFiles('mobile/ios/App/CapApp-SPM/Package.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Install Apple certificate and provisioning profile
+        if: env.IOS_CERTIFICATE_P12_BASE64 != ''
+        env:
+          IOS_CERTIFICATE_P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          # Create temporary keychain
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -hex 24)"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import certificate
+          CERTIFICATE_PATH="$RUNNER_TEMP/certificate.p12"
+          echo "$IOS_CERTIFICATE_P12_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
+          security import "$CERTIFICATE_PATH" \
+            -P "$IOS_CERTIFICATE_PASSWORD" \
+            -A \
+            -t cert \
+            -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+          security set-key-partition-list \
+            -S apple-tool:,apple: \
+            -k "$KEYCHAIN_PASSWORD" \
+            "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+
+          # Install provisioning profile
+          PROFILE_PATH="$RUNNER_TEMP/profile.mobileprovision"
+          echo "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
+
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin \
+            <<< "$(security cms -D -i "$PROFILE_PATH")")
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp "$PROFILE_PATH" \
+            "$HOME/Library/MobileDevice/Provisioning Profiles/${PROFILE_UUID}.mobileprovision"
+
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+          echo "PROVISIONING_PROFILE_UUID=$PROFILE_UUID" >> "$GITHUB_ENV"
+
+      - name: Resolve Swift packages
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/spm-cache"
+        working-directory: mobile
+
+      - name: Build and archive
+        env:
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          IOS_CERTIFICATE_P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
+        run: |
+          # Determine signing style based on whether secrets are available
+          if [ -n "$IOS_CERTIFICATE_P12_BASE64" ]; then
+            echo "Using manual signing with distribution certificate"
+            xcodebuild archive \
+              -project ios/App/App.xcodeproj \
+              -scheme App \
+              -archivePath "$RUNNER_TEMP/App.xcarchive" \
+              -destination "generic/platform=iOS" \
+              -clonedSourcePackagesDirPath "$RUNNER_TEMP/spm-cache" \
+              CODE_SIGN_STYLE=Manual \
+              CODE_SIGN_IDENTITY="Apple Distribution" \
+              DEVELOPMENT_TEAM="$IOS_TEAM_ID" \
+              PROVISIONING_PROFILE_SPECIFIER="" \
+              PROVISIONING_PROFILE="$PROVISIONING_PROFILE_UUID" \
+              OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN_PATH" \
+              -allowProvisioningUpdates=NO
+          else
+            echo "::warning::No signing secrets configured — building unsigned archive"
+            xcodebuild archive \
+              -project ios/App/App.xcodeproj \
+              -scheme App \
+              -archivePath "$RUNNER_TEMP/App.xcarchive" \
+              -destination "generic/platform=iOS" \
+              -clonedSourcePackagesDirPath "$RUNNER_TEMP/spm-cache" \
+              CODE_SIGNING_ALLOWED=NO
+          fi
+        working-directory: mobile
+
+      - name: Create ExportOptions.plist
+        if: env.IOS_CERTIFICATE_P12_BASE64 != ''
+        env:
+          IOS_CERTIFICATE_P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+            "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>teamID</key>
+            <string>${IOS_TEAM_ID}</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>es.deamap.mobile</key>
+              <string>${PROVISIONING_PROFILE_UUID}</string>
+            </dict>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>destination</key>
+            <string>upload</string>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Export IPA
+        if: env.IOS_CERTIFICATE_P12_BASE64 != ''
+        env:
+          IOS_CERTIFICATE_P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -allowProvisioningUpdates=NO
+
+      - name: Rename IPA with version
+        if: env.IOS_CERTIFICATE_P12_BASE64 != ''
+        id: ipa_info
+        env:
+          IOS_CERTIFICATE_P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
+        run: |
+          VERSION=$(node -e "console.log(require('./mobile/version.json').version)")
+          IPA_NAME="DeaMap-v${VERSION}.ipa"
+          mv "$RUNNER_TEMP/export/App.ipa" "$RUNNER_TEMP/export/${IPA_NAME}"
+          echo "ipa_path=$RUNNER_TEMP/export/${IPA_NAME}" >> "$GITHUB_OUTPUT"
+          echo "ipa_name=${IPA_NAME}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload IPA artifact
+        if: env.IOS_CERTIFICATE_P12_BASE64 != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        env:
+          IOS_CERTIFICATE_P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
+        with:
+          name: release-ipa
+          path: ${{ steps.ipa_info.outputs.ipa_path }}
+          retention-days: 30
+
+      - name: Upload dSYMs artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dsyms
+          path: ${{ runner.temp }}/App.xcarchive/dSYMs/
+          retention-days: 90
+          if-no-files-found: ignore
+
+      - name: Cleanup keychain
+        if: always()
+        run: |
+          if [ -n "$KEYCHAIN_PATH" ] && [ -f "$KEYCHAIN_PATH" ]; then
+            security delete-keychain "$KEYCHAIN_PATH" || true
+          fi
+
+  deploy-testflight:
+    name: Deploy to TestFlight
+    runs-on: macos-15
+    timeout-minutes: 30
+    needs: build-ios
+    if: >
+      (startsWith(github.ref, 'refs/tags/mobile@') ||
+       (github.event_name == 'workflow_dispatch' &&
+        github.event.inputs.deploy_to_testflight == 'true')) &&
+      secrets.IOS_CERTIFICATE_P12_BASE64 != ''
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout (for version.json)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          sparse-checkout: mobile/version.json
+
+      - name: Download IPA
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-ipa
+          path: artifacts
+
+      - name: Create App Store Connect API key file
+        env:
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+        run: |
+          mkdir -p private_keys
+          echo "$APP_STORE_CONNECT_API_KEY_BASE64" | base64 --decode \
+            > "private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
+
+      - name: Upload to TestFlight
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+        run: |
+          xcrun altool --upload-app \
+            --type ios \
+            --file artifacts/*.ipa \
+            --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_API_ISSUER_ID"
+
+  create-release:
+    name: Append iOS to GitHub Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build-ios
+    if: startsWith(github.ref, 'refs/tags/mobile@')
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          path: artifacts
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#mobile@}" >> "$GITHUB_OUTPUT"
+
+      # Uses same release name as Android workflow — softprops/action-gh-release
+      # is idempotent: creates if not exists, appends files if it does.
+      - name: Append to Release
+        uses: softprops/action-gh-release@c062e08bd532815e2082a7e09ce9f200309e996d # v2.2.1
+        with:
+          name: "DeaMap Mobile v${{ steps.version.outputs.version }}"
+          generate_release_notes: true
+          files: |
+            artifacts/release-ipa/*.ipa

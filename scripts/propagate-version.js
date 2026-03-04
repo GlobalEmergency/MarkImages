@@ -6,6 +6,7 @@
  * Propagates version from version.json to all derived files:
  * - mobile/package.json (version field)
  * - mobile/android/app/build.gradle (versionName + versionCode)
+ * - mobile/ios/App/App.xcodeproj/project.pbxproj (MARKETING_VERSION + CURRENT_PROJECT_VERSION)
  *
  * Usage:
  *   node scripts/propagate-version.js              # Propagate versions
@@ -106,6 +107,58 @@ function propagateMobile() {
       console.log(`✅ build.gradle → versionName "${version}", versionCode ${buildNumber}`);
     } else if (!CHECK_MODE) {
       console.log(`✅ build.gradle already in sync`);
+    }
+  }
+
+  // 3. Update mobile/ios/App/App.xcodeproj/project.pbxproj (if iOS project exists)
+  const pbxprojPath = path.resolve("mobile/ios/App/App.xcodeproj/project.pbxproj");
+  if (fs.existsSync(pbxprojPath)) {
+    let pbxproj = fs.readFileSync(pbxprojPath, "utf-8");
+    let pbxprojChanged = false;
+
+    // Update MARKETING_VERSION (appears in Debug + Release target build configs)
+    const marketingRegex = /MARKETING_VERSION = [^;]+;/g;
+    const expectedMarketing = `MARKETING_VERSION = ${version};`;
+    const marketingMatches = pbxproj.match(marketingRegex) || [];
+    const allMarketingCorrect = marketingMatches.every((m) => m === expectedMarketing);
+
+    if (!allMarketingCorrect && marketingMatches.length > 0) {
+      if (CHECK_MODE) {
+        console.error(
+          `❌ project.pbxproj MARKETING_VERSION mismatch: found "${marketingMatches[0]}", expected "${expectedMarketing}"`
+        );
+        allInSync = false;
+      } else {
+        pbxproj = pbxproj.replace(marketingRegex, expectedMarketing);
+        pbxprojChanged = true;
+      }
+    }
+
+    // Update CURRENT_PROJECT_VERSION (same formula as Android versionCode)
+    const projectVersionRegex = /CURRENT_PROJECT_VERSION = [^;]+;/g;
+    const expectedProjectVersion = `CURRENT_PROJECT_VERSION = ${buildNumber};`;
+    const versionMatches = pbxproj.match(projectVersionRegex) || [];
+    const allVersionCorrect = versionMatches.every((m) => m === expectedProjectVersion);
+
+    if (!allVersionCorrect && versionMatches.length > 0) {
+      if (CHECK_MODE) {
+        console.error(
+          `❌ project.pbxproj CURRENT_PROJECT_VERSION mismatch: found "${versionMatches[0]}", expected "${expectedProjectVersion}"`
+        );
+        allInSync = false;
+      } else {
+        pbxproj = pbxproj.replace(projectVersionRegex, expectedProjectVersion);
+        pbxprojChanged = true;
+      }
+    }
+
+    if (pbxprojChanged) {
+      fs.writeFileSync(pbxprojPath, pbxproj, "utf-8");
+      console.log(
+        `✅ project.pbxproj → MARKETING_VERSION = ${version}, CURRENT_PROJECT_VERSION = ${buildNumber}`
+      );
+    } else if (!CHECK_MODE) {
+      console.log(`✅ project.pbxproj already in sync`);
     }
   }
 

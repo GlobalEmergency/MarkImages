@@ -544,3 +544,37 @@ npm run ios:open          # Abrir Xcode
 - **Branding propio**: Se usa `/icon-96x96.png` (icono de la app) en lugar de Ionicons genéricos como logotipo.
 - **LoginPage / RegisterPage simplificadas**: Se mantienen como fallback para AuthGuard redirects y deep links, pero el flujo principal es el inline en el tab Perfil.
 - **Sin navegación a páginas externas**: Tras login/register exitoso, el AuthContext se actualiza y el ProfileTabPage muestra automáticamente el perfil del usuario (no `history.push`).
+
+### Release — Versionado iOS
+
+**Problema:** `propagate-version.js` solo sincronizaba Android (build.gradle). Las versiones iOS en `project.pbxproj` (`MARKETING_VERSION`, `CURRENT_PROJECT_VERSION`) eran manuales y estaban desincronizadas.
+
+**Solución:** `propagate-version.js` ahora propaga también a iOS:
+
+- `MARKETING_VERSION` = version semver (ej: `1.0.0`)
+- `CURRENT_PROJECT_VERSION` = build number con misma fórmula que Android (`major×1M + minor×1K + patch`)
+- Funciona tanto en modo propagación como en `--check` (CI)
+
+### Release — iOS CI/CD
+
+**Decisión:** Firma manual con p12 + provisioning profile en GitHub Secrets (no Fastlane match).
+**Razón:** Más simple, sin dependencias Ruby, mapea al patrón ya usado en Android.
+
+**Workflow** `.github/workflows/build-ios.yml`: 3 jobs (build-ios, deploy-testflight, create-release) — misma estructura que Android.
+
+- `macos-15` runner con Xcode 16.2
+- Override de firma en xcodebuild CLI (no se modifica el pbxproj → desarrollo local sigue con Automatic signing)
+- Keychain temporal con cleanup
+- SPM package cache
+- El job `create-release` es idempotente con `softprops/action-gh-release` — complementa el release creado por Android
+
+**Secrets iOS requeridos:** `IOS_CERTIFICATE_P12_BASE64`, `IOS_CERTIFICATE_PASSWORD`, `IOS_PROVISIONING_PROFILE_BASE64`, `IOS_TEAM_ID`, `APP_STORE_CONNECT_API_KEY_ID`, `APP_STORE_CONNECT_API_ISSUER_ID`, `APP_STORE_CONNECT_API_KEY_BASE64`
+
+### Release — Flujo Completo
+
+```
+mobile/version.json → propagate-version.js → package.json + build.gradle + project.pbxproj
+push a main → ensure-tags.yml → tag mobile@x.y.z
+tag → build-android.yml (Play Store internal) + build-ios.yml (TestFlight)
+probar → promover a producción manualmente
+```
