@@ -2,10 +2,11 @@ import { IAedRepository } from "../../domain/ports/IAedRepository";
 import { Aed, AedsByBoundsResult, CreateAedData, NearbyAed } from "../../domain/models/Aed";
 import { BoundingBox } from "../../domain/models/Location";
 import { ClusteredAedsApiResponse, NearbyAedsApiResponse } from "../../application/dto/AedDTO";
-import { HttpClient, ApiResponse } from "./HttpClient";
+import { IHttpClient } from "../../domain/ports/IHttpClient";
+import { ApiResponse } from "./HttpClient";
 
 export class ApiAedRepository implements IAedRepository {
-  constructor(private readonly httpClient: HttpClient) {}
+  constructor(private readonly httpClient: IHttpClient) {}
 
   async getByBounds(bounds: BoundingBox, zoom: number): Promise<AedsByBoundsResult> {
     const response = await this.httpClient.get<ClusteredAedsApiResponse>("/api/aeds/by-bounds", {

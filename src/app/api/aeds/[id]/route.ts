@@ -89,9 +89,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-    }
 
     const { id } = await params;
     const body = await request.json();
@@ -113,12 +110,29 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const hasImageChanges =
       (deleteImageIds && deleteImageIds.length > 0) || (addImages && addImages.length > 0);
 
-    // Preparar datos de actualización
-    const updateData: any = {
-      ...updateFields,
+    // Allowlist of fields non-admin users can update
+    const allowedFields = [
+      "name",
+      "establishment_type",
+      "status",
+      "description",
+      "accessibility",
+      "indoor",
+      "floor_info",
+      "access_info",
+      "phone",
+      "notes",
+      "publication_mode",
+    ] as const;
+    const updateData: Record<string, unknown> = {
       updated_by: user.userId,
       updated_at: new Date(),
     };
+    for (const field of allowedFields) {
+      if (field in updateFields) {
+        updateData[field] = updateFields[field];
+      }
+    }
 
     // Si cambia a PUBLISHED, establecer published_at
     if (

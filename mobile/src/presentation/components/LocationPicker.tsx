@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 
@@ -57,15 +57,10 @@ const DraggableMarker: React.FC<{
 };
 
 const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition, onChange }) => {
-  const center: [number, number] = initialPosition
-    ? [initialPosition.latitude, initialPosition.longitude]
-    : [40.4168, -3.7038];
-
-  const handleChange = useCallback(
-    (coords: Coordinates) => {
-      onChange(coords);
-    },
-    [onChange]
+  const center = useMemo<[number, number]>(
+    () =>
+      initialPosition ? [initialPosition.latitude, initialPosition.longitude] : [40.4168, -3.7038],
+    [initialPosition]
   );
 
   return (
@@ -87,7 +82,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition, onChan
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <DraggableMarker position={center} onChange={handleChange} />
+        <DraggableMarker position={center} onChange={onChange} />
       </MapContainer>
     </div>
   );

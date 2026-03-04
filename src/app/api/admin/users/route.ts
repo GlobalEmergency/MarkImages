@@ -5,23 +5,15 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, AuthError } from "@/lib/auth";
 
 /**
  * GET /api/admin/users
  * List all users (with optional filters)
  */
 export async function GET(request: NextRequest) {
-  // Verify admin permissions
-  const admin = await requireAdmin(request);
-  if (!admin) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized - Admin access required" },
-      { status: 403 }
-    );
-  }
-
   try {
+    await requireAdmin(request);
     const { searchParams } = new URL(request.url);
     const role = searchParams.get("role");
     const isActive = searchParams.get("is_active");
@@ -37,8 +29,8 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       where.OR = [
-        { email: { contains: search, mode: 'insensitive' } },
-        { name: { contains: search, mode: 'insensitive' } }
+        { email: { contains: search, mode: "insensitive" } },
+        { name: { contains: search, mode: "insensitive" } },
       ];
     }
 
@@ -65,14 +57,14 @@ export async function GET(request: NextRequest) {
                 name: true,
                 type: true,
                 code: true,
-              }
-            }
-          }
-        }
+              },
+            },
+          },
+        },
       },
       orderBy: {
-        created_at: 'desc'
-      }
+        created_at: "desc",
+      },
     });
 
     // Map to expected response shape
@@ -93,14 +85,16 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: usersWithOrgs
+      data: usersWithOrgs,
     });
-
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      );
+    }
     console.error("Error fetching users:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch users" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Failed to fetch users" }, { status: 500 });
   }
 }

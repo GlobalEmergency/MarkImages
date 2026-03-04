@@ -7,6 +7,7 @@ import { ReverseGeocodeService } from "../geocoding/ReverseGeocodeService";
 
 import { LoginUseCase } from "../../application/use-cases/LoginUseCase";
 import { RegisterUseCase } from "../../application/use-cases/RegisterUseCase";
+import { CheckSessionUseCase } from "../../application/use-cases/CheckSessionUseCase";
 import { GetAedsByBoundsUseCase } from "../../application/use-cases/GetAedsByBoundsUseCase";
 import { GetAedDetailUseCase } from "../../application/use-cases/GetAedDetailUseCase";
 import { CreateAedUseCase } from "../../application/use-cases/CreateAedUseCase";
@@ -27,13 +28,14 @@ const reverseGeocodeService = new ReverseGeocodeService();
 // Use Cases
 const loginUseCase = new LoginUseCase(authRepository);
 const registerUseCase = new RegisterUseCase(authRepository);
+const checkSessionUseCase = new CheckSessionUseCase(tokenStorage, authRepository);
 const getAedsByBoundsUseCase = new GetAedsByBoundsUseCase(aedRepository);
 const getAedDetailUseCase = new GetAedDetailUseCase(aedRepository);
 const createAedUseCase = new CreateAedUseCase(aedRepository);
 const getNearbyAedsUseCase = new GetNearbyAedsUseCase(aedRepository);
 
 export {
-  // Infrastructure (exposed for AuthContext which needs direct repo access)
+  // Infrastructure (authRepository exported for logout in AuthContext)
   httpClient,
   authRepository,
   tokenStorage,
@@ -42,6 +44,7 @@ export {
   // Use Cases
   loginUseCase,
   registerUseCase,
+  checkSessionUseCase,
   getAedsByBoundsUseCase,
   getAedDetailUseCase,
   createAedUseCase,

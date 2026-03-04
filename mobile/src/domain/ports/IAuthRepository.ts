@@ -10,6 +10,4 @@ export interface IAuthRepository {
   register(name: string, email: string, password: string): Promise<AuthResult>;
   logout(): Promise<void>;
   getMe(): Promise<UserPublic | null>;
-  getStoredToken(): Promise<string | null>;
-  clearToken(): Promise<void>;
 }

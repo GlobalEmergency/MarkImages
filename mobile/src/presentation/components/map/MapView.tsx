@@ -51,12 +51,21 @@ const MapView: React.FC<MapViewProps> = ({ onMarkerSelect, userPosition, flyToCo
     }
   }, [userPosition]);
 
+  // Keep a ref to userPosition so the flyTo effect doesn't re-fire on position changes
+  const userPositionRef = useRef(userPosition);
+  useEffect(() => {
+    userPositionRef.current = userPosition;
+  }, [userPosition]);
+
   // Fly to user position when the locate button is pressed (flyToCounter increments)
   useEffect(() => {
-    if (flyToCounter > 0 && userPosition && mapRef.current) {
-      mapRef.current.flyTo([userPosition.latitude, userPosition.longitude], 16);
+    if (flyToCounter > 0 && userPositionRef.current && mapRef.current) {
+      mapRef.current.flyTo(
+        [userPositionRef.current.latitude, userPositionRef.current.longitude],
+        16
+      );
     }
-  }, [flyToCounter]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [flyToCounter]);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>

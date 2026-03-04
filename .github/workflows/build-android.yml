@@ -34,6 +34,8 @@ jobs:
     name: Build Android APK & AAB
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
@@ -196,7 +198,7 @@ jobs:
         run: echo "version=${GITHUB_REF_NAME#mobile@}" >> "$GITHUB_OUTPUT"
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@c062e08bd532815e2082a7e09ce9f200309e996d # v2.2.1
         with:
           name: "DeaMap Mobile v${{ steps.version.outputs.version }}"
           generate_release_notes: true

@@ -24,7 +24,7 @@ export function useAedsByBounds(
   const [stats, setStats] = useState<UseAedsByBoundsResult["stats"]>(null);
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const mountedRef = useRef(true);
+  const mountedRef = useRef(false);
   const requestIdRef = useRef(0);
 
   const fetchData = useCallback(async (b: BoundingBox, z: number) => {

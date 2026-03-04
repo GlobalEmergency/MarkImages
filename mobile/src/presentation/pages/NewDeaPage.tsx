@@ -54,17 +54,24 @@ const NewDeaPage: React.FC = () => {
   // Reverse geocode when coords change
   useEffect(() => {
     if (!coords) return;
-
+    let cancelled = false;
     const controller = new AbortController();
-    reverseGeocodeService.reverse(coords, controller.signal).then((result) => {
-      if (result) {
-        setStreetName(result.streetName);
-        setStreetNumber(result.streetNumber);
-        setPostalCode(result.postalCode);
-      }
-    });
 
-    return () => controller.abort();
+    reverseGeocodeService
+      .reverse(coords, controller.signal)
+      .then((result) => {
+        if (!cancelled && result) {
+          setStreetName(result.streetName);
+          setStreetNumber(result.streetNumber);
+          setPostalCode(result.postalCode);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, [coords]);
 
   const handleLocationChange = useCallback((newCoords: Coordinates) => {

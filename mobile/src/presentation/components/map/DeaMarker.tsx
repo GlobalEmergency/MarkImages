@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 
@@ -30,23 +30,24 @@ const deaIcon = L.divIcon({
   iconAnchor: [16, 16],
 });
 
-const DeaMarker: React.FC<DeaMarkerProps> = ({ aed, onSelect }) => {
+const DeaMarker: React.FC<DeaMarkerProps> = React.memo(({ aed, onSelect }) => {
+  const eventHandlers = useMemo(() => ({ click: () => onSelect(aed) }), [aed, onSelect]);
+
   return (
-    <Marker
-      position={[aed.latitude, aed.longitude]}
-      icon={deaIcon}
-      eventHandlers={{
-        click: () => onSelect(aed),
-      }}
-    >
+    <Marker position={[aed.latitude, aed.longitude]} icon={deaIcon} eventHandlers={eventHandlers}>
       <Popup>
         <strong>{aed.name}</strong>
         {aed.establishment_type && (
-          <><br /><small>{aed.establishment_type}</small></>
+          <>
+            <br />
+            <small>{aed.establishment_type}</small>
+          </>
         )}
       </Popup>
     </Marker>
   );
-};
+});
+
+DeaMarker.displayName = "DeaMarker";
 
 export default DeaMarker;

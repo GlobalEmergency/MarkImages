@@ -1,4 +1,5 @@
 import { ITokenStorage } from "../../domain/ports/ITokenStorage";
+import { IHttpClient } from "../../domain/ports/IHttpClient";
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -7,7 +8,7 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
-export class HttpClient {
+export class HttpClient implements IHttpClient {
   private onUnauthorized?: () => void;
 
   constructor(

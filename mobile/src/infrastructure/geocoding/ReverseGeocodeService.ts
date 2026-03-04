@@ -1,14 +1,14 @@
 import { Coordinates } from "../../domain/models/Location";
+import {
+  IReverseGeocodeService,
+  ReverseGeocodeResult,
+} from "../../domain/ports/IReverseGeocodeService";
 
-export interface ReverseGeocodeResult {
-  streetName: string;
-  streetNumber: string;
-  postalCode: string;
-}
+export type { ReverseGeocodeResult } from "../../domain/ports/IReverseGeocodeService";
 
 const NOMINATIM_BASE_URL = "https://nominatim.openstreetmap.org";
 
-export class ReverseGeocodeService {
+export class ReverseGeocodeService implements IReverseGeocodeService {
   async reverse(coords: Coordinates, signal?: AbortSignal): Promise<ReverseGeocodeResult | null> {
     try {
       const response = await fetch(

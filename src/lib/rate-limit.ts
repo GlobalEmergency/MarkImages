@@ -24,13 +24,14 @@ const stores = new Map<string, Map<string, RateLimitEntry>>();
 
 // Periodic cleanup to prevent memory leaks (every 5 minutes)
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
-let lastCleanup = Date.now();
+const lastCleanupByStore = new Map<string, number>();
 
-function cleanupExpired(store: Map<string, RateLimitEntry>): void {
+function cleanupExpired(storeName: string, store: Map<string, RateLimitEntry>): void {
   const now = Date.now();
+  const lastCleanup = lastCleanupByStore.get(storeName) ?? 0;
   if (now - lastCleanup < CLEANUP_INTERVAL_MS) return;
 
-  lastCleanup = now;
+  lastCleanupByStore.set(storeName, now);
   for (const [key, entry] of store) {
     if (now > entry.resetAt) {
       store.delete(key);
@@ -53,7 +54,7 @@ export function createRateLimiter(name: string, config: RateLimitConfig) {
   const store = stores.get(name)!;
 
   return function checkRateLimit(request: NextRequest): NextResponse | null {
-    cleanupExpired(store);
+    cleanupExpired(name, store);
 
     const ip =
       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||

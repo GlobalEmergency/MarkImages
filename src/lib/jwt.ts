@@ -35,9 +35,7 @@ export async function createToken(payload: JWTPayload): Promise<string> {
 /**
  * Verify and decode a JWT token
  */
-export async function verifyToken(
-  token: string
-): Promise<JWTPayload | null> {
+export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getSecret());
     // Validate payload structure instead of blind cast
@@ -47,7 +45,9 @@ export async function verifyToken(
     }
     return { userId, email, role } as JWTPayload;
   } catch (error) {
-    console.error("JWT verification failed:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.warn("JWT verification failed:", error instanceof Error ? error.message : "unknown");
+    }
     return null;
   }
 }
@@ -94,9 +94,7 @@ export async function removeAuthCookie(): Promise<void> {
  * Checks the Authorization Bearer header first, then falls back to the session cookie.
  * Use this in API route handlers where you have access to the request object.
  */
-export async function getCurrentUserFromRequest(
-  request: NextRequest
-): Promise<JWTPayload | null> {
+export async function getCurrentUserFromRequest(request: NextRequest): Promise<JWTPayload | null> {
   // 1. Try Authorization: Bearer <token> header
   const authHeader = request.headers.get("Authorization");
   if (authHeader?.startsWith("Bearer ")) {

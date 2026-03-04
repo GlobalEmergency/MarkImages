@@ -2,8 +2,9 @@ import { Geolocation } from "@capacitor/geolocation";
 import { Capacitor } from "@capacitor/core";
 
 import { Coordinates } from "../../domain/models/Location";
+import { IGeolocationService } from "../../domain/ports/IGeolocationService";
 
-export class CapacitorGeolocationService {
+export class CapacitorGeolocationService implements IGeolocationService {
   async getCurrentPosition(): Promise<Coordinates> {
     const position = await Geolocation.getCurrentPosition({
       enableHighAccuracy: true,

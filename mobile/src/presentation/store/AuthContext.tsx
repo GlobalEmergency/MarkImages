@@ -1,7 +1,12 @@
 import React, { createContext, useCallback, useEffect, useState } from "react";
 
 import { UserPublic } from "../../domain/models/User";
-import { authRepository, loginUseCase, registerUseCase } from "../../infrastructure/di/container";
+import {
+  authRepository,
+  loginUseCase,
+  registerUseCase,
+  checkSessionUseCase,
+} from "../../infrastructure/di/container";
 
 export interface AuthContextValue {
   user: UserPublic | null;
@@ -20,20 +25,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check for existing session on mount
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const token = await authRepository.getStoredToken();
-        if (token) {
-          const currentUser = await authRepository.getMe();
-          setUser(currentUser);
-        }
-      } catch {
-        await authRepository.clearToken();
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    checkSession();
+    checkSessionUseCase
+      .execute()
+      .then(setUser)
+      .finally(() => setIsLoading(false));
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {

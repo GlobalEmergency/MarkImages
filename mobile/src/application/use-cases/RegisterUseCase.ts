@@ -1,4 +1,5 @@
 import { IAuthRepository, AuthResult } from "../../domain/ports/IAuthRepository";
+import { Password } from "../../domain/models/Password";
 
 export class RegisterUseCase {
   constructor(private readonly authRepository: IAuthRepository) {}
@@ -10,17 +11,9 @@ export class RegisterUseCase {
     if (!email?.trim()) {
       throw new Error("El email es obligatorio");
     }
-    if (!password || password.length < 8) {
-      throw new Error("La contraseña debe tener al menos 8 caracteres");
-    }
-    if (!/[A-Z]/.test(password)) {
-      throw new Error("La contraseña debe incluir al menos una mayúscula");
-    }
-    if (!/[a-z]/.test(password)) {
-      throw new Error("La contraseña debe incluir al menos una minúscula");
-    }
-    if (!/[0-9]/.test(password)) {
-      throw new Error("La contraseña debe incluir al menos un número");
+    const passwordErrors = Password.validate(password);
+    if (passwordErrors.length > 0) {
+      throw new Error(passwordErrors[0]);
     }
 
     return this.authRepository.register(name.trim(), email.trim().toLowerCase(), password);

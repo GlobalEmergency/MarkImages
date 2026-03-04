@@ -2,11 +2,11 @@ import { IAuthRepository, AuthResult } from "../../domain/ports/IAuthRepository"
 import { ITokenStorage } from "../../domain/ports/ITokenStorage";
 import { UserPublic } from "../../domain/models/User";
 import { AuthResponse } from "../../application/dto/AuthDTO";
-import { HttpClient } from "./HttpClient";
+import { IHttpClient } from "../../domain/ports/IHttpClient";
 
 export class ApiAuthRepository implements IAuthRepository {
   constructor(
-    private readonly httpClient: HttpClient,
+    private readonly httpClient: IHttpClient,
     private readonly tokenStorage: ITokenStorage
   ) {}
 
@@ -57,13 +57,5 @@ export class ApiAuthRepository implements IAuthRepository {
     } catch {
       return null;
     }
-  }
-
-  async getStoredToken(): Promise<string | null> {
-    return this.tokenStorage.getToken();
-  }
-
-  async clearToken(): Promise<void> {
-    return this.tokenStorage.removeToken();
   }
 }
