@@ -26,10 +26,21 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- Polyfill globalThis for older WebViews (Android < Chrome 71) -->
+    <!-- Polyfills for older Android WebViews (pre-Chrome 71) -->
     <script>
       if (typeof globalThis === "undefined") {
         self.globalThis = self;
+      }
+      if (typeof queueMicrotask !== "function") {
+        window.queueMicrotask = function (cb) {
+          Promise.resolve()
+            .then(cb)
+            .catch(function (e) {
+              setTimeout(function () {
+                throw e;
+              });
+            });
+        };
       }
     </script>
     <script type="module" src="/src/main.tsx"></script>
