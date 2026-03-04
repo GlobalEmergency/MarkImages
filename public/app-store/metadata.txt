@@ -1,0 +1,51 @@
+=============================================
+ APP STORE - METADATA PARA DEAMAP
+ iOS App Store Connect
+=============================================
+
+TEXTO PROMOCIONAL (max 170 caracteres):
+Encuentra el desfibrilador más cercano en segundos. Mapa colaborativo con miles de DEAs verificados en España. ¡Cada segundo cuenta!
+
+DESCRIPCIÓN (max 4000 caracteres):
+DeaMap es la aplicación gratuita que te ayuda a localizar desfibriladores externos automáticos (DEA) cerca de ti. En una emergencia cardíaca, cada segundo cuenta. Con DeaMap, encontrar el DEA más cercano es rápido y sencillo.
+
+FUNCIONES PRINCIPALES
+
+• Mapa interactivo: Visualiza todos los desfibriladores disponibles en tu zona con un mapa actualizado en tiempo real. Busca por dirección o usa tu ubicación GPS para encontrar el más cercano.
+
+• Información detallada: Consulta la dirección exacta, horario de acceso, instrucciones para llegar, teléfono de contacto y fecha de última verificación de cada DEA.
+
+• Navegación directa: Obtén indicaciones para llegar al desfibrilador con un solo toque. También puedes llamar al 112 directamente desde la app.
+
+• Colabora y salva vidas: Añade nuevos desfibriladores al mapa con un formulario sencillo. Tu contribución ayuda a que más personas puedan encontrar un DEA cuando lo necesitan.
+
+• Gestión para organizaciones: Si formas parte de Protección Civil, una empresa certificada o cualquier entidad que gestione DEAs, DeaMap te ofrece un panel de control completo para gestionar tus desfibriladores, verificar su estado y coordinar a tu equipo.
+
+• Importación masiva: Las organizaciones pueden importar sus inventarios de DEAs mediante archivos CSV, con validación automática y mapeo de columnas.
+
+• Datos verificados: Cada DEA puede ser verificado por los responsables, garantizando que la información esté siempre actualizada y sea fiable.
+
+POR QUÉ DEAMAP
+
+La muerte súbita cardíaca es una de las principales causas de fallecimiento en España. Un desfibrilador aplicado en los primeros minutos puede multiplicar por 10 las posibilidades de supervivencia. Sin embargo, muchas personas no saben dónde encontrar el DEA más cercano.
+
+DeaMap nace del proyecto Global Emergency con la misión de crear el mapa colaborativo de desfibriladores más completo de España, con el objetivo de expandirse a toda Europa.
+
+La aplicación es completamente gratuita, sin publicidad y sin necesidad de registro para buscar desfibriladores.
+
+Descarga DeaMap y ayúdanos a salvar vidas.
+
+PALABRAS CLAVE (max 100 caracteres):
+desfibrilador,DEA,AED,emergencia,cardíaca,mapa,salvar vidas,primeros auxilios,112,España,salud
+
+URL DE SOPORTE:
+https://www.globalemergency.online/proyectos/deamap
+
+URL DE MARKETING:
+https://www.deamap.es
+
+VERSIÓN:
+2.0.0
+
+COPYRIGHT:
+© 2026 Global Emergency. Todos los derechos reservados.
