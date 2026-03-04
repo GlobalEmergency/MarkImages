@@ -35,6 +35,9 @@ yarn-error.log*
 # /android  ← no longer ignored
 # /ios      ← no longer ignored
 
+# Environment files with potential secrets
+.env.production
+
 # Keystores and signing credentials (NEVER commit these)
 /keystores/*.keystore
 /keystores/*.jks

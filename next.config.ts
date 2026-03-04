@@ -34,11 +34,8 @@ const nextConfig: NextConfig = {
 
   productionBrowserSourceMaps: process.env.VERCEL_ENV === "preview",
 
-  // Security headers + CORS for mobile app
+  // Security headers (CORS is handled dynamically in src/middleware.ts)
   async headers() {
-    const mobileCorsOrigins =
-      process.env.MOBILE_CORS_ORIGINS || "capacitor://localhost,http://localhost";
-
     return [
       // .well-known files for iOS/Android app-domain association (credential autofill)
       {
@@ -46,28 +43,6 @@ const nextConfig: NextConfig = {
         headers: [
           { key: "Content-Type", value: "application/json" },
           { key: "Cache-Control", value: "public, max-age=3600" },
-        ],
-      },
-      // CORS headers for API routes (mobile app support)
-      {
-        source: "/api/:path*",
-        headers: [
-          {
-            key: "Access-Control-Allow-Origin",
-            value: mobileCorsOrigins.split(",")[0] || "*",
-          },
-          {
-            key: "Access-Control-Allow-Methods",
-            value: "GET, POST, PATCH, DELETE, OPTIONS",
-          },
-          {
-            key: "Access-Control-Allow-Headers",
-            value: "Content-Type, Authorization",
-          },
-          {
-            key: "Access-Control-Allow-Credentials",
-            value: "true",
-          },
         ],
       },
       // Security headers for all routes

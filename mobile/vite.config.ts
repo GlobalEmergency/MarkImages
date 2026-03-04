@@ -9,12 +9,12 @@ export default defineConfig({
   plugins: [react(), legacy()],
 
   server: {
-    // Proxy API calls to the production server in dev mode.
-    // This avoids CORS issues since the browser sees same-origin requests.
+    // Proxy API calls to avoid CORS issues in dev mode.
     // In production builds (device), CapacitorHttp handles CORS natively.
+    // Override with: VITE_API_PROXY_TARGET=http://localhost:3000 npm run dev
     proxy: {
       "/api": {
-        target: "https://deamap.es",
+        target: process.env.VITE_API_PROXY_TARGET || "https://deamap.es",
         changeOrigin: true,
         secure: true,
       },
@@ -24,6 +24,5 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
-    setupFiles: "./src/setupTests.ts",
   },
 });

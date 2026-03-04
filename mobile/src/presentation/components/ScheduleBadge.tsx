@@ -10,6 +10,9 @@ interface ScheduleBadgeProps {
 function isOpenNow(opening: string | null, closing: string | null): boolean {
   if (!opening || !closing) return false;
   const now = new Date();
+  const dayOfWeek = now.getDay();
+  // Weekday-only schedule: closed on weekends (0 = Sunday, 6 = Saturday)
+  if (dayOfWeek === 0 || dayOfWeek === 6) return false;
   const [openH, openM] = opening.split(":").map(Number);
   const [closeH, closeM] = closing.split(":").map(Number);
   const currentMinutes = now.getHours() * 60 + now.getMinutes();

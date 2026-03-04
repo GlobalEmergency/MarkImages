@@ -1,5 +1,5 @@
 import { IAedRepository } from "../../domain/ports/IAedRepository";
-import { NearbyAed } from "../dto/AedDTO";
+import { NearbyAed } from "../../domain/models/Aed";
 
 export class GetNearbyAedsUseCase {
   constructor(private readonly aedRepository: IAedRepository) {}

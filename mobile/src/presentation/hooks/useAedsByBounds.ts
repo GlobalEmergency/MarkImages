@@ -23,32 +23,34 @@ export function useAedsByBounds(
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<UseAedsByBoundsResult["stats"]>(null);
 
-  const abortControllerRef = useRef<AbortController | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+  const requestIdRef = useRef(0);
 
-  const fetchData = useCallback(
-    async (b: BoundingBox, z: number) => {
-      // Cancel previous request
-      abortControllerRef.current?.abort();
-      abortControllerRef.current = new AbortController();
+  const fetchData = useCallback(async (b: BoundingBox, z: number) => {
+    // Track request id so only the latest response updates state
+    const currentRequestId = ++requestIdRef.current;
 
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
-      try {
-        const response = await getAedsByBoundsUseCase.execute(b, z);
-        setMarkers(response.data.markers);
-        setClusters(response.data.clusters);
+    try {
+      const response = await getAedsByBoundsUseCase.execute(b, z);
+      if (mountedRef.current && currentRequestId === requestIdRef.current) {
+        setMarkers(response.markers);
+        setClusters(response.clusters);
         setStats(response.stats);
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") return;
+      }
+    } catch (err) {
+      if (mountedRef.current && currentRequestId === requestIdRef.current) {
         setError(err instanceof Error ? err.message : "Error cargando DEAs");
-      } finally {
+      }
+    } finally {
+      if (mountedRef.current && currentRequestId === requestIdRef.current) {
         setLoading(false);
       }
-    },
-    []
-  );
+    }
+  }, []);
 
   useEffect(() => {
     if (!bounds) return;
@@ -66,10 +68,10 @@ export function useAedsByBounds(
     };
   }, [bounds, zoom, debounceMs, fetchData]);
 
-  // Cleanup on unmount
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
-      abortControllerRef.current?.abort();
+      mountedRef.current = false;
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, []);

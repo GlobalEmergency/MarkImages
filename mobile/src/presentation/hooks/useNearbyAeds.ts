@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { NearbyAed } from "../../application/dto/AedDTO";
+import { NearbyAed } from "../../domain/models/Aed";
 import { Coordinates } from "../../domain/models/Location";
 import { getNearbyAedsUseCase, geolocationService } from "../../infrastructure/di/container";
 

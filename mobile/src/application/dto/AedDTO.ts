@@ -1,6 +1,14 @@
-import { Aed, AedCluster, AedMapMarker } from "../../domain/models/Aed";
+import { AedCluster, AedMapMarker } from "../../domain/models/Aed";
 
-export interface ClusteredAedsResponse {
+// Re-export domain types used by use cases
+export type {
+  NearbyAed,
+  CreateAedData as CreateAedRequest,
+  AedsByBoundsResult,
+} from "../../domain/models/Aed";
+
+/** Raw API response shape for clustered AEDs (infrastructure concern) */
+export interface ClusteredAedsApiResponse {
   success: boolean;
   data: {
     clusters: AedCluster[];
@@ -15,13 +23,10 @@ export interface ClusteredAedsResponse {
   strategy: string;
 }
 
-export interface NearbyAed extends Aed {
-  distance: number;
-}
-
-export interface NearbyAedsResponse {
+/** Raw API response shape for nearby AEDs (infrastructure concern) */
+export interface NearbyAedsApiResponse {
   success: boolean;
-  data: NearbyAed[];
+  data: Array<import("../../domain/models/Aed").NearbyAed>;
   query: {
     lat: number;
     lng: number;
@@ -32,18 +37,4 @@ export interface NearbyAedsResponse {
     found: number;
     searchRadius: number;
   };
-}
-
-export interface CreateAedRequest {
-  name: string;
-  establishment_type?: string;
-  latitude: number;
-  longitude: number;
-  location?: {
-    street_name?: string;
-    street_number?: string;
-    postal_code?: string;
-    city_name?: string;
-  };
-  source_details?: string;
 }

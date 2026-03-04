@@ -3,6 +3,7 @@ import { HttpClient } from "../api/HttpClient";
 import { ApiAuthRepository } from "../api/ApiAuthRepository";
 import { ApiAedRepository } from "../api/ApiAedRepository";
 import { CapacitorGeolocationService } from "../location/CapacitorGeolocation";
+import { ReverseGeocodeService } from "../geocoding/ReverseGeocodeService";
 
 import { LoginUseCase } from "../../application/use-cases/LoginUseCase";
 import { RegisterUseCase } from "../../application/use-cases/RegisterUseCase";
@@ -21,6 +22,7 @@ const httpClient = new HttpClient(API_BASE_URL, tokenStorage);
 const authRepository = new ApiAuthRepository(httpClient, tokenStorage);
 const aedRepository = new ApiAedRepository(httpClient);
 const geolocationService = new CapacitorGeolocationService();
+const reverseGeocodeService = new ReverseGeocodeService();
 
 // Use Cases
 const loginUseCase = new LoginUseCase(authRepository);
@@ -36,6 +38,7 @@ export {
   authRepository,
   tokenStorage,
   geolocationService,
+  reverseGeocodeService,
   // Use Cases
   loginUseCase,
   registerUseCase,

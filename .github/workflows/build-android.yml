@@ -94,7 +94,7 @@ jobs:
 
       - name: Sign Release APK
         if: env.ANDROID_SIGNING_KEY != ''
-        uses: r0adkll/sign-android-release@v1
+        uses: r0adkll/sign-android-release@349ebdef58775b1e0d8099458af0816dc79b6407 # v1
         with:
           releaseDirectory: mobile/android/app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
@@ -107,7 +107,7 @@ jobs:
 
       - name: Sign Release AAB
         if: env.ANDROID_SIGNING_KEY != ''
-        uses: r0adkll/sign-android-release@v1
+        uses: r0adkll/sign-android-release@349ebdef58775b1e0d8099458af0816dc79b6407 # v1
         with:
           releaseDirectory: mobile/android/app/build/outputs/bundle/release
           signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
@@ -117,6 +117,16 @@ jobs:
         env:
           ANDROID_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY }}
           BUILD_TOOLS_VERSION: "34.0.0"
+
+      - name: Verify release signing
+        if: env.ANDROID_SIGNING_KEY != ''
+        run: |
+          if [ ! -f mobile/android/app/build/outputs/bundle/release/*-signed* ]; then
+            echo "::error::Signed AAB not found — signing step may have failed"
+            exit 1
+          fi
+        env:
+          ANDROID_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY }}
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
@@ -157,7 +167,7 @@ jobs:
           path: artifacts
 
       - name: Upload to Google Play
-        uses: r0adkll/upload-google-play@v1
+        uses: r0adkll/upload-google-play@935ef9c68bb393a8e6116b1575626a7f5be3a7fb # v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: es.deamap.mobile

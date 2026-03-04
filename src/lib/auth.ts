@@ -5,46 +5,52 @@ import type { JWTPayload } from "@/types";
 
 import { getCurrentUserFromRequest } from "./jwt";
 
+export class AuthError extends Error {
+  constructor(
+    message: string,
+    public readonly statusCode: number = 401
+  ) {
+    super(message);
+    this.name = "AuthError";
+  }
+}
+
 /**
  * Get the current user from the request without requiring authentication.
- * Checks Authorization Bearer header first, then falls back to session cookie.
- * Returns null if not authenticated, making it suitable for optional auth checks.
+ * Returns null if not authenticated — suitable for optional auth checks.
  */
 export async function getUserFromRequest(request: NextRequest): Promise<JWTPayload | null> {
   return getCurrentUserFromRequest(request);
 }
 
 /**
- * Middleware to check if user is authenticated.
- * Checks Authorization Bearer header first, then falls back to session cookie.
+ * Require the user to be authenticated. Throws AuthError if not.
  */
-export async function requireAuth(request: NextRequest): Promise<JWTPayload | null> {
-  return getCurrentUserFromRequest(request);
-}
-
-/**
- * Middleware to check if user has specific role
- */
-export async function requireRole(
-  request: NextRequest,
-  allowedRoles: UserRole[]
-): Promise<JWTPayload | null> {
+export async function requireAuth(request: NextRequest): Promise<JWTPayload> {
   const user = await getCurrentUserFromRequest(request);
-
   if (!user) {
-    return null;
+    throw new AuthError("No autenticado");
   }
-
-  if (!allowedRoles.includes(user.role)) {
-    return null;
-  }
-
   return user;
 }
 
 /**
- * Middleware to check if user is admin
+ * Require the user to have a specific role. Throws AuthError if not.
  */
-export async function requireAdmin(request: NextRequest): Promise<JWTPayload | null> {
+export async function requireRole(
+  request: NextRequest,
+  allowedRoles: UserRole[]
+): Promise<JWTPayload> {
+  const user = await requireAuth(request);
+  if (!allowedRoles.includes(user.role)) {
+    throw new AuthError("No tienes permisos para esta acción", 403);
+  }
+  return user;
+}
+
+/**
+ * Require the user to be an admin. Throws AuthError if not.
+ */
+export async function requireAdmin(request: NextRequest): Promise<JWTPayload> {
   return requireRole(request, [UserRole.ADMIN]);
 }

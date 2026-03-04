@@ -19,7 +19,7 @@ import {
 import { useHistory } from "react-router-dom";
 import { locationOutline, heartOutline, navigateOutline } from "ionicons/icons";
 
-import { NearbyAed } from "../../application/dto/AedDTO";
+import { NearbyAed } from "../../domain/models/Aed";
 import { useNearbyAeds } from "../hooks/useNearbyAeds";
 import { formatDistance } from "../utils/format";
 import ScheduleBadge from "../components/ScheduleBadge";

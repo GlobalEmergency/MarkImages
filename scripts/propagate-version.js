@@ -27,7 +27,8 @@ function writeJson(filePath, data) {
 
 function calculateBuildNumber(version) {
   const [major, minor, patch] = version.split(".").map(Number);
-  return major * 10000 + minor * 100 + patch;
+  // Supports major 0-999, minor 0-999, patch 0-999 without collisions
+  return major * 1_000_000 + minor * 1_000 + patch;
 }
 
 function propagateMobile() {

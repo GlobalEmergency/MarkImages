@@ -16,10 +16,7 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!email || !password) {
-      return NextResponse.json(
-        { error: "Email y contraseña son obligatorios" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Email y contraseña son obligatorios" }, { status: 400 });
     }
 
     // Find user by email
@@ -28,28 +25,17 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "Credenciales inválidas" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Credenciales inválidas" }, { status: 401 });
     }
 
-    // Check if user is active
-    if (!user.is_active) {
-      return NextResponse.json(
-        { error: "Cuenta desactivada" },
-        { status: 403 }
-      );
-    }
-
-    // Verify password
-    const isValidPassword = await verifyPassword(password, user.password_hash);
+    // Verify password and check active status
+    // Use a unified error message to prevent account enumeration
+    const isValidPassword = user.is_active
+      ? await verifyPassword(password, user.password_hash)
+      : false;
 
     if (!isValidPassword) {
-      return NextResponse.json(
-        { error: "Credenciales inválidas" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Credenciales inválidas" }, { status: 401 });
     }
 
     // Update last login
@@ -81,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     const response: AuthResponse = {
       user: userPublic,
-      token,
+      token, // Included for mobile app (Bearer auth); web clients use the httpOnly cookie
       message: "Login exitoso",
     };
 
@@ -96,7 +82,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: "Error al iniciar sesión",
-        ...(isDevelopment && { details: errorMessage })
+        ...(isDevelopment && { details: errorMessage }),
       },
       { status: 500 }
     );

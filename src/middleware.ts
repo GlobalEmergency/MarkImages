@@ -53,9 +53,23 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Handle CORS preflight requests (OPTIONS)
+  // Handle CORS preflight requests (OPTIONS) with dynamic origin
   if (request.method === "OPTIONS") {
-    return new NextResponse(null, { status: 204 });
+    const origin = request.headers.get("Origin") || "";
+    const allowedOrigins = (
+      process.env.MOBILE_CORS_ORIGINS || "capacitor://localhost,http://localhost"
+    ).split(",");
+    const allowOrigin = allowedOrigins.includes(origin) ? origin : "";
+
+    return new NextResponse(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": allowOrigin,
+        "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Credentials": "true",
+      },
+    });
   }
 
   // Skip if not a protected path
@@ -65,13 +79,11 @@ export async function middleware(request: NextRequest) {
 
   // Check for auth: Bearer token header first, then cookie
   const authHeader = request.headers.get("Authorization");
-  const token = (authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null)
-    || request.cookies.get(COOKIE_NAME)?.value;
+  const token =
+    (authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null) ||
+    request.cookies.get(COOKIE_NAME)?.value;
   if (!token) {
-    return NextResponse.json(
-      { error: "No autenticado" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
   // Verify JWT structure (Edge-compatible using jose)
@@ -80,20 +92,14 @@ export async function middleware(request: NextRequest) {
     if (!secret) {
       // In production without JWT_SECRET, reject all requests
       console.error("[Middleware] JWT_SECRET not configured");
-      return NextResponse.json(
-        { error: "Error de configuración del servidor" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Error de configuración del servidor" }, { status: 500 });
     }
 
     const encodedSecret = new TextEncoder().encode(secret);
     await jwtVerify(token, encodedSecret);
   } catch {
     // Token invalid or expired
-    return NextResponse.json(
-      { error: "Sesión inválida o expirada" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Sesión inválida o expirada" }, { status: 401 });
   }
 
   return NextResponse.next();

@@ -17,7 +17,7 @@ import {
 import { useHistory } from "react-router-dom";
 
 import { Coordinates } from "../../domain/models/Location";
-import { createAedUseCase } from "../../infrastructure/di/container";
+import { createAedUseCase, reverseGeocodeService } from "../../infrastructure/di/container";
 import LocationPicker from "../components/LocationPicker";
 import { useGeolocation } from "../hooks/useGeolocation";
 
@@ -56,21 +56,13 @@ const NewDeaPage: React.FC = () => {
     if (!coords) return;
 
     const controller = new AbortController();
-    fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.latitude}&lon=${coords.longitude}&zoom=18&addressdetails=1`,
-      { signal: controller.signal }
-    )
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.address) {
-          setStreetName(data.address.road || data.address.pedestrian || "");
-          setStreetNumber(data.address.house_number || "");
-          setPostalCode(data.address.postcode || "");
-        }
-      })
-      .catch(() => {
-        // Ignore reverse geocode errors
-      });
+    reverseGeocodeService.reverse(coords, controller.signal).then((result) => {
+      if (result) {
+        setStreetName(result.streetName);
+        setStreetNumber(result.streetNumber);
+        setPostalCode(result.postalCode);
+      }
+    });
 
     return () => controller.abort();
   }, [coords]);

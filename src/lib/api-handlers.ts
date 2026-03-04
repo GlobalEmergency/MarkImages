@@ -22,7 +22,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import type { JWTPayload } from "@/types";
 
-import { requireAuth, requireAdmin } from "./auth";
+import { requireAuth, requireAdmin, AuthError } from "./auth";
 
 type AuthenticatedHandler = (
   request: NextRequest,
@@ -36,6 +36,26 @@ type AdminHandler = (
   context?: { params: Promise<Record<string, string>> }
 ) => Promise<NextResponse>;
 
+function handleError(request: NextRequest, error: unknown): NextResponse {
+  if (error instanceof AuthError) {
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: error.statusCode }
+    );
+  }
+
+  console.error(`[${request.method} ${request.nextUrl.pathname}]`, error);
+  const isDev = process.env.NODE_ENV === "development";
+  return NextResponse.json(
+    {
+      success: false,
+      error: "Internal server error",
+      ...(isDev && { details: error instanceof Error ? error.message : String(error) }),
+    },
+    { status: 500 }
+  );
+}
+
 /**
  * Wraps a route handler with authentication check.
  * Returns 401 if not authenticated, otherwise calls handler with verified user.
@@ -45,27 +65,11 @@ export function withAuth(handler: AuthenticatedHandler) {
     request: NextRequest,
     context?: { params: Promise<Record<string, string>> }
   ): Promise<NextResponse> => {
-    const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: "No autorizado" },
-        { status: 401 }
-      );
-    }
-
     try {
+      const user = await requireAuth(request);
       return await handler(request, user, context);
     } catch (error) {
-      console.error(`[${request.method} ${request.nextUrl.pathname}]`, error);
-      const isDev = process.env.NODE_ENV === "development";
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Internal server error",
-          ...(isDev && { details: error instanceof Error ? error.message : String(error) }),
-        },
-        { status: 500 }
-      );
+      return handleError(request, error);
     }
   };
 }
@@ -79,27 +83,11 @@ export function withAdmin(handler: AdminHandler) {
     request: NextRequest,
     context?: { params: Promise<Record<string, string>> }
   ): Promise<NextResponse> => {
-    const admin = await requireAdmin(request);
-    if (!admin) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized - Admin access required" },
-        { status: 403 }
-      );
-    }
-
     try {
+      const admin = await requireAdmin(request);
       return await handler(request, admin, context);
     } catch (error) {
-      console.error(`[${request.method} ${request.nextUrl.pathname}]`, error);
-      const isDev = process.env.NODE_ENV === "development";
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Internal server error",
-          ...(isDev && { details: error instanceof Error ? error.message : String(error) }),
-        },
-        { status: 500 }
-      );
+      return handleError(request, error);
     }
   };
 }

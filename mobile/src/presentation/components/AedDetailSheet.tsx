@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   IonContent,
   IonText,
@@ -10,8 +10,7 @@ import {
 } from "@ionic/react";
 import { navigate as navigateIcon, time, call, location } from "ionicons/icons";
 
-import { Aed } from "../../domain/models/Aed";
-import { getAedDetailUseCase } from "../../infrastructure/di/container";
+import { useAedDetail } from "../hooks/useAedDetail";
 
 interface AedDetailSheetProps {
   aedId: string;
@@ -19,35 +18,10 @@ interface AedDetailSheetProps {
 }
 
 const AedDetailSheet: React.FC<AedDetailSheetProps> = ({ aedId, name }) => {
-  const [aed, setAed] = useState<Aed | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-
-    getAedDetailUseCase
-      .execute(aedId)
-      .then((data) => {
-        if (!cancelled) setAed(data);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Error cargando detalle");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [aedId]);
+  const { aed, loading, error } = useAedDetail(aedId);
 
   const handleNavigate = () => {
     if (aed) {
-      // Opens native maps app
       const url = `geo:${aed.latitude},${aed.longitude}?q=${aed.latitude},${aed.longitude}(${encodeURIComponent(aed.name)})`;
       window.open(url, "_system");
     }
@@ -90,10 +64,12 @@ const AedDetailSheet: React.FC<AedDetailSheetProps> = ({ aedId, name }) => {
         </IonChip>
       )}
 
-      {/* Address */}
       {aed.location && (
         <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 12 }}>
-          <IonIcon icon={location} style={{ fontSize: 20, marginTop: 2, color: "var(--ion-color-primary)" }} />
+          <IonIcon
+            icon={location}
+            style={{ fontSize: 20, marginTop: 2, color: "var(--ion-color-primary)" }}
+          />
           <IonText>
             <p style={{ margin: 0 }}>
               {aed.location.street_type} {aed.location.street_name}
@@ -111,7 +87,6 @@ const AedDetailSheet: React.FC<AedDetailSheetProps> = ({ aedId, name }) => {
         </div>
       )}
 
-      {/* Schedule */}
       {aed.schedule && (
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
           <IonIcon icon={time} style={{ fontSize: 20, color: "var(--ion-color-primary)" }} />
@@ -129,7 +104,6 @@ const AedDetailSheet: React.FC<AedDetailSheetProps> = ({ aedId, name }) => {
         </div>
       )}
 
-      {/* Contact */}
       {aed.responsible?.phone && (
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
           <IonIcon icon={call} style={{ fontSize: 20, color: "var(--ion-color-primary)" }} />

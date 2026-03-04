@@ -67,3 +67,34 @@ export interface Aed {
   } | null;
   images?: AedImage[];
 }
+
+/** An AED with its distance from a reference point (km) */
+export interface NearbyAed extends Aed {
+  distance: number;
+}
+
+/** Data required to create a new AED */
+export interface CreateAedData {
+  name: string;
+  establishment_type?: string;
+  latitude: number;
+  longitude: number;
+  location?: {
+    street_name?: string;
+    street_number?: string;
+    postal_code?: string;
+    city_name?: string;
+  };
+  source_details?: string;
+}
+
+/** Result of querying AEDs within map bounds */
+export interface AedsByBoundsResult {
+  markers: AedMapMarker[];
+  clusters: AedCluster[];
+  stats: {
+    total_in_view: number;
+    clustered: number;
+    individual: number;
+  };
+}
