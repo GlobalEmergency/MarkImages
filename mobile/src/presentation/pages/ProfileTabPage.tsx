@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   IonPage,
   IonHeader,
@@ -11,26 +11,223 @@ import {
   IonItem,
   IonLabel,
   IonChip,
+  IonInput,
+  IonText,
+  IonLoading,
+  IonSpinner,
+  useIonToast,
 } from "@ionic/react";
 import { useHistory } from "react-router-dom";
-import {
-  logOut,
-  person,
-  mail,
-  shield,
-  heartOutline,
-  logInOutline,
-  personAddOutline,
-  addCircleOutline,
-} from "ionicons/icons";
+import { logOut, person, mail, shield, addCircleOutline } from "ionicons/icons";
 
 import { useAuth } from "../hooks/useAuth";
+import { promptSaveCredentials } from "../../infrastructure/auth/CredentialService";
 
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: "Administrador",
   MODERATOR: "Moderador",
   USER: "Usuario",
 };
+
+/* ---------- Inline Auth Form (login + register toggle) ---------- */
+
+const AuthForm: React.FC = () => {
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { login, register } = useAuth();
+  const [presentToast] = useIonToast();
+
+  const resetFields = () => {
+    setEmail("");
+    setPassword("");
+    setName("");
+    setConfirmPassword("");
+  };
+
+  const toggleMode = () => {
+    resetFields();
+    setMode((m) => (m === "login" ? "register" : "login"));
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await login(email, password);
+      await promptSaveCredentials(email, password);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Error al iniciar sesión";
+      presentToast({ message, duration: 3000, color: "danger", position: "top" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      presentToast({
+        message: "Las contraseñas no coinciden",
+        duration: 3000,
+        color: "warning",
+        position: "top",
+      });
+      return;
+    }
+    setLoading(true);
+    try {
+      await register(name, email, password);
+      await promptSaveCredentials(email, password);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Error al registrarse";
+      presentToast({ message, duration: 3000, color: "danger", position: "top" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "70vh",
+        maxWidth: 400,
+        margin: "0 auto",
+        padding: "24px 16px",
+      }}
+    >
+      {/* App branding */}
+      <img src="/icon-96x96.png" alt="DeaMap" style={{ width: 72, height: 72, marginBottom: 8 }} />
+      <IonText>
+        <h2 style={{ textAlign: "center", margin: "0 0 4px" }}>DeaMap</h2>
+        <p
+          style={{
+            textAlign: "center",
+            color: "var(--ion-color-medium)",
+            margin: "0 0 24px",
+            fontSize: 14,
+          }}
+        >
+          {mode === "login"
+            ? "Inicia sesión para contribuir registrando desfibriladores"
+            : "Crea tu cuenta para ayudar a salvar vidas"}
+        </p>
+      </IonText>
+
+      {/* ---- Login form ---- */}
+      {mode === "login" && (
+        <form onSubmit={handleLogin} style={{ width: "100%" }} autoComplete="on">
+          <IonInput
+            type="email"
+            name="email"
+            label="Email"
+            labelPlacement="floating"
+            fill="outline"
+            value={email}
+            autocomplete="email"
+            inputMode="email"
+            onIonInput={(e) => setEmail(e.detail.value || "")}
+            required
+            style={{ marginBottom: 16 }}
+          />
+          <IonInput
+            type="password"
+            name="password"
+            label="Contraseña"
+            labelPlacement="floating"
+            fill="outline"
+            value={password}
+            autocomplete="current-password"
+            onIonInput={(e) => setPassword(e.detail.value || "")}
+            required
+            style={{ marginBottom: 24 }}
+          />
+          <IonButton expand="block" type="submit" disabled={loading}>
+            {loading ? <IonSpinner name="crescent" /> : "Iniciar sesión"}
+          </IonButton>
+        </form>
+      )}
+
+      {/* ---- Register form ---- */}
+      {mode === "register" && (
+        <form onSubmit={handleRegister} style={{ width: "100%" }} autoComplete="on">
+          <IonInput
+            type="text"
+            name="name"
+            label="Nombre"
+            labelPlacement="floating"
+            fill="outline"
+            value={name}
+            autocomplete="name"
+            onIonInput={(e) => setName(e.detail.value || "")}
+            required
+            style={{ marginBottom: 16 }}
+          />
+          <IonInput
+            type="email"
+            name="email"
+            label="Email"
+            labelPlacement="floating"
+            fill="outline"
+            value={email}
+            autocomplete="email"
+            inputMode="email"
+            onIonInput={(e) => setEmail(e.detail.value || "")}
+            required
+            style={{ marginBottom: 16 }}
+          />
+          <IonInput
+            type="password"
+            name="password"
+            label="Contraseña"
+            labelPlacement="floating"
+            fill="outline"
+            value={password}
+            autocomplete="new-password"
+            onIonInput={(e) => setPassword(e.detail.value || "")}
+            required
+            helperText="Mínimo 8 caracteres, con mayúscula, minúscula y número"
+            style={{ marginBottom: 16 }}
+          />
+          <IonInput
+            type="password"
+            name="confirm-password"
+            label="Confirmar contraseña"
+            labelPlacement="floating"
+            fill="outline"
+            value={confirmPassword}
+            autocomplete="new-password"
+            onIonInput={(e) => setConfirmPassword(e.detail.value || "")}
+            required
+            style={{ marginBottom: 24 }}
+          />
+          <IonButton expand="block" type="submit" disabled={loading}>
+            {loading ? <IonSpinner name="crescent" /> : "Crear cuenta"}
+          </IonButton>
+        </form>
+      )}
+
+      {/* Toggle link */}
+      <IonButton fill="clear" size="small" onClick={toggleMode} style={{ marginTop: 12 }}>
+        {mode === "login" ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
+      </IonButton>
+
+      <IonLoading
+        isOpen={loading}
+        message={mode === "login" ? "Iniciando sesión..." : "Creando cuenta..."}
+      />
+    </div>
+  );
+};
+
+/* ---------- Profile Tab Page ---------- */
 
 const ProfileTabPage: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -44,46 +241,8 @@ const ProfileTabPage: React.FC = () => {
             <IonTitle>Perfil</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent className="ion-padding">
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "60vh",
-              gap: 16,
-              textAlign: "center",
-              padding: 32,
-            }}
-          >
-            <IonIcon
-              icon={heartOutline}
-              style={{ fontSize: 72, color: "var(--ion-color-primary)" }}
-            />
-            <h2 style={{ margin: 0, fontSize: 22 }}>DeaMap</h2>
-            <p style={{ color: "var(--ion-color-medium)", margin: 0 }}>
-              Inicia sesión para contribuir registrando nuevos desfibriladores y ayudar a salvar
-              vidas.
-            </p>
-            <IonButton
-              expand="block"
-              onClick={() => history.push("/login")}
-              style={{ width: "100%", maxWidth: 300, marginTop: 8 }}
-            >
-              <IonIcon icon={logInOutline} slot="start" />
-              Iniciar sesión
-            </IonButton>
-            <IonButton
-              expand="block"
-              fill="outline"
-              onClick={() => history.push("/register")}
-              style={{ width: "100%", maxWidth: 300 }}
-            >
-              <IonIcon icon={personAddOutline} slot="start" />
-              Registrarse
-            </IonButton>
-          </div>
+        <IonContent className="ion-padding" scrollY>
+          <AuthForm />
         </IonContent>
       </IonPage>
     );

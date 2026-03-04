@@ -533,3 +533,14 @@ npm run ios:open          # Abrir Xcode
 
 - **`globalThis` polyfill**: Inline en `index.html` antes del bundle. Necesario para WebViews Android pre-Chrome 71.
 - **`@vitejs/plugin-legacy`**: Targets `Chrome >= 61, Android >= 5` para máxima compatibilidad.
+
+### Mobile — Auth/UX Flow
+
+**Problema:** El perfil redirigía a páginas standalone (`/login`, `/register`) lo que causaba una navegación fragmentada y poco fluida. El usuario perdía el tab bar al navegar. Se usaban iconos de Ionicons (`heartCircle`, `heartOutline`) como "logo" de la app, dando aspecto de branding ajeno.
+
+**Solución:**
+
+- **Formulario inline en ProfileTabPage**: Login y registro embebidos directamente en el tab Perfil con un toggle "¿No tienes cuenta? / ¿Ya tienes cuenta?". El usuario nunca sale de la navegación con tabs.
+- **Branding propio**: Se usa `/icon-96x96.png` (icono de la app) en lugar de Ionicons genéricos como logotipo.
+- **LoginPage / RegisterPage simplificadas**: Se mantienen como fallback para AuthGuard redirects y deep links, pero el flujo principal es el inline en el tab Perfil.
+- **Sin navegación a páginas externas**: Tras login/register exitoso, el AuthContext se actualiza y el ProfileTabPage muestra automáticamente el perfil del usuario (no `history.push`).

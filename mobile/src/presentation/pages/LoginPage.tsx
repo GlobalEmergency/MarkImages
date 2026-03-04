@@ -6,15 +6,18 @@ import {
   IonButton,
   IonText,
   IonLoading,
-  IonIcon,
+  IonSpinner,
   useIonToast,
 } from "@ionic/react";
-import { heartCircle } from "ionicons/icons";
 import { useHistory } from "react-router-dom";
 
 import { useAuth } from "../hooks/useAuth";
 import { promptSaveCredentials } from "../../infrastructure/auth/CredentialService";
 
+/**
+ * Standalone login page — used when AuthGuard redirects here.
+ * The primary login flow is now inline in ProfileTabPage.
+ */
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -52,7 +55,11 @@ const LoginPage: React.FC = () => {
             margin: "0 auto",
           }}
         >
-          <IonIcon icon={heartCircle} style={{ fontSize: 80, color: "var(--ion-color-primary)" }} />
+          <img
+            src="/icon-96x96.png"
+            alt="DeaMap"
+            style={{ width: 72, height: 72, marginBottom: 8 }}
+          />
           <IonText>
             <h1 style={{ textAlign: "center", marginBottom: 8 }}>DeaMap</h1>
             <p style={{ textAlign: "center", color: "var(--ion-color-medium)", marginBottom: 32 }}>
@@ -87,7 +94,7 @@ const LoginPage: React.FC = () => {
               style={{ marginBottom: 24 }}
             />
             <IonButton expand="block" type="submit" disabled={loading}>
-              Iniciar sesión
+              {loading ? <IonSpinner name="crescent" /> : "Iniciar sesión"}
             </IonButton>
           </form>
 

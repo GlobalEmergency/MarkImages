@@ -6,15 +6,18 @@ import {
   IonButton,
   IonText,
   IonLoading,
-  IonIcon,
+  IonSpinner,
   useIonToast,
 } from "@ionic/react";
-import { heartCircle } from "ionicons/icons";
 import { useHistory } from "react-router-dom";
 
 import { useAuth } from "../hooks/useAuth";
 import { promptSaveCredentials } from "../../infrastructure/auth/CredentialService";
 
+/**
+ * Standalone register page — used when AuthGuard redirects here.
+ * The primary registration flow is now inline in ProfileTabPage.
+ */
 const RegisterPage: React.FC = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -65,7 +68,11 @@ const RegisterPage: React.FC = () => {
             margin: "0 auto",
           }}
         >
-          <IonIcon icon={heartCircle} style={{ fontSize: 64, color: "var(--ion-color-primary)" }} />
+          <img
+            src="/icon-96x96.png"
+            alt="DeaMap"
+            style={{ width: 64, height: 64, marginBottom: 8 }}
+          />
           <IonText>
             <h1 style={{ textAlign: "center", marginBottom: 8 }}>Crear cuenta</h1>
             <p style={{ textAlign: "center", color: "var(--ion-color-medium)", marginBottom: 24 }}>
@@ -125,7 +132,7 @@ const RegisterPage: React.FC = () => {
               style={{ marginBottom: 24 }}
             />
             <IonButton expand="block" type="submit" disabled={loading}>
-              Registrarse
+              {loading ? <IonSpinner name="crescent" /> : "Crear cuenta"}
             </IonButton>
           </form>
 
