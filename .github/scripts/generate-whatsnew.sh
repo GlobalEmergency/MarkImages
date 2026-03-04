@@ -62,6 +62,6 @@ fi
 
 # Write to all locales
 for LOCALE in "${LOCALES[@]}"; do
-  echo "$NOTES" > "$WHATSNEW_DIR/whatsnew-${LOCALE}"
+  printf '%s' "$NOTES" > "$WHATSNEW_DIR/whatsnew-${LOCALE}"
   echo "Written whatsnew-${LOCALE} (${#NOTES} chars)"
 done
