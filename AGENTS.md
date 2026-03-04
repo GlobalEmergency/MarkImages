@@ -415,9 +415,11 @@ xl: "1280px"; // Large desktop
 ### Mobile (Ionic React + Capacitor)
 
 - **Clean Architecture**: domain → application → infrastructure → presentation
-- **Leaflet** para mapas (mismo que web, funciona en WebView)
+- **Leaflet** para mapas (mismo que web, funciona en WebView). **NO** MapKit/Google Maps nativos. No se necesita `com.apple.developer.maps` en iOS
 - **Capacitor Preferences** para token storage (SharedPreferences/UserDefaults)
 - **Bearer token auth** (no cookies, Capacitor WebView no las comparte)
+- **HTTP en nativo**: `CapacitorHttp.request()` llamado DIRECTAMENTE (no fetch-patching). `CapacitorHttp: { enabled: false }` en capacitor.config.ts. En web/dev se usa `fetch` estándar vía Vite proxy
+- **Legacy support**: `@vitejs/plugin-legacy` con targets `Chrome >= 61, Android >= 5` + polyfill `globalThis` en index.html para WebViews antiguos
 
 **Scripts de desarrollo:**
 
@@ -479,3 +481,55 @@ npm run ios:open          # Abrir Xcode
 3. **Simplicidad**: La solución más simple que funcione
 4. **Mantenibilidad**: Código limpio, testeable, documentado por nombres
 5. **Performance**: Solo optimizar cuando sea necesario y medido
+
+---
+
+## 14. Decisiones Arquitectónicas (Historial)
+
+### Mobile — HTTP y WebView
+
+**Problema:** El `hostname: "deamap.es"` en capacitor.config.ts (necesario para autofill de credenciales) hace que el WebView intercepte TODAS las peticiones a `https://deamap.es/*` como assets locales. `CapacitorHttp: { enabled: true }` NO intercepta peticiones al mismo hostname — las trata como "locales". Resultado: las API calls devuelven `index.html` (SPA fallback) en vez de JSON.
+
+**Solución:** `HttpClient` usa `CapacitorHttp.request()` directamente en nativo (bypass total del WebView). En web/dev, `fetch` estándar vía Vite proxy. `CapacitorHttp: { enabled: false }`.
+
+### Mobile — DDD Ports
+
+**Ports creados:** `IHttpClient`, `IGeolocationService`, `IReverseGeocodeService`, `IAuthRepository`, `IAedRepository`.
+**Regla:** Infraestructura nunca se importa desde presentation. Todo se resuelve en `mobile/src/infrastructure/di/container.ts`.
+
+### Mobile — React Performance
+
+- `React.memo` en markers de mapa (DeaMarker, ClusterMarker)
+- `useMemo` para refs estables (center, event handlers)
+- `useRef` para valores usados en effects (evita eslint-disable de exhaustive-deps)
+- `requestIdRef` pattern para evitar stale data en hooks async (useAedDetail)
+
+### Mobile — Value Objects
+
+- `Password`: Valida reglas de contraseña. Método estático `Password.validate(password): string[]`
+- Los VO se ubican en `mobile/src/domain/models/`
+
+### Backend — Seguridad
+
+- **requireAuth** lanza `AuthError` (nunca retorna null). No necesita null-check después.
+- **requireAdmin** envuelve requireAuth + role check. Usar en rutas admin en vez de check manual.
+- **Image proxy**: requiere auth (NO en PUBLIC_PATHS). Previene SSRF.
+- **PATCH endpoints**: deben usar allowlist de campos. Previene mass-assignment.
+- **Rate limiting**: usar `createRateLimiter()` de `src/lib/rate-limit.ts`. No crear rate limiters artesanales.
+- **API errors**: usar `apiError()` de `src/lib/api-error.ts`. No exponer `error.message` en producción.
+
+### Backend — SES/S3 Singletons
+
+`getS3Client()` y `getSESClient()` siguen patrón singleton (lazy init). No crear clientes por cada request.
+
+### CI/CD
+
+- **GitHub Actions**: third-party actions pinneadas a commit SHA (no tags)
+- **Prettier**: gate duro en CI (sin `continue-on-error`)
+- **Version sync**: `scripts/propagate-version.js --check` en job quality
+- **moduleResolution**: `"Bundler"` en tsconfigs mobile (ESM + Vite)
+
+### Mobile — Compatibilidad
+
+- **`globalThis` polyfill**: Inline en `index.html` antes del bundle. Necesario para WebViews Android pre-Chrome 71.
+- **`@vitejs/plugin-legacy`**: Targets `Chrome >= 61, Android >= 5` para máxima compatibilidad.

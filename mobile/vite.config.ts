@@ -6,7 +6,13 @@ import { defineConfig } from "vite";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), legacy()],
+  plugins: [
+    react(),
+    legacy({
+      // Support older Android WebViews (globalThis, optional chaining, etc.)
+      targets: ["defaults", "Chrome >= 61", "Android >= 5"],
+    }),
+  ],
 
   server: {
     // Proxy API calls to avoid CORS issues in dev mode.
