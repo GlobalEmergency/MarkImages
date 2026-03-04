@@ -491,14 +491,14 @@ jobs:
     steps:
       - name: Download Android artifacts
         if: needs.build-android.result == 'success'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: app-release-android-${{ needs.prepare.outputs.version }}
           path: ./android
 
       - name: Download iOS artifacts
         if: needs.build-ios.result == 'success'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: app-release-ios-${{ needs.prepare.outputs.version }}
           path: ./ios
