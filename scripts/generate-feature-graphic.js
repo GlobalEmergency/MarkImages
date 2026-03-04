@@ -1,4 +1,4 @@
-const { createCanvas } = require("canvas");
+const { createCanvas, loadImage } = require("canvas");
 const fs = require("fs");
 const path = require("path");
 
@@ -7,16 +7,23 @@ const HEIGHT = 500;
 const canvas = createCanvas(WIDTH, HEIGHT);
 const ctx = canvas.getContext("2d");
 
-// Background gradient (red tones matching DeaMap brand / emergency theme)
+// Brand colors from logo: green background, red pin, white heart, green bolt
+const GREEN_DARK = "#1B5E20";
+const GREEN_MID = "#2E7D32";
+const GREEN_LIGHT = "#388E3C";
+const RED_PIN = "#DC2626";
+const WHITE = "#FFFFFF";
+
+// Background gradient (green tones matching DeaMap logo)
 const bgGrad = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
-bgGrad.addColorStop(0, "#DC2626"); // red-600
-bgGrad.addColorStop(0.5, "#B91C1C"); // red-700
-bgGrad.addColorStop(1, "#991B1B"); // red-800
+bgGrad.addColorStop(0, GREEN_LIGHT);
+bgGrad.addColorStop(0.5, GREEN_MID);
+bgGrad.addColorStop(1, GREEN_DARK);
 ctx.fillStyle = bgGrad;
 ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-// Subtle pattern: circles representing map pins scattered in background
-ctx.globalAlpha = 0.06;
+// Subtle pattern: map pin shapes scattered in background
+ctx.globalAlpha = 0.07;
 const pinPositions = [
   [80, 90],
   [200, 380],
@@ -35,12 +42,10 @@ const pinPositions = [
   [580, 350],
 ];
 for (const [x, y] of pinPositions) {
-  // Pin body (teardrop shape using arcs)
-  ctx.fillStyle = "#FFFFFF";
+  ctx.fillStyle = WHITE;
   ctx.beginPath();
   ctx.arc(x, y, 18, 0, Math.PI * 2);
   ctx.fill();
-  // Pin point
   ctx.beginPath();
   ctx.moveTo(x - 12, y + 10);
   ctx.lineTo(x, y + 35);
@@ -49,69 +54,103 @@ for (const [x, y] of pinPositions) {
 }
 ctx.globalAlpha = 1;
 
-// Heart + lightning bolt icon (AED symbol) on the left
-const iconCenterX = 260;
-const iconCenterY = 250;
-const heartScale = 2.8;
+// --- Map pin icon (matching the logo) ---
+const pinCenterX = 230;
+const pinCenterY = 220;
 
-// Draw heart shape
-ctx.fillStyle = "#FFFFFF";
+// Red pin body (teardrop)
+ctx.fillStyle = RED_PIN;
 ctx.beginPath();
-const hx = iconCenterX;
-const hy = iconCenterY - 20;
-// Left bump
-ctx.moveTo(hx, hy + 20 * heartScale);
-ctx.bezierCurveTo(
-  hx - 30 * heartScale,
-  hy - 10 * heartScale,
-  hx - 30 * heartScale,
-  hy - 30 * heartScale,
-  hx,
-  hy - 10 * heartScale
+// Circle top of pin
+ctx.arc(pinCenterX, pinCenterY - 15, 55, Math.PI, 0);
+// Point at bottom
+ctx.lineTo(pinCenterX, pinCenterY + 75);
+ctx.lineTo(pinCenterX - 55, pinCenterY - 15);
+ctx.fill();
+
+// Add slight red gradient/shadow to pin
+const pinGrad = ctx.createLinearGradient(
+  pinCenterX - 55,
+  pinCenterY - 70,
+  pinCenterX + 55,
+  pinCenterY + 75
 );
-// Right bump
+pinGrad.addColorStop(0, "rgba(255,255,255,0.15)");
+pinGrad.addColorStop(0.5, "rgba(0,0,0,0)");
+pinGrad.addColorStop(1, "rgba(0,0,0,0.15)");
+ctx.fillStyle = pinGrad;
+ctx.beginPath();
+ctx.arc(pinCenterX, pinCenterY - 15, 55, Math.PI, 0);
+ctx.lineTo(pinCenterX, pinCenterY + 75);
+ctx.lineTo(pinCenterX - 55, pinCenterY - 15);
+ctx.fill();
+
+// White circle inside pin
+ctx.fillStyle = WHITE;
+ctx.beginPath();
+ctx.arc(pinCenterX, pinCenterY - 15, 38, 0, Math.PI * 2);
+ctx.fill();
+
+// Heart shape inside white circle
+const heartX = pinCenterX;
+const heartY = pinCenterY - 20;
+const hs = 1.1;
+
+ctx.fillStyle = GREEN_MID;
+ctx.beginPath();
+ctx.moveTo(heartX, heartY + 18 * hs);
 ctx.bezierCurveTo(
-  hx + 30 * heartScale,
-  hy - 30 * heartScale,
-  hx + 30 * heartScale,
-  hy - 10 * heartScale,
-  hx,
-  hy + 20 * heartScale
+  heartX - 22 * hs,
+  heartY - 2 * hs,
+  heartX - 22 * hs,
+  heartY - 18 * hs,
+  heartX,
+  heartY - 6 * hs
+);
+ctx.bezierCurveTo(
+  heartX + 22 * hs,
+  heartY - 18 * hs,
+  heartX + 22 * hs,
+  heartY - 2 * hs,
+  heartX,
+  heartY + 18 * hs
 );
 ctx.fill();
 
-// Lightning bolt inside the heart (AED symbol)
-ctx.fillStyle = "#DC2626";
+// Lightning bolt inside heart (green on white, like the logo)
+ctx.fillStyle = WHITE;
 ctx.beginPath();
-const bx = iconCenterX;
-const by = iconCenterY - 25;
-ctx.moveTo(bx - 8, by - 5);
-ctx.lineTo(bx + 15, by - 25);
-ctx.lineTo(bx + 5, by - 5);
-ctx.lineTo(bx + 8, by - 5);
-ctx.lineTo(bx - 15, by + 25);
-ctx.lineTo(bx - 5, by - 0);
+const bx = heartX;
+const by = heartY + 2;
+ctx.moveTo(bx + 2, by - 14);
+ctx.lineTo(bx - 6, by + 1);
+ctx.lineTo(bx - 1, by + 1);
+ctx.lineTo(bx - 2, by + 14);
+ctx.lineTo(bx + 6, by - 1);
+ctx.lineTo(bx + 1, by - 1);
 ctx.closePath();
 ctx.fill();
 
+// --- Text ---
+
 // App name "DeaMap"
-ctx.fillStyle = "#FFFFFF";
+ctx.fillStyle = WHITE;
 ctx.font = "bold 88px sans-serif";
 ctx.textAlign = "left";
 ctx.textBaseline = "middle";
-ctx.fillText("DeaMap", 420, 200);
+ctx.fillText("DeaMap", 380, 195);
 
 // Tagline
 ctx.font = "300 28px sans-serif";
-ctx.fillStyle = "rgba(255,255,255,0.9)";
-ctx.fillText("Encuentra desfibriladores cerca de ti", 420, 280);
+ctx.fillStyle = "rgba(255,255,255,0.92)";
+ctx.fillText("Encuentra desfibriladores cerca de ti", 380, 275);
 
 // Secondary line
 ctx.font = "300 22px sans-serif";
 ctx.fillStyle = "rgba(255,255,255,0.65)";
-ctx.fillText("Cada segundo cuenta. Ayuda a salvar vidas.", 420, 330);
+ctx.fillText("Cada segundo cuenta. Ayuda a salvar vidas.", 380, 325);
 
-// "by Global Emergency" at the bottom
+// "Global Emergency" at the bottom
 ctx.font = "300 16px sans-serif";
 ctx.fillStyle = "rgba(255,255,255,0.45)";
 ctx.textAlign = "center";
