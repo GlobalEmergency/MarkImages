@@ -41,7 +41,7 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">3. Registro de usuario</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">3. Registro de usuario y menores de edad</h2>
             <p>Para utilizar ciertas funcionalidades de DeaMap es necesario crear una cuenta. Al registrarte, te comprometes a:</p>
             <ul className="list-disc pl-5 space-y-1 mt-2">
               <li>Proporcionar información veraz y actualizada.</li>
@@ -49,6 +49,13 @@ export default function TermsOfServicePage() {
               <li>Notificarnos cualquier uso no autorizado de tu cuenta.</li>
               <li>Ser responsable de todas las actividades realizadas desde tu cuenta.</li>
             </ul>
+            <p className="mt-3">
+              <strong>Uso por menores:</strong> la parte pública de DeaMap (consultar el mapa y localizar desfibriladores)
+              está disponible para cualquier persona sin restricción de edad. Para crear una cuenta, los menores de
+              14 años necesitan el consentimiento de su padre, madre o tutor legal. Los usuarios de entre 14 y 17 años
+              pueden registrarse por sí mismos. Los padres o tutores son responsables del uso que los menores a su cargo
+              hagan de la plataforma.
+            </p>
           </section>
 
           <section>

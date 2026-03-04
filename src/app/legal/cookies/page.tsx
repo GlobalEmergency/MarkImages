@@ -116,7 +116,17 @@ export default function CookiePolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">5. ¿Cómo gestionar las cookies?</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">5. Cookies y menores de edad</h2>
+            <p>
+              DeaMap es una plataforma apta para todos los públicos. En cumplimiento de la Política de Familias de
+              Google Play y la normativa de protección de menores, las cookies de analítica y seguimiento de terceros
+              (como Google Analytics) pueden ser desactivadas en las secciones públicas de la plataforma accesibles
+              sin registro, para proteger la privacidad de los menores de edad.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">6. ¿Cómo gestionar las cookies?</h2>
             <p>
               Puedes controlar y eliminar las cookies a través de la configuración de tu navegador. Ten en cuenta que
               deshabilitar ciertas cookies puede afectar a la funcionalidad de la plataforma.
@@ -131,7 +141,7 @@ export default function CookiePolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">6. Cambios en esta política</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">7. Cambios en esta política</h2>
             <p>
               Podemos actualizar esta política de cookies cuando cambiemos las tecnologías que utilizamos. Cualquier
               modificación será publicada en esta página.
@@ -139,7 +149,7 @@ export default function CookiePolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">7. Contacto</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">8. Contacto</h2>
             <p>
               Si tienes preguntas sobre nuestra política de cookies, contacta con nosotros en{" "}
               <a href="mailto:rgpd@globalemergency.online" className="text-blue-600 hover:underline">rgpd@globalemergency.online</a>.

@@ -98,7 +98,28 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">8. Seguridad</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">8. Menores de edad</h2>
+            <p>
+              DeaMap es una plataforma apta para todos los públicos. La parte pública de la plataforma (consulta del
+              mapa y localización de desfibriladores) puede ser utilizada por cualquier persona sin necesidad de registro.
+            </p>
+            <p className="mt-2">
+              Para crear una cuenta en DeaMap, los menores de 14 años necesitan el consentimiento verificable de su
+              padre, madre o tutor legal, conforme al artículo 7 del RGPD y al artículo 7 de la Ley Orgánica 3/2018
+              (LOPDGDD). Si eres padre, madre o tutor y crees que tu hijo/a menor de 14 años nos ha proporcionado
+              datos personales sin tu consentimiento, contacta con nosotros en{" "}
+              <a href="mailto:rgpd@globalemergency.online" className="text-blue-600 hover:underline">rgpd@globalemergency.online</a>{" "}
+              y procederemos a eliminar dichos datos.
+            </p>
+            <p className="mt-2">
+              No recopilamos deliberadamente datos personales de menores de 14 años sin consentimiento parental.
+              En la parte pública de la plataforma, limitamos el uso de cookies de analítica y servicios de
+              terceros para proteger la privacidad de todos los usuarios, incluidos los menores.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">9. Seguridad</h2>
             <p>
               Aplicamos medidas técnicas y organizativas para proteger tus datos, incluyendo cifrado de contraseñas,
               conexiones seguras (HTTPS) y controles de acceso. No obstante, ningún sistema es completamente seguro
@@ -107,7 +128,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">9. Cookies</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">10. Cookies</h2>
             <p>
               DeaMap utiliza cookies y tecnologías similares. Para más información, consulta nuestra{" "}
               <Link href="/legal/cookies" className="text-blue-600 hover:underline">Política de Cookies</Link>.
@@ -115,7 +136,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">10. Cambios en esta política</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">11. Cambios en esta política</h2>
             <p>
               Podemos actualizar esta política de privacidad periódicamente. Cualquier cambio será publicado en esta
               página con la fecha de actualización correspondiente. Te recomendamos revisarla de forma periódica.
@@ -123,7 +144,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">11. Contacto</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">12. Contacto</h2>
             <p>
               Si tienes preguntas sobre esta política de privacidad o sobre el tratamiento de tus datos, puedes
               contactarnos en{" "}
