@@ -7,7 +7,10 @@
     "target": {
       "namespace": "android_app",
       "package_name": "es.deamap.mobile",
-      "sha256_cert_fingerprints": ["TODO:REPLACE_WITH_YOUR_SHA256_FINGERPRINT"]
+      "sha256_cert_fingerprints": [
+        "E1:37:9C:4E:7F:FB:92:CD:F8:DB:57:F1:D4:F0:B9:B2:18:41:99:7C:A3:32:C9:2E:00:AC:17:19:B5:F0:B7:3B",
+        "70:82:F8:7E:7F:FB:3E:7F:DB:B5:6A:BB:33:CD:18:23:98:CA:16:0F:46:8E:35:03:8E:91:7E:55:FD:58:97:0A"
+      ]
     }
   }
 ]

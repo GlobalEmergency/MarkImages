@@ -30,6 +30,12 @@ yarn-error.log*
 # Optional eslint cache
 .eslintcache
 
-# Capacitor native projects (generated, not committed)
-/android
-/ios
+# Capacitor native projects — tracked in git for production stability.
+# After `npx cap sync`, commit any native changes.
+# /android  ← no longer ignored
+# /ios      ← no longer ignored
+
+# Keystores and signing credentials (NEVER commit these)
+/keystores/*.keystore
+/keystores/*.jks
+keystore.properties

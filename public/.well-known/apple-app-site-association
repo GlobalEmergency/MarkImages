@@ -2,7 +2,7 @@
   "applinks": {
     "details": [
       {
-        "appIDs": ["TEAMID.es.deamap.mobile"],
+        "appIDs": ["3NP6Q84729.es.deamap.mobile"],
         "components": [
           {
             "/": "*"
@@ -12,6 +12,6 @@
     ]
   },
   "webcredentials": {
-    "apps": ["TEAMID.es.deamap.mobile"]
+    "apps": ["3NP6Q84729.es.deamap.mobile"]
   }
 }

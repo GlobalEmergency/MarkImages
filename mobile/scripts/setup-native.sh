@@ -44,6 +44,40 @@ else
   echo "  ⚠️  Android manifest not found (run 'npx cap add android' first)"
 fi
 
+# ── Android: release signing config ───────────────────────────────────
+ANDROID_BUILD_GRADLE="$MOBILE_DIR/android/app/build.gradle"
+KEYSTORE_PROPS="$MOBILE_DIR/keystores/keystore.properties"
+if [ -f "$ANDROID_BUILD_GRADLE" ] && [ -f "$KEYSTORE_PROPS" ]; then
+  if ! grep -q "signingConfigs" "$ANDROID_BUILD_GRADLE"; then
+    echo "  ✅ Adding Android release signing config to build.gradle..."
+    # Insert signingConfigs block before buildTypes
+    sed -i.bak '/buildTypes {/i\
+    signingConfigs {\
+        release {\
+            def keystorePropsFile = rootProject.file("app/../../keystores/keystore.properties")\
+            if (keystorePropsFile.exists()) {\
+                def keystoreProps = new Properties()\
+                keystoreProps.load(new FileInputStream(keystorePropsFile))\
+                storeFile file(keystoreProps["storeFile"])\
+                storePassword keystoreProps["storePassword"]\
+                keyAlias keystoreProps["keyAlias"]\
+                keyPassword keystoreProps["keyPassword"]\
+            }\
+        }\
+    }' "$ANDROID_BUILD_GRADLE"
+    # Add signingConfig to the release buildType
+    sed -i.bak 's|release {|release {\
+            signingConfig signingConfigs.release|' "$ANDROID_BUILD_GRADLE"
+    rm -f "${ANDROID_BUILD_GRADLE}.bak"
+  else
+    echo "  ⏭️  Android signing config already present"
+  fi
+elif [ -f "$ANDROID_BUILD_GRADLE" ]; then
+  echo "  ⚠️  keystores/keystore.properties not found — release builds will use debug signing"
+else
+  echo "  ⚠️  Android build.gradle not found"
+fi
+
 # ── iOS: location usage descriptions ───────────────────────────────────
 IOS_PLIST="$MOBILE_DIR/ios/App/App/Info.plist"
 if [ -f "$IOS_PLIST" ]; then
@@ -93,9 +127,5 @@ else
   echo "  ⚠️  iOS project not found (run 'npx cap add ios' first)"
 fi
 
-echo "✅ Native platform setup complete!"
 echo ""
-echo "📋 REMINDER: For credential autofill to work fully, you must host:"
-echo "   - https://deamap.es/.well-known/apple-app-site-association  (iOS)"
-echo "   - https://deamap.es/.well-known/assetlinks.json             (Android)"
-echo "   See: public/.well-known/ for templates"
+echo "✅ Native platform setup complete!"
