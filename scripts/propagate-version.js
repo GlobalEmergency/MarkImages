@@ -8,6 +8,12 @@
  * - mobile/android/app/build.gradle (versionName + versionCode)
  * - mobile/ios/App/App.xcodeproj/project.pbxproj (MARKETING_VERSION + CURRENT_PROJECT_VERSION)
  *
+ * Build number formula: major * 10000 + minor * 100 + patch
+ * ⚠️  This formula also lives in:
+ *   - .github/workflows/release-mobile-app.yml (prepare job, bash)
+ *   - .github/scripts/google-play-version.mjs (docs only)
+ * If you change it here, update those files too!
+ *
  * Usage:
  *   node scripts/propagate-version.js              # Propagate versions
  *   node scripts/propagate-version.js --check       # Check if versions are in sync (CI)
@@ -28,8 +34,8 @@ function writeJson(filePath, data) {
 
 function calculateBuildNumber(version) {
   const [major, minor, patch] = version.split(".").map(Number);
-  // Supports major 0-999, minor 0-999, patch 0-999 without collisions
-  return major * 1_000_000 + minor * 1_000 + patch;
+  // major * 10000 + minor * 100 + patch (e.g., 1.0.0 → 10000, 2.3.5 → 20305)
+  return major * 10000 + minor * 100 + patch;
 }
 
 function propagateMobile() {
