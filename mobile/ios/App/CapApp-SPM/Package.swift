@@ -12,14 +12,14 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.1.0"),
-        .package(name: "CapacitorApp", path: "..\..\..\node_modules\@capacitor\app"),
-        .package(name: "CapacitorGeolocation", path: "..\..\..\node_modules\@capacitor\geolocation"),
-        .package(name: "CapacitorHaptics", path: "..\..\..\node_modules\@capacitor\haptics"),
-        .package(name: "CapacitorKeyboard", path: "..\..\..\node_modules\@capacitor\keyboard"),
-        .package(name: "CapacitorPreferences", path: "..\..\..\node_modules\@capacitor\preferences"),
-        .package(name: "CapacitorSplashScreen", path: "..\..\..\node_modules\@capacitor\splash-screen"),
-        .package(name: "CapacitorStatusBar", path: "..\..\..\node_modules\@capacitor\status-bar"),
-        .package(name: "CapgoCapacitorAutofillSavePassword", path: "..\..\..\node_modules\@capgo\capacitor-autofill-save-password")
+        .package(name: "CapacitorApp", path: "../../../node_modules/@capacitor/app"),
+        .package(name: "CapacitorGeolocation", path: "../../../node_modules/@capacitor/geolocation"),
+        .package(name: "CapacitorHaptics", path: "../../../node_modules/@capacitor/haptics"),
+        .package(name: "CapacitorKeyboard", path: "../../../node_modules/@capacitor/keyboard"),
+        .package(name: "CapacitorPreferences", path: "../../../node_modules/@capacitor/preferences"),
+        .package(name: "CapacitorSplashScreen", path: "../../../node_modules/@capacitor/splash-screen"),
+        .package(name: "CapacitorStatusBar", path: "../../../node_modules/@capacitor/status-bar"),
+        .package(name: "CapgoCapacitorAutofillSavePassword", path: "../../../node_modules/@capgo/capacitor-autofill-save-password")
     ],
     targets: [
         .target(
