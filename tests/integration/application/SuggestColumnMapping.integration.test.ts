@@ -9,9 +9,7 @@ describe("SuggestColumnMappingUseCase - Integration", () => {
     it("debe sugerir mapeos para columnas con nombres en español", () => {
       const preview = CsvPreview.create(
         ["Código", "Dirección", "Número", "Código Postal", "Latitud", "Longitud"],
-        [
-          ["DEA-001", "Calle Test", "10", "28001", "40.416775", "-3.703790"],
-        ],
+        [["DEA-001", "Calle Test", "10", "28001", "40.416775", "-3.703790"]],
         10
       );
 
@@ -25,9 +23,7 @@ describe("SuggestColumnMappingUseCase - Integration", () => {
     it("debe sugerir mapeos para columnas con nombres en inglés", () => {
       const preview = CsvPreview.create(
         ["name", "email", "phone", "latitude", "longitude", "postal"],
-        [
-          ["DEA Test", "test@test.com", "123456789", "40.416775", "-3.703790", "28001"],
-        ],
+        [["DEA Test", "test@test.com", "123456789", "40.416775", "-3.703790", "28001"]],
         10
       );
 
@@ -43,9 +39,7 @@ describe("SuggestColumnMappingUseCase - Integration", () => {
     it("debe identificar columnas no mapeadas", () => {
       const preview = CsvPreview.create(
         ["codigo_dea", "campo_desconocido", "otra_columna"],
-        [
-          ["DEA-001", "valor1", "valor2"],
-        ],
+        [["DEA-001", "valor1", "valor2"]],
         10
       );
 
@@ -57,9 +51,7 @@ describe("SuggestColumnMappingUseCase - Integration", () => {
     it("debe priorizar campos requeridos cuando se solicita", () => {
       const preview = CsvPreview.create(
         ["nombre", "calle", "numero", "email"],
-        [
-          ["DEA Test", "Calle Principal", "123", "test@test.com"],
-        ],
+        [["DEA Test", "Calle Principal", "123", "test@test.com"]],
         10
       );
 
@@ -72,9 +64,7 @@ describe("SuggestColumnMappingUseCase - Integration", () => {
     it("debe calcular confidence promedio correctamente", () => {
       const preview = CsvPreview.create(
         ["codigo", "nombre", "direccion"],
-        [
-          ["DEA-001", "DEA Test", "Calle Test"],
-        ],
+        [["DEA-001", "DEA Test", "Calle Test"]],
         10
       );
 
@@ -87,9 +77,7 @@ describe("SuggestColumnMappingUseCase - Integration", () => {
     it("debe detectar campos requeridos faltantes", () => {
       const preview = CsvPreview.create(
         ["email", "telefono"],
-        [
-          ["test@test.com", "123456789"],
-        ],
+        [["test@test.com", "123456789"]],
         10
       );
 
@@ -103,9 +91,7 @@ describe("SuggestColumnMappingUseCase - Integration", () => {
     it("debe resolver conflictos cuando múltiples columnas sugieren el mismo campo", () => {
       const preview = CsvPreview.create(
         ["calle", "direccion_calle", "via"],
-        [
-          ["Calle Principal", "Calle Principal", "Calle Principal"],
-        ],
+        [["Calle Principal", "Calle Principal", "Calle Principal"]],
         10
       );
 
@@ -132,9 +118,7 @@ describe("SuggestColumnMappingUseCase - Integration", () => {
     it("debe manejar columnas con caracteres especiales", () => {
       const preview = CsvPreview.create(
         ["Código_DEA", "Dirección (Calle)", "N° Portal"],
-        [
-          ["DEA-001", "Test", "10"],
-        ],
+        [["DEA-001", "Test", "10"]],
         10
       );
 
@@ -147,9 +131,7 @@ describe("SuggestColumnMappingUseCase - Integration", () => {
     it("debe manejar columnas con acentos y tildes", () => {
       const preview = CsvPreview.create(
         ["Código", "Dirección", "Teléfono", "Ubicación"],
-        [
-          ["DEA-001", "Calle Test", "123456789", "Madrid"],
-        ],
+        [["DEA-001", "Calle Test", "123456789", "Madrid"]],
         10
       );
 
@@ -165,9 +147,7 @@ describe("SuggestColumnMappingUseCase - Integration", () => {
     it("debe proporcionar estadísticas completas", () => {
       const preview = CsvPreview.create(
         ["nombre", "calle", "numero"],
-        [
-          ["DEA Test", "Calle Principal", "123"],
-        ],
+        [["DEA Test", "Calle Principal", "123"]],
         10
       );
 

@@ -11,6 +11,7 @@ El sistema de detección de duplicados sigue una arquitectura hexagonal limpia c
 ### 1. **Dominio** (Reglas de negocio puras)
 
 #### Puertos (Interfaces)
+
 ```
 src/import/domain/ports/
 ├── ITextNormalizationService.ts      # Contrato de normalización
@@ -19,6 +20,7 @@ src/import/domain/ports/
 ```
 
 **Ventajas:**
+
 - ✅ Independiente de implementación
 - ✅ Testable con mocks
 - ✅ Cambiar implementación sin tocar dominio
@@ -29,6 +31,7 @@ src/import/domain/ports/
 ### 2. **Infraestructura** (Implementaciones concretas)
 
 #### Servicios
+
 ```
 src/import/infrastructure/services/
 ├── PostgreSqlTextNormalizer.ts       # Implementa ITextNormalizationService
@@ -36,6 +39,7 @@ src/import/infrastructure/services/
 ```
 
 #### Adapters
+
 ```
 src/import/infrastructure/adapters/
 └── PrismaDuplicateDetectionAdapter.ts  # Orquestador con DI
@@ -56,10 +60,7 @@ import { PostgreSqlTextNormalizer } from "@/import/infrastructure/services/Postg
 const textNormalizer = new PostgreSqlTextNormalizer();
 
 // 2. Inyectar dependencias en el adapter
-const duplicateDetectionService = new PrismaDuplicateDetectionAdapter(
-  prisma,
-  textNormalizer
-);
+const duplicateDetectionService = new PrismaDuplicateDetectionAdapter(prisma, textNormalizer);
 
 // 3. Usar el servicio
 const result = await duplicateDetectionService.checkDuplicate({
@@ -97,10 +98,7 @@ describe("PrismaDuplicateDetectionAdapter", () => {
     } as any;
 
     // Instanciar adapter con mocks
-    const adapter = new PrismaDuplicateDetectionAdapter(
-      mockPrisma,
-      mockNormalizer
-    );
+    const adapter = new PrismaDuplicateDetectionAdapter(mockPrisma, mockNormalizer);
 
     // Ejecutar
     await adapter.checkDuplicate({
@@ -129,11 +127,8 @@ describe("Duplicate Detection Integration", () => {
   it("should detect duplicates using real PostgreSQL", async () => {
     const prisma = new PrismaClient();
     const textNormalizer = new PostgreSqlTextNormalizer();
-    
-    const adapter = new PrismaDuplicateDetectionAdapter(
-      prisma,
-      textNormalizer
-    );
+
+    const adapter = new PrismaDuplicateDetectionAdapter(prisma, textNormalizer);
 
     const result = await adapter.checkDuplicate({
       name: "Centro Deportivo",
@@ -143,7 +138,7 @@ describe("Duplicate Detection Integration", () => {
 
     expect(result).toBeDefined();
     expect(typeof result.isDuplicate).toBe("boolean");
-    
+
     await prisma.$disconnect();
   });
 });
@@ -168,16 +163,13 @@ export class InMemoryTextNormalizer implements ITextNormalizationService {
     streetName: string | null | undefined,
     streetNumber: string | null | undefined
   ): string {
-    return [streetType, streetName, streetNumber]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase()
-      .trim();
+    return [streetType, streetName, streetNumber].filter(Boolean).join(" ").toLowerCase().trim();
   }
 }
 ```
 
 **Usar la nueva implementación:**
+
 ```typescript
 // Solo cambiar la instanciación
 const textNormalizer = new InMemoryTextNormalizer();
@@ -189,6 +181,7 @@ const adapter = new PrismaDuplicateDetectionAdapter(
 ```
 
 **Sin cambios en:**
+
 - ❌ Dominio (interfaces)
 - ❌ Adapter (código)
 - ❌ Tests (solo mocks)
@@ -198,22 +191,27 @@ const adapter = new PrismaDuplicateDetectionAdapter(
 ## 🎯 Principios SOLID Aplicados
 
 ### 1. **Single Responsibility Principle (SRP)**
+
 - `PostgreSqlTextNormalizer`: Solo normaliza texto
 - `PostgreSqlDuplicateScorer`: Solo calcula scores
 - `PrismaDuplicateDetectionAdapter`: Solo orquesta la búsqueda
 
 ### 2. **Open/Closed Principle (OCP)**
+
 - Puedes **extender** con nuevas implementaciones sin **modificar** el código existente
 
 ### 3. **Liskov Substitution Principle (LSP)**
+
 - Cualquier implementación de `ITextNormalizationService` es intercambiable
 
 ### 4. **Interface Segregation Principle (ISP)**
+
 - Interfaces pequeñas y específicas:
   - `ITextNormalizationService`: Solo normalización
   - `IDuplicateScoringService`: Solo scoring
-  
+
 ### 5. **Dependency Inversion Principle (DIP)**
+
 - El adapter **depende de abstracciones** (interfaces), no de implementaciones concretas
 
 ---
@@ -249,21 +247,15 @@ Para simplificar la instanciación:
 export class DuplicateDetectionFactory {
   static create(prisma: PrismaClient): IDuplicateDetectionService {
     const textNormalizer = new PostgreSqlTextNormalizer();
-    
-    return new PrismaDuplicateDetectionAdapter(
-      prisma,
-      textNormalizer
-    );
+
+    return new PrismaDuplicateDetectionAdapter(prisma, textNormalizer);
   }
 
   static createWithCustomNormalizer(
     prisma: PrismaClient,
     normalizer: ITextNormalizationService
   ): IDuplicateDetectionService {
-    return new PrismaDuplicateDetectionAdapter(
-      prisma,
-      normalizer
-    );
+    return new PrismaDuplicateDetectionAdapter(prisma, normalizer);
   }
 }
 

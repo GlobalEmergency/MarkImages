@@ -1,31 +1,31 @@
 #!/usr/bin/env tsx
 /**
  * MIGRATION SCRIPT: Update Image URLs to use CDN
- * 
+ *
  * This script migrates image URLs from S3 direct URLs to CDN URLs
  * (CloudFront or any other CDN configured in CDN_BASE_URL)
- * 
+ *
  * Usage:
  *   npm run migrate-cdn               # Apply migration
  *   npm run migrate-cdn -- --dry-run  # Preview changes without applying
  *   npm run migrate-cdn -- --revert   # Revert to S3 direct URLs
- * 
+ *
  * Requirements:
  *   - CDN_BASE_URL must be set in .env (e.g., https://d1l55ep6jkz7cn.cloudfront.net)
  *   - AWS_S3_BUCKET_NAME must be set in .env
  *   - AWS_REGION must be set in .env
  */
 
-import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '@/generated/client/client';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@/generated/client/client";
+import * as dotenv from "dotenv";
+import * as path from "path";
 
 // Load environment variables
-dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
-const connectionString = process.env.DATABASE_URL || '';
+const connectionString = process.env.DATABASE_URL || "";
 const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
@@ -58,7 +58,7 @@ function extractS3Key(url: string): string | null {
  * Build CDN URL from S3 key
  */
 function buildCdnUrl(key: string, cdnBaseUrl: string): string {
-  const baseUrl = cdnBaseUrl.endsWith('/') ? cdnBaseUrl.slice(0, -1) : cdnBaseUrl;
+  const baseUrl = cdnBaseUrl.endsWith("/") ? cdnBaseUrl.slice(0, -1) : cdnBaseUrl;
   return `${baseUrl}/${key}`;
 }
 
@@ -81,13 +81,18 @@ function convertToCdnUrl(s3Url: string, cdnBaseUrl: string): string | null {
 /**
  * Convert CDN URL back to S3 URL
  */
-function convertToS3Url(cdnUrl: string, cdnBaseUrl: string, bucketName: string, region: string): string | null {
-  const baseUrl = cdnBaseUrl.endsWith('/') ? cdnBaseUrl.slice(0, -1) : cdnBaseUrl;
-  
+function convertToS3Url(
+  cdnUrl: string,
+  cdnBaseUrl: string,
+  bucketName: string,
+  region: string
+): string | null {
+  const baseUrl = cdnBaseUrl.endsWith("/") ? cdnBaseUrl.slice(0, -1) : cdnBaseUrl;
+
   if (!cdnUrl.startsWith(baseUrl)) {
     return null; // Not a CDN URL
   }
-  
+
   const key = cdnUrl.substring(baseUrl.length + 1); // +1 for the slash
   return buildS3Url(key, bucketName, region);
 }
@@ -96,14 +101,14 @@ function convertToS3Url(cdnUrl: string, cdnBaseUrl: string, bucketName: string, 
  * Check if URL is an S3 URL
  */
 function isS3Url(url: string): boolean {
-  return url.includes('.s3.') || url.includes('.s3-');
+  return url.includes(".s3.") || url.includes(".s3-");
 }
 
 /**
  * Check if URL is a CDN URL
  */
 function isCdnUrl(url: string, cdnBaseUrl: string): boolean {
-  const baseUrl = cdnBaseUrl.endsWith('/') ? cdnBaseUrl.slice(0, -1) : cdnBaseUrl;
+  const baseUrl = cdnBaseUrl.endsWith("/") ? cdnBaseUrl.slice(0, -1) : cdnBaseUrl;
   return url.startsWith(baseUrl);
 }
 
@@ -112,31 +117,33 @@ function isCdnUrl(url: string, cdnBaseUrl: string): boolean {
  */
 async function migrateImageUrlsToCdn(options: MigrationOptions): Promise<MigrationStats> {
   const { dryRun, revert } = options;
-  
+
   const cdnBaseUrl = process.env.CDN_BASE_URL;
   const bucketName = process.env.AWS_S3_BUCKET_NAME;
-  const region = process.env.AWS_REGION || 'eu-west-1';
-  
+  const region = process.env.AWS_REGION || "eu-west-1";
+
   if (!cdnBaseUrl && !revert) {
-    throw new Error('CDN_BASE_URL is not configured in .env');
+    throw new Error("CDN_BASE_URL is not configured in .env");
   }
-  
+
   if (!bucketName) {
-    throw new Error('AWS_S3_BUCKET_NAME is not configured in .env');
+    throw new Error("AWS_S3_BUCKET_NAME is not configured in .env");
   }
-  
-  console.log('\n🚀 Image URL Migration Script');
-  console.log('════════════════════════════════════════════════════════════');
-  console.log(`Mode: ${revert ? '🔄 REVERT to S3' : '⬆️  MIGRATE to CDN'}`);
-  console.log(`Dry Run: ${dryRun ? '✅ YES (no changes will be applied)' : '❌ NO (changes will be applied)'}`);
-  
+
+  console.log("\n🚀 Image URL Migration Script");
+  console.log("════════════════════════════════════════════════════════════");
+  console.log(`Mode: ${revert ? "🔄 REVERT to S3" : "⬆️  MIGRATE to CDN"}`);
+  console.log(
+    `Dry Run: ${dryRun ? "✅ YES (no changes will be applied)" : "❌ NO (changes will be applied)"}`
+  );
+
   if (!revert && cdnBaseUrl) {
     console.log(`CDN URL: ${cdnBaseUrl}`);
   }
   console.log(`S3 Bucket: ${bucketName}`);
   console.log(`S3 Region: ${region}`);
-  console.log('════════════════════════════════════════════════════════════\n');
-  
+  console.log("════════════════════════════════════════════════════════════\n");
+
   const stats: MigrationStats = {
     totalImages: 0,
     originalUrlUpdated: 0,
@@ -145,7 +152,7 @@ async function migrateImageUrlsToCdn(options: MigrationOptions): Promise<Migrati
     skipped: 0,
     errors: 0,
   };
-  
+
   try {
     // Fetch all images
     const images = await prisma.aedImage.findMany({
@@ -158,17 +165,17 @@ async function migrateImageUrlsToCdn(options: MigrationOptions): Promise<Migrati
         type: true,
       },
     });
-    
+
     stats.totalImages = images.length;
     console.log(`📊 Found ${images.length} images in database\n`);
-    
+
     let updatedCount = 0;
-    
+
     for (const image of images) {
       try {
         const updates: any = {};
         let needsUpdate = false;
-        
+
         // Process original_url
         if (image.original_url) {
           if (revert) {
@@ -193,7 +200,7 @@ async function migrateImageUrlsToCdn(options: MigrationOptions): Promise<Migrati
             }
           }
         }
-        
+
         // Process processed_url
         if (image.processed_url) {
           if (revert) {
@@ -216,7 +223,7 @@ async function migrateImageUrlsToCdn(options: MigrationOptions): Promise<Migrati
             }
           }
         }
-        
+
         // Process thumbnail_url
         if (image.thumbnail_url) {
           if (revert) {
@@ -239,7 +246,7 @@ async function migrateImageUrlsToCdn(options: MigrationOptions): Promise<Migrati
             }
           }
         }
-        
+
         // Apply updates
         if (needsUpdate) {
           if (!dryRun) {
@@ -248,9 +255,9 @@ async function migrateImageUrlsToCdn(options: MigrationOptions): Promise<Migrati
               data: updates,
             });
           }
-          
+
           updatedCount++;
-          
+
           // Show progress every 100 images
           if (updatedCount % 100 === 0) {
             console.log(`   ⏳ Processed ${updatedCount} images...`);
@@ -263,31 +270,30 @@ async function migrateImageUrlsToCdn(options: MigrationOptions): Promise<Migrati
         console.error(`   ❌ Error processing image ${image.id}:`, error);
       }
     }
-    
+
     // Print summary
-    console.log('\n════════════════════════════════════════════════════════════');
-    console.log('📊 MIGRATION SUMMARY');
-    console.log('════════════════════════════════════════════════════════════');
+    console.log("\n════════════════════════════════════════════════════════════");
+    console.log("📊 MIGRATION SUMMARY");
+    console.log("════════════════════════════════════════════════════════════");
     console.log(`Total images:        ${stats.totalImages}`);
     console.log(`Original URLs:       ${stats.originalUrlUpdated} updated`);
     console.log(`Processed URLs:      ${stats.processedUrlUpdated} updated`);
     console.log(`Thumbnail URLs:      ${stats.thumbnailUrlUpdated} updated`);
     console.log(`Skipped:             ${stats.skipped}`);
     console.log(`Errors:              ${stats.errors}`);
-    console.log('════════════════════════════════════════════════════════════');
-    
+    console.log("════════════════════════════════════════════════════════════");
+
     if (dryRun) {
-      console.log('\n⚠️  DRY RUN MODE: No changes were applied to the database');
-      console.log('   Run without --dry-run to apply these changes\n');
+      console.log("\n⚠️  DRY RUN MODE: No changes were applied to the database");
+      console.log("   Run without --dry-run to apply these changes\n");
     } else {
-      console.log('\n✅ Migration completed successfully!\n');
+      console.log("\n✅ Migration completed successfully!\n");
     }
-    
   } catch (error) {
-    console.error('\n❌ Migration failed:', error);
+    console.error("\n❌ Migration failed:", error);
     throw error;
   }
-  
+
   return stats;
 }
 
@@ -296,13 +302,13 @@ async function migrateImageUrlsToCdn(options: MigrationOptions): Promise<Migrati
  */
 async function main() {
   const args = process.argv.slice(2);
-  const dryRun = args.includes('--dry-run');
-  const revert = args.includes('--revert');
-  
+  const dryRun = args.includes("--dry-run");
+  const revert = args.includes("--revert");
+
   try {
     await migrateImageUrlsToCdn({ dryRun, revert });
   } catch (error) {
-    console.error('Fatal error:', error);
+    console.error("Fatal error:", error);
     process.exit(1);
   } finally {
     await prisma.$disconnect();

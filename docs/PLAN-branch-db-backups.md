@@ -21,6 +21,7 @@ POSTGRES_ADMIN_URL=postgresql://postgres:admin_password@host:5432/postgres
 El sistema extrae automáticamente las credenciales (host, port, user, password) de tu `DATABASE_URL` existente y construye las URLs para las bases de datos de rama.
 
 **Opcional:**
+
 ```env
 # Si quieres usar un nombre base diferente al de DATABASE_URL:
 PRODUCTION_DATABASE_NAME=mi_otro_nombre
@@ -101,19 +102,20 @@ const CONFIG = {
 
 **Datos que generará:**
 
-| Entidad | Cantidad | Variedad |
-|---------|----------|----------|
-| Districts | 21 | Todos los distritos de Madrid con datos reales |
-| AEDs | 500 | Distribuidos geográficamente por Madrid |
-| Responsibles | ~150 | Organizaciones variadas |
-| Schedules | ~100 | Horarios diversos (24h, comercial, escolar) |
-| Locations | 500 | Direcciones realistas de Madrid |
-| StatusChanges | ~1500 | Historial de cambios por AED |
-| CodeHistory | 500 | Un registro por AED |
-| Organizations | 10 | SAMUR, hospitales, empresas |
-| Users | 20 | Admin, validators, viewers |
+| Entidad       | Cantidad | Variedad                                       |
+| ------------- | -------- | ---------------------------------------------- |
+| Districts     | 21       | Todos los distritos de Madrid con datos reales |
+| AEDs          | 500      | Distribuidos geográficamente por Madrid        |
+| Responsibles  | ~150     | Organizaciones variadas                        |
+| Schedules     | ~100     | Horarios diversos (24h, comercial, escolar)    |
+| Locations     | 500      | Direcciones realistas de Madrid                |
+| StatusChanges | ~1500    | Historial de cambios por AED                   |
+| CodeHistory   | 500      | Un registro por AED                            |
+| Organizations | 10       | SAMUR, hospitales, empresas                    |
+| Users         | 20       | Admin, validators, viewers                     |
 
 **Tipos de establecimientos:**
+
 - Centros educativos (colegios, institutos, universidades)
 - Centros deportivos (polideportivos, gimnasios, piscinas)
 - Centros comerciales y tiendas
@@ -292,29 +294,34 @@ async function seedDummy() {
 ## Consideraciones
 
 ### Limpieza de BDs huérfanas
+
 Cuando una rama se elimina, la BD queda huérfana. Opciones:
+
 - Script de limpieza manual
 - Job periódico que elimina BDs de ramas que ya no existen
 - Prefijo con timestamp para identificar BDs antiguas
 
 ### Límites del proveedor
+
 Verificar con tu proveedor de PostgreSQL:
+
 - Límite de bases de datos por cuenta
 - Espacio de almacenamiento
 - Conexiones concurrentes
 
 ### Tiempo de build
+
 El seed con 500 DEAs añade ~30-60 segundos al primer build de cada rama.
 
 ## Archivos a Crear/Modificar
 
-| Archivo | Acción | Descripción |
-|---------|--------|-------------|
-| `scripts/branch-database.js` | Crear | Lógica de gestión de BD por rama |
-| `prisma/seed-dummy.ts` | Crear | Seeder con datos dummy realistas |
-| `prisma/data/madrid-districts.json` | Crear | Datos de distritos de Madrid |
-| `scripts/migrate.js` | Modificar | Integrar creación de BD por rama |
-| `package.json` | Modificar | Añadir script de seed dummy |
+| Archivo                             | Acción    | Descripción                      |
+| ----------------------------------- | --------- | -------------------------------- |
+| `scripts/branch-database.js`        | Crear     | Lógica de gestión de BD por rama |
+| `prisma/seed-dummy.ts`              | Crear     | Seeder con datos dummy realistas |
+| `prisma/data/madrid-districts.json` | Crear     | Datos de distritos de Madrid     |
+| `scripts/migrate.js`                | Modificar | Integrar creación de BD por rama |
+| `package.json`                      | Modificar | Añadir script de seed dummy      |
 
 ## Dependencias Nuevas
 
@@ -327,13 +334,13 @@ npm install @faker-js/faker pg --save-dev
 
 ## Archivos Implementados
 
-| Archivo | Descripción |
-|---------|-------------|
-| `scripts/branch-database.js` | Módulo de gestión de BD por rama |
-| `prisma/seed-dummy.ts` | Seeder con 500 DEAs realistas |
-| `prisma/data/madrid-districts.json` | Datos de los 21 distritos de Madrid |
-| `scripts/migrate.js` | Modificado para integrar la creación de BD |
-| `package.json` | Nuevos scripts: `db:seed:dummy`, `db:branch:check`, `db:branch:list` |
+| Archivo                             | Descripción                                                          |
+| ----------------------------------- | -------------------------------------------------------------------- |
+| `scripts/branch-database.js`        | Módulo de gestión de BD por rama                                     |
+| `prisma/seed-dummy.ts`              | Seeder con 500 DEAs realistas                                        |
+| `prisma/data/madrid-districts.json` | Datos de los 21 distritos de Madrid                                  |
+| `scripts/migrate.js`                | Modificado para integrar la creación de BD                           |
+| `package.json`                      | Nuevos scripts: `db:seed:dummy`, `db:branch:check`, `db:branch:list` |
 
 ## Uso
 

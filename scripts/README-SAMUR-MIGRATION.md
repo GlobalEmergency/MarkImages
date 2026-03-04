@@ -42,6 +42,7 @@ npx tsx scripts/migrate-to-samur-madrid.ts
 ```
 
 **Ventajas:**
+
 - ✅ Más seguro (usa Prisma con validaciones)
 - ✅ Manejo de errores robusto
 - ✅ Logs detallados del progreso
@@ -55,6 +56,7 @@ psql -U postgres -d deamap -f prisma/migrations/20251216000001_assign_existing_a
 ```
 
 **Ventajas:**
+
 - ✅ Más rápido para grandes volúmenes
 - ✅ No requiere dependencias de Node.js
 
@@ -153,6 +155,7 @@ WHERE NOT EXISTS (
 1. **Idempotencia**: El script puede ejecutarse múltiples veces sin duplicar datos
 2. **No destructivo**: No elimina ni modifica DEAs existentes, solo crea relaciones
 3. **Reversible**: Si es necesario, se pueden eliminar las asignaciones:
+
    ```sql
    DELETE FROM aed_organization_assignments
    WHERE organization_id = (SELECT id FROM organizations WHERE code = 'SAMUR_MADRID');

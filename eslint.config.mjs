@@ -44,7 +44,7 @@ const eslintConfig = [
         // React
         React: "readonly",
         JSX: "readonly",
-        
+
         // Node.js
         console: "readonly",
         process: "readonly",
@@ -60,7 +60,7 @@ const eslintConfig = [
         setImmediate: "readonly",
         clearImmediate: "readonly",
         global: "readonly",
-        
+
         // Browser
         window: "readonly",
         document: "readonly",
@@ -72,7 +72,7 @@ const eslintConfig = [
         alert: "readonly",
         confirm: "readonly",
         prompt: "readonly",
-        
+
         // Web APIs
         URL: "readonly",
         URLSearchParams: "readonly",
@@ -106,7 +106,7 @@ const eslintConfig = [
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-require-imports": "off", // Permitir require para imports dinámicos
       // "no-console": ["warn", { allow: ["warn", "error"] }],
-      'no-console': 'off',
+      "no-console": "off",
       "prefer-const": "error",
       "no-var": "error",
       "react-hooks/rules-of-hooks": "error",

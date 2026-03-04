@@ -55,6 +55,7 @@ npm run test:integration
 Los tests E2E verifican flujos completos de usuario en la aplicación real.
 
 **Archivos de test:**
+
 - `home.spec.ts` - Página principal, elementos básicos, responsive design
 - `navigation.spec.ts` - Navegación entre páginas, accesibilidad
 - `search-and-filter.spec.ts` - Búsqueda, filtros, paginación, responsive
@@ -79,6 +80,7 @@ npx playwright test --debug
 ```
 
 **Cobertura de tests E2E (60+ tests):**
+
 - ✅ Página principal y header
 - ✅ Navegación entre vistas (Lista/Mapa)
 - ✅ Búsqueda y filtrado en tiempo real
@@ -108,21 +110,21 @@ npm run test:coverage
 Los tests unitarios deben estar en `tests/unit/` y seguir la estructura del código fuente:
 
 ```typescript
-import { describe, it, expect } from 'vitest'
-import { MiClase } from '@/domain/...'
+import { describe, it, expect } from "vitest";
+import { MiClase } from "@/domain/...";
 
-describe('MiClase', () => {
-  it('debe hacer algo específico', () => {
+describe("MiClase", () => {
+  it("debe hacer algo específico", () => {
     // Arrange
-    const instancia = new MiClase()
+    const instancia = new MiClase();
 
     // Act
-    const resultado = instancia.metodo()
+    const resultado = instancia.metodo();
 
     // Assert
-    expect(resultado).toBe(valorEsperado)
-  })
-})
+    expect(resultado).toBe(valorEsperado);
+  });
+});
 ```
 
 ### Tests de Integración
@@ -130,21 +132,21 @@ describe('MiClase', () => {
 Los tests de integración deben estar en `tests/integration/` y probar la interacción entre múltiples componentes:
 
 ```typescript
-import { describe, it, expect } from 'vitest'
-import { MiUseCase } from '@/application/...'
+import { describe, it, expect } from "vitest";
+import { MiUseCase } from "@/application/...";
 
-describe('MiUseCase - Integration', () => {
-  it('debe ejecutar el flujo completo', async () => {
+describe("MiUseCase - Integration", () => {
+  it("debe ejecutar el flujo completo", async () => {
     // Arrange
-    const useCase = new MiUseCase()
+    const useCase = new MiUseCase();
 
     // Act
-    const resultado = await useCase.execute(request)
+    const resultado = await useCase.execute(request);
 
     // Assert
-    expect(resultado).toBeDefined()
-  })
-})
+    expect(resultado).toBeDefined();
+  });
+});
 ```
 
 ### Tests E2E
@@ -152,17 +154,17 @@ describe('MiUseCase - Integration', () => {
 Los tests E2E deben estar en `tests/e2e/` y probar flujos completos de usuario:
 
 ```typescript
-import { test, expect } from '@playwright/test'
+import { test, expect } from "@playwright/test";
 
-test('flujo de usuario', async ({ page }) => {
-  await page.goto('/')
+test("flujo de usuario", async ({ page }) => {
+  await page.goto("/");
 
   // Interactuar con la página
-  await page.click('button')
+  await page.click("button");
 
   // Verificar resultados
-  await expect(page.locator('h1')).toContainText('Título esperado')
-})
+  await expect(page.locator("h1")).toContainText("Título esperado");
+});
 ```
 
 ## Cobertura de Código

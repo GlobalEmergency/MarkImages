@@ -23,9 +23,11 @@
 El sistema de verificación de DEAs implementa **DOS PROCESOS INDEPENDIENTES pero NECESARIOS** para que un DEA pueda ser publicado:
 
 ### 🗺️ **1. Validación de Dirección** (`addressValidationStatus`)
+
 Proceso de validación de la ubicación física del DEA contra datos oficiales del Ayuntamiento de Madrid.
 
 ### 📸 **2. Verificación de Imágenes** (`imageVerificationStatus`)
+
 Proceso de verificación visual mediante fotografías donde se marca con flechas la ubicación exacta del DEA.
 
 ### ⚡ Independencia de los Procesos
@@ -43,7 +45,9 @@ Proceso de verificación visual mediante fotografías donde se marca con flechas
 ## Proceso de Validación de Dirección
 
 ### Objetivo
+
 Validar que la dirección proporcionada coincida con los datos oficiales del Ayuntamiento de Madrid en términos de:
+
 - Tipo y nombre de vía
 - Código postal
 - Distrito
@@ -52,12 +56,14 @@ Validar que la dirección proporcionada coincida con los datos oficiales del Ayu
 ### Modalidades de Validación
 
 #### 🤖 **Validación Automática**
+
 - Ejecutada por tareas programadas en el backend
 - Compara automáticamente contra base de datos oficial
 - Auto-aprueba si cumple todos los criterios de coincidencia
 - Ideal para lotes grandes de DEAs
 
 #### 👤 **Validación Manual**
+
 - Proceso interactivo paso a paso
 - Operador revisa y confirma cada aspecto
 - Permite correcciones manuales cuando los datos no coinciden exactamente
@@ -68,9 +74,10 @@ Validar que la dirección proporcionada coincida con los datos oficiales del Ayu
 El proceso consta de **4 pasos secuenciales**:
 
 #### **Paso 1: Confirmar Dirección**
+
 - **Objetivo**: Buscar y confirmar la dirección oficial en el callejero de Madrid
 - **Entrada**: Datos proporcionados por el usuario (tipo vía, nombre, número)
-- **Proceso**: 
+- **Proceso**:
   - Sistema busca automáticamente en base de datos oficial
   - Muestra sugerencias de coincidencias
   - Operador selecciona la dirección correcta
@@ -78,6 +85,7 @@ El proceso consta de **4 pasos secuenciales**:
 - **Puede saltarse**: ❌ NO - Es siempre obligatorio
 
 #### **Paso 2: Verificar Código Postal**
+
 - **Objetivo**: Confirmar que el código postal coincide con la dirección
 - **Entrada**: CP del registro vs CP de la dirección oficial
 - **Proceso**:
@@ -87,6 +95,7 @@ El proceso consta de **4 pasos secuenciales**:
 - **Puede saltarse**: ✅ SÍ - Auto-aprobado si coincide
 
 #### **Paso 3: Verificar Distrito**
+
 - **Objetivo**: Confirmar que el distrito coincide con la dirección
 - **Entrada**: Distrito del registro vs distrito de la dirección oficial
 - **Proceso**:
@@ -96,6 +105,7 @@ El proceso consta de **4 pasos secuenciales**:
 - **Puede saltarse**: ✅ SÍ - Auto-aprobado si coincide
 
 #### **Paso 4: Verificar Coordenadas**
+
 - **Objetivo**: Confirmar que las coordenadas GPS son precisas
 - **Entrada**: Coordenadas del registro vs coordenadas oficiales
 - **Proceso**:
@@ -108,6 +118,7 @@ El proceso consta de **4 pasos secuenciales**:
 ### Resultado Final
 
 Al completar los 4 pasos:
+
 - ✅ El DEA recibe `addressValidationStatus = 'completed'`
 - ✅ Los campos definitivos (`def*`) se actualizan con los valores validados:
   - `defTipoVia`, `defNombreVia`, `defNumero`
@@ -117,6 +128,7 @@ Al completar los 4 pasos:
 ### Optimización de Pasos
 
 **Si la dirección ya fue validada previamente** (`addressValidationStatus = 'completed'`):
+
 - ⚡ Los pasos 1 y 2 se **saltan automáticamente**
 - ⚡ El proceso continúa directamente desde el paso 3 (verificación de distrito)
 - ⚡ Se utilizan los datos definitivos (`def*`) ya almacenados
@@ -126,11 +138,13 @@ Al completar los 4 pasos:
 ## Proceso de Verificación de Imágenes
 
 ### Objetivo
+
 Verificar visualmente la ubicación exacta del DEA mediante fotografías con indicadores claros.
 
 ### Proceso Paso a Paso
 
 #### **Paso 1: Validación de Datos DEA**
+
 - **Objetivo**: Confirmar información básica del DEA
 - **Entrada**: Datos del registro (nombre, tipo establecimiento, horarios, etc.)
 - **Proceso**:
@@ -139,6 +153,7 @@ Verificar visualmente la ubicación exacta del DEA mediante fotografías con ind
 - **Resultado**: Datos básicos confirmados
 
 #### **Paso 2: Selección de Imágenes**
+
 - **Objetivo**: Seleccionar qué imágenes se utilizarán
 - **Entrada**: Foto1 y Foto2 (si existe)
 - **Proceso**:
@@ -151,6 +166,7 @@ Verificar visualmente la ubicación exacta del DEA mediante fotografías con ind
 - **Resultado**: Imágenes seleccionadas para procesamiento
 
 #### **Paso 3: Recorte de Imagen**
+
 - **Objetivo**: Extraer la parte relevante de la imagen
 - **Entrada**: Imagen válida seleccionada
 - **Proceso**:
@@ -160,6 +176,7 @@ Verificar visualmente la ubicación exacta del DEA mediante fotografías con ind
 - **Resultado**: Imagen recortada lista para marcado
 
 #### **Paso 4: Marcado con Flecha**
+
 - **Objetivo**: Indicar ubicación exacta del DEA en la imagen
 - **Entrada**: Imagen recortada
 - **Proceso**:
@@ -169,6 +186,7 @@ Verificar visualmente la ubicación exacta del DEA mediante fotografías con ind
 - **Resultado**: Imagen procesada con flecha indicadora
 
 #### **Paso 5: Revisión y Confirmación**
+
 - **Objetivo**: Revisar resultado final antes de completar
 - **Entrada**: Imagen procesada con flecha
 - **Proceso**:
@@ -180,6 +198,7 @@ Verificar visualmente la ubicación exacta del DEA mediante fotografías con ind
 ### Resultado Final
 
 Al completar el proceso:
+
 - ✅ El DEA recibe `imageVerificationStatus = 'verified'`
 - ✅ Se genera un registro en `verification_sessions` con estado `VERIFIED`
 - ✅ La imagen procesada queda almacenada y referenciada
@@ -188,18 +207,21 @@ Al completar el proceso:
 ### Casos Especiales en Verificación de Imágenes
 
 #### DEA Marcado como Inválido
+
 - Si el operador marca el DEA como inválido (sin imágenes útiles):
   - ❌ `imageVerificationStatus = 'invalid'`
   - ❌ El DEA NO se puede publicar
   - 📝 Se registra el motivo del rechazo
 
 #### Verificación Descartada
+
 - Si se decide no continuar con la verificación:
   - ⚠️ `imageVerificationStatus = 'discarded'`
   - 📝 Se registra razón del descarte
   - 🔄 Puede re-verificarse posteriormente
 
 #### Cancelación de Verificación
+
 - Si se cancela una verificación en progreso:
   - 🔙 El estado vuelve al anterior (ej: `pending`)
   - 🗑️ No se guardan cambios
@@ -211,28 +233,30 @@ Al completar el proceso:
 
 ### Estados de Validación de Dirección
 
-| Estado | Descripción | ¿Publicable? |
-|--------|-------------|--------------|
-| `pending` | Dirección aún no validada (estado inicial) | ❌ NO |
-| `completed` | Dirección validada exitosamente | ✅ SÍ (si imágenes también) |
+| Estado      | Descripción                                | ¿Publicable?                |
+| ----------- | ------------------------------------------ | --------------------------- |
+| `pending`   | Dirección aún no validada (estado inicial) | ❌ NO                       |
+| `completed` | Dirección validada exitosamente            | ✅ SÍ (si imágenes también) |
 
 **Transiciones:**
+
 ```
 pending → [Proceso de validación] → completed
 ```
 
 ### Estados de Verificación de Imágenes
 
-| Estado | Descripción | ¿Publicable? |
-|--------|-------------|--------------|
-| `pending` | Sin verificación de imágenes (estado inicial) | ❌ NO |
-| `pre_verified` | Pre-verificado (salta validación de datos) | ⚡ Especial |
-| `in_progress` | Verificación en curso | ⏳ En proceso |
-| `verified` | Imágenes verificadas exitosamente | ✅ SÍ (si dirección también) |
-| `invalid` | Marcado como inválido (sin imágenes útiles) | ❌ NO |
-| `discarded` | Verificación descartada | ⚠️ Puede re-verificarse |
+| Estado         | Descripción                                   | ¿Publicable?                 |
+| -------------- | --------------------------------------------- | ---------------------------- |
+| `pending`      | Sin verificación de imágenes (estado inicial) | ❌ NO                        |
+| `pre_verified` | Pre-verificado (salta validación de datos)    | ⚡ Especial                  |
+| `in_progress`  | Verificación en curso                         | ⏳ En proceso                |
+| `verified`     | Imágenes verificadas exitosamente             | ✅ SÍ (si dirección también) |
+| `invalid`      | Marcado como inválido (sin imágenes útiles)   | ❌ NO                        |
+| `discarded`    | Verificación descartada                       | ⚠️ Puede re-verificarse      |
 
 **Transiciones:**
+
 ```
 pending → in_progress → verified
 pending → in_progress → invalid
@@ -257,7 +281,7 @@ verified → in_progress → verified (re-verificación)
    ├─ Paso 2: Verificar CP (puede auto-saltarse)
    ├─ Paso 3: Verificar distrito (puede auto-saltarse)
    └─ Paso 4: Verificar coordenadas (puede auto-saltarse)
-   
+
    Resultado:
    └─ addressValidationStatus: 'completed'
 
@@ -267,7 +291,7 @@ verified → in_progress → verified (re-verificación)
    ├─ Paso 3: Recortar imagen
    ├─ Paso 4: Marcar con flecha
    └─ Paso 5: Revisar y confirmar
-   
+
    Resultado:
    └─ imageVerificationStatus: 'verified'
 
@@ -299,11 +323,13 @@ Los procesos pueden ejecutarse en orden inverso si es necesario:
 **Concepto**: DEA cuya dirección ya fue verificada por otro medio (ej: importación desde sistema oficial).
 
 **Estado inicial**:
+
 ```
 imageVerificationStatus: 'pre_verified'
 ```
 
 **Comportamiento**:
+
 - ⚡ **Salta validación de dirección completamente**
 - ⚡ Comienza directamente en selección de imágenes (Paso 2)
 - ⚡ No requiere confirmar datos básicos (Paso 1)
@@ -313,16 +339,19 @@ imageVerificationStatus: 'pre_verified'
 ### ❌ DEA Inválido
 
 **Razones**:
+
 - Sin imágenes utilizables (borrosas, incorrectas, etc.)
 - Ubicación no corresponde con la dirección
 - Información contradictoria
 
 **Estado final**:
+
 ```
 imageVerificationStatus: 'invalid'
 ```
 
 **Consecuencias**:
+
 - ❌ NO se puede publicar
 - 📝 Queda registrado el motivo
 - 🔄 Puede actualizarse con nuevas imágenes y re-verificarse
@@ -330,16 +359,19 @@ imageVerificationStatus: 'invalid'
 ### ⚠️ Verificación Descartada
 
 **Razones**:
+
 - DEA ya no existe en la ubicación
 - Información desactualizada
 - Duplicado de otro registro
 
 **Estado final**:
+
 ```
 imageVerificationStatus: 'discarded'
 ```
 
 **Consecuencias**:
+
 - ⚠️ Queda marcado como descartado
 - 📝 Se registra motivo del descarte
 - 🔄 Puede re-verificarse si cambia la situación
@@ -347,11 +379,13 @@ imageVerificationStatus: 'discarded'
 ### 🔄 Re-verificación
 
 **Cuándo es necesaria**:
+
 - Cambio de ubicación del DEA
 - Actualización de imágenes
 - Corrección de datos
 
 **Proceso**:
+
 - Estado previo se guarda temporalmente
 - Se puede cancelar y volver al estado anterior
 - Si se completa, reemplaza la verificación anterior
@@ -404,16 +438,19 @@ Algunos estados permiten trabajo parcial pero no publicación:
 #### Tabla: `dea_records`
 
 **Validación de Dirección:**
+
 - `addressValidationStatus` (VARCHAR): Estado de validación de dirección
   - Valores: `'pending'`, `'completed'`
   - Por defecto: `'pending'`
 
 **Verificación de Imágenes:**
+
 - `imageVerificationStatus` (VARCHAR): Estado de verificación de imágenes
   - Valores: `'pending'`, `'pre_verified'`, `'in_progress'`, `'verified'`, `'invalid'`, `'discarded'`
   - Por defecto: `'pending'`
 
 **Campos Definitivos (resultado de validación):**
+
 - `defTipoVia`, `defNombreVia`, `defNumero`: Dirección validada
 - `defCp`: Código postal validado
 - `defDistrito`: Distrito validado
@@ -422,6 +459,7 @@ Algunos estados permiten trabajo parcial pero no publicación:
 #### Tabla: `verification_sessions`
 
 Registra cada sesión de verificación de imágenes:
+
 - `status`: Estado de la sesión (`in_progress`, `verified`, `discarded`)
 - `currentStep`: Paso actual del proceso
 - `stepData`: Datos de cada paso (JSON)
@@ -431,11 +469,13 @@ Registra cada sesión de verificación de imágenes:
 ### Servicios Principales
 
 #### `stepValidationService.ts`
+
 - Gestiona validación de dirección paso a paso
 - Métodos: `initializeStepValidation`, `executeStep1-4`
 - Actualiza `addressValidationStatus`
 
 #### `simpleVerificationService.ts`
+
 - Gestiona verificación de imágenes
 - Métodos: `startVerification`, `completeVerification`, `discardVerification`
 - Actualiza `imageVerificationStatus`
@@ -443,9 +483,11 @@ Registra cada sesión de verificación de imágenes:
 ### Endpoints API
 
 **Validación de Dirección:**
+
 - `POST /api/dea/[id]/validate-steps` - Ejecutar pasos de validación
 
 **Verificación de Imágenes:**
+
 - `POST /api/verify/[id]/start` - Iniciar verificación
 - `POST /api/verify/[id]/select-images` - Seleccionar imágenes
 - `POST /api/verify/[id]/crop` - Recortar imagen
@@ -457,6 +499,7 @@ Registra cada sesión de verificación de imágenes:
 **Fuente**: Ayuntamiento de Madrid
 
 **Tablas cargadas:**
+
 - `direcciones`: 213,431 direcciones oficiales
 - `vias`: 9,393 viales normalizados
 - `distritos`: 21 distritos

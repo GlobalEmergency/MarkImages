@@ -47,6 +47,7 @@ Sistema avanzado de detección de duplicados **OPTIMIZADO con PostgreSQL nativo*
 ```
 
 **Eliminados en v3.0:**
+
 - ❌ `TextNormalizer.ts` → Reemplazado por función `normalize_text()` en PostgreSQL
 - ❌ `DuplicateScoringService.ts` → Scoring calculado en queries SQL
 
@@ -58,8 +59,8 @@ Sistema avanzado de detección de duplicados **OPTIMIZADO con PostgreSQL nativo*
 
 ```sql
 -- Columna normalizada para comparación de nombres
-ALTER TABLE aeds 
-ADD COLUMN normalized_name TEXT 
+ALTER TABLE aeds
+ADD COLUMN normalized_name TEXT
   GENERATED ALWAYS AS (normalize_text(name)) STORED;
 
 CREATE INDEX idx_aeds_normalized_name ON aeds (normalized_name);
@@ -70,7 +71,7 @@ CREATE INDEX idx_aeds_normalized_name ON aeds (normalized_name);
 ```sql
 -- Dirección normalizada
 ALTER TABLE aed_locations
-ADD COLUMN normalized_address TEXT 
+ADD COLUMN normalized_address TEXT
   GENERATED ALWAYS AS (
     normalize_text(
       COALESCE(street_type, '') || ' ' ||
@@ -115,6 +116,7 @@ $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE STRICT;
 ```
 
 **Ventajas:**
+
 - ✅ **Auto-actualización**: Las columnas se actualizan automáticamente
 - ✅ **Consistencia**: Misma normalización en toda la aplicación
 - ✅ **Performance**: Comparaciones instantáneas sin procesar en runtime
@@ -126,31 +128,32 @@ $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE STRICT;
 
 ### Pesos de Similitud (+puntos)
 
-| Campo                             | Puntos | Descripción                             |
-| --------------------------------- | ------ | --------------------------------------- |
-| **name** (similitud pg_trgm)      | +30    | `similarity()` >= 0.9                   |
-| **address** (coincidencia exacta) | +25    | Normalización + comparación exacta      |
-| **coordinates** (proximidad)      | +20    | Distancia < 5 metros (PostGIS)          |
-| **provisional_number**            | +15    | Número provisional del DEA              |
-| **establishment_type**            | +10    | Tipo de establecimiento normalizado     |
-| **postal_code**                   | +5     | Código postal                           |
+| Campo                             | Puntos | Descripción                         |
+| --------------------------------- | ------ | ----------------------------------- |
+| **name** (similitud pg_trgm)      | +30    | `similarity()` >= 0.9               |
+| **address** (coincidencia exacta) | +25    | Normalización + comparación exacta  |
+| **coordinates** (proximidad)      | +20    | Distancia < 5 metros (PostGIS)      |
+| **provisional_number**            | +15    | Número provisional del DEA          |
+| **establishment_type**            | +10    | Tipo de establecimiento normalizado |
+| **postal_code**                   | +5     | Código postal                       |
 
 ### Penalties de Diferenciación (-puntos)
 
-| Campo                                       | Penalización | Razón                                          |
-| ------------------------------------------- | ------------ | ---------------------------------------------- |
-| **floor** (diferente)                       | -20          | Mismo edificio, planta diferente               |
-| **location_details** (diferente)            | -20          | Ubicación específica (botiquín, pista 1, etc.) |
-| **access_instructions** (diferente)         | -15          | Descripción de acceso                          |
+| Campo                               | Penalización | Razón                                          |
+| ----------------------------------- | ------------ | ---------------------------------------------- |
+| **floor** (diferente)               | -20          | Mismo edificio, planta diferente               |
+| **location_details** (diferente)    | -20          | Ubicación específica (botiquín, pista 1, etc.) |
+| **access_instructions** (diferente) | -15          | Descripción de acceso                          |
 
 **Nota:** En la versión simplificada del schema:
+
 - `location_details` combina `specific_location` + `additional_info`
 - `access_instructions` combina `access_description` + `visible_references`
 
 ### Ejemplo de Query Optimizada
 
 ```sql
-SELECT 
+SELECT
   a.id,
   a.name,
   l.street_type,
@@ -159,7 +162,7 @@ SELECT
   -- SCORING CALCULADO EN DB
   (
     -- SUMAR puntos positivos
-    (CASE WHEN similarity(a.normalized_name, 'centro deportivo') >= 0.9 
+    (CASE WHEN similarity(a.normalized_name, 'centro deportivo') >= 0.9
        THEN 30 ELSE 0 END) +
     (CASE WHEN l.normalized_address = 'c mayor 14'
        THEN 25 ELSE 0 END) +
@@ -172,7 +175,7 @@ SELECT
     (CASE WHEN l.postal_code = '28001'
        THEN 5 ELSE 0 END) -
     -- RESTAR puntos por diferencias
-    (CASE WHEN l.normalized_floor != '' AND 'planta 3' != '' 
+    (CASE WHEN l.normalized_floor != '' AND 'planta 3' != ''
            AND l.normalized_floor != 'planta 3'
        THEN 20 ELSE 0 END) -
     (CASE WHEN l.normalized_location_details != '' AND 'pista 1' != ''
@@ -184,7 +187,7 @@ SELECT
   ) AS score
 FROM aeds a
 LEFT JOIN aed_locations l ON a.location_id = l.id
-WHERE 
+WHERE
   a.geom IS NOT NULL
   AND ST_DWithin(a.geom, ST_SetSRID(ST_MakePoint(-3.7, 40.4), 4326), 0.001)
 HAVING score >= 60
@@ -199,6 +202,7 @@ LIMIT 20;
 ### Estrategia 1: Búsqueda Espacial CON Scoring en DB - 90% de casos
 
 **Ventajas v3.0:**
+
 - ⚡ **Ultra rápido**: ~50-100ms (antes: 200-500ms)
 - 🎯 **Todo en una query**: No trae datos a JavaScript
 - 🧮 **Scoring en DB**: PostgreSQL es 10-25x más rápido
@@ -222,6 +226,7 @@ const results = await prisma.$queryRaw`
 ### Estrategia 2: Fallback por Código Postal CON Scoring - 10% de casos
 
 **Ventajas v3.0:**
+
 - 📮 **Más rápido**: ~100-200ms (antes: 500-1000ms)
 - 🔄 **Sin JavaScript**: Todo el cálculo en PostgreSQL
 - ✅ **Filtrado eficiente**: Solo matches relevantes
@@ -243,13 +248,14 @@ const results = await prisma.$queryRaw`
 
 ## 📈 Performance Comparison
 
-| Versión | Normalización | Scoring | Tiempo (con coords) | Tiempo (sin coords) |
-|---------|---------------|---------|---------------------|---------------------|
-| **v1.0** | JavaScript | JavaScript | ~500ms | ~2-5s |
-| **v2.0** | JavaScript | JavaScript | ~200ms | ~1-2s |
-| **v3.0** | PostgreSQL | PostgreSQL | **~50-100ms** | **~100-300ms** |
+| Versión  | Normalización | Scoring    | Tiempo (con coords) | Tiempo (sin coords) |
+| -------- | ------------- | ---------- | ------------------- | ------------------- |
+| **v1.0** | JavaScript    | JavaScript | ~500ms              | ~2-5s               |
+| **v2.0** | JavaScript    | JavaScript | ~200ms              | ~1-2s               |
+| **v3.0** | PostgreSQL    | PostgreSQL | **~50-100ms**       | **~100-300ms**      |
 
 **Mejoras v3.0:**
+
 - ✅ **5-10x más rápido** en búsquedas con coordenadas
 - ✅ **10-25x más rápido** en búsquedas por código postal
 - ✅ **Menor uso de memoria**: No carga candidatos en JavaScript
@@ -311,7 +317,7 @@ DEA 2: name: "Hospital edificio 5", location_details: "Pediatría" → Score: 35
 export const DuplicateDetectionConfig = {
   thresholds: {
     confirmed: 80, // Score >= 80: DUPLICADO CONFIRMADO
-    possible: 60,  // Score 60-79: POSIBLE DUPLICADO
+    possible: 60, // Score 60-79: POSIBLE DUPLICADO
   },
 
   spatial: {
@@ -344,6 +350,7 @@ npm run tsx scripts/test-duplicate-scoring.ts
 ```
 
 **Casos validados:**
+
 1. ✅ Duplicados perfectos (score ≥ 90)
 2. ✅ Misma ubicación, location_details diferentes (score < 70)
 3. ✅ Mismo edificio, plantas diferentes (score < 70)
@@ -360,6 +367,7 @@ npm run tsx scripts/test-duplicate-scoring.ts
 ### 2. Posible Duplicado (Score 60-79) ⚠️
 
 **Acción:** Importar pero marcar para revisión
+
 - `requires_attention = true`
 - `attention_reason = "Posible duplicado..."`
 
@@ -378,6 +386,7 @@ npx prisma migrate deploy
 ```
 
 Esto crea:
+
 - Función `normalize_text()` inmutable
 - Columnas normalizadas en `aeds` y `aed_locations`
 - Índices B-tree para búsqueda rápida
@@ -386,17 +395,17 @@ Esto crea:
 
 ```sql
 -- Verificar que las columnas se crearon
-SELECT 
-  name, 
+SELECT
+  name,
   normalized_name,
   (name = normalized_name) as already_normalized
-FROM aeds 
+FROM aeds
 LIMIT 10;
 
-SELECT 
+SELECT
   street_type, street_name, street_number,
   normalized_address
-FROM aed_locations 
+FROM aed_locations
 LIMIT 10;
 ```
 
@@ -461,7 +470,8 @@ Después de migrar a v3.0:
 
 **Versión:** 3.0.0  
 **Fecha:** 21 de diciembre de 2025  
-**Breaking Changes:** 
+**Breaking Changes:**
+
 - Eliminados `TextNormalizer.ts` y `DuplicateScoringService.ts`
 - Scoring ahora calculado íntegramente en PostgreSQL
 - Requiere migration para columnas normalizadas

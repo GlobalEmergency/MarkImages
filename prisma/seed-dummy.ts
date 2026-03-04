@@ -214,15 +214,31 @@ async function loadDistrictsReference() {
 }
 
 // Map JSON organization types to Prisma enum values
-function mapOrganizationType(jsonType: string): "CIVIL_PROTECTION" | "CERTIFIED_COMPANY" | "VOLUNTEER_GROUP" | "MUNICIPALITY" | "HEALTH_SERVICE" | "OWNER" {
-  const typeMap: Record<string, "CIVIL_PROTECTION" | "CERTIFIED_COMPANY" | "VOLUNTEER_GROUP" | "MUNICIPALITY" | "HEALTH_SERVICE" | "OWNER"> = {
-    "emergency": "CIVIL_PROTECTION",
-    "government": "MUNICIPALITY",
-    "commercial": "CERTIFIED_COMPANY",
-    "health": "HEALTH_SERVICE",
-    "hospital": "HEALTH_SERVICE",
-    "transport": "MUNICIPALITY", // Transport falls under municipality
-    "enterprise": "CERTIFIED_COMPANY", // Enterprise is a certified company
+function mapOrganizationType(
+  jsonType: string
+):
+  | "CIVIL_PROTECTION"
+  | "CERTIFIED_COMPANY"
+  | "VOLUNTEER_GROUP"
+  | "MUNICIPALITY"
+  | "HEALTH_SERVICE"
+  | "OWNER" {
+  const typeMap: Record<
+    string,
+    | "CIVIL_PROTECTION"
+    | "CERTIFIED_COMPANY"
+    | "VOLUNTEER_GROUP"
+    | "MUNICIPALITY"
+    | "HEALTH_SERVICE"
+    | "OWNER"
+  > = {
+    emergency: "CIVIL_PROTECTION",
+    government: "MUNICIPALITY",
+    commercial: "CERTIFIED_COMPANY",
+    health: "HEALTH_SERVICE",
+    hospital: "HEALTH_SERVICE",
+    transport: "MUNICIPALITY", // Transport falls under municipality
+    enterprise: "CERTIFIED_COMPANY", // Enterprise is a certified company
   };
   return typeMap[jsonType.toLowerCase()] || "CERTIFIED_COMPANY";
 }
@@ -336,9 +352,12 @@ async function createAed(index: number, districtSequences: Map<number, number>) 
       city_code: "079",
       district_code: district.textCode,
       district_name: district.name,
-      location_details: faker.helpers.maybe(() => `Planta ${faker.number.int({ min: 0, max: 5 })}`, {
-        probability: 0.3,
-      }),
+      location_details: faker.helpers.maybe(
+        () => `Planta ${faker.number.int({ min: 0, max: 5 })}`,
+        {
+          probability: 0.3,
+        }
+      ),
       access_instructions: faker.helpers.maybe(
         () =>
           faker.helpers.arrayElement([

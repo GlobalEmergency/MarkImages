@@ -1,11 +1,13 @@
 # CLAUDE.md — Project Rules for DeaMap
 
 ## Project Overview
+
 DeaMap is an AED (Automated External Defibrillator) management platform built with Next.js 15, Prisma ORM, and PostgreSQL with PostGIS. It uses Domain-Driven Design (DDD) architecture for the import module.
 
 ## Mandatory Rules
 
 ### Database Migrations (CRITICAL)
+
 - **NEVER** create migrations that drop tables, columns, indexes, or constraints without explicit approval
 - **NEVER** modify an existing migration file — Prisma verifies checksums and this will break production deployments
 - **NEVER** use `DELETE FROM`, `TRUNCATE`, or `ALTER COLUMN ... TYPE` in migrations without explicit approval
@@ -15,11 +17,13 @@ DeaMap is an AED (Automated External Defibrillator) management platform built wi
 - When creating migrations that depend on other tables, verify the execution order (Prisma runs migrations alphabetically by directory name)
 
 ### Testing
+
 - All PRs must pass the test suite (unit + integration)
 - Tests are run with Vitest (not Jest). E2E tests use Playwright and are separate
 - When modifying domain entities or value objects, update corresponding tests in `tests/`
 
 ### Code Style
+
 - TypeScript strict mode is enabled
 - ESLint and Prettier are configured — run `npm run lint` and `npm run format:check`
 - Pre-commit hooks run type-check, lint, and build automatically
@@ -27,6 +31,7 @@ DeaMap is an AED (Automated External Defibrillator) management platform built wi
 ## Architecture
 
 ### Tech Stack
+
 - **Framework**: Next.js 15 (App Router)
 - **ORM**: Prisma with PostgreSQL + PostGIS
 - **Auth**: JWT tokens via `jose` library, bcrypt for passwords
@@ -34,6 +39,7 @@ DeaMap is an AED (Automated External Defibrillator) management platform built wi
 - **Testing**: Vitest (unit/integration), Playwright (e2e)
 
 ### Directory Structure
+
 ```
 src/
 ├── app/              # Next.js App Router (pages + API routes)
@@ -57,6 +63,7 @@ scripts/
 ```
 
 ### Key Domain Concepts (Import Module)
+
 - **CsvPreview**: Value Object — `create(headers: string[], sampleRows: string[][], totalRows: number)`
 - **ValidationResult**: Value Object — `create(errors, warnings, stats)`, `withIssues()`, `success()`, `empty()`
 - **ValidationError**: Value Object — `create({row, field, value, errorType, message, severity})`
@@ -64,12 +71,14 @@ scripts/
 - **ColumnMapping**: Value Object — Maps CSV columns to database fields
 
 ### Branch Database System
+
 - Feature branches on Vercel get isolated PostgreSQL databases
 - Managed by `scripts/branch-database.js` and `scripts/migrate.js`
 - New branch databases are seeded with 500 dummy DEAs and test users
 - Test credentials: `admin@deamap.es` / `123456`
 
 ## Commands
+
 ```bash
 npm run dev              # Start development server
 npm run build            # Production build

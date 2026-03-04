@@ -24,7 +24,7 @@ import * as path from "path";
 
 dotenv.config();
 //Load .env.local
-dotenv.config({ path: ".env.local", override: true});
+dotenv.config({ path: ".env.local", override: true });
 
 const connectionString = process.env.DATABASE_URL || "";
 const adapter = new PrismaPg({ connectionString });
@@ -113,14 +113,14 @@ function parseCSV(content: string): CsvRow[] {
   try {
     // Usar csv-parse para manejar correctamente campos con ;, comillas, etc.
     const records = parse(content, {
-      columns: false,           // No usar primera fila como headers
+      columns: false, // No usar primera fila como headers
       skip_empty_lines: true,
-      delimiter: ';',           // Usar ; como separador
-      quote: '"',               // Respetar comillas
-      escape: '"',              // Escapar comillas dobles
-      relax_quotes: true,       // Tolerante con comillas
-      trim: true,               // Trim automático
-      from_line: 2,             // Saltar header (empezar desde línea 2)
+      delimiter: ";", // Usar ; como separador
+      quote: '"', // Respetar comillas
+      escape: '"', // Escapar comillas dobles
+      relax_quotes: true, // Tolerante con comillas
+      trim: true, // Trim automático
+      from_line: 2, // Saltar header (empezar desde línea 2)
       relax_column_count: true, // Tolerar columnas inconsistentes
     }) as string[][];
 
@@ -155,18 +155,10 @@ function parseCSV(content: string): CsvRow[] {
 function normalizeText(text: string): string {
   // Normalización simple: solo lowercase y espacios
   // Respeta acentos y caracteres especiales (UTF-8)
-  return text
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .trim();
+  return text.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
-function calculateDistance(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371e3; // Earth radius in meters
   const φ1 = (lat1 * Math.PI) / 180;
   const φ2 = (lat2 * Math.PI) / 180;
@@ -218,10 +210,7 @@ function generateCSVOutput(results: ProcessResult[]): Buffer {
 }
 
 function getOutputFilename(): string {
-  const timestamp = new Date()
-    .toISOString()
-    .replace(/[:.]/g, "-")
-    .slice(0, 19);
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
   const suffix = DRY_RUN ? "dryrun" : "executed";
   return `revisadas-match-location-${timestamp}-${suffix}.csv`;
 }
@@ -400,9 +389,7 @@ async function processRow(row: CsvRow): Promise<ProcessResult> {
             match.location?.street_number || ""
           ),
           db_coords:
-            match.latitude && match.longitude
-              ? `${match.latitude},${match.longitude}`
-              : "",
+            match.latitude && match.longitude ? `${match.latitude},${match.longitude}` : "",
           db_access_info: match.location?.access_instructions || "",
           status: "WARNING",
           action: "CODE_CONFLICT",
@@ -429,10 +416,7 @@ async function processRow(row: CsvRow): Promise<ProcessResult> {
         match.location?.street_name || "",
         match.location?.street_number || ""
       ),
-      db_coords:
-        match.latitude && match.longitude
-          ? `${match.latitude},${match.longitude}`
-          : "",
+      db_coords: match.latitude && match.longitude ? `${match.latitude},${match.longitude}` : "",
       db_access_info: match.location?.access_instructions || "",
       status: "OK",
       action: "MATCHED_NAME",
@@ -449,16 +433,11 @@ async function processRow(row: CsvRow): Promise<ProcessResult> {
     const coordMatches = nameMatches
       .map((aed) => {
         if (!aed.latitude || !aed.longitude) return null;
-        const distance = calculateDistance(
-          csvLat,
-          csvLon,
-          aed.latitude,
-          aed.longitude
-        );
+        const distance = calculateDistance(csvLat, csvLon, aed.latitude, aed.longitude);
         return { aed, distance };
       })
       .filter(
-        (m): m is { aed: typeof nameMatches[0]; distance: number } =>
+        (m): m is { aed: (typeof nameMatches)[0]; distance: number } =>
           m !== null && m.distance <= MAX_DISTANCE_METERS
       )
       .sort((a, b) => a.distance - b.distance);
@@ -498,8 +477,7 @@ async function processRow(row: CsvRow): Promise<ProcessResult> {
     }
 
     // Use coord matches for next steps if we have any, otherwise use all name matches
-    const nextStepMatches =
-      coordMatches.length > 0 ? coordMatches.map((m) => m.aed) : nameMatches;
+    const nextStepMatches = coordMatches.length > 0 ? coordMatches.map((m) => m.aed) : nameMatches;
 
     // STEP 3: Try address matching
     const normalizedCsvAddress = normalizeText(csvAddress);
@@ -542,9 +520,7 @@ async function processRow(row: CsvRow): Promise<ProcessResult> {
             match.location?.street_number || ""
           ),
           db_coords:
-            match.latitude && match.longitude
-              ? `${match.latitude},${match.longitude}`
-              : "",
+            match.latitude && match.longitude ? `${match.latitude},${match.longitude}` : "",
           db_access_info: match.location?.access_instructions || "",
           status: "OK",
           action: "MATCHED_NAME_ADDRESS",
@@ -556,7 +532,7 @@ async function processRow(row: CsvRow): Promise<ProcessResult> {
       // STEP 4: Try description matching using pg_trgm similarity
       if (descripcionAcceso || comentarioLibre) {
         const candidateMatches = addressMatches.length > 0 ? addressMatches : nextStepMatches;
-        const candidateIds = candidateMatches.map(aed => aed.id);
+        const candidateIds = candidateMatches.map((aed) => aed.id);
 
         // Skip if no candidates or no description text
         const csvDescription = `${descripcionAcceso} ${comentarioLibre}`.trim();
@@ -634,9 +610,7 @@ async function processRow(row: CsvRow): Promise<ProcessResult> {
                 match.street_number || ""
               ),
               db_coords:
-                match.latitude && match.longitude
-                  ? `${match.latitude},${match.longitude}`
-                  : "",
+                match.latitude && match.longitude ? `${match.latitude},${match.longitude}` : "",
               db_access_info: match.access_instructions || "",
               status: "OK",
               action: "MATCHED_NAME_DESCRIPTION",
@@ -702,9 +676,7 @@ async function updateAed(
     provisional_number: number | null;
   } = {
     external_reference: Id,
-    provisional_number: numeroProvisionalDea
-      ? parseInt(numeroProvisionalDea)
-      : null,
+    provisional_number: numeroProvisionalDea ? parseInt(numeroProvisionalDea) : null,
   };
 
   // Solo actualizar code si tiene valor (no vacío)
@@ -780,9 +752,7 @@ async function main() {
     console.log("   Para ejecutar cambios reales, use: --execute");
     console.log();
   } else {
-    console.log(
-      "✅ MODO EJECUCIÓN - Los cambios se aplicarán a la base de datos"
-    );
+    console.log("✅ MODO EJECUCIÓN - Los cambios se aplicarán a la base de datos");
     console.log();
   }
 
@@ -836,9 +806,7 @@ async function main() {
       }
     }
 
-    console.log(
-      `✅ Procesamiento completado: ${processed}/${rows.length} registros`
-    );
+    console.log(`✅ Procesamiento completado: ${processed}/${rows.length} registros`);
     console.log();
 
     // Generate output
@@ -858,29 +826,15 @@ async function main() {
     console.log(`  Total registros procesados:           ${stats.total}`);
     console.log();
     if (stats.skipped > 0) {
-      console.log(
-        `  ⏭️  Ya procesados (SKIPPED):          ${stats.skipped}`
-      );
+      console.log(`  ⏭️  Ya procesados (SKIPPED):          ${stats.skipped}`);
       console.log();
     }
-    console.log(
-      `  ✅ Match por nombre únicamente:       ${stats.matched_name}`
-    );
-    console.log(
-      `  ✅ Match por nombre + coordenadas:    ${stats.matched_name_coords}`
-    );
-    console.log(
-      `  ✅ Match por nombre + dirección:      ${stats.matched_name_address}`
-    );
-    console.log(
-      `  ✅ Match por nombre + descripción:    ${stats.matched_name_description}`
-    );
-    console.log(
-      `  ⚠️  Múltiples matches (ambiguos):     ${stats.multiple_matches}`
-    );
-    console.log(
-      `  ⚠️  Conflictos de código:             ${stats.code_conflicts}`
-    );
+    console.log(`  ✅ Match por nombre únicamente:       ${stats.matched_name}`);
+    console.log(`  ✅ Match por nombre + coordenadas:    ${stats.matched_name_coords}`);
+    console.log(`  ✅ Match por nombre + dirección:      ${stats.matched_name_address}`);
+    console.log(`  ✅ Match por nombre + descripción:    ${stats.matched_name_description}`);
+    console.log(`  ⚠️  Múltiples matches (ambiguos):     ${stats.multiple_matches}`);
+    console.log(`  ⚠️  Conflictos de código:             ${stats.code_conflicts}`);
     console.log(`  ❌ No encontrados:                    ${stats.not_found}`);
     console.log();
     console.log(
@@ -896,9 +850,7 @@ async function main() {
     if (DRY_RUN) {
       console.log("⚠️  RECORDATORIO: Este fue un DRY-RUN");
       console.log("   Para aplicar los cambios reales, ejecute:");
-      console.log(
-        "   npx tsx scripts/match-revisadas-by-location.ts --execute"
-      );
+      console.log("   npx tsx scripts/match-revisadas-by-location.ts --execute");
     } else {
       console.log("✅ Matching completado exitosamente");
     }

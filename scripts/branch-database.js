@@ -106,10 +106,7 @@ function getDatabaseName(branch) {
  * Requires: DATABASE_URL (for credentials) and POSTGRES_ADMIN_URL (to create DBs)
  */
 function isFeatureEnabled() {
-  return !!(
-    process.env.POSTGRES_ADMIN_URL &&
-    CONFIG.credentials
-  );
+  return !!(process.env.POSTGRES_ADMIN_URL && CONFIG.credentials);
 }
 
 /**
@@ -145,10 +142,7 @@ function shouldCreateBranchDatabase() {
  * Checks if a database exists
  */
 async function databaseExists(adminClient, dbName) {
-  const result = await adminClient.query(
-    "SELECT 1 FROM pg_database WHERE datname = $1",
-    [dbName]
-  );
+  const result = await adminClient.query("SELECT 1 FROM pg_database WHERE datname = $1", [dbName]);
   return result.rows.length > 0;
 }
 
@@ -180,23 +174,25 @@ async function createDatabase(adminUrl, dbName) {
     try {
       const safeUser = appUser.replace(/"/g, '""');
       // Grant all privileges on the new database
-      await newDbClient.query(`GRANT ALL PRIVILEGES ON DATABASE "${dbName.replace(/"/g, '""')}" TO "${safeUser}"`);
+      await newDbClient.query(
+        `GRANT ALL PRIVILEGES ON DATABASE "${dbName.replace(/"/g, '""')}" TO "${safeUser}"`
+      );
       // Grant usage and create on public schema
       await newDbClient.query(`GRANT ALL ON SCHEMA public TO "${safeUser}"`);
       // Make app user owner of public schema so it can create tables
       await newDbClient.query(`ALTER SCHEMA public OWNER TO "${safeUser}"`);
       console.log(`   ✅ Permissions granted to user: ${appUser}`);
 
-    //   ENABLE EXTENSIONS
-    //   POSTGIS
+      //   ENABLE EXTENSIONS
+      //   POSTGIS
       await newDbClient.query(`CREATE EXTENSION IF NOT EXISTS postgis`);
       console.log(`   ✅ PostGIS extension enabled`);
-    //   UUID-OSSP
-        await newDbClient.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
-        console.log(`   ✅ uuid-ossp extension enabled`);
-    //     postgres search
-        await newDbClient.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm`);
-        console.log(`   ✅ pg_trgm extension enabled`);
+      //   UUID-OSSP
+      await newDbClient.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
+      console.log(`   ✅ uuid-ossp extension enabled`);
+      //     postgres search
+      await newDbClient.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm`);
+      console.log(`   ✅ pg_trgm extension enabled`);
     } finally {
       await newDbClient.end();
     }
@@ -394,7 +390,10 @@ if (require.main === module) {
         } else {
           console.log("  ❌ DATABASE_URL not configured or invalid");
         }
-        console.log("\n🔑 Admin URL:", process.env.POSTGRES_ADMIN_URL ? "✅ configured" : "❌ not set");
+        console.log(
+          "\n🔑 Admin URL:",
+          process.env.POSTGRES_ADMIN_URL ? "✅ configured" : "❌ not set"
+        );
         break;
 
       case "create":

@@ -15,11 +15,13 @@ El proyecto está configurado para hacer auto-deploy de migraciones **solo en Ve
 #### Comportamiento Inteligente
 
 El script `scripts/migrate.js` verifica automáticamente:
+
 - ✅ **Entorno Vercel**: Solo ejecuta migraciones si `VERCEL=1`
 - ✅ **Ramas permitidas**: Solo en ramas `main` o `refactor` (o que contengan estos nombres)
 - ✅ **Prisma Client**: Siempre se genera, independientemente de la rama
 
 Esto ejecutará automáticamente:
+
 1. Las migraciones de base de datos (solo si estás en Vercel + rama correcta)
 2. La generación del cliente de Prisma (siempre)
 3. El build de Next.js
@@ -53,23 +55,27 @@ DATABASE_URL="postgresql://user:password@host:port/database"
 ### Setup
 
 1. **Clonar el repositorio**
+
    ```bash
    git clone <repo-url>
    cd MarkImages
    ```
 
 2. **Instalar dependencias**
+
    ```bash
    npm install
    ```
 
 3. **Configurar variables de entorno**
+
    ```bash
    cp .env.example .env
    # Editar .env con tu DATABASE_URL
    ```
 
 4. **Ejecutar migraciones** (para desarrollo local)
+
    ```bash
    npx prisma migrate deploy  # O usa: npx prisma migrate dev
    npx prisma generate
@@ -78,6 +84,7 @@ DATABASE_URL="postgresql://user:password@host:port/database"
    **Nota**: `npm run build` NO ejecuta migraciones en local (solo en Vercel)
 
 5. **Seed (opcional)**
+
    ```bash
    npm run db:seed
    ```
@@ -141,6 +148,7 @@ npx prisma migrate reset
 ## 🎯 Features
 
 ### Implementado
+
 - ✅ Lista de AEDs publicados
 - ✅ Búsqueda por nombre/código
 - ✅ Paginación
@@ -148,6 +156,7 @@ npx prisma migrate reset
 - ✅ Schema normalizado con PostGIS
 
 ### Por Implementar
+
 - [ ] Mapa interactivo
 - [ ] Detalle de AED
 - [ ] Formulario de registro
@@ -161,11 +170,13 @@ npx prisma migrate reset
 Lista AEDs publicados con paginación.
 
 **Query params:**
+
 - `page` (default: 1)
 - `limit` (default: 50, max: 100)
 - `search` (opcional): buscar por nombre o código
 
 **Response:**
+
 ```json
 {
   "success": true,

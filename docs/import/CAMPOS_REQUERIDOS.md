@@ -5,13 +5,15 @@
 El sistema de importación de DEAs **solo requiere 3 campos obligatorios**:
 
 ### 1. Nombre del establecimiento (`proposedName`)
+
 - **Descripción**: Nombre del establecimiento donde está ubicado el DEA
-- **Ejemplos**: 
+- **Ejemplos**:
   - Hospital General
   - Centro Comercial Plaza
   - Ayuntamiento
 
 ### 2. Nombre de la vía (`streetName`)
+
 - **Descripción**: Nombre de la calle o vía
 - **Ejemplos**:
   - Gran Vía
@@ -19,6 +21,7 @@ El sistema de importación de DEAs **solo requiere 3 campos obligatorios**:
   - Paseo de la Castellana
 
 ### 3. Número de la vía (`streetNumber`)
+
 - **Descripción**: Número del portal
 - **Ejemplos**:
   - 1
@@ -30,6 +33,7 @@ El sistema de importación de DEAs **solo requiere 3 campos obligatorios**:
 Todos los demás campos son **opcionales**, incluyendo:
 
 ### Distrito (`district`)
+
 - **Descripción**: Distrito de Madrid donde se ubica el DEA
 - **Nota**: A pesar de ser útil, NO es obligatorio
 - **Validación**: Si se proporciona, se valida contra la lista de distritos válidos (genera WARNING si no se encuentra)
@@ -40,6 +44,7 @@ Todos los demás campos son **opcionales**, incluyendo:
   - 3. Retiro
 
 ### Otros campos opcionales
+
 - Correo electrónico
 - Código postal
 - Coordenadas (latitud/longitud)
@@ -51,10 +56,12 @@ Todos los demás campos son **opcionales**, incluyendo:
 ## Validación durante la Importación
 
 ### Validación de Campos Requeridos
+
 - ❌ **ERROR**: Si falta alguno de los 3 campos obligatorios
 - ✅ **OK**: Si todos están presentes, incluso sin distrito
 
 ### Validación de Distrito (si está presente)
+
 - ⚠️ **WARNING**: Si el distrito no se encuentra en el sistema
 - ⚠️ **WARNING**: Si el distrito no existe en la base de datos
 - ✅ **OK**: Si está vacío (es opcional)
@@ -79,11 +86,13 @@ Todos los demás campos son **opcionales**, incluyendo:
 ## Cambios Implementados (Enero 2025)
 
 ### Antes
+
 - ❌ Distrito era **obligatorio**
 - ❌ No se podía importar sin distrito
 - ❌ Error si distrito estaba vacío
 
 ### Después
+
 - ✅ Distrito es **opcional**
 - ✅ Se puede importar sin distrito
 - ✅ Solo WARNING si distrito inválido

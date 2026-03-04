@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -27,7 +27,11 @@
   <body>
     <div id="root"></div>
     <!-- Polyfill globalThis for older WebViews (Android < Chrome 71) -->
-    <script>if(typeof globalThis==="undefined"){self.globalThis=self}</script>
+    <script>
+      if (typeof globalThis === "undefined") {
+        self.globalThis = self;
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

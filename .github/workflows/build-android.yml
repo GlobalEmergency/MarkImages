@@ -25,6 +25,10 @@ on:
           - beta
           - production
 
+# Minimal top-level permissions — jobs override as needed
+permissions:
+  contents: read
+
 concurrency:
   group: build-android-${{ github.ref }}
   cancel-in-progress: false

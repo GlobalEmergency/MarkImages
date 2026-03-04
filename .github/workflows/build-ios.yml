@@ -15,6 +15,10 @@ on:
         type: boolean
         default: false
 
+# Minimal top-level permissions — jobs override as needed
+permissions:
+  contents: read
+
 concurrency:
   group: build-ios-${{ github.ref }}
   cancel-in-progress: false

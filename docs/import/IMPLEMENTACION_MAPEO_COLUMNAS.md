@@ -7,18 +7,21 @@ Se ha implementado completamente el sistema de mapeo de columnas para la importa
 ## ✅ Componentes Implementados
 
 ### 1. **Hook: `useColumnMapping.ts`**
+
 - Gestiona el estado del mapeo de columnas
 - Calcula estadísticas en tiempo real
 - Valida campos requeridos
 - Detecta mapeos duplicados
 
 ### 2. **Componente: `MappingSummary.tsx`**
+
 - Muestra resumen visual del estado del mapeo
 - Tarjetas con estadísticas (requeridos, opcionales, sin mapear)
 - Alertas de campos faltantes
 - Leyenda de colores
 
 ### 3. **Componente: `MappingRow.tsx`**
+
 - Fila individual para cada columna CSV
 - Vista previa de datos (primeras 3 filas)
 - Selector dropdown de campos del sistema
@@ -26,6 +29,7 @@ Se ha implementado completamente el sistema de mapeo de columnas para la importa
 - Previene mapeos duplicados
 
 ### 4. **Componente: `ColumnMappingEditor.tsx`**
+
 - Editor principal de mapeo
 - Búsqueda/filtrado de columnas
 - Botón para limpiar todos los mapeos
@@ -33,11 +37,13 @@ Se ha implementado completamente el sistema de mapeo de columnas para la importa
 - Validación en tiempo real
 
 ### 5. **Modificaciones en `ImportWizard.tsx`**
+
 - Integración del ColumnMappingEditor
 - Paso de validación mejorado con UI
 - Flujo completo: Upload → Mapeo → Validación
 
 ### 6. **Modificaciones en `/import/page.tsx`**
+
 - Toggle entre historial y wizard
 - Botón principal para nueva importación
 - Integración limpia con el sistema existente
@@ -74,11 +80,13 @@ Se ha implementado completamente el sistema de mapeo de columnas para la importa
 ## 🎨 Características de UX
 
 ### Mobile-First
+
 - Diseño responsivo desde móvil hacia desktop
 - Componentes optimizados para pantallas pequeñas
 - Touch-friendly (botones de 44px mínimo)
 
 ### Feedback Visual
+
 - ✅ **Verde**: Campo requerido mapeado correctamente
 - 🔵 **Azul**: Campo opcional mapeado
 - ⚠️ **Amarillo**: Sugerencia con confianza media (< 70%)
@@ -86,6 +94,7 @@ Se ha implementado completamente el sistema de mapeo de columnas para la importa
 - ❌ **Rojo**: Campo requerido faltante
 
 ### Validación en Tiempo Real
+
 - Contador de campos mapeados
 - Lista de campos requeridos faltantes
 - Botón "Continuar" deshabilitado hasta que todos los requeridos estén mapeados
@@ -93,31 +102,37 @@ Se ha implementado completamente el sistema de mapeo de columnas para la importa
 ## 🔧 Arquitectura DDD
 
 ### Domain Layer
+
 - `FieldDefinition.ts`: Define campos del sistema
 - `ColumnMapping.ts`: Value Object para mapeos
 - `CsvPreview.ts`: Preview de datos
 - `ValidationResult.ts`: Resultados de validación
 
 ### Application Layer
+
 - `ParseCsvPreviewUseCase.ts`: Parsea CSV
 - `SuggestColumnMappingUseCase.ts`: Genera sugerencias automáticas
 - `PreValidateDataUseCase.ts`: Pre-valida antes de importar
 
 ### Infrastructure Layer
+
 - Repositories existentes (sin cambios)
 
 ### Interface Layer
+
 - API Routes: `/api/import/preview`, `/api/import/validate`
 - Componentes React del wizard
 
 ## 🚀 Cómo Probar
 
 ### 1. Iniciar el servidor de desarrollo
+
 ```bash
 npm run dev
 ```
 
 ### 2. Navegar a la página de importación
+
 ```
 http://localhost:3000/import
 ```
@@ -125,9 +140,11 @@ http://localhost:3000/import
 ### 3. Hacer clic en "Iniciar Nueva Importación"
 
 ### 4. Subir un CSV de prueba
+
 El sistema aceptará cualquier CSV con estructura válida.
 
 ### 5. Revisar el mapeo automático
+
 - El sistema sugerirá mapeos basándose en similitud de nombres
 - Ejemplos de columnas que se mapearán automáticamente:
   - "Nombre" → "Nombre propuesto"
@@ -136,11 +153,13 @@ El sistema aceptará cualquier CSV con estructura válida.
   - "Calle" → "Nombre de la vía"
 
 ### 6. Ajustar mapeos si es necesario
+
 - Hacer clic en cualquier selector
 - Elegir el campo correcto del sistema
 - Los campos ya mapeados aparecerán deshabilitados
 
 ### 7. Confirmar y validar
+
 - Una vez todos los campos requeridos estén mapeados
 - Hacer clic en "Continuar con validación"
 - El sistema validará las primeras 100 filas
@@ -148,16 +167,19 @@ El sistema aceptará cualquier CSV con estructura válida.
 ## 🐛 Problema Resuelto
 
 ### Antes
+
 ```
 ❌ Error: Foreign key constraint violated on constraint: `aed_locations_district_id_fkey`
 ```
 
 **Causa**: El sistema intentaba insertar registros sin validar que:
+
 - El distrito existiera en la base de datos
 - Los campos estuvieran mapeados correctamente
 - Los datos tuvieran el formato correcto
 
 ### Después
+
 ```
 ✅ Pre-validación detecta problemas ANTES de importar
 ✅ Usuario puede corregir datos en el CSV

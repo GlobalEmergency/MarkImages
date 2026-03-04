@@ -7,7 +7,7 @@
       "normalizedName": "centro",
       "postalCodes": ["28004", "28005", "28012", "28013", "28014"],
       "center": { "lat": 40.4155, "lng": -3.7074 },
-      "bounds": { "minLat": 40.4050, "maxLat": 40.4260, "minLng": -3.7200, "maxLng": -3.6900 }
+      "bounds": { "minLat": 40.405, "maxLat": 40.426, "minLng": -3.72, "maxLng": -3.69 }
     },
     {
       "code": 2,
@@ -16,7 +16,7 @@
       "normalizedName": "arganzuela",
       "postalCodes": ["28005", "28045"],
       "center": { "lat": 40.3939, "lng": -3.6969 },
-      "bounds": { "minLat": 40.3800, "maxLat": 40.4080, "minLng": -3.7150, "maxLng": -3.6750 }
+      "bounds": { "minLat": 40.38, "maxLat": 40.408, "minLng": -3.715, "maxLng": -3.675 }
     },
     {
       "code": 3,
@@ -25,7 +25,7 @@
       "normalizedName": "retiro",
       "postalCodes": ["28007", "28009", "28014"],
       "center": { "lat": 40.4093, "lng": -3.6773 },
-      "bounds": { "minLat": 40.3950, "maxLat": 40.4230, "minLng": -3.6950, "maxLng": -3.6550 }
+      "bounds": { "minLat": 40.395, "maxLat": 40.423, "minLng": -3.695, "maxLng": -3.655 }
     },
     {
       "code": 4,
@@ -34,7 +34,7 @@
       "normalizedName": "salamanca",
       "postalCodes": ["28001", "28006", "28009", "28028"],
       "center": { "lat": 40.4299, "lng": -3.6773 },
-      "bounds": { "minLat": 40.4150, "maxLat": 40.4450, "minLng": -3.6950, "maxLng": -3.6600 }
+      "bounds": { "minLat": 40.415, "maxLat": 40.445, "minLng": -3.695, "maxLng": -3.66 }
     },
     {
       "code": 5,
@@ -42,8 +42,8 @@
       "name": "Chamartín",
       "normalizedName": "chamartin",
       "postalCodes": ["28002", "28016", "28033", "28034", "28036", "28043"],
-      "center": { "lat": 40.4590, "lng": -3.6773 },
-      "bounds": { "minLat": 40.4400, "maxLat": 40.4780, "minLng": -3.7000, "maxLng": -3.6500 }
+      "center": { "lat": 40.459, "lng": -3.6773 },
+      "bounds": { "minLat": 40.44, "maxLat": 40.478, "minLng": -3.7, "maxLng": -3.65 }
     },
     {
       "code": 6,
@@ -51,8 +51,8 @@
       "name": "Tetuán",
       "normalizedName": "tetuan",
       "postalCodes": ["28020", "28034", "28036", "28039"],
-      "center": { "lat": 40.4600, "lng": -3.6969 },
-      "bounds": { "minLat": 40.4450, "maxLat": 40.4750, "minLng": -3.7150, "maxLng": -3.6800 }
+      "center": { "lat": 40.46, "lng": -3.6969 },
+      "bounds": { "minLat": 40.445, "maxLat": 40.475, "minLng": -3.715, "maxLng": -3.68 }
     },
     {
       "code": 7,
@@ -60,8 +60,8 @@
       "name": "Chamberí",
       "normalizedName": "chamberi",
       "postalCodes": ["28003", "28010", "28015"],
-      "center": { "lat": 40.4350, "lng": -3.6969 },
-      "bounds": { "minLat": 40.4200, "maxLat": 40.4500, "minLng": -3.7150, "maxLng": -3.6800 }
+      "center": { "lat": 40.435, "lng": -3.6969 },
+      "bounds": { "minLat": 40.42, "maxLat": 40.45, "minLng": -3.715, "maxLng": -3.68 }
     },
     {
       "code": 8,
@@ -69,8 +69,8 @@
       "name": "Fuencarral-El Pardo",
       "normalizedName": "fuencarral-el pardo",
       "postalCodes": ["28029", "28034", "28035", "28049"],
-      "center": { "lat": 40.5100, "lng": -3.7300 },
-      "bounds": { "minLat": 40.4700, "maxLat": 40.5500, "minLng": -3.8000, "maxLng": -3.6700 }
+      "center": { "lat": 40.51, "lng": -3.73 },
+      "bounds": { "minLat": 40.47, "maxLat": 40.55, "minLng": -3.8, "maxLng": -3.67 }
     },
     {
       "code": 9,
@@ -78,8 +78,8 @@
       "name": "Moncloa-Aravaca",
       "normalizedName": "moncloa-aravaca",
       "postalCodes": ["28008", "28011", "28023", "28035", "28040"],
-      "center": { "lat": 40.4350, "lng": -3.7500 },
-      "bounds": { "minLat": 40.4100, "maxLat": 40.4600, "minLng": -3.8000, "maxLng": -3.7100 }
+      "center": { "lat": 40.435, "lng": -3.75 },
+      "bounds": { "minLat": 40.41, "maxLat": 40.46, "minLng": -3.8, "maxLng": -3.71 }
     },
     {
       "code": 10,
@@ -87,8 +87,8 @@
       "name": "Latina",
       "normalizedName": "latina",
       "postalCodes": ["28011", "28019", "28024", "28044", "28047"],
-      "center": { "lat": 40.3900, "lng": -3.7500 },
-      "bounds": { "minLat": 40.3600, "maxLat": 40.4200, "minLng": -3.8000, "maxLng": -3.7100 }
+      "center": { "lat": 40.39, "lng": -3.75 },
+      "bounds": { "minLat": 40.36, "maxLat": 40.42, "minLng": -3.8, "maxLng": -3.71 }
     },
     {
       "code": 11,
@@ -96,8 +96,8 @@
       "name": "Carabanchel",
       "normalizedName": "carabanchel",
       "postalCodes": ["28019", "28025", "28044", "28047"],
-      "center": { "lat": 40.3700, "lng": -3.7300 },
-      "bounds": { "minLat": 40.3400, "maxLat": 40.4000, "minLng": -3.7700, "maxLng": -3.7000 }
+      "center": { "lat": 40.37, "lng": -3.73 },
+      "bounds": { "minLat": 40.34, "maxLat": 40.4, "minLng": -3.77, "maxLng": -3.7 }
     },
     {
       "code": 12,
@@ -105,8 +105,8 @@
       "name": "Usera",
       "normalizedName": "usera",
       "postalCodes": ["28026"],
-      "center": { "lat": 40.3830, "lng": -3.7074 },
-      "bounds": { "minLat": 40.3650, "maxLat": 40.4000, "minLng": -3.7300, "maxLng": -3.6850 }
+      "center": { "lat": 40.383, "lng": -3.7074 },
+      "bounds": { "minLat": 40.365, "maxLat": 40.4, "minLng": -3.73, "maxLng": -3.685 }
     },
     {
       "code": 13,
@@ -114,8 +114,8 @@
       "name": "Puente de Vallecas",
       "normalizedName": "puente de vallecas",
       "postalCodes": ["28018", "28038", "28053", "28054"],
-      "center": { "lat": 40.3900, "lng": -3.6600 },
-      "bounds": { "minLat": 40.3650, "maxLat": 40.4150, "minLng": -3.6900, "maxLng": -3.6300 }
+      "center": { "lat": 40.39, "lng": -3.66 },
+      "bounds": { "minLat": 40.365, "maxLat": 40.415, "minLng": -3.69, "maxLng": -3.63 }
     },
     {
       "code": 14,
@@ -123,8 +123,8 @@
       "name": "Moratalaz",
       "normalizedName": "moratalaz",
       "postalCodes": ["28030"],
-      "center": { "lat": 40.4080, "lng": -3.6400 },
-      "bounds": { "minLat": 40.3900, "maxLat": 40.4260, "minLng": -3.6600, "maxLng": -3.6200 }
+      "center": { "lat": 40.408, "lng": -3.64 },
+      "bounds": { "minLat": 40.39, "maxLat": 40.426, "minLng": -3.66, "maxLng": -3.62 }
     },
     {
       "code": 15,
@@ -132,8 +132,8 @@
       "name": "Ciudad Lineal",
       "normalizedName": "ciudad lineal",
       "postalCodes": ["28017", "28027", "28028", "28032", "28037"],
-      "center": { "lat": 40.4450, "lng": -3.6500 },
-      "bounds": { "minLat": 40.4250, "maxLat": 40.4650, "minLng": -3.6700, "maxLng": -3.6200 }
+      "center": { "lat": 40.445, "lng": -3.65 },
+      "bounds": { "minLat": 40.425, "maxLat": 40.465, "minLng": -3.67, "maxLng": -3.62 }
     },
     {
       "code": 16,
@@ -141,8 +141,8 @@
       "name": "Hortaleza",
       "normalizedName": "hortaleza",
       "postalCodes": ["28033", "28042", "28043", "28050", "28055"],
-      "center": { "lat": 40.4750, "lng": -3.6400 },
-      "bounds": { "minLat": 40.4550, "maxLat": 40.4950, "minLng": -3.6700, "maxLng": -3.6000 }
+      "center": { "lat": 40.475, "lng": -3.64 },
+      "bounds": { "minLat": 40.455, "maxLat": 40.495, "minLng": -3.67, "maxLng": -3.6 }
     },
     {
       "code": 17,
@@ -150,8 +150,8 @@
       "name": "Villaverde",
       "normalizedName": "villaverde",
       "postalCodes": ["28021", "28041"],
-      "center": { "lat": 40.3450, "lng": -3.6969 },
-      "bounds": { "minLat": 40.3200, "maxLat": 40.3700, "minLng": -3.7200, "maxLng": -3.6700 }
+      "center": { "lat": 40.345, "lng": -3.6969 },
+      "bounds": { "minLat": 40.32, "maxLat": 40.37, "minLng": -3.72, "maxLng": -3.67 }
     },
     {
       "code": 18,
@@ -159,8 +159,8 @@
       "name": "Villa de Vallecas",
       "normalizedName": "villa de vallecas",
       "postalCodes": ["28031", "28051", "28052"],
-      "center": { "lat": 40.3750, "lng": -3.6200 },
-      "bounds": { "minLat": 40.3400, "maxLat": 40.4100, "minLng": -3.6500, "maxLng": -3.5800 }
+      "center": { "lat": 40.375, "lng": -3.62 },
+      "bounds": { "minLat": 40.34, "maxLat": 40.41, "minLng": -3.65, "maxLng": -3.58 }
     },
     {
       "code": 19,
@@ -168,8 +168,8 @@
       "name": "Vicálvaro",
       "normalizedName": "vicalvaro",
       "postalCodes": ["28032", "28052"],
-      "center": { "lat": 40.4050, "lng": -3.6000 },
-      "bounds": { "minLat": 40.3800, "maxLat": 40.4300, "minLng": -3.6300, "maxLng": -3.5700 }
+      "center": { "lat": 40.405, "lng": -3.6 },
+      "bounds": { "minLat": 40.38, "maxLat": 40.43, "minLng": -3.63, "maxLng": -3.57 }
     },
     {
       "code": 20,
@@ -177,8 +177,8 @@
       "name": "San Blas-Canillejas",
       "normalizedName": "san blas-canillejas",
       "postalCodes": ["28022", "28037", "28042"],
-      "center": { "lat": 40.4350, "lng": -3.6100 },
-      "bounds": { "minLat": 40.4150, "maxLat": 40.4550, "minLng": -3.6400, "maxLng": -3.5800 }
+      "center": { "lat": 40.435, "lng": -3.61 },
+      "bounds": { "minLat": 40.415, "maxLat": 40.455, "minLng": -3.64, "maxLng": -3.58 }
     },
     {
       "code": 21,
@@ -186,39 +186,136 @@
       "name": "Barajas",
       "normalizedName": "barajas",
       "postalCodes": ["28042", "28055"],
-      "center": { "lat": 40.4700, "lng": -3.5800 },
-      "bounds": { "minLat": 40.4450, "maxLat": 40.4950, "minLng": -3.6200, "maxLng": -3.5400 }
+      "center": { "lat": 40.47, "lng": -3.58 },
+      "bounds": { "minLat": 40.445, "maxLat": 40.495, "minLng": -3.62, "maxLng": -3.54 }
     }
   ],
   "streetTypes": [
-    "Calle", "Avenida", "Plaza", "Paseo", "Glorieta", "Ronda",
-    "Travesía", "Camino", "Carretera", "Costanilla", "Callejón"
+    "Calle",
+    "Avenida",
+    "Plaza",
+    "Paseo",
+    "Glorieta",
+    "Ronda",
+    "Travesía",
+    "Camino",
+    "Carretera",
+    "Costanilla",
+    "Callejón"
   ],
   "establishmentTypes": [
-    { "type": "Centro educativo", "weight": 15, "subtypes": ["Colegio", "Instituto", "Universidad", "Guardería", "Academia"] },
-    { "type": "Centro deportivo", "weight": 12, "subtypes": ["Polideportivo", "Gimnasio", "Piscina municipal", "Campo de fútbol", "Pabellón"] },
-    { "type": "Centro comercial", "weight": 10, "subtypes": ["Centro comercial", "Supermercado", "Gran almacén", "Galería comercial"] },
-    { "type": "Estación de transporte", "weight": 10, "subtypes": ["Estación de metro", "Estación de cercanías", "Intercambiador", "Estación de autobuses"] },
-    { "type": "Edificio público", "weight": 8, "subtypes": ["Ayuntamiento", "Biblioteca", "Centro cultural", "Junta municipal", "Oficina de atención"] },
-    { "type": "Centro de salud", "weight": 8, "subtypes": ["Centro de salud", "Hospital", "Clínica", "Ambulatorio"] },
+    {
+      "type": "Centro educativo",
+      "weight": 15,
+      "subtypes": ["Colegio", "Instituto", "Universidad", "Guardería", "Academia"]
+    },
+    {
+      "type": "Centro deportivo",
+      "weight": 12,
+      "subtypes": ["Polideportivo", "Gimnasio", "Piscina municipal", "Campo de fútbol", "Pabellón"]
+    },
+    {
+      "type": "Centro comercial",
+      "weight": 10,
+      "subtypes": ["Centro comercial", "Supermercado", "Gran almacén", "Galería comercial"]
+    },
+    {
+      "type": "Estación de transporte",
+      "weight": 10,
+      "subtypes": [
+        "Estación de metro",
+        "Estación de cercanías",
+        "Intercambiador",
+        "Estación de autobuses"
+      ]
+    },
+    {
+      "type": "Edificio público",
+      "weight": 8,
+      "subtypes": [
+        "Ayuntamiento",
+        "Biblioteca",
+        "Centro cultural",
+        "Junta municipal",
+        "Oficina de atención"
+      ]
+    },
+    {
+      "type": "Centro de salud",
+      "weight": 8,
+      "subtypes": ["Centro de salud", "Hospital", "Clínica", "Ambulatorio"]
+    },
     { "type": "Farmacia", "weight": 8, "subtypes": ["Farmacia", "Farmacia 24h"] },
     { "type": "Hotel", "weight": 6, "subtypes": ["Hotel", "Hostal", "Aparthotel"] },
     { "type": "Restaurante", "weight": 5, "subtypes": ["Restaurante", "Cafetería", "Bar"] },
-    { "type": "Empresa", "weight": 8, "subtypes": ["Oficinas", "Sede corporativa", "Nave industrial", "Coworking"] },
-    { "type": "Comunidad de vecinos", "weight": 5, "subtypes": ["Comunidad de propietarios", "Urbanización", "Residencial"] },
+    {
+      "type": "Empresa",
+      "weight": 8,
+      "subtypes": ["Oficinas", "Sede corporativa", "Nave industrial", "Coworking"]
+    },
+    {
+      "type": "Comunidad de vecinos",
+      "weight": 5,
+      "subtypes": ["Comunidad de propietarios", "Urbanización", "Residencial"]
+    },
     { "type": "Parque público", "weight": 3, "subtypes": ["Parque", "Jardín", "Área recreativa"] },
-    { "type": "Instalación cultural", "weight": 2, "subtypes": ["Museo", "Teatro", "Cine", "Auditorio"] }
+    {
+      "type": "Instalación cultural",
+      "weight": 2,
+      "subtypes": ["Museo", "Teatro", "Cine", "Auditorio"]
+    }
   ],
   "scheduleTemplates": [
     { "name": "24 horas", "has24h": true, "weight": 10 },
-    { "name": "Horario comercial", "weekdayOpen": "10:00", "weekdayClose": "21:00", "saturdayOpen": "10:00", "saturdayClose": "21:00", "sundayOpen": "11:00", "sundayClose": "20:00", "weight": 15 },
+    {
+      "name": "Horario comercial",
+      "weekdayOpen": "10:00",
+      "weekdayClose": "21:00",
+      "saturdayOpen": "10:00",
+      "saturdayClose": "21:00",
+      "sundayOpen": "11:00",
+      "sundayClose": "20:00",
+      "weight": 15
+    },
     { "name": "Horario oficina", "weekdayOpen": "08:00", "weekdayClose": "18:00", "weight": 20 },
-    { "name": "Horario escolar", "weekdayOpen": "08:00", "weekdayClose": "17:00", "closedAugust": true, "closedHolidays": true, "weight": 15 },
-    { "name": "Horario extendido", "weekdayOpen": "07:00", "weekdayClose": "23:00", "saturdayOpen": "08:00", "saturdayClose": "22:00", "sundayOpen": "09:00", "sundayClose": "21:00", "weight": 10 },
-    { "name": "Horario sanitario", "weekdayOpen": "08:00", "weekdayClose": "21:00", "saturdayOpen": "09:00", "saturdayClose": "14:00", "weight": 10 },
+    {
+      "name": "Horario escolar",
+      "weekdayOpen": "08:00",
+      "weekdayClose": "17:00",
+      "closedAugust": true,
+      "closedHolidays": true,
+      "weight": 15
+    },
+    {
+      "name": "Horario extendido",
+      "weekdayOpen": "07:00",
+      "weekdayClose": "23:00",
+      "saturdayOpen": "08:00",
+      "saturdayClose": "22:00",
+      "sundayOpen": "09:00",
+      "sundayClose": "21:00",
+      "weight": 10
+    },
+    {
+      "name": "Horario sanitario",
+      "weekdayOpen": "08:00",
+      "weekdayClose": "21:00",
+      "saturdayOpen": "09:00",
+      "saturdayClose": "14:00",
+      "weight": 10
+    },
     { "name": "Solo laborables", "weekdayOpen": "09:00", "weekdayClose": "14:00", "weight": 10 },
     { "name": "Tarde", "weekdayOpen": "16:00", "weekdayClose": "22:00", "weight": 5 },
-    { "name": "Horario deportivo", "weekdayOpen": "07:00", "weekdayClose": "22:00", "saturdayOpen": "08:00", "saturdayClose": "21:00", "sundayOpen": "09:00", "sundayClose": "14:00", "weight": 5 }
+    {
+      "name": "Horario deportivo",
+      "weekdayOpen": "07:00",
+      "weekdayClose": "22:00",
+      "saturdayOpen": "08:00",
+      "saturdayClose": "21:00",
+      "sundayOpen": "09:00",
+      "sundayClose": "14:00",
+      "weight": 5
+    }
   ],
   "organizations": [
     { "name": "SAMUR - Protección Civil", "type": "emergency", "isPublic": true },

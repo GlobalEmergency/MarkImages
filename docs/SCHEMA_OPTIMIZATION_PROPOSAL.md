@@ -9,17 +9,20 @@ El análisis del schema actual revela **redundancias significativas** en varias 
 ## 1. COORDENADAS DUPLICADAS (Crítico)
 
 ### Problema Actual
+
 Las coordenadas están almacenadas en **3 lugares diferentes**:
 
-| Ubicación | Campos |
-|-----------|--------|
-| `Aed` | `latitude`, `longitude`, `coordinates_precision`, `geom` |
-| `AedLocation` | `latitude`, `longitude`, `coordinates_precision` |
+| Ubicación     | Campos                                                   |
+| ------------- | -------------------------------------------------------- |
+| `Aed`         | `latitude`, `longitude`, `coordinates_precision`, `geom` |
+| `AedLocation` | `latitude`, `longitude`, `coordinates_precision`         |
 
 **Total: 7 campos para la misma información**
 
 ### Propuesta
+
 Mantener coordenadas **SOLO en `Aed`** (tabla principal):
+
 - `latitude`, `longitude` → Para consultas rápidas
 - `geom` → Para consultas espaciales PostGIS
 - `coordinates_precision` → Una sola vez
@@ -33,6 +36,7 @@ Mantener coordenadas **SOLO en `Aed`** (tabla principal):
 ## 2. CAMPOS DE NOTAS EXCESIVOS EN `Aed`
 
 ### Problema Actual
+
 La tabla `Aed` tiene **9 campos de texto para notas/observaciones**:
 
 ```
@@ -50,15 +54,17 @@ DEPRECADOS (aún en schema):
 ```
 
 ### Propuesta
+
 Consolidar en **3 campos**:
 
-| Campo | Uso |
-|-------|-----|
-| `public_notes` | Información visible públicamente |
-| `internal_notes` | Todo lo interno: observaciones de origen, razones de atención, notas de publicación |
-| `rejection_reason` | Razón de rechazo (específico para workflow) |
+| Campo              | Uso                                                                                 |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| `public_notes`     | Información visible públicamente                                                    |
+| `internal_notes`   | Todo lo interno: observaciones de origen, razones de atención, notas de publicación |
+| `rejection_reason` | Razón de rechazo (específico para workflow)                                         |
 
 **Eliminar**:
+
 - `validation_notes` → Mover a `AedValidation.notes`
 - `attention_reason` → Consolidar en `internal_notes`
 - `publication_notes` → Consolidar en `internal_notes`
@@ -72,6 +78,7 @@ Consolidar en **3 campos**:
 ## 3. CAMPOS DE ACCESO EXCESIVOS EN `AedLocation`
 
 ### Problema Actual
+
 La tabla `AedLocation` tiene **8 campos de texto libre**:
 
 ```
@@ -89,14 +96,16 @@ DEPRECADOS (aún en schema):
 ```
 
 ### Propuesta
+
 Consolidar en **2 campos**:
 
-| Campo | Uso |
-|-------|-----|
-| `location_details` | Combina: `additional_info` + `specific_location` + `floor` (ej: "Planta 2, junto a recepción") |
-| `access_instructions` | Combina: instrucciones de acceso, referencias visibles, avisos |
+| Campo                 | Uso                                                                                            |
+| --------------------- | ---------------------------------------------------------------------------------------------- |
+| `location_details`    | Combina: `additional_info` + `specific_location` + `floor` (ej: "Planta 2, junto a recepción") |
+| `access_instructions` | Combina: instrucciones de acceso, referencias visibles, avisos                                 |
 
 **Eliminar**:
+
 - `additional_info` → Fusionar en `location_details`
 - `specific_location` → Fusionar en `location_details`
 - `public_notes` → Redundante con `Aed.public_notes`
@@ -112,6 +121,7 @@ Consolidar en **2 campos**:
 ## 4. CAMPOS EXCESIVOS EN `AedSchedule`
 
 ### Problema Actual
+
 ```
 - description           → "Descripción del horario"
 - observations          → "Observaciones"
@@ -122,14 +132,16 @@ Consolidar en **2 campos**:
 **4 campos de texto libre que frecuentemente contienen información similar**
 
 ### Propuesta
+
 Consolidar en **2 campos**:
 
-| Campo | Uso |
-|-------|-----|
-| `description` | Descripción general del horario + excepciones |
-| `notes` | Observaciones adicionales e instrucciones de acceso específicas del horario |
+| Campo         | Uso                                                                         |
+| ------------- | --------------------------------------------------------------------------- |
+| `description` | Descripción general del horario + excepciones                               |
+| `notes`       | Observaciones adicionales e instrucciones de acceso específicas del horario |
 
 **Eliminar**:
+
 - `schedule_exceptions` → Fusionar en `description`
 - `access_instructions` → Fusionar en `notes` o eliminar (ya está en `AedLocation`)
 
@@ -140,16 +152,18 @@ Consolidar en **2 campos**:
 ## 5. CAMPOS DUPLICADOS EN `AedResponsible`
 
 ### Problema Actual
+
 ```
 - observations    → "Observaciones"
 - contact_notes   → "Notas de contacto"
 ```
 
 ### Propuesta
+
 Mantener solo **1 campo**:
 
-| Campo | Uso |
-|-------|-----|
+| Campo   | Uso                                  |
+| ------- | ------------------------------------ |
 | `notes` | Todas las notas sobre el responsable |
 
 **Ahorro: 1 campo**
@@ -159,6 +173,7 @@ Mantener solo **1 campo**:
 ## 6. DUPLICACIÓN CON `AedAddressValidation`
 
 ### Problema Actual
+
 `AedAddressValidation` replica toda la información geográfica:
 
 ```
@@ -176,12 +191,13 @@ Mantener solo **1 campo**:
 Esto es **9 campos** que duplican lo que ya está en `AedLocation`.
 
 ### Propuesta
+
 Esta duplicación tiene sentido semántico (dirección original vs dirección oficial validada), pero se puede simplificar:
 
-| Campo | Uso |
-|-------|-----|
-| `validated_address` (JSON) | Contiene la dirección oficial validada como objeto |
-| `address_corrections` (JSON) | Diferencias detectadas entre original y validada |
+| Campo                        | Uso                                                |
+| ---------------------------- | -------------------------------------------------- |
+| `validated_address` (JSON)   | Contiene la dirección oficial validada como objeto |
+| `address_corrections` (JSON) | Diferencias detectadas entre original y validada   |
 
 **Ahorro: 7 campos** (reemplazando 9 por 2 JSON)
 
@@ -190,19 +206,23 @@ Esta duplicación tiene sentido semántico (dirección original vs dirección of
 ## 7. CAMPOS DEPRECADOS SIN ELIMINAR
 
 ### Problema Actual
+
 Hay campos marcados como `@deprecated` que siguen en el schema:
 
 En `Aed`:
+
 - `origin_observations`
 - `validation_observations`
 
 En `AedLocation`:
+
 - `access_description`
 - `visible_references`
 - `access_warnings`
 - `location_observations`
 
 ### Propuesta
+
 Crear una migración para eliminar definitivamente estos 6 campos una vez migrados los datos.
 
 ---
@@ -211,15 +231,15 @@ Crear una migración para eliminar definitivamente estos 6 campos una vez migrad
 
 ### Campos a Eliminar/Consolidar
 
-| Tabla | Campos Actuales | Campos Propuestos | Ahorro |
-|-------|-----------------|-------------------|--------|
-| `Aed` (notas) | 8 | 3 | **5 campos** |
-| `AedLocation` (coords) | 3 | 0 | **3 campos** |
-| `AedLocation` (notas) | 8 | 2 | **6 campos** |
-| `AedSchedule` | 4 | 2 | **2 campos** |
-| `AedResponsible` | 2 | 1 | **1 campo** |
-| `AedAddressValidation` | 9 | 2 (JSON) | **7 campos** |
-| Campos deprecados | 6 | 0 | **6 campos** |
+| Tabla                  | Campos Actuales | Campos Propuestos | Ahorro       |
+| ---------------------- | --------------- | ----------------- | ------------ |
+| `Aed` (notas)          | 8               | 3                 | **5 campos** |
+| `AedLocation` (coords) | 3               | 0                 | **3 campos** |
+| `AedLocation` (notas)  | 8               | 2                 | **6 campos** |
+| `AedSchedule`          | 4               | 2                 | **2 campos** |
+| `AedResponsible`       | 2               | 1                 | **1 campo**  |
+| `AedAddressValidation` | 9               | 2 (JSON)          | **7 campos** |
+| Campos deprecados      | 6               | 0                 | **6 campos** |
 
 **TOTAL: ~30 campos eliminados/consolidados**
 
@@ -228,6 +248,7 @@ Crear una migración para eliminar definitivamente estos 6 campos una vez migrad
 ## Schema Propuesto Simplificado
 
 ### Aed (Simplificado)
+
 ```prisma
 model Aed {
   id                        String                   @id @default(uuid()) @db.Uuid
@@ -284,6 +305,7 @@ model Aed {
 ```
 
 ### AedLocation (Simplificado)
+
 ```prisma
 model AedLocation {
   id                      String    @id @default(uuid()) @db.Uuid
@@ -314,6 +336,7 @@ model AedLocation {
 ```
 
 ### AedSchedule (Simplificado)
+
 ```prisma
 model AedSchedule {
   id                      String    @id @default(uuid()) @db.Uuid
@@ -344,6 +367,7 @@ model AedSchedule {
 ```
 
 ### AedResponsible (Simplificado)
+
 ```prisma
 model AedResponsible {
   id                String    @id @default(uuid()) @db.Uuid
@@ -370,6 +394,7 @@ model AedResponsible {
 ## Plan de Migración
 
 ### Fase 1: Migración de Datos
+
 ```sql
 -- 1. Consolidar notas en Aed
 UPDATE aeds SET
@@ -408,6 +433,7 @@ WHERE a.location_id = l.id
 ```
 
 ### Fase 2: Eliminar Columnas
+
 ```sql
 -- Eliminar campos deprecados
 ALTER TABLE aeds DROP COLUMN origin_observations;
@@ -457,4 +483,4 @@ ALTER TABLE aed_responsibles RENAME COLUMN contact_notes TO notes;
 
 ---
 
-*Documento generado: 2025-12-21*
+_Documento generado: 2025-12-21_

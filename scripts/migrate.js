@@ -57,9 +57,7 @@ const hasBranchDatabase = isFeatureEnabled() && !["main", "master"].includes(git
 // or has a branch-specific database that needs schema initialization
 const shouldRunMigrations =
   isVercel &&
-  (MIGRATION_BRANCHES.some(
-    (branch) => gitBranch === branch || gitBranch.includes(branch)
-  ) ||
+  (MIGRATION_BRANCHES.some((branch) => gitBranch === branch || gitBranch.includes(branch)) ||
     isClaudeBranch ||
     isCopilotBranch ||
     hasBranchDatabase);
@@ -69,9 +67,7 @@ async function main() {
   console.log(`   - Running in Vercel: ${isVercel ? "✅" : "❌"}`);
   console.log(`   - Current branch: ${gitBranch || "unknown"}`);
   console.log(`   - Should run migrations: ${shouldRunMigrations ? "✅" : "❌"}`);
-  console.log(
-    `   - Branch DB feature: ${isFeatureEnabled() ? "✅ enabled" : "❌ disabled"}`
-  );
+  console.log(`   - Branch DB feature: ${isFeatureEnabled() ? "✅ enabled" : "❌ disabled"}`);
 
   let isNewDatabase = false;
 
@@ -125,7 +121,9 @@ async function main() {
       // Migration 20250123000000 tries to ALTER TABLE external_data_sources
       // before migration 20251218000000 creates it. This only fails on fresh DBs.
       if (hasBranchDatabase) {
-        console.log("\n⚠️  Migration failed on branch database. Attempting to fix ordering issue...\n");
+        console.log(
+          "\n⚠️  Migration failed on branch database. Attempting to fix ordering issue...\n"
+        );
         console.log("   ℹ️  Marking out-of-order migration as applied and retrying...\n");
 
         try {
