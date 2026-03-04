@@ -15,10 +15,7 @@
  */
 
 /** Dominios válidos de SharePoint */
-const SHAREPOINT_DOMAINS = [
-  "sharepoint.com",
-  "sharepoint-df.com",
-] as const;
+const SHAREPOINT_DOMAINS = ["sharepoint.com", "sharepoint-df.com"] as const;
 
 /**
  * Verifica si una URL pertenece a SharePoint.

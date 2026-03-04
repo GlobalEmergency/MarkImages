@@ -163,11 +163,7 @@ export class AedValidationService {
     allErrors.push(...requiredResult.errors);
 
     // Validar nombre
-    const nameResult = this.validateName(
-      data.proposedName,
-      row,
-      mappings.get("proposedName")
-    );
+    const nameResult = this.validateName(data.proposedName, row, mappings.get("proposedName"));
     allErrors.push(...nameResult.errors);
 
     // Validar código postal

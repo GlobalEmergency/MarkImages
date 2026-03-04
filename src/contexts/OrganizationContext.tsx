@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 
 import type { UserOrganization } from "@/types/auth";
 
@@ -25,16 +19,15 @@ interface OrganizationContextType {
   canApprove: boolean;
 }
 
-const OrganizationContext = createContext<OrganizationContextType | undefined>(
-  undefined
-);
+const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
 
 const STORAGE_KEY = "deamap_selected_organization";
 
 export function OrganizationProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const [selectedOrganization, setSelectedOrganizationState] =
-    useState<UserOrganization | null>(null);
+  const [selectedOrganization, setSelectedOrganizationState] = useState<UserOrganization | null>(
+    null
+  );
 
   const organizations = user?.permissions?.organizations || [];
   const hasOrganizations = organizations.length > 0;
@@ -42,10 +35,8 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   // Permisos de la organización seleccionada
   const isOrgOwner = selectedOrganization?.role === "OWNER";
   const isOrgAdmin =
-    selectedOrganization?.role === "ADMIN" ||
-    selectedOrganization?.role === "OWNER";
-  const canManageMembers =
-    selectedOrganization?.permissions?.can_manage_members || false;
+    selectedOrganization?.role === "ADMIN" || selectedOrganization?.role === "OWNER";
+  const canManageMembers = selectedOrganization?.permissions?.can_manage_members || false;
   const canVerify = selectedOrganization?.permissions?.can_verify || false;
   const canEdit = selectedOrganization?.permissions?.can_edit || false;
   const canApprove = selectedOrganization?.permissions?.can_approve || false;
@@ -119,9 +110,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
 export function useOrganization() {
   const context = useContext(OrganizationContext);
   if (context === undefined) {
-    throw new Error(
-      "useOrganization must be used within an OrganizationProvider"
-    );
+    throw new Error("useOrganization must be used within an OrganizationProvider");
   }
   return context;
 }

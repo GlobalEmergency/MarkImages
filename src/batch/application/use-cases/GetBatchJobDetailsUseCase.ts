@@ -1,6 +1,6 @@
 /**
  * Use Case: Get Batch Job Details
- * 
+ *
  * Obtiene los detalles completos de un batch job específico,
  * incluyendo estadísticas de progreso y duración.
  */

@@ -94,7 +94,7 @@ export class S3DataSource implements DataSource {
       if (!isNaN(size) && size > this.maxFileSize) {
         throw new Error(
           `CSV file too large: ${(size / 1024 / 1024).toFixed(1)} MB ` +
-          `(max ${(this.maxFileSize / 1024 / 1024).toFixed(0)} MB)`
+            `(max ${(this.maxFileSize / 1024 / 1024).toFixed(0)} MB)`
         );
       }
     }
@@ -105,7 +105,7 @@ export class S3DataSource implements DataSource {
     if (buffer.byteLength > this.maxFileSize) {
       throw new Error(
         `CSV file too large: ${(buffer.byteLength / 1024 / 1024).toFixed(1)} MB ` +
-        `(max ${(this.maxFileSize / 1024 / 1024).toFixed(0)} MB)`
+          `(max ${(this.maxFileSize / 1024 / 1024).toFixed(0)} MB)`
       );
     }
 
@@ -140,4 +140,3 @@ export class S3DataSource implements DataSource {
     this.cachedContent = null;
   }
 }
-

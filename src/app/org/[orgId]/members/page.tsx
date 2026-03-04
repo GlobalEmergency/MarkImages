@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Users,
-  Shield,
-  UserPlus,
-  Mail,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
+import { Users, Shield, UserPlus, Mail, CheckCircle, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, use } from "react";
 
@@ -129,10 +122,7 @@ export default function OrgMembersPage({ params }: { params: Promise<{ orgId: st
       {/* Members List */}
       <div className="space-y-3">
         {members.map((member) => (
-          <div
-            key={member.id}
-            className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm"
-          >
+          <div key={member.id} className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
             <div className="flex items-start gap-3">
               {/* Avatar */}
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
@@ -144,9 +134,7 @@ export default function OrgMembersPage({ params }: { params: Promise<{ orgId: st
                 {/* Name and Status */}
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 truncate">
-                      {member.user.name}
-                    </h3>
+                    <h3 className="font-semibold text-gray-900 truncate">{member.user.name}</h3>
                     <p className="text-sm text-gray-600 truncate flex items-center gap-1">
                       <Mail className="w-3 h-3" />
                       {member.user.email}
@@ -230,11 +218,21 @@ export default function OrgMembersPage({ params }: { params: Promise<{ orgId: st
           <div className="text-sm text-blue-900">
             <p className="font-medium mb-1">Roles y permisos</p>
             <ul className="text-blue-800 space-y-1 text-xs">
-              <li>• <strong>Propietario:</strong> Control total de la organización</li>
-              <li>• <strong>Administrador:</strong> Puede verificar, editar y aprobar</li>
-              <li>• <strong>Verificador:</strong> Solo puede verificar DEAs</li>
-              <li>• <strong>Miembro:</strong> Acceso limitado</li>
-              <li>• <strong>Observador:</strong> Solo lectura</li>
+              <li>
+                • <strong>Propietario:</strong> Control total de la organización
+              </li>
+              <li>
+                • <strong>Administrador:</strong> Puede verificar, editar y aprobar
+              </li>
+              <li>
+                • <strong>Verificador:</strong> Solo puede verificar DEAs
+              </li>
+              <li>
+                • <strong>Miembro:</strong> Acceso limitado
+              </li>
+              <li>
+                • <strong>Observador:</strong> Solo lectura
+              </li>
             </ul>
           </div>
         </div>

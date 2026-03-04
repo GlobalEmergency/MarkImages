@@ -51,10 +51,7 @@ export async function GET(request: NextRequest) {
     const googleApiKey = process.env.GOOGLE_MAPS_API_KEY;
     if (!googleApiKey) {
       console.error("[Geocode API] GOOGLE_MAPS_API_KEY not configured");
-      return NextResponse.json(
-        { error: "Geocoding service not configured" },
-        { status: 503 }
-      );
+      return NextResponse.json({ error: "Geocoding service not configured" }, { status: 503 });
     }
 
     // Detect if user is searching for a specific house number
@@ -97,10 +94,7 @@ export async function GET(request: NextRequest) {
       console.error(
         `[Geocode API] Google API error: ${googleData.status} - ${googleData.error_message || "Unknown"}`
       );
-      return NextResponse.json(
-        { error: `Geocoding error: ${googleData.status}` },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: `Geocoding error: ${googleData.status}` }, { status: 500 });
     }
 
     const results: NormalizedResult[] = googleData.results
@@ -130,10 +124,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(sortedResults);
   } catch (error) {
     console.error("Error in geocoding API:", error);
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
 
@@ -141,17 +132,12 @@ function normalizeGoogleResult(result: GoogleGeocodingResult): NormalizedResult 
   const components = result.address_components;
 
   // Extract address components
-  const streetNumber = components.find((c) =>
-    c.types.includes("street_number")
-  )?.long_name;
+  const streetNumber = components.find((c) => c.types.includes("street_number"))?.long_name;
   const route = components.find((c) => c.types.includes("route"))?.long_name;
-  const postalCode = components.find((c) =>
-    c.types.includes("postal_code")
-  )?.long_name;
+  const postalCode = components.find((c) => c.types.includes("postal_code"))?.long_name;
   const locality =
     components.find((c) => c.types.includes("locality"))?.long_name ||
-    components.find((c) => c.types.includes("administrative_area_level_2"))
-      ?.long_name;
+    components.find((c) => c.types.includes("administrative_area_level_2"))?.long_name;
 
   // Extract autonomous community (administrative_area_level_1 in Spain)
   const autonomousCommunity = components.find((c) =>

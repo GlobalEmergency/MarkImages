@@ -16,28 +16,19 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!email || !password || !name) {
-      return NextResponse.json(
-        { error: "Todos los campos son obligatorios" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Todos los campos son obligatorios" }, { status: 400 });
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: "Email inválido" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Email inválido" }, { status: 400 });
     }
 
     // Validate password strength
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.valid) {
-      return NextResponse.json(
-        { error: passwordValidation.errors.join(", ") },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: passwordValidation.errors.join(", ") }, { status: 400 });
     }
 
     // Check if user already exists
@@ -46,10 +37,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: "El email ya está registrado" },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: "El email ya está registrado" }, { status: 409 });
     }
 
     // Hash password
@@ -105,7 +93,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: "Error al registrar usuario",
-        ...(isDevelopment && { details: errorMessage })
+        ...(isDevelopment && { details: errorMessage }),
       },
       { status: 500 }
     );

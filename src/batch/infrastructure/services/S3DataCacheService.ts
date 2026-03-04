@@ -142,9 +142,7 @@ export class S3DataCacheService {
 
       const chunk = records.slice(startIndex, startIndex + chunkSize);
 
-      console.log(
-        `✅ [S3Cache] Retrieved ${chunk.length} records from total ${records.length}`
-      );
+      console.log(`✅ [S3Cache] Retrieved ${chunk.length} records from total ${records.length}`);
 
       return chunk;
     } catch (error) {

@@ -185,7 +185,9 @@ function validateUrl(value: unknown): ValidationFieldResult {
 
   const isSharePointHost = (hostname: string): boolean => {
     const normalizedHostname = hostname.toLowerCase();
-    return normalizedHostname === "sharepoint.com" || normalizedHostname.endsWith(".sharepoint.com");
+    return (
+      normalizedHostname === "sharepoint.com" || normalizedHostname.endsWith(".sharepoint.com")
+    );
   };
 
   try {
@@ -224,18 +226,7 @@ function validateBoolean(value: unknown): ValidationFieldResult {
   const str = String(value).trim().toLowerCase();
   if (!str) return { valid: true };
 
-  const validValues = [
-    "si",
-    "sÃ­",
-    "no",
-    "true",
-    "false",
-    "1",
-    "0",
-    "yes",
-    "verdadero",
-    "falso",
-  ];
+  const validValues = ["si", "sÃ­", "no", "true", "false", "1", "0", "yes", "verdadero", "falso"];
 
   if (!validValues.includes(str)) {
     return {
@@ -431,4 +422,3 @@ export function getFieldAliases(fieldKey: string): string[] {
   if (!field) return [];
   return extractAliases(field);
 }
-

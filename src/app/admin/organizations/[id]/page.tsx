@@ -100,7 +100,6 @@ export default function OrganizationDetailPage() {
     can_manage_members: false,
   });
 
-
   const fetchOrganization = useCallback(async () => {
     try {
       setLoading(true);
@@ -162,9 +161,7 @@ export default function OrganizationDetailPage() {
       if (data.success) {
         // Filter out users already in the organization
         const memberUserIds = members.map((m) => m.user_id);
-        const available = data.data.filter(
-          (u: User) => !memberUserIds.includes(u.id)
-        );
+        const available = data.data.filter((u: User) => !memberUserIds.includes(u.id));
         setAvailableUsers(available);
       }
     } catch (err) {
@@ -230,7 +227,11 @@ export default function OrganizationDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm("¿Estás seguro de que quieres eliminar esta organización? Esta acción no se puede deshacer.")) {
+    if (
+      !confirm(
+        "¿Estás seguro de que quieres eliminar esta organización? Esta acción no se puede deshacer."
+      )
+    ) {
       return;
     }
 
@@ -515,7 +516,10 @@ export default function OrganizationDetailPage() {
         {/* Stats */}
         {organization._count && (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-6">
-            <div className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab("members")}>
+            <div
+              className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setActiveTab("members")}
+            >
               <div className="px-4 py-5 sm:p-6">
                 <dt className="text-sm font-medium text-gray-500 truncate">Miembros</dt>
                 <dd className="mt-1 text-3xl font-semibold text-gray-900">
@@ -523,7 +527,10 @@ export default function OrganizationDetailPage() {
                 </dd>
               </div>
             </div>
-            <div className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab("aeds")}>
+            <div
+              className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setActiveTab("aeds")}
+            >
               <div className="px-4 py-5 sm:p-6">
                 <dt className="text-sm font-medium text-gray-500 truncate">DEAs Asignados</dt>
                 <dd className="mt-1 text-3xl font-semibold text-gray-900">
@@ -589,7 +596,9 @@ export default function OrganizationDetailPage() {
                     <div className="grid grid-cols-2 gap-6">
                       <div>
                         <h3 className="text-sm font-medium text-gray-500">Tipo</h3>
-                        <p className="mt-1 text-sm text-gray-900">{getTypeLabel(organization.type)}</p>
+                        <p className="mt-1 text-sm text-gray-900">
+                          {getTypeLabel(organization.type)}
+                        </p>
                       </div>
                       <div>
                         <h3 className="text-sm font-medium text-gray-500">Código</h3>
@@ -607,16 +616,25 @@ export default function OrganizationDetailPage() {
                         <h3 className="text-sm font-medium text-gray-500">Sitio Web</h3>
                         <p className="mt-1 text-sm text-gray-900">
                           {organization.website ? (
-                            <a href={organization.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                            <a
+                              href={organization.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800"
+                            >
                               {organization.website}
                             </a>
-                          ) : "—"}
+                          ) : (
+                            "—"
+                          )}
                         </p>
                       </div>
                       <div>
                         <h3 className="text-sm font-medium text-gray-500">Estado</h3>
                         <p className="mt-1 text-sm text-gray-900">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${organization.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${organization.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                          >
                             {organization.is_active ? "Activa" : "Inactiva"}
                           </span>
                         </p>
@@ -635,7 +653,9 @@ export default function OrganizationDetailPage() {
                       <div className="grid grid-cols-2 gap-6">
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">Tipo de Ámbito</h3>
-                          <p className="mt-1 text-sm text-gray-900">{getScopeLabel(organization.scope_type)}</p>
+                          <p className="mt-1 text-sm text-gray-900">
+                            {getScopeLabel(organization.scope_type)}
+                          </p>
                         </div>
                         {organization.city_name && (
                           <>
@@ -644,15 +664,23 @@ export default function OrganizationDetailPage() {
                               <p className="mt-1 text-sm text-gray-900">{organization.city_name}</p>
                             </div>
                             <div>
-                              <h3 className="text-sm font-medium text-gray-500">Código de Ciudad</h3>
-                              <p className="mt-1 text-sm text-gray-900">{organization.city_code || "—"}</p>
+                              <h3 className="text-sm font-medium text-gray-500">
+                                Código de Ciudad
+                              </h3>
+                              <p className="mt-1 text-sm text-gray-900">
+                                {organization.city_code || "—"}
+                              </p>
                             </div>
                           </>
                         )}
                         {organization.custom_scope_description && (
                           <div className="col-span-2">
-                            <h3 className="text-sm font-medium text-gray-500">Descripción del Ámbito</h3>
-                            <p className="mt-1 text-sm text-gray-900">{organization.custom_scope_description}</p>
+                            <h3 className="text-sm font-medium text-gray-500">
+                              Descripción del Ámbito
+                            </h3>
+                            <p className="mt-1 text-sm text-gray-900">
+                              {organization.custom_scope_description}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -663,12 +691,18 @@ export default function OrganizationDetailPage() {
                       <div className="grid grid-cols-2 gap-6">
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">Requiere Aprobación</h3>
-                          <p className="mt-1 text-sm text-gray-900">{organization.require_approval ? "Sí" : "No"}</p>
+                          <p className="mt-1 text-sm text-gray-900">
+                            {organization.require_approval ? "Sí" : "No"}
+                          </p>
                         </div>
                         {organization.approval_authority && (
                           <div>
-                            <h3 className="text-sm font-medium text-gray-500">Autoridad de Aprobación</h3>
-                            <p className="mt-1 text-sm text-gray-900">{organization.approval_authority}</p>
+                            <h3 className="text-sm font-medium text-gray-500">
+                              Autoridad de Aprobación
+                            </h3>
+                            <p className="mt-1 text-sm text-gray-900">
+                              {organization.approval_authority}
+                            </p>
                           </div>
                         )}
                         {organization.badge_name && (
@@ -677,7 +711,10 @@ export default function OrganizationDetailPage() {
                             <p className="mt-1 text-sm text-gray-900">
                               <span
                                 className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                style={{ backgroundColor: organization.badge_color || "#3B82F6", color: "white" }}
+                                style={{
+                                  backgroundColor: organization.badge_color || "#3B82F6",
+                                  color: "white",
+                                }}
                               >
                                 {organization.badge_name}
                               </span>
@@ -812,7 +849,9 @@ export default function OrganizationDetailPage() {
                                   </div>
                                 </div>
                                 <div className="ml-4">
-                                  <div className="text-sm font-medium text-gray-900">{member.user.name}</div>
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {member.user.name}
+                                  </div>
                                   <div className="text-sm text-gray-500">{member.user.email}</div>
                                 </div>
                               </div>
@@ -820,7 +859,9 @@ export default function OrganizationDetailPage() {
                             <td className="px-6 py-4 whitespace-nowrap">
                               <select
                                 value={member.role}
-                                onChange={(e) => handleUpdateMemberRole(member.id, e.target.value as OrgMemberRole)}
+                                onChange={(e) =>
+                                  handleUpdateMemberRole(member.id, e.target.value as OrgMemberRole)
+                                }
                                 className={`text-xs font-medium rounded-full px-2.5 py-0.5 ${getRoleBadgeColor(member.role)} border-0 cursor-pointer`}
                               >
                                 <option value="OWNER">Propietario</option>
@@ -832,10 +873,26 @@ export default function OrganizationDetailPage() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               <div className="flex gap-1">
-                                {member.can_verify && <span className="px-1.5 py-0.5 bg-green-100 text-green-800 text-xs rounded">Verificar</span>}
-                                {member.can_edit && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">Editar</span>}
-                                {member.can_approve && <span className="px-1.5 py-0.5 bg-purple-100 text-purple-800 text-xs rounded">Aprobar</span>}
-                                {member.can_manage_members && <span className="px-1.5 py-0.5 bg-red-100 text-red-800 text-xs rounded">Gestionar</span>}
+                                {member.can_verify && (
+                                  <span className="px-1.5 py-0.5 bg-green-100 text-green-800 text-xs rounded">
+                                    Verificar
+                                  </span>
+                                )}
+                                {member.can_edit && (
+                                  <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">
+                                    Editar
+                                  </span>
+                                )}
+                                {member.can_approve && (
+                                  <span className="px-1.5 py-0.5 bg-purple-100 text-purple-800 text-xs rounded">
+                                    Aprobar
+                                  </span>
+                                )}
+                                {member.can_manage_members && (
+                                  <span className="px-1.5 py-0.5 bg-red-100 text-red-800 text-xs rounded">
+                                    Gestionar
+                                  </span>
+                                )}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -867,7 +924,9 @@ export default function OrganizationDetailPage() {
                           <label className="block text-sm font-medium text-gray-700">Usuario</label>
                           <select
                             value={newMember.user_id}
-                            onChange={(e) => setNewMember({ ...newMember, user_id: e.target.value })}
+                            onChange={(e) =>
+                              setNewMember({ ...newMember, user_id: e.target.value })
+                            }
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                           >
                             <option value="">Seleccionar usuario...</option>
@@ -888,7 +947,8 @@ export default function OrganizationDetailPage() {
                               setNewMember({
                                 ...newMember,
                                 role,
-                                can_verify: role === "VERIFIER" || role === "ADMIN" || role === "OWNER",
+                                can_verify:
+                                  role === "VERIFIER" || role === "ADMIN" || role === "OWNER",
                                 can_edit: role === "ADMIN" || role === "OWNER",
                                 can_approve: role === "ADMIN" || role === "OWNER",
                                 can_manage_members: role === "OWNER",
@@ -926,9 +986,7 @@ export default function OrganizationDetailPage() {
             )}
 
             {/* DEAs Tab */}
-            {activeTab === "aeds" && (
-              <OrganizationDeasTab organizationId={id} />
-            )}
+            {activeTab === "aeds" && <OrganizationDeasTab organizationId={id} />}
           </div>
         </div>
       </div>

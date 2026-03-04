@@ -18,5 +18,5 @@ export function getAppUrl(): string {
   }
 
   // Fallback to localhost for local development
-  return 'http://localhost:3000';
+  return "http://localhost:3000";
 }

@@ -39,8 +39,5 @@ export interface IGeocodingService {
   /**
    * Reverse geocoding: coordinates -> address
    */
-  reverseGeocode(
-    latitude: number,
-    longitude: number
-  ): Promise<GeocodingResult | null>;
+  reverseGeocode(latitude: number, longitude: number): Promise<GeocodingResult | null>;
 }

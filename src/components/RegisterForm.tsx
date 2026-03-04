@@ -67,15 +67,11 @@ export default function RegisterForm() {
 
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-        Crear Cuenta
-      </h2>
+      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Crear Cuenta</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
+          <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">{error}</div>
         )}
 
         <div>
@@ -87,9 +83,7 @@ export default function RegisterForm() {
             type="text"
             required
             value={formData.name}
-            onChange={(e) =>
-              setFormData({ ...formData, name: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             onFocus={() => trackFormFieldFocus("register", "name")}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Tu nombre"
@@ -105,9 +99,7 @@ export default function RegisterForm() {
             type="email"
             required
             value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             onFocus={() => trackFormFieldFocus("register", "email")}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="tu@email.com"
@@ -123,9 +115,7 @@ export default function RegisterForm() {
             type="password"
             required
             value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             onFocus={() => trackFormFieldFocus("register", "password")}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="••••••••"
@@ -144,9 +134,7 @@ export default function RegisterForm() {
             type="password"
             required
             value={formData.confirmPassword}
-            onChange={(e) =>
-              setFormData({ ...formData, confirmPassword: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
             onFocus={() => trackFormFieldFocus("register", "confirmPassword")}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="••••••••"

@@ -1,7 +1,7 @@
 /**
  * Puerto: Servicio de scoring de duplicados
  * Capa de Dominio - Interface
- * 
+ *
  * Define el contrato para calcular scores de duplicados.
  * Permite diferentes implementaciones (JavaScript, PostgreSQL, etc.)
  */
@@ -39,7 +39,7 @@ export interface ScoringWeights {
 export interface IDuplicateScoringService {
   /**
    * Calcula el score de duplicado entre dos DEAs
-   * 
+   *
    * @param aed1 Primer DEA a comparar
    * @param aed2 Segundo DEA a comparar
    * @param weights Pesos personalizados (opcional)
@@ -53,7 +53,7 @@ export interface IDuplicateScoringService {
 
   /**
    * Determina si un score indica que dos DEAs son duplicados
-   * 
+   *
    * @param score Score calculado (0-100)
    * @param threshold Umbral personalizado (opcional)
    * @returns true si el score indica duplicado
@@ -63,15 +63,11 @@ export interface IDuplicateScoringService {
   /**
    * Genera un mensaje explicativo del score calculado
    * Útil para debugging y logs
-   * 
+   *
    * @param aed1 Primer DEA
    * @param aed2 Segundo DEA
    * @param score Score calculado
    * @returns Explicación detallada del score
    */
-  explainScore(
-    aed1: AedComparisonData,
-    aed2: AedComparisonData,
-    score: number
-  ): Promise<string>;
+  explainScore(aed1: AedComparisonData, aed2: AedComparisonData, score: number): Promise<string>;
 }

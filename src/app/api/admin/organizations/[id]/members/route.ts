@@ -9,7 +9,7 @@ import { requireAdmin } from "@/lib/auth";
 
 interface AddMemberRequest {
   user_id: string;
-  role: 'OWNER' | 'ADMIN' | 'VERIFIER' | 'MEMBER' | 'VIEWER';
+  role: "OWNER" | "ADMIN" | "VERIFIER" | "MEMBER" | "VIEWER";
   can_verify?: boolean;
   can_edit?: boolean;
   can_approve?: boolean;
@@ -21,10 +21,7 @@ interface AddMemberRequest {
  * GET /api/admin/organizations/[id]/members
  * List all members of an organization
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   // Verify admin permissions
   const admin = await requireAdmin(request);
   if (!admin) {
@@ -40,7 +37,7 @@ export async function GET(
     // Check if organization exists
     const organization = await prisma.organization.findUnique({
       where: { id },
-      select: { id: true, name: true }
+      select: { id: true, name: true },
     });
 
     if (!organization) {
@@ -61,22 +58,21 @@ export async function GET(
             name: true,
             role: true,
             is_active: true,
-          }
-        }
+          },
+        },
       },
       orderBy: {
-        joined_at: 'desc'
-      }
+        joined_at: "desc",
+      },
     });
 
     return NextResponse.json({
       success: true,
       data: {
         organization,
-        members
-      }
+        members,
+      },
     });
-
   } catch (error) {
     console.error("Error fetching organization members:", error);
     return NextResponse.json(
@@ -90,10 +86,7 @@ export async function GET(
  * POST /api/admin/organizations/[id]/members
  * Add a user to an organization
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   // Verify admin permissions
   const admin = await requireAdmin(request);
   if (!admin) {
@@ -117,7 +110,7 @@ export async function POST(
 
     // Check if organization exists
     const organization = await prisma.organization.findUnique({
-      where: { id: organizationId }
+      where: { id: organizationId },
     });
 
     if (!organization) {
@@ -130,14 +123,11 @@ export async function POST(
     // Check if user exists
     const user = await prisma.user.findUnique({
       where: { id: body.user_id },
-      select: { id: true, email: true, name: true }
+      select: { id: true, email: true, name: true },
     });
 
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
     }
 
     // Check if user is already a member
@@ -145,9 +135,9 @@ export async function POST(
       where: {
         organization_id_user_id: {
           organization_id: organizationId,
-          user_id: body.user_id
-        }
-      }
+          user_id: body.user_id,
+        },
+      },
     });
 
     if (existingMember) {
@@ -159,10 +149,12 @@ export async function POST(
 
     // Set default permissions based on role
     const permissions = {
-      can_verify: body.can_verify ?? (body.role === 'VERIFIER' || body.role === 'ADMIN' || body.role === 'OWNER'),
-      can_edit: body.can_edit ?? (body.role === 'ADMIN' || body.role === 'OWNER'),
-      can_approve: body.can_approve ?? (body.role === 'ADMIN' || body.role === 'OWNER'),
-      can_manage_members: body.can_manage_members ?? (body.role === 'OWNER'),
+      can_verify:
+        body.can_verify ??
+        (body.role === "VERIFIER" || body.role === "ADMIN" || body.role === "OWNER"),
+      can_edit: body.can_edit ?? (body.role === "ADMIN" || body.role === "OWNER"),
+      can_approve: body.can_approve ?? (body.role === "ADMIN" || body.role === "OWNER"),
+      can_manage_members: body.can_manage_members ?? body.role === "OWNER",
     };
 
     // Create member
@@ -181,23 +173,25 @@ export async function POST(
             id: true,
             email: true,
             name: true,
-          }
+          },
         },
         organization: {
           select: {
             id: true,
             name: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
-    return NextResponse.json({
-      success: true,
-      data: member,
-      message: `User '${user.email}' added to organization '${organization.name}' as ${body.role}`
-    }, { status: 201 });
-
+    return NextResponse.json(
+      {
+        success: true,
+        data: member,
+        message: `User '${user.email}' added to organization '${organization.name}' as ${body.role}`,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Error adding organization member:", error);
     return NextResponse.json(

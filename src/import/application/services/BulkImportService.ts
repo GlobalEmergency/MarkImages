@@ -12,7 +12,15 @@
  * - Combinar validaciÃ³n de @batchactions/import con auto-mapeo inteligente
  */
 
-import { BulkImport, CsvParser, JsonParser, XmlParser, BufferSource, getErrors, getWarnings } from "@batchactions/import";
+import {
+  BulkImport,
+  CsvParser,
+  JsonParser,
+  XmlParser,
+  BufferSource,
+  getErrors,
+  getWarnings,
+} from "@batchactions/import";
 import type { ChunkResult, JobProgress, ProcessedRecord, SourceParser } from "@batchactions/import";
 import type { PrismaClient } from "@/generated/client/client";
 import type { SharePointAuthConfig } from "@/storage/domain/ports/IImageDownloader";
@@ -148,7 +156,7 @@ export class BulkImportService {
   constructor(
     private readonly prisma: PrismaClient,
     private readonly aedRepository: IAedRepository,
-    private readonly downloadAndUploadImageUseCase?: DownloadAndUploadImageUseCase,
+    private readonly downloadAndUploadImageUseCase?: DownloadAndUploadImageUseCase
   ) {}
 
   /**
@@ -156,26 +164,16 @@ export class BulkImportService {
    * Útil para mostrar preview de datos y errores antes de importar.
    */
   async preview(options: ImportPreviewOptions): Promise<ImportPreviewResult> {
-    const {
-      csvContent,
-      fileName,
-      delimiter = DEFAULT_CSV_DELIMITER,
-      maxRecords = 100,
-    } = options;
+    const { csvContent, fileName, delimiter = DEFAULT_CSV_DELIMITER, maxRecords = 100 } = options;
 
-    const content = typeof csvContent === "string"
-      ? csvContent
-      : csvContent.toString("utf-8");
+    const content = typeof csvContent === "string" ? csvContent : csvContent.toString("utf-8");
 
     const importer = new BulkImport({
       schema: aedImportSchema,
       continueOnError: true,
     });
 
-    importer.from(
-      new BufferSource(content),
-      this.createParserForFile(fileName, delimiter)
-    );
+    importer.from(new BufferSource(content), this.createParserForFile(fileName, delimiter));
 
     const preview = await importer.preview(maxRecords);
 
@@ -372,18 +370,13 @@ export class BulkImportService {
   }): Promise<number> {
     const { csvContent, fileName, delimiter = DEFAULT_CSV_DELIMITER } = options;
 
-    const content = typeof csvContent === "string"
-      ? csvContent
-      : csvContent.toString("utf-8");
+    const content = typeof csvContent === "string" ? csvContent : csvContent.toString("utf-8");
 
     const importer = new BulkImport({
       schema: aedImportSchema,
     });
 
-    importer.from(
-      new BufferSource(content),
-      this.createParserForFile(fileName, delimiter)
-    );
+    importer.from(new BufferSource(content), this.createParserForFile(fileName, delimiter));
 
     return importer.count();
   }
@@ -427,8 +420,8 @@ export class BulkImportService {
         const p = e.progress;
         console.log(
           `[Import:${label}] Progress — ${p.processedRecords}/${p.totalRecords} (${p.percentage}%) ` +
-          `batch ${p.currentBatch}/${p.totalBatches}` +
-          (p.estimatedRemainingMs ? ` ~${Math.round(p.estimatedRemainingMs / 1000)}s left` : "")
+            `batch ${p.currentBatch}/${p.totalBatches}` +
+            (p.estimatedRemainingMs ? ` ~${Math.round(p.estimatedRemainingMs / 1000)}s left` : "")
         );
       })
       .on("batch:completed", (e) => {
@@ -442,9 +435,7 @@ export class BulkImportService {
         );
       })
       .on("record:failed", (e) => {
-        console.warn(
-          `[Import:${label}] Record ${e.recordIndex} failed: ${e.error}`
-        );
+        console.warn(`[Import:${label}] Record ${e.recordIndex} failed: ${e.error}`);
       })
       .on("chunk:completed", (e) => {
         console.log(
@@ -455,8 +446,8 @@ export class BulkImportService {
         const s = e.summary;
         console.log(
           `[Import:${label}] Job ${e.jobId} COMPLETED — ` +
-          `${s.processed}/${s.total} records, ${s.failed} failed ` +
-          `(${s.elapsedMs}ms)`
+            `${s.processed}/${s.total} records, ${s.failed} failed ` +
+            `(${s.elapsedMs}ms)`
         );
       })
       .on("job:failed", (e) => {
@@ -531,4 +522,3 @@ export class BulkImportService {
     }
   }
 }
-

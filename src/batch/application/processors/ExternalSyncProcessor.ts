@@ -129,14 +129,18 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
         return {
           success: false,
           totalRecords: 0,
-          error: `La fuente de datos "${dataSource.name}" no tiene configurado el mapeo de campos (fieldMappings). ` +
-                 `Por favor, configure el mapeo de campos en la página de edición de la fuente de datos ` +
-                 `antes de ejecutar la sincronización. Use el botón "Cargar Preview" para verificar que el mapeo es correcto.`,
+          error:
+            `La fuente de datos "${dataSource.name}" no tiene configurado el mapeo de campos (fieldMappings). ` +
+            `Por favor, configure el mapeo de campos en la página de edición de la fuente de datos ` +
+            `antes de ejecutar la sincronización. Use el botón "Cargar Preview" para verificar que el mapeo es correcto.`,
         };
       }
 
       // Log the field mappings being used
-      console.log(`📋 [ExternalSync] Using field mappings for "${dataSource.name}":`, Object.keys(fieldMappings).join(", "));
+      console.log(
+        `📋 [ExternalSync] Using field mappings for "${dataSource.name}":`,
+        Object.keys(fieldMappings).join(", ")
+      );
 
       this.dataSource = {
         type: dataSource.type,
@@ -266,7 +270,9 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
           });
 
           if (recordsArray.length % 1000 === 0) {
-            console.log(`📦 [ExternalSync] Downloaded and normalized ${recordsArray.length} records...`);
+            console.log(
+              `📦 [ExternalSync] Downloaded and normalized ${recordsArray.length} records...`
+            );
           }
         }
 
@@ -277,7 +283,9 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
         if (recordsArray.length > 0) {
           const firstRawData = recordsArray[0]._rawData as Record<string, unknown>;
           this.externalIdFieldCache = this.detectExternalIdField(firstRawData);
-          console.log(`🔑 [ExternalSync] Detected external ID field: "${this.externalIdFieldCache}"`);
+          console.log(
+            `🔑 [ExternalSync] Detected external ID field: "${this.externalIdFieldCache}"`
+          );
         }
 
         // Upload to S3 - now contains normalized data
@@ -294,7 +302,9 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
         rawRecords = recordsArray.slice(0, chunkSize);
       } else {
         // CHUNK 2+: Read chunk from S3 cache
-        console.log(`📥 [ExternalSync] Reading chunk from S3 cache (${startIndex}-${startIndex + chunkSize - 1})`);
+        console.log(
+          `📥 [ExternalSync] Reading chunk from S3 cache (${startIndex}-${startIndex + chunkSize - 1})`
+        );
 
         rawRecords = await this.s3Cache.getJsonChunk(job.id, startIndex, chunkSize);
 
@@ -331,7 +341,9 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
         // Try to get from _rawData if available (normalized format)
         const firstRawData = (rawRecords[0]._rawData as Record<string, unknown>) || rawRecords[0];
         this.externalIdFieldCache = this.detectExternalIdField(firstRawData);
-        console.log(`🔑 [ExternalSync] Detected external ID field (resumed job): "${this.externalIdFieldCache}"`);
+        console.log(
+          `🔑 [ExternalSync] Detected external ID field (resumed job): "${this.externalIdFieldCache}"`
+        );
       }
 
       // Process records in the chunk
@@ -346,7 +358,11 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
         // No need to re-apply fieldMappings - data was normalized during first chunk
         const importRecord = ImportRecord.fromCachedRecord(
           cachedRecord,
-          (this.dataSource?.type || "CKAN_API") as "CKAN_API" | "JSON_FILE" | "REST_API" | "CSV_FILE"
+          (this.dataSource?.type || "CKAN_API") as
+            | "CKAN_API"
+            | "JSON_FILE"
+            | "REST_API"
+            | "CSV_FILE"
         );
 
         // Process the record
@@ -479,10 +495,10 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
       const matchingThreshold = this.dataSource.matchingThreshold;
 
       // Skip advanced detection if strategy is BY_EXTERNAL_CODE only
-      if (matchingStrategy !== 'BY_EXTERNAL_CODE') {
+      if (matchingStrategy !== "BY_EXTERNAL_CODE") {
         try {
           const criteria: DuplicateDetectionCriteria = {
-            name: record.name || '',
+            name: record.name || "",
             streetType: record.streetType,
             streetName: record.streetName,
             streetNumber: record.streetNumber,
@@ -507,7 +523,7 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
           }
         } catch (error) {
           // Log error but continue with fallback strategies
-          console.error('Error in advanced duplicate detection:', error);
+          console.error("Error in advanced duplicate detection:", error);
         }
       }
     }
@@ -574,14 +590,10 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
     if (this.enrichLocationUseCase) {
       try {
         const needsEnrichment =
-          !location.postal_code ||
-          !location.city_name ||
-          !location.district_name;
+          !location.postal_code || !location.city_name || !location.district_name;
 
         if (needsEnrichment) {
-          console.log(
-            `🌍 [ExternalSync] Enriching location ${location.id} with geocoding...`
-          );
+          console.log(`🌍 [ExternalSync] Enriching location ${location.id} with geocoding...`);
 
           // Construir dirección completa para mejor precisión en geocoding
           // Combinar streetType + streetName para formar la dirección completa
@@ -589,8 +601,8 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
           let streetPart = "";
           if (record.streetType && record.streetName) {
             // Capitalizar el tipo de vía (CALLE -> Calle, PLAZA -> Plaza)
-            const capitalizedType = record.streetType.charAt(0).toUpperCase() +
-                                    record.streetType.slice(1).toLowerCase();
+            const capitalizedType =
+              record.streetType.charAt(0).toUpperCase() + record.streetType.slice(1).toLowerCase();
             streetPart = `${capitalizedType} ${record.streetName}`;
           } else if (record.streetName) {
             streetPart = record.streetName;
@@ -618,16 +630,11 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
             console.log(
               `✅ [ExternalSync] Location enriched. Fields updated: ${enrichResult.fieldsUpdated.join(", ")}`
             );
-            console.log(
-              `   Coordinate validation: ${enrichResult.coordinateValidation.status}`
-            );
+            console.log(`   Coordinate validation: ${enrichResult.coordinateValidation.status}`);
           }
         }
       } catch (error) {
-        console.error(
-          `❌ [ExternalSync] Error enriching location ${location.id}:`,
-          error
-        );
+        console.error(`❌ [ExternalSync] Error enriching location ${location.id}:`, error);
         // Continue execution - enrichment failure should not block sync
       }
     }
@@ -641,7 +648,9 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
         },
       });
       scheduleId = schedule.id;
-      console.log(`📝 [ExternalSync] Created schedule: ${record.accessSchedule || record.scheduleDescription}`);
+      console.log(
+        `📝 [ExternalSync] Created schedule: ${record.accessSchedule || record.scheduleDescription}`
+      );
     }
 
     // Create responsible if we have ownership or submitter information
@@ -662,7 +671,9 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
         },
       });
       responsibleId = responsible.id;
-      console.log(`📝 [ExternalSync] Created responsible with ownership: ${record.ownershipType || record.ownership}`);
+      console.log(
+        `📝 [ExternalSync] Created responsible with ownership: ${record.ownershipType || record.ownership}`
+      );
     }
 
     // Prepare code field
@@ -701,18 +712,22 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
     });
 
     console.log(
-      `📝 [ExternalSync] Created AED ${aed.id} with code="${code || 'null'}", ` +
-      `status="${dataSource?.default_status || 'PUBLISHED'}", ` +
-      `requires_attention=${dataSource?.default_requires_attention ?? true}, ` +
-      `publication_mode="${dataSource?.default_publication_mode || 'LOCATION_ONLY'}"`
+      `📝 [ExternalSync] Created AED ${aed.id} with code="${code || "null"}", ` +
+        `status="${dataSource?.default_status || "PUBLISHED"}", ` +
+        `requires_attention=${dataSource?.default_requires_attention ?? true}, ` +
+        `publication_mode="${dataSource?.default_publication_mode || "LOCATION_ONLY"}"`
     );
 
     return aed;
   }
 
-  private async updateAed(aedId: string, record: ImportRecord, config: ExternalSyncConfig): Promise<void> {
+  private async updateAed(
+    aedId: string,
+    record: ImportRecord,
+    config: ExternalSyncConfig
+  ): Promise<void> {
     // Get full AED info to check verification status and existing code
-    const aed = await this.prisma.aed.findUnique({
+    const aed = (await this.prisma.aed.findUnique({
       where: { id: aedId },
       select: {
         location_id: true,
@@ -727,21 +742,21 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
         source_origin: true,
         internal_notes: true,
       },
-    }) as AedUpdateCheckData | null;
+    })) as AedUpdateCheckData | null;
 
     if (!aed) {
       throw new Error(`AED ${aedId} not found`);
     }
 
     // 🔀 MERGE LOGIC: Determine if this is a merge (different external_reference)
-    const isMerging = aed.external_reference &&
-                      record.externalId &&
-                      aed.external_reference !== record.externalId;
+    const isMerging =
+      aed.external_reference && record.externalId && aed.external_reference !== record.externalId;
 
     // 📊 SYNC TYPE: Determine if this is an automatic/periodic sync or manual/one-time import
-    const isAutomaticSync = this.dataSource &&
-                            this.dataSource.syncFrequency &&
-                            this.dataSource.syncFrequency !== 'MANUAL';
+    const isAutomaticSync =
+      this.dataSource &&
+      this.dataSource.syncFrequency &&
+      this.dataSource.syncFrequency !== "MANUAL";
 
     if (isMerging) {
       const existingNotes = Array.isArray(aed.internal_notes) ? aed.internal_notes : [];
@@ -757,18 +772,19 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
 
         console.log(
           `🔄 [ExternalSync] AUTOMATIC SYNC - DEA ${aedId} transitions to automatic source: ` +
-          `Previous: external_ref="${aed.external_reference}", source="${aed.source_origin}". ` +
-          `New: external_ref="${record.externalId}", source="${dataSource.sourceOrigin}". ` +
-          `Previous data saved in history.`
+            `Previous: external_ref="${aed.external_reference}", source="${aed.source_origin}". ` +
+            `New: external_ref="${record.externalId}", source="${dataSource.sourceOrigin}". ` +
+            `Previous data saved in history.`
         );
 
         const mergeNote = {
-          text: `DEA asumido por sincronización automática. ` +
-                `Datos previos: external_reference="${aed.external_reference}", source_origin="${aed.source_origin}". ` +
-                `Nuevos datos: external_reference="${record.externalId}", source_origin="${dataSource.sourceOrigin}".`,
+          text:
+            `DEA asumido por sincronización automática. ` +
+            `Datos previos: external_reference="${aed.external_reference}", source_origin="${aed.source_origin}". ` +
+            `Nuevos datos: external_reference="${record.externalId}", source_origin="${dataSource.sourceOrigin}".`,
           date: new Date().toISOString(),
-          type: 'automatic_sync_takeover',
-          source: 'ExternalSyncProcessor',
+          type: "automatic_sync_takeover",
+          source: "ExternalSyncProcessor",
           metadata: {
             previous_external_ref: aed.external_reference,
             previous_source_origin: aed.source_origin,
@@ -787,11 +803,11 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
           await this.prisma.aedFieldChange.create({
             data: {
               aed_id: aedId,
-              field_name: 'source_origin_automatic_transition',
+              field_name: "source_origin_automatic_transition",
               old_value: `${aed.source_origin}:${aed.external_reference}`,
               new_value: `${dataSource.sourceOrigin}:${record.externalId}`,
               changed_by: SYSTEM_USER_UUID,
-              change_source: 'IMPORT',
+              change_source: "IMPORT",
             },
           });
         } catch (error) {
@@ -803,13 +819,12 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
           where: { id: aedId },
           data: {
             internal_notes: [...existingNotes, mergeNote],
-            external_reference: record.externalId,      // ✅ Actualiza al nuevo
+            external_reference: record.externalId, // ✅ Actualiza al nuevo
             source_origin: dataSource.sourceOrigin as SourceOrigin, // ✅ Cambia el origen
             data_source_id: config.dataSourceId,
             last_synced_at: new Date(),
           },
         });
-
       } else {
         // ==========================================
         // CASO 2: Importación Puntual/Manual
@@ -818,17 +833,18 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
         // Solo se registran los campos que se actualizaron
         console.log(
           `📝 [ExternalSync] MANUAL IMPORT - DEA ${aedId} updated but keeps original source: ` +
-          `Keeping: external_ref="${aed.external_reference}", source="${aed.source_origin}". ` +
-          `Updating fields from: external_ref="${record.externalId}", import_source="${config.dataSourceId}".`
+            `Keeping: external_ref="${aed.external_reference}", source="${aed.source_origin}". ` +
+            `Updating fields from: external_ref="${record.externalId}", import_source="${config.dataSourceId}".`
         );
 
         const mergeNote = {
-          text: `Actualizado por importación puntual. ` +
-                `Se mantiene: external_reference="${aed.external_reference}", source_origin="${aed.source_origin}". ` +
-                `Datos de importación: external_reference="${record.externalId}", fuente="${config.dataSourceId}".`,
+          text:
+            `Actualizado por importación puntual. ` +
+            `Se mantiene: external_reference="${aed.external_reference}", source_origin="${aed.source_origin}". ` +
+            `Datos de importación: external_reference="${record.externalId}", fuente="${config.dataSourceId}".`,
           date: new Date().toISOString(),
-          type: 'manual_import_update',
-          source: 'ExternalSyncProcessor',
+          type: "manual_import_update",
+          source: "ExternalSyncProcessor",
           metadata: {
             original_external_ref: aed.external_reference,
             original_source_origin: aed.source_origin,
@@ -845,11 +861,11 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
           await this.prisma.aedFieldChange.create({
             data: {
               aed_id: aedId,
-              field_name: 'manual_import_merge',
-              old_value: aed.external_reference || '',
-              new_value: record.externalId || '',
+              field_name: "manual_import_merge",
+              old_value: aed.external_reference || "",
+              new_value: record.externalId || "",
               changed_by: SYSTEM_USER_UUID,
-              change_source: 'IMPORT',
+              change_source: "IMPORT",
             },
           });
         } catch (error) {
@@ -874,7 +890,7 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
     if (aed.last_verified_at) {
       console.log(
         `🔒 [ExternalSync] AED ${aedId} ("${aed.name}") is manually verified. ` +
-        `Updating ONLY technical metadata. Business data is PROTECTED.`
+          `Updating ONLY technical metadata. Business data is PROTECTED.`
       );
 
       // Only update technical metadata for verified AEDs
@@ -982,7 +998,9 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
           },
         });
         responsibleIdUpdate = responsible.id;
-        console.log(`📝 [ExternalSync] Created new responsible with ownership: ${record.ownershipType || record.ownership}`);
+        console.log(
+          `📝 [ExternalSync] Created new responsible with ownership: ${record.ownershipType || record.ownership}`
+        );
       }
     }
 
@@ -994,9 +1012,13 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
     if (!aed.code && record.hasExternalReference()) {
       // AED has no code yet, assign from external source
       codeUpdate = record.externalId;
-      console.log(`📝 [ExternalSync] Assigning code from externalId: ${codeUpdate} (AED had no code)`);
+      console.log(
+        `📝 [ExternalSync] Assigning code from externalId: ${codeUpdate} (AED had no code)`
+      );
     } else if (aed.code) {
-      console.log(`🔒 [ExternalSync] AED already has code: "${aed.code}". Protecting existing code from automatic update.`);
+      console.log(
+        `🔒 [ExternalSync] AED already has code: "${aed.code}". Protecting existing code from automatic update.`
+      );
       // Don't update codeUpdate - keep it undefined to preserve existing code
     }
 
@@ -1033,7 +1055,6 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
         },
         raw_data: record.rawData,
       });
-
     } else if (isMerging && !isAutomaticSync) {
       // ==========================================
       // CASO 2: Merge + Importación Manual/Puntual
@@ -1070,7 +1091,6 @@ export class ExternalSyncProcessor extends BaseBatchJobProcessor<ExternalSyncCon
       });
 
       // ❌ NO actualizar: source_origin, external_reference, name
-
     } else {
       // ==========================================
       // CASO 3: NO es merge (actualización normal)

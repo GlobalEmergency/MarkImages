@@ -1046,14 +1046,7 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
     required: false,
     type: "date",
     description: "Fecha de creación del registro",
-    keywords: [
-      "createdAt",
-      "fecha creacion",
-      "created",
-      "creado",
-      "creation date",
-      "created date",
-    ],
+    keywords: ["createdAt", "fecha creacion", "created", "creado", "creation date", "created date"],
   },
   {
     key: "updatedAt",

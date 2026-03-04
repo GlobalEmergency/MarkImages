@@ -8,7 +8,16 @@ import { useState, useEffect } from "react";
 const LocationPickerMap = dynamic(() => import("@/components/LocationPickerMap"), {
   ssr: false,
   loading: () => (
-    <div style={{ height: "400px", display: "flex", alignItems: "center", justifyContent: "center", background: "#f5f5f5", borderRadius: "8px" }}>
+    <div
+      style={{
+        height: "400px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#f5f5f5",
+        borderRadius: "8px",
+      }}
+    >
       <p style={{ color: "#666" }}>Cargando mapa...</p>
     </div>
   ),
@@ -215,8 +224,9 @@ export default function NewDeaPage() {
     <div style={{ padding: "20px", maxWidth: "900px", margin: "0 auto" }}>
       <h1 style={{ marginBottom: "20px" }}>Agregar Nuevo DEA</h1>
       <p style={{ marginBottom: "30px", color: "#666" }}>
-        Complete el formulario para agregar un nuevo DEA. Los campos marcados con * son obligatorios.
-        El DEA estará en estado &quot;Pendiente de Revisión&quot; hasta que sea validado por un administrador.
+        Complete el formulario para agregar un nuevo DEA. Los campos marcados con * son
+        obligatorios. El DEA estará en estado &quot;Pendiente de Revisión&quot; hasta que sea
+        validado por un administrador.
       </p>
 
       {error && (
@@ -235,7 +245,14 @@ export default function NewDeaPage() {
 
       <form onSubmit={handleSubmit}>
         {/* BASIC AED DATA */}
-        <fieldset style={{ marginBottom: "30px", border: "1px solid #ddd", padding: "20px", borderRadius: "5px" }}>
+        <fieldset
+          style={{
+            marginBottom: "30px",
+            border: "1px solid #ddd",
+            padding: "20px",
+            borderRadius: "5px",
+          }}
+        >
           <legend style={{ fontWeight: "bold", fontSize: "18px" }}>Datos Básicos del DEA</legend>
 
           <div style={{ marginBottom: "15px" }}>
@@ -249,7 +266,12 @@ export default function NewDeaPage() {
               onChange={handleChange}
               required
               placeholder="Ej: 12-001"
-              style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
             />
           </div>
 
@@ -264,7 +286,12 @@ export default function NewDeaPage() {
               onChange={handleChange}
               required
               placeholder="Ej: DEA Colegio Nuestra Señora de Fátima"
-              style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
             />
           </div>
 
@@ -277,7 +304,12 @@ export default function NewDeaPage() {
               value={formData.establishment_type}
               onChange={handleChange}
               required
-              style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
             >
               <option value="">Seleccione un tipo</option>
               <option value="Centro educativo">Centro educativo</option>
@@ -290,7 +322,14 @@ export default function NewDeaPage() {
             </select>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "15px" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "15px",
+              marginBottom: "15px",
+            }}
+          >
             <div>
               <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
                 Latitud *
@@ -303,7 +342,12 @@ export default function NewDeaPage() {
                 onChange={handleChange}
                 required
                 placeholder="40.334922"
-                style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
               />
             </div>
 
@@ -319,7 +363,12 @@ export default function NewDeaPage() {
                 onChange={handleChange}
                 required
                 placeholder="-3.701048"
-                style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
               />
             </div>
           </div>
@@ -346,7 +395,12 @@ export default function NewDeaPage() {
               value={formData.provisional_number}
               onChange={handleChange}
               placeholder="Opcional"
-              style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
             />
           </div>
 
@@ -360,16 +414,35 @@ export default function NewDeaPage() {
               onChange={handleChange}
               rows={3}
               placeholder="Observaciones adicionales sobre el origen de los datos"
-              style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
             />
           </div>
         </fieldset>
 
         {/* LOCATION DATA */}
-        <fieldset style={{ marginBottom: "30px", border: "1px solid #ddd", padding: "20px", borderRadius: "5px" }}>
+        <fieldset
+          style={{
+            marginBottom: "30px",
+            border: "1px solid #ddd",
+            padding: "20px",
+            borderRadius: "5px",
+          }}
+        >
           <legend style={{ fontWeight: "bold", fontSize: "18px" }}>Ubicación</legend>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "15px", marginBottom: "15px" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 2fr",
+              gap: "15px",
+              marginBottom: "15px",
+            }}
+          >
             <div>
               <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
                 Tipo de Vía *
@@ -379,7 +452,12 @@ export default function NewDeaPage() {
                 value={formData.location_street_type}
                 onChange={handleChange}
                 required
-                style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
               >
                 <option value="Calle">Calle</option>
                 <option value="Avenida">Avenida</option>
@@ -400,12 +478,24 @@ export default function NewDeaPage() {
                 onChange={handleChange}
                 required
                 placeholder="Ej: Manuel Muñoz"
-                style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
               />
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "15px" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "15px",
+              marginBottom: "15px",
+            }}
+          >
             <div>
               <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
                 Número
@@ -416,7 +506,12 @@ export default function NewDeaPage() {
                 value={formData.location_street_number}
                 onChange={handleChange}
                 placeholder="Ej: 30"
-                style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
               />
             </div>
 
@@ -432,7 +527,12 @@ export default function NewDeaPage() {
                 required
                 placeholder="28026"
                 pattern="[0-9]{5}"
-                style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
               />
             </div>
           </div>
@@ -446,7 +546,12 @@ export default function NewDeaPage() {
               value={formData.location_district_id}
               onChange={handleChange}
               required
-              style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
             >
               <option value="">Seleccione un distrito</option>
               {districts.map((district) => (
@@ -467,7 +572,12 @@ export default function NewDeaPage() {
               value={formData.location_additional_info}
               onChange={handleChange}
               placeholder="Ej: Acceso por C/Hijas de Jesús"
-              style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
             />
           </div>
 
@@ -481,7 +591,12 @@ export default function NewDeaPage() {
               onChange={handleChange}
               rows={3}
               placeholder="Ej: Entrando al patio por la calle Hijas de Jesús, a la izquierda en el departamento de Tecnología"
-              style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
             />
           </div>
 
@@ -495,11 +610,23 @@ export default function NewDeaPage() {
               value={formData.location_visible_references}
               onChange={handleChange}
               placeholder="Ej: Edificio educativo con acceso desde patio principal"
-              style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
             />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "15px" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "15px",
+              marginBottom: "15px",
+            }}
+          >
             <div>
               <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
                 Piso
@@ -510,7 +637,12 @@ export default function NewDeaPage() {
                 value={formData.location_floor}
                 onChange={handleChange}
                 placeholder="Ej: Planta Baja"
-                style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
               />
             </div>
 
@@ -524,14 +656,26 @@ export default function NewDeaPage() {
                 value={formData.location_specific_location}
                 onChange={handleChange}
                 placeholder="Ej: Hall de entrada"
-                style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
               />
             </div>
           </div>
         </fieldset>
 
         {/* RESPONSIBLE DATA */}
-        <fieldset style={{ marginBottom: "30px", border: "1px solid #ddd", padding: "20px", borderRadius: "5px" }}>
+        <fieldset
+          style={{
+            marginBottom: "30px",
+            border: "1px solid #ddd",
+            padding: "20px",
+            borderRadius: "5px",
+          }}
+        >
           <legend style={{ fontWeight: "bold", fontSize: "18px" }}>Responsable</legend>
 
           <div style={{ marginBottom: "15px" }}>
@@ -545,7 +689,12 @@ export default function NewDeaPage() {
               onChange={handleChange}
               required
               placeholder="Ej: Maria Del Carmen Escobar Cano"
-              style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
             />
           </div>
 
@@ -560,11 +709,23 @@ export default function NewDeaPage() {
               onChange={handleChange}
               required
               placeholder="ejemplo@email.com"
-              style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
             />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "15px" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "15px",
+              marginBottom: "15px",
+            }}
+          >
             <div>
               <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
                 Teléfono
@@ -575,7 +736,12 @@ export default function NewDeaPage() {
                 value={formData.responsible_phone}
                 onChange={handleChange}
                 placeholder="+34 600 123 456"
-                style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
               />
             </div>
 
@@ -589,12 +755,24 @@ export default function NewDeaPage() {
                 value={formData.responsible_alternative_phone}
                 onChange={handleChange}
                 placeholder="+34 600 654 321"
-                style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
               />
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "15px", marginBottom: "15px" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr 1fr",
+              gap: "15px",
+              marginBottom: "15px",
+            }}
+          >
             <div>
               <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
                 Titularidad DEA *
@@ -604,7 +782,12 @@ export default function NewDeaPage() {
                 value={formData.responsible_ownership}
                 onChange={handleChange}
                 required
-                style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
               >
                 <option value="Público">Público</option>
                 <option value="Privado">Privado</option>
@@ -620,7 +803,12 @@ export default function NewDeaPage() {
                 value={formData.responsible_local_ownership}
                 onChange={handleChange}
                 required
-                style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
               >
                 <option value="Pública">Pública</option>
                 <option value="Privada">Privada</option>
@@ -636,7 +824,12 @@ export default function NewDeaPage() {
                 value={formData.responsible_local_use}
                 onChange={handleChange}
                 required
-                style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
               >
                 <option value="Público">Público</option>
                 <option value="Privado">Privado</option>
@@ -654,11 +847,23 @@ export default function NewDeaPage() {
               value={formData.responsible_organization}
               onChange={handleChange}
               placeholder="Ej: Colegio Nuestra Señora de Fátima"
-              style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
             />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "15px" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "15px",
+              marginBottom: "15px",
+            }}
+          >
             <div>
               <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
                 Cargo
@@ -669,7 +874,12 @@ export default function NewDeaPage() {
                 value={formData.responsible_position}
                 onChange={handleChange}
                 placeholder="Ej: Coordinadora de Salud"
-                style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
               />
             </div>
 
@@ -683,14 +893,26 @@ export default function NewDeaPage() {
                 value={formData.responsible_department}
                 onChange={handleChange}
                 placeholder="Ej: Recursos Humanos"
-                style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
               />
             </div>
           </div>
         </fieldset>
 
         {/* SCHEDULE DATA (OPTIONAL) */}
-        <fieldset style={{ marginBottom: "30px", border: "1px solid #ddd", padding: "20px", borderRadius: "5px" }}>
+        <fieldset
+          style={{
+            marginBottom: "30px",
+            border: "1px solid #ddd",
+            padding: "20px",
+            borderRadius: "5px",
+          }}
+        >
           <legend style={{ fontWeight: "bold", fontSize: "18px" }}>Horario (Opcional)</legend>
 
           <div style={{ marginBottom: "15px" }}>
@@ -718,12 +940,24 @@ export default function NewDeaPage() {
                   value={formData.schedule_description}
                   onChange={handleChange}
                   placeholder="Ej: Horario escolar de lunes a viernes"
-                  style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                  }}
                 />
               </div>
 
               <div style={{ marginBottom: "15px" }}>
-                <label style={{ display: "flex", alignItems: "center", cursor: "pointer", marginBottom: "10px" }}>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    cursor: "pointer",
+                    marginBottom: "10px",
+                  }}
+                >
                   <input
                     type="checkbox"
                     name="schedule_has_24h"
@@ -757,7 +991,12 @@ export default function NewDeaPage() {
                     value={formData.schedule_weekday_opening}
                     onChange={handleChange}
                     placeholder="Apertura"
-                    style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                    style={{
+                      width: "100%",
+                      padding: "8px",
+                      border: "1px solid #ccc",
+                      borderRadius: "4px",
+                    }}
                   />
                   <input
                     type="time"
@@ -765,7 +1004,12 @@ export default function NewDeaPage() {
                     value={formData.schedule_weekday_closing}
                     onChange={handleChange}
                     placeholder="Cierre"
-                    style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                    style={{
+                      width: "100%",
+                      padding: "8px",
+                      border: "1px solid #ccc",
+                      borderRadius: "4px",
+                    }}
                   />
                 </div>
               </div>
@@ -781,7 +1025,12 @@ export default function NewDeaPage() {
                     value={formData.schedule_saturday_opening}
                     onChange={handleChange}
                     placeholder="Apertura"
-                    style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                    style={{
+                      width: "100%",
+                      padding: "8px",
+                      border: "1px solid #ccc",
+                      borderRadius: "4px",
+                    }}
                   />
                   <input
                     type="time"
@@ -789,7 +1038,12 @@ export default function NewDeaPage() {
                     value={formData.schedule_saturday_closing}
                     onChange={handleChange}
                     placeholder="Cierre"
-                    style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                    style={{
+                      width: "100%",
+                      padding: "8px",
+                      border: "1px solid #ccc",
+                      borderRadius: "4px",
+                    }}
                   />
                 </div>
               </div>
@@ -805,7 +1059,12 @@ export default function NewDeaPage() {
                     value={formData.schedule_sunday_opening}
                     onChange={handleChange}
                     placeholder="Apertura"
-                    style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                    style={{
+                      width: "100%",
+                      padding: "8px",
+                      border: "1px solid #ccc",
+                      borderRadius: "4px",
+                    }}
                   />
                   <input
                     type="time"
@@ -813,13 +1072,25 @@ export default function NewDeaPage() {
                     value={formData.schedule_sunday_closing}
                     onChange={handleChange}
                     placeholder="Cierre"
-                    style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                    style={{
+                      width: "100%",
+                      padding: "8px",
+                      border: "1px solid #ccc",
+                      borderRadius: "4px",
+                    }}
                   />
                 </div>
               </div>
 
               <div style={{ marginBottom: "15px" }}>
-                <label style={{ display: "flex", alignItems: "center", cursor: "pointer", marginBottom: "10px" }}>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    cursor: "pointer",
+                    marginBottom: "10px",
+                  }}
+                >
                   <input
                     type="checkbox"
                     name="schedule_closed_holidays"
@@ -852,7 +1123,12 @@ export default function NewDeaPage() {
                   onChange={handleChange}
                   rows={2}
                   placeholder="Observaciones adicionales sobre el horario"
-                  style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                  }}
                 />
               </div>
             </>

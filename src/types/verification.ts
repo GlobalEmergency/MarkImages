@@ -1,4 +1,4 @@
-import type { CropData, ArrowData, BlurArea } from './shared';
+import type { CropData, ArrowData, BlurArea } from "./shared";
 
 export enum VerificationStep {
   ADDRESS_VALIDATION = "address_validation",

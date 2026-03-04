@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Loader2 } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { Loader2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 
-import type { CropData } from '@/types/shared';
+import type { CropData } from "@/types/shared";
 
 interface ImageCropperProps {
   imageUrl: string;
@@ -23,7 +23,7 @@ export default function ImageCropper({
   imageUrl,
   onCropChange,
   onCropComplete,
-  onCancel
+  onCancel,
 }: ImageCropperProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -32,24 +32,29 @@ export default function ImageCropper({
   const [isResizing, setIsResizing] = useState(false);
   const [resizingCorner, setResizingCorner] = useState<string | null>(null);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [initialCropArea, setInitialCropArea] = useState<CropArea>({ x: 0, y: 0, width: 0, height: 0 });
+  const [initialCropArea, setInitialCropArea] = useState<CropArea>({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  });
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
   const [canvasScale, setCanvasScale] = useState(1);
   const [processing, setProcessing] = useState(false);
-  const [loadingState, setLoadingState] = useState<string>('Cargando imagen...');
+  const [loadingState, setLoadingState] = useState<string>("Cargando imagen...");
   const [retryAttempt, setRetryAttempt] = useState<number>(0);
 
   // Calcular el área de recorte inicial
   const calculateInitialCrop = (imgWidth: number, imgHeight: number) => {
     const isHorizontal = imgWidth > imgHeight;
     const squareSize = isHorizontal ? imgHeight : imgWidth;
-    
+
     return {
       x: (imgWidth - squareSize) / 2,
       y: (imgHeight - squareSize) / 2,
       width: squareSize,
-      height: squareSize
+      height: squareSize,
     };
   };
 
@@ -57,12 +62,18 @@ export default function ImageCropper({
   const drawCanvas = () => {
     const canvas = canvasRef.current;
     const img = imageRef.current;
-    
-    if (!canvas || !img || !imageLoaded || imageDimensions.width === 0 || imageDimensions.height === 0) {
+
+    if (
+      !canvas ||
+      !img ||
+      !imageLoaded ||
+      imageDimensions.width === 0 ||
+      imageDimensions.height === 0
+    ) {
       return;
     }
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     // Calcular escala para ajustar la imagen al canvas (responsive)
@@ -84,7 +95,7 @@ export default function ImageCropper({
     ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
 
     // Dibujar overlay oscuro
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Limpiar área de recorte (mostrar imagen original)
@@ -92,42 +103,68 @@ export default function ImageCropper({
       x: cropArea.x * scale,
       y: cropArea.y * scale,
       width: cropArea.width * scale,
-      height: cropArea.height * scale
+      height: cropArea.height * scale,
     };
 
     ctx.clearRect(scaledCrop.x, scaledCrop.y, scaledCrop.width, scaledCrop.height);
     ctx.drawImage(
       img,
-      cropArea.x, cropArea.y, cropArea.width, cropArea.height,
-      scaledCrop.x, scaledCrop.y, scaledCrop.width, scaledCrop.height
+      cropArea.x,
+      cropArea.y,
+      cropArea.width,
+      cropArea.height,
+      scaledCrop.x,
+      scaledCrop.y,
+      scaledCrop.width,
+      scaledCrop.height
     );
 
     // Dibujar borde de selección
-    ctx.strokeStyle = '#3b82f6';
+    ctx.strokeStyle = "#3b82f6";
     ctx.lineWidth = 2;
     ctx.strokeRect(scaledCrop.x, scaledCrop.y, scaledCrop.width, scaledCrop.height);
 
     // Dibujar esquinas para redimensionar
     const cornerSize = 8;
-    ctx.fillStyle = '#3b82f6';
-    
+    ctx.fillStyle = "#3b82f6";
+
     // Esquinas
-    ctx.fillRect(scaledCrop.x - cornerSize/2, scaledCrop.y - cornerSize/2, cornerSize, cornerSize);
-    ctx.fillRect(scaledCrop.x + scaledCrop.width - cornerSize/2, scaledCrop.y - cornerSize/2, cornerSize, cornerSize);
-    ctx.fillRect(scaledCrop.x - cornerSize/2, scaledCrop.y + scaledCrop.height - cornerSize/2, cornerSize, cornerSize);
-    ctx.fillRect(scaledCrop.x + scaledCrop.width - cornerSize/2, scaledCrop.y + scaledCrop.height - cornerSize/2, cornerSize, cornerSize);
+    ctx.fillRect(
+      scaledCrop.x - cornerSize / 2,
+      scaledCrop.y - cornerSize / 2,
+      cornerSize,
+      cornerSize
+    );
+    ctx.fillRect(
+      scaledCrop.x + scaledCrop.width - cornerSize / 2,
+      scaledCrop.y - cornerSize / 2,
+      cornerSize,
+      cornerSize
+    );
+    ctx.fillRect(
+      scaledCrop.x - cornerSize / 2,
+      scaledCrop.y + scaledCrop.height - cornerSize / 2,
+      cornerSize,
+      cornerSize
+    );
+    ctx.fillRect(
+      scaledCrop.x + scaledCrop.width - cornerSize / 2,
+      scaledCrop.y + scaledCrop.height - cornerSize / 2,
+      cornerSize,
+      cornerSize
+    );
   };
 
   // Cargar imagen
   useEffect(() => {
     setImageLoaded(false);
-    setLoadingState('Cargando imagen...');
+    setLoadingState("Cargando imagen...");
     setRetryAttempt(0);
-    
+
     const loadImageAsync = async () => {
       try {
         // Usar loadImageWithRetry que maneja automáticamente reintentos y CORS
-        const { loadImageWithRetry } = await import('@/utils/imageLoader');
+        const { loadImageWithRetry } = await import("@/utils/imageLoader");
         const result = await loadImageWithRetry(imageUrl, {
           maxRetries: 3,
           initialDelay: 1000,
@@ -140,18 +177,18 @@ export default function ImageCropper({
             } else {
               setLoadingState(`Reintentando... (${attempt}/${maxRetries})`);
             }
-          }
+          },
         });
-        
+
         const img = result.image;
-        
+
         // IMPORTANTE: Aplicar orientación EXIF para obtener dimensiones correctas
         // Esto asegura que las dimensiones coincidan con las que usará Sharp en el backend
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
         if (!ctx) {
-          throw new Error('No se pudo crear el contexto del canvas');
+          throw new Error("No se pudo crear el contexto del canvas");
         }
 
         // Detectar orientación EXIF y aplicar rotación
@@ -165,23 +202,23 @@ export default function ImageCropper({
         finalWidth = img.width;
         finalHeight = img.height;
 
-        console.log('=== CARGA DE IMAGEN EN FRONTEND ===');
-        console.log('Dimensiones naturales (archivo físico):', {
+        console.log("=== CARGA DE IMAGEN EN FRONTEND ===");
+        console.log("Dimensiones naturales (archivo físico):", {
           width: img.naturalWidth,
-          height: img.naturalHeight
+          height: img.naturalHeight,
         });
-        console.log('Dimensiones visuales (post-EXIF):', {
+        console.log("Dimensiones visuales (post-EXIF):", {
           width: finalWidth,
-          height: finalHeight
+          height: finalHeight,
         });
 
         // Configurar canvas con las dimensiones correctas
         canvas.width = finalWidth;
         canvas.height = finalHeight;
-        
+
         // Dibujar la imagen (el navegador ya aplica la orientación EXIF)
         ctx.drawImage(img, 0, 0, finalWidth, finalHeight);
-        
+
         // Crear nueva imagen desde el canvas para asegurar dimensiones correctas
         const correctedImg = new Image();
         correctedImg.onload = () => {
@@ -189,50 +226,49 @@ export default function ImageCropper({
           const initialCrop = calculateInitialCrop(finalWidth, finalHeight);
           setCropArea(initialCrop);
           setImageLoaded(true);
-          
+
           // Calcular escala (responsive)
           const maxWidth = Math.min(window.innerWidth - 64, 800);
           const maxHeight = Math.min(window.innerHeight * 0.6, 600);
           const scale = Math.min(maxWidth / finalWidth, maxHeight / finalHeight, 1);
           setCanvasScale(scale);
-          
+
           // Notificar crop inicial
           onCropChange(initialCrop);
-          
-          console.log('✅ Imagen cargada con orientación correcta:', {
+
+          console.log("✅ Imagen cargada con orientación correcta:", {
             dimensions: { width: finalWidth, height: finalHeight },
             initialCrop,
-            scale
+            scale,
           });
-          
+
           // Guardar referencia de la imagen corregida
           imageRef.current = correctedImg;
         };
-        
-        correctedImg.src = canvas.toDataURL('image/jpeg', 0.95);
-        
+
+        correctedImg.src = canvas.toDataURL("image/jpeg", 0.95);
       } catch (error) {
-        console.error('❌ Error loading image:', error);
-        setLoadingState('Error al cargar la imagen');
+        console.error("❌ Error loading image:", error);
+        setLoadingState("Error al cargar la imagen");
         // Fallback: intentar con la función legacy
-        const { loadImageWithProxy } = await import('@/utils/imageLoader');
+        const { loadImageWithProxy } = await import("@/utils/imageLoader");
         const img = await loadImageWithProxy(imageUrl);
-        
+
         setImageDimensions({ width: img.width, height: img.height });
         const initialCrop = calculateInitialCrop(img.width, img.height);
         setCropArea(initialCrop);
         setImageLoaded(true);
-        
+
         const maxWidth = Math.min(window.innerWidth - 64, 800);
         const maxHeight = Math.min(window.innerHeight * 0.6, 600);
         const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
         setCanvasScale(scale);
-        
+
         onCropChange(initialCrop);
         imageRef.current = img;
       }
     };
-    
+
     loadImageAsync();
   }, [imageUrl]);
 
@@ -244,15 +280,17 @@ export default function ImageCropper({
   }, [cropArea, imageLoaded]);
 
   // Obtener coordenadas del mouse o touch
-  const getMousePos = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  const getMousePos = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
+  ) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
 
     const rect = canvas.getBoundingClientRect();
-    
+
     // Detectar si es touch o mouse event
     let clientX, clientY;
-    if ('touches' in e) {
+    if ("touches" in e) {
       // Touch event
       if (e.touches.length > 0) {
         clientX = e.touches[0].clientX;
@@ -271,7 +309,7 @@ export default function ImageCropper({
 
     return {
       x: (clientX - rect.left) / canvasScale,
-      y: (clientY - rect.top) / canvasScale
+      y: (clientY - rect.top) / canvasScale,
     };
   };
 
@@ -280,16 +318,25 @@ export default function ImageCropper({
     const tolerance = 15;
 
     if (Math.abs(x - cropArea.x) < tolerance && Math.abs(y - cropArea.y) < tolerance) {
-      return 'top-left';
+      return "top-left";
     }
-    if (Math.abs(x - (cropArea.x + cropArea.width)) < tolerance && Math.abs(y - cropArea.y) < tolerance) {
-      return 'top-right';
+    if (
+      Math.abs(x - (cropArea.x + cropArea.width)) < tolerance &&
+      Math.abs(y - cropArea.y) < tolerance
+    ) {
+      return "top-right";
     }
-    if (Math.abs(x - cropArea.x) < tolerance && Math.abs(y - (cropArea.y + cropArea.height)) < tolerance) {
-      return 'bottom-left';
+    if (
+      Math.abs(x - cropArea.x) < tolerance &&
+      Math.abs(y - (cropArea.y + cropArea.height)) < tolerance
+    ) {
+      return "bottom-left";
     }
-    if (Math.abs(x - (cropArea.x + cropArea.width)) < tolerance && Math.abs(y - (cropArea.y + cropArea.height)) < tolerance) {
-      return 'bottom-right';
+    if (
+      Math.abs(x - (cropArea.x + cropArea.width)) < tolerance &&
+      Math.abs(y - (cropArea.y + cropArea.height)) < tolerance
+    ) {
+      return "bottom-right";
     }
 
     return null;
@@ -297,8 +344,12 @@ export default function ImageCropper({
 
   // Verificar si está dentro del área
   const isInsideCropArea = (x: number, y: number) => {
-    return x >= cropArea.x && x <= cropArea.x + cropArea.width &&
-           y >= cropArea.y && y <= cropArea.y + cropArea.height;
+    return (
+      x >= cropArea.x &&
+      x <= cropArea.x + cropArea.width &&
+      y >= cropArea.y &&
+      y <= cropArea.y + cropArea.height
+    );
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -320,16 +371,22 @@ export default function ImageCropper({
     const pos = getMousePos(e);
 
     if (isDragging) {
-      const newX = Math.max(0, Math.min(pos.x - dragStart.x, imageDimensions.width - cropArea.width));
-      const newY = Math.max(0, Math.min(pos.y - dragStart.y, imageDimensions.height - cropArea.height));
-      
+      const newX = Math.max(
+        0,
+        Math.min(pos.x - dragStart.x, imageDimensions.width - cropArea.width)
+      );
+      const newY = Math.max(
+        0,
+        Math.min(pos.y - dragStart.y, imageDimensions.height - cropArea.height)
+      );
+
       const newCropArea = { ...cropArea, x: newX, y: newY };
       setCropArea(newCropArea);
       onCropChange(newCropArea);
     } else if (isResizing && resizingCorner) {
       const deltaX = pos.x - dragStart.x;
       const deltaY = pos.y - dragStart.y;
-      
+
       // Calcular tamaño mínimo: 50% del lado más corto de la imagen
       const minSize = Math.min(imageDimensions.width, imageDimensions.height) * 0.5;
 
@@ -337,7 +394,7 @@ export default function ImageCropper({
       let delta: number;
 
       switch (resizingCorner) {
-        case 'top-left': {
+        case "top-left": {
           // Redimensionar desde esquina superior izquierda
           // Mover hacia arriba-izquierda (negativos) debe AUMENTAR el tamaño
           delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * Math.sign(deltaX + deltaY || -1);
@@ -350,17 +407,17 @@ export default function ImageCropper({
             imageDimensions.height
           );
           const finalSize = Math.min(newSize, maxSize);
-          
+
           newCrop = {
             x: initialCropArea.x + initialCropArea.width - finalSize,
             y: initialCropArea.y + initialCropArea.height - finalSize,
             width: finalSize,
-            height: finalSize
+            height: finalSize,
           };
           break;
         }
 
-        case 'top-right': {
+        case "top-right": {
           // Redimensionar desde esquina superior derecha
           // Mover hacia arriba-derecha (X+ Y-) debe AUMENTAR el tamaño
           delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * Math.sign(deltaX - deltaY || 1);
@@ -371,17 +428,17 @@ export default function ImageCropper({
             initialCropArea.y + initialCropArea.height
           );
           const finalSize = Math.min(newSize, maxSize);
-          
+
           newCrop = {
             x: initialCropArea.x,
             y: initialCropArea.y + initialCropArea.height - finalSize,
             width: finalSize,
-            height: finalSize
+            height: finalSize,
           };
           break;
         }
 
-        case 'bottom-left': {
+        case "bottom-left": {
           // Redimensionar desde esquina inferior izquierda
           // Mover hacia abajo-izquierda (X- Y+) debe AUMENTAR el tamaño
           delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * Math.sign(-deltaX + deltaY || 1);
@@ -392,17 +449,17 @@ export default function ImageCropper({
             imageDimensions.height - initialCropArea.y
           );
           const finalSize = Math.min(newSize, maxSize);
-          
+
           newCrop = {
             x: initialCropArea.x + initialCropArea.width - finalSize,
             y: initialCropArea.y,
             width: finalSize,
-            height: finalSize
+            height: finalSize,
           };
           break;
         }
 
-        case 'bottom-right': {
+        case "bottom-right": {
           // Redimensionar desde esquina inferior derecha
           // Mover hacia abajo-derecha (positivos) debe AUMENTAR el tamaño
           delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * Math.sign(deltaX + deltaY || 1);
@@ -413,21 +470,24 @@ export default function ImageCropper({
             imageDimensions.height - initialCropArea.y
           );
           const finalSize = Math.min(newSize, maxSize);
-          
+
           newCrop = {
             x: initialCropArea.x,
             y: initialCropArea.y,
             width: finalSize,
-            height: finalSize
+            height: finalSize,
           };
           break;
         }
       }
 
       // Validar que el crop está dentro de los límites
-      if (newCrop.x >= 0 && newCrop.y >= 0 && 
-          newCrop.x + newCrop.width <= imageDimensions.width &&
-          newCrop.y + newCrop.height <= imageDimensions.height) {
+      if (
+        newCrop.x >= 0 &&
+        newCrop.y >= 0 &&
+        newCrop.x + newCrop.width <= imageDimensions.width &&
+        newCrop.y + newCrop.height <= imageDimensions.height
+      ) {
         setCropArea(newCrop);
         onCropChange(newCrop);
       }
@@ -438,11 +498,11 @@ export default function ImageCropper({
 
       const corner = getCornerAtPosition(pos.x, pos.y);
       if (corner) {
-        canvas.style.cursor = 'nw-resize';
+        canvas.style.cursor = "nw-resize";
       } else if (isInsideCropArea(pos.x, pos.y)) {
-        canvas.style.cursor = 'move';
+        canvas.style.cursor = "move";
       } else {
-        canvas.style.cursor = 'default';
+        canvas.style.cursor = "default";
       }
     }
   };
@@ -474,16 +534,22 @@ export default function ImageCropper({
     const pos = getMousePos(e);
 
     if (isDragging) {
-      const newX = Math.max(0, Math.min(pos.x - dragStart.x, imageDimensions.width - cropArea.width));
-      const newY = Math.max(0, Math.min(pos.y - dragStart.y, imageDimensions.height - cropArea.height));
-      
+      const newX = Math.max(
+        0,
+        Math.min(pos.x - dragStart.x, imageDimensions.width - cropArea.width)
+      );
+      const newY = Math.max(
+        0,
+        Math.min(pos.y - dragStart.y, imageDimensions.height - cropArea.height)
+      );
+
       const newCropArea = { ...cropArea, x: newX, y: newY };
       setCropArea(newCropArea);
       onCropChange(newCropArea);
     } else if (isResizing && resizingCorner) {
       const deltaX = pos.x - dragStart.x;
       const deltaY = pos.y - dragStart.y;
-      
+
       // Calcular tamaño mínimo: 50% del lado más corto de la imagen
       const minSize = Math.min(imageDimensions.width, imageDimensions.height) * 0.5;
 
@@ -491,7 +557,7 @@ export default function ImageCropper({
       let delta: number;
 
       switch (resizingCorner) {
-        case 'top-left': {
+        case "top-left": {
           // Redimensionar desde esquina superior izquierda
           // Mover hacia arriba-izquierda (negativos) debe AUMENTAR el tamaño
           delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * Math.sign(deltaX + deltaY || -1);
@@ -504,17 +570,17 @@ export default function ImageCropper({
             imageDimensions.height
           );
           const finalSize = Math.min(newSize, maxSize);
-          
+
           newCrop = {
             x: initialCropArea.x + initialCropArea.width - finalSize,
             y: initialCropArea.y + initialCropArea.height - finalSize,
             width: finalSize,
-            height: finalSize
+            height: finalSize,
           };
           break;
         }
 
-        case 'top-right': {
+        case "top-right": {
           // Redimensionar desde esquina superior derecha
           // Mover hacia arriba-derecha (X+ Y-) debe AUMENTAR el tamaño
           delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * Math.sign(deltaX - deltaY || 1);
@@ -525,17 +591,17 @@ export default function ImageCropper({
             initialCropArea.y + initialCropArea.height
           );
           const finalSize = Math.min(newSize, maxSize);
-          
+
           newCrop = {
             x: initialCropArea.x,
             y: initialCropArea.y + initialCropArea.height - finalSize,
             width: finalSize,
-            height: finalSize
+            height: finalSize,
           };
           break;
         }
 
-        case 'bottom-left': {
+        case "bottom-left": {
           // Redimensionar desde esquina inferior izquierda
           // Mover hacia abajo-izquierda (X- Y+) debe AUMENTAR el tamaño
           delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * Math.sign(-deltaX + deltaY || 1);
@@ -546,17 +612,17 @@ export default function ImageCropper({
             imageDimensions.height - initialCropArea.y
           );
           const finalSize = Math.min(newSize, maxSize);
-          
+
           newCrop = {
             x: initialCropArea.x + initialCropArea.width - finalSize,
             y: initialCropArea.y,
             width: finalSize,
-            height: finalSize
+            height: finalSize,
           };
           break;
         }
 
-        case 'bottom-right': {
+        case "bottom-right": {
           // Redimensionar desde esquina inferior derecha
           // Mover hacia abajo-derecha (positivos) debe AUMENTAR el tamaño
           delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * Math.sign(deltaX + deltaY || 1);
@@ -567,21 +633,24 @@ export default function ImageCropper({
             imageDimensions.height - initialCropArea.y
           );
           const finalSize = Math.min(newSize, maxSize);
-          
+
           newCrop = {
             x: initialCropArea.x,
             y: initialCropArea.y,
             width: finalSize,
-            height: finalSize
+            height: finalSize,
           };
           break;
         }
       }
 
       // Validar que el crop está dentro de los límites
-      if (newCrop.x >= 0 && newCrop.y >= 0 && 
-          newCrop.x + newCrop.width <= imageDimensions.width &&
-          newCrop.y + newCrop.height <= imageDimensions.height) {
+      if (
+        newCrop.x >= 0 &&
+        newCrop.y >= 0 &&
+        newCrop.x + newCrop.width <= imageDimensions.width &&
+        newCrop.y + newCrop.height <= imageDimensions.height
+      ) {
         setCropArea(newCrop);
         onCropChange(newCrop);
       }
@@ -602,39 +671,49 @@ export default function ImageCropper({
 
     try {
       // Crear canvas con las dimensiones del área de recorte
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = cropArea.width;
       canvas.height = cropArea.height;
 
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       if (!ctx) {
-        console.error('No se pudo crear contexto del canvas');
+        console.error("No se pudo crear contexto del canvas");
         return undefined;
       }
 
       // Dibujar solo el área recortada
       ctx.drawImage(
         imageRef.current,
-        cropArea.x, cropArea.y, cropArea.width, cropArea.height,
-        0, 0, cropArea.width, cropArea.height
+        cropArea.x,
+        cropArea.y,
+        cropArea.width,
+        cropArea.height,
+        0,
+        0,
+        cropArea.width,
+        cropArea.height
       );
 
       // Convertir canvas a blob URL
       return new Promise((resolve) => {
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const url = URL.createObjectURL(blob);
-            console.log('✅ Imagen recortada generada:', url);
-            console.log(`   Dimensiones: ${cropArea.width}x${cropArea.height}px`);
-            resolve(url);
-          } else {
-            console.error('❌ Error generando blob de imagen recortada');
-            resolve(undefined);
-          }
-        }, 'image/jpeg', 0.95);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const url = URL.createObjectURL(blob);
+              console.log("✅ Imagen recortada generada:", url);
+              console.log(`   Dimensiones: ${cropArea.width}x${cropArea.height}px`);
+              resolve(url);
+            } else {
+              console.error("❌ Error generando blob de imagen recortada");
+              resolve(undefined);
+            }
+          },
+          "image/jpeg",
+          0.95
+        );
       });
     } catch (error) {
-      console.error('❌ Error generando imagen recortada:', error);
+      console.error("❌ Error generando imagen recortada:", error);
       return undefined;
     }
   };
@@ -659,9 +738,7 @@ export default function ImageCropper({
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
               <p className="text-gray-500">{loadingState}</p>
               {retryAttempt > 0 && (
-                <p className="text-xs text-gray-400 mt-2">
-                  Esto puede tomar unos segundos...
-                </p>
+                <p className="text-xs text-gray-400 mt-2">Esto puede tomar unos segundos...</p>
               )}
             </div>
           </div>
@@ -700,7 +777,7 @@ export default function ImageCropper({
               Procesando imagen...
             </>
           ) : (
-            'Aceptar Recorte'
+            "Aceptar Recorte"
           )}
         </button>
       </div>
@@ -708,7 +785,10 @@ export default function ImageCropper({
       {imageLoaded && (
         <div className="text-sm text-gray-600 text-center max-w-md px-4">
           <p className="mb-1">Arrastra para mover • Usa cualquier esquina para redimensionar</p>
-          <p>Tamaño: {Math.round(cropArea.width)} × {Math.round(cropArea.height)} px (mín: {Math.round(Math.min(imageDimensions.width, imageDimensions.height) * 0.5)}px)</p>
+          <p>
+            Tamaño: {Math.round(cropArea.width)} × {Math.round(cropArea.height)} px (mín:{" "}
+            {Math.round(Math.min(imageDimensions.width, imageDimensions.height) * 0.5)}px)
+          </p>
         </div>
       )}
     </div>

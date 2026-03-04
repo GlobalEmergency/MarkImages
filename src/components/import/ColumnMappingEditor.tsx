@@ -3,15 +3,15 @@
  * Permite al usuario configurar el mapeo de forma interactiva
  */
 
-'use client';
+"use client";
 
-import { Search, RotateCcw } from 'lucide-react';
-import { useState, useMemo, useCallback } from 'react';
+import { Search, RotateCcw } from "lucide-react";
+import { useState, useMemo, useCallback } from "react";
 
-import { useColumnMapping } from '@/hooks/useColumnMapping';
+import { useColumnMapping } from "@/hooks/useColumnMapping";
 
-import MappingRow from './MappingRow';
-import MappingSummary from './MappingSummary';
+import MappingRow from "./MappingRow";
+import MappingSummary from "./MappingSummary";
 
 interface ColumnMappingEditorProps {
   preview: {
@@ -40,7 +40,7 @@ export default function ColumnMappingEditor({
   initialMappings,
   onMappingsConfirmed,
 }: ColumnMappingEditorProps) {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const {
     mappingStates,
@@ -60,9 +60,9 @@ export default function ColumnMappingEditor({
       if (columnIndex === -1) return [];
 
       return preview.rows.slice(0, 3).map((row) => {
-        if (!row || !Array.isArray(row)) return '';
+        if (!row || !Array.isArray(row)) return "";
         const value = row[columnIndex];
-        return value?.toString().trim() || '';
+        return value?.toString().trim() || "";
       });
     },
     [preview.headers, preview.rows]
@@ -82,9 +82,7 @@ export default function ColumnMappingEditor({
     if (!searchTerm.trim()) return nonEmptyStates;
 
     const term = searchTerm.toLowerCase();
-    return nonEmptyStates.filter((state) =>
-      state.csvColumn.toLowerCase().includes(term)
-    );
+    return nonEmptyStates.filter((state) => state.csvColumn.toLowerCase().includes(term));
   }, [mappingStates, searchTerm, getSampleDataForColumn]);
 
   const handleConfirm = () => {
@@ -127,9 +125,7 @@ export default function ColumnMappingEditor({
           <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
             <Search className="w-12 h-12 text-gray-400 mx-auto mb-3" />
             <p className="text-gray-600">No se encontraron columnas que coincidan</p>
-            <p className="text-sm text-gray-500 mt-1">
-              Intenta con otro término de búsqueda
-            </p>
+            <p className="text-sm text-gray-500 mt-1">Intenta con otro término de búsqueda</p>
           </div>
         ) : (
           filteredMappingStates.map((state) => (
@@ -157,8 +153,7 @@ export default function ColumnMappingEditor({
             <h4 className="font-medium text-blue-900 mb-1">Sugerencias automáticas</h4>
             <p className="text-sm text-blue-800">
               El sistema ha analizado las columnas de tu CSV y ha sugerido mapeos automáticos
-              basándose en la similitud de nombres. Revisa y ajusta los mapeos según sea
-              necesario.
+              basándose en la similitud de nombres. Revisa y ajusta los mapeos según sea necesario.
             </p>
             <p className="text-sm text-blue-800 mt-2">
               Los campos marcados con <span className="text-red-600 font-bold">*</span> son
@@ -175,12 +170,12 @@ export default function ColumnMappingEditor({
           disabled={!summary.canProceed}
           className={`px-6 py-3 rounded-lg font-medium transition-all ${
             summary.canProceed
-              ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
           }`}
         >
           {summary.canProceed
-            ? 'Continuar con validación →'
+            ? "Continuar con validación →"
             : `Mapea los ${summary.requiredTotal - summary.requiredMapped} campos faltantes`}
         </button>
       </div>

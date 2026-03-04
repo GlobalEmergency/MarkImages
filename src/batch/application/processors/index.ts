@@ -55,10 +55,7 @@ export function initializeProcessors(
   // Uses Google Maps Geocoding API directly for batch processing
   // ========================================
   const geocodingService = new GoogleGeocodingService();
-  const enrichLocationUseCase = new EnrichLocationWithGeocodingUseCase(
-    prisma,
-    geocodingService
-  );
+  const enrichLocationUseCase = new EnrichLocationWithGeocodingUseCase(prisma, geocodingService);
 
   // ========================================
   // Register processors

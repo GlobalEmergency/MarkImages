@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
@@ -266,7 +265,9 @@ export default function DataSourceDetailPage() {
       await fetchDataSource();
 
       // Show success message
-      alert("El job continuará automáticamente en segundo plano. El cron job lo procesará en el próximo ciclo (cada minuto).");
+      alert(
+        "El job continuará automáticamente en segundo plano. El cron job lo procesará en el próximo ciclo (cada minuto)."
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al actualizar estado del job");
     } finally {
@@ -1242,8 +1243,9 @@ export default function DataSourceDetailPage() {
                   <div>
                     <p className="text-sm font-medium text-blue-800">Proceso en Segundo Plano</p>
                     <p className="text-xs text-blue-700 mt-1">
-                      Las sincronizaciones se ejecutan automáticamente en segundo plano mediante un cron job que se ejecuta cada minuto.
-                      Esto evita timeouts y permite procesar grandes volúmenes de datos sin interrupciones.
+                      Las sincronizaciones se ejecutan automáticamente en segundo plano mediante un
+                      cron job que se ejecuta cada minuto. Esto evita timeouts y permite procesar
+                      grandes volúmenes de datos sin interrupciones.
                     </p>
                   </div>
                 </div>

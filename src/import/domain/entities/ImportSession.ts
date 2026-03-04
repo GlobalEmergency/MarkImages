@@ -226,9 +226,7 @@ export class ImportSession {
    */
   canImport(): boolean {
     return (
-      this.status === "READY" &&
-      this.validationResult !== null &&
-      this.validationResult.isValid
+      this.status === "READY" && this.validationResult !== null && this.validationResult.isValid
     );
   }
 

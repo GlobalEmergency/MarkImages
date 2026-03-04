@@ -13,10 +13,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireAuth(request);
     if (!user) {
-      return NextResponse.json(
-        { valid: false, message: "No autorizado" },
-        { status: 401 }
-      );
+      return NextResponse.json({ valid: false, message: "No autorizado" }, { status: 401 });
     }
 
     const body = await request.json();

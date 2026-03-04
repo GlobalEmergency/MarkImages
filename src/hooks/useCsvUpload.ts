@@ -17,10 +17,7 @@ export function useCsvUpload() {
     batchId: null,
   });
 
-  const uploadCsv = async (
-    file: File,
-    batchName: string
-  ): Promise<string | null> => {
+  const uploadCsv = async (file: File, batchName: string): Promise<string | null> => {
     setState({ uploading: true, error: null, batchId: null });
 
     try {
@@ -42,8 +39,7 @@ export function useCsvUpload() {
       setState({ uploading: false, error: null, batchId: data.batchId });
       return data.batchId;
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Error desconocido";
+      const message = error instanceof Error ? error.message : "Error desconocido";
       setState({ uploading: false, error: message, batchId: null });
       return null;
     }

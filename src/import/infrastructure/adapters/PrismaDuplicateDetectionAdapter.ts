@@ -4,11 +4,11 @@
  *
  * OPTIMIZADO: Usa columnas normalizadas + pg_trgm + scoring en DB
  * ARQUITECTURA: Cumple con DDD y SOLID mediante inyección de dependencias
- * 
+ *
  * Implementa búsqueda híbrida:
  * - CON coordenadas: búsqueda espacial PostGIS (radio configurable)
  * - SIN coordenadas: fallback por código postal
- * 
+ *
  * MEJORAS vs versión anterior:
  * - Normalización delegada a servicio de dominio
  * - Scoring calculado en query (no en memoria)
@@ -153,7 +153,7 @@ export class PrismaDuplicateDetectionAdapter implements IDuplicateDetectionServi
     }
 
     // Ya vienen ordenados por score desde la query
-    
+
     // Retornar resultado según prioridad
     if (confirmedMatches.length > 0) {
       return DuplicateCheckResult.foundDuplicate(name, address, confirmedMatches);

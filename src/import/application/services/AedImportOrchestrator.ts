@@ -6,7 +6,11 @@
  * Este orchestrador es reutilizable tanto para validación previa como para importación real.
  */
 
-import { ValidationResult, PreviewRecord, SharePointInfo } from "../../domain/value-objects/ValidationResult";
+import {
+  ValidationResult,
+  PreviewRecord,
+  SharePointInfo,
+} from "../../domain/value-objects/ValidationResult";
 import { ValidationError } from "../../domain/value-objects/ValidationError";
 import { AedImportData } from "../../domain/value-objects/AedImportData";
 import { AedValidationService } from "../../domain/services/AedValidationService";
@@ -89,9 +93,7 @@ export class AedImportOrchestrator {
       );
 
       if (sharePointInfo.detected) {
-        console.log(
-          `🔍 SharePoint detectado en campos: ${sharePointInfo.imageFields.join(", ")}`
-        );
+        console.log(`🔍 SharePoint detectado en campos: ${sharePointInfo.imageFields.join(", ")}`);
         console.log(`📸 URLs de muestra (${sharePointInfo.sampleUrls.length}):`);
         sharePointInfo.sampleUrls.forEach((url) => console.log(`  - ${url}`));
       }
@@ -162,20 +164,20 @@ export class AedImportOrchestrator {
           skipDuplicates
         );
 
-        let recordStatus: 'valid' | 'invalid' | 'skipped' = 'valid';
+        let recordStatus: "valid" | "invalid" | "skipped" = "valid";
 
         if (duplicateCheck.isDuplicate) {
           if (skipDuplicates) {
             skippedCount++;
-            recordStatus = 'skipped';
+            recordStatus = "skipped";
             // Capturar registro omitido para preview
             if (skippedPreviewCount < MAX_SKIPPED_PREVIEW) {
               previewRecords.push({
                 rowNumber: row,
-                status: 'skipped',
+                status: "skipped",
                 mappedData: this.serializeAedData(data),
                 originalData,
-                errors: recordErrors.map(e => e.toJSON()),
+                errors: recordErrors.map((e) => e.toJSON()),
               });
               skippedPreviewCount++;
             }
@@ -190,7 +192,7 @@ export class AedImportOrchestrator {
           if (validPreviewCount < MAX_VALID_PREVIEW) {
             previewRecords.push({
               rowNumber: row,
-              status: 'valid',
+              status: "valid",
               mappedData: this.serializeAedData(data),
               originalData,
             });
@@ -200,15 +202,15 @@ export class AedImportOrchestrator {
 
         if (hasErrors) {
           invalidCount++;
-          recordStatus = 'invalid';
+          recordStatus = "invalid";
           // Capturar registro inválido para preview
-          if (invalidPreviewCount < MAX_INVALID_PREVIEW && recordStatus === 'invalid') {
+          if (invalidPreviewCount < MAX_INVALID_PREVIEW && recordStatus === "invalid") {
             previewRecords.push({
               rowNumber: row,
-              status: 'invalid',
+              status: "invalid",
               mappedData: this.serializeAedData(data),
               originalData,
-              errors: recordErrors.map(e => e.toJSON()),
+              errors: recordErrors.map((e) => e.toJSON()),
             });
             invalidPreviewCount++;
           }
@@ -306,11 +308,7 @@ export class AedImportOrchestrator {
     }
 
     // Verificar duplicados
-    const duplicateCheck = await this.duplicateDetector.checkDuplicate(
-      data,
-      row,
-      skipDuplicates
-    );
+    const duplicateCheck = await this.duplicateDetector.checkDuplicate(data, row, skipDuplicates);
 
     if (duplicateCheck.isDuplicate && !skipDuplicates && duplicateCheck.error) {
       errors.push(duplicateCheck.error);

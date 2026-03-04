@@ -99,7 +99,11 @@ export default function ArrowPlacer({ imageUrl, onArrowComplete, onCancel }: Arr
 
         // Generar imagen procesada con la flecha dibujada
         try {
-          const processedImageUrl = await generateProcessedImage(imageUrl, arrowData, imageDimensions);
+          const processedImageUrl = await generateProcessedImage(
+            imageUrl,
+            arrowData,
+            imageDimensions
+          );
           onArrowComplete(arrowData, processedImageUrl);
         } catch (error) {
           console.error("Error generating processed image:", error);
@@ -118,11 +122,11 @@ export default function ArrowPlacer({ imageUrl, onArrowComplete, onCancel }: Arr
     dimensions: { width: number; height: number }
   ): Promise<string> => {
     return new Promise((resolve, reject) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
       if (!ctx) {
-        reject(new Error('Could not get canvas context'));
+        reject(new Error("Could not get canvas context"));
         return;
       }
 
@@ -131,8 +135,8 @@ export default function ArrowPlacer({ imageUrl, onArrowComplete, onCancel }: Arr
       canvas.height = dimensions.height;
 
       const img = new Image();
-      img.crossOrigin = 'anonymous';
-      
+      img.crossOrigin = "anonymous";
+
       img.onload = () => {
         // Dibujar imagen base
         ctx.drawImage(img, 0, 0, dimensions.width, dimensions.height);
@@ -153,7 +157,7 @@ export default function ArrowPlacer({ imageUrl, onArrowComplete, onCancel }: Arr
         // Dibujar cuerpo de la flecha
         ctx.strokeStyle = ARROW_CONFIG.COLOR;
         ctx.lineWidth = bodyWidth;
-        ctx.lineCap = 'round';
+        ctx.lineCap = "round";
         ctx.beginPath();
         ctx.moveTo(startX, startY);
         ctx.lineTo(endX - headLength * Math.cos(angle), endY - headLength * Math.sin(angle));
@@ -178,12 +182,12 @@ export default function ArrowPlacer({ imageUrl, onArrowComplete, onCancel }: Arr
         ctx.stroke();
 
         // Convertir a data URL
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
         resolve(dataUrl);
       };
 
       img.onerror = () => {
-        reject(new Error('Failed to load image'));
+        reject(new Error("Failed to load image"));
       };
 
       img.src = imageUrl;
@@ -408,9 +412,25 @@ export default function ArrowPlacer({ imageUrl, onArrowComplete, onCancel }: Arr
         >
           {processing ? (
             <>
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              <svg
+                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
               </svg>
               Procesando...
             </>

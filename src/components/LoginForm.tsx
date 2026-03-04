@@ -49,15 +49,11 @@ export default function LoginForm() {
 
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-        Iniciar Sesión
-      </h2>
+      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Iniciar Sesión</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
+          <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">{error}</div>
         )}
 
         <div>
@@ -69,9 +65,7 @@ export default function LoginForm() {
             type="email"
             required
             value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             onFocus={() => trackFormFieldFocus("login", "email")}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="tu@email.com"
@@ -96,9 +90,7 @@ export default function LoginForm() {
             type="password"
             required
             value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             onFocus={() => trackFormFieldFocus("login", "password")}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="••••••••"

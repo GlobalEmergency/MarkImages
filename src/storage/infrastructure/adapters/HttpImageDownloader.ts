@@ -109,9 +109,7 @@ export class HttpImageDownloader implements IImageDownloader {
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === "TimeoutError" || error.name === "AbortError") {
-          throw new Error(
-            `Timeout al descargar imagen desde ${url} después de ${timeoutMs}ms`
-          );
+          throw new Error(`Timeout al descargar imagen desde ${url} después de ${timeoutMs}ms`);
         }
         throw error;
       }

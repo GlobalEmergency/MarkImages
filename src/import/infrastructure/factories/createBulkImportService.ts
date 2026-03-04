@@ -41,11 +41,7 @@ export function getBulkImportService(): BulkImportService {
       imageStorage
     );
 
-    _instance = new BulkImportService(
-      prisma,
-      aedRepository,
-      downloadAndUploadImageUseCase
-    );
+    _instance = new BulkImportService(prisma, aedRepository, downloadAndUploadImageUseCase);
   }
 
   return _instance;

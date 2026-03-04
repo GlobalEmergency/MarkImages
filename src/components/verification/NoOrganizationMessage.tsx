@@ -14,18 +14,14 @@ export default function NoOrganizationMessage() {
             </div>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">
-            Sin Acceso a Verificaciones
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">Sin Acceso a Verificaciones</h2>
 
           <p className="text-gray-700 mb-6">
             No perteneces a ninguna organización con permisos de verificación de DEAs.
           </p>
 
           <div className="bg-white border border-amber-200 rounded-lg p-4 mb-6">
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">
-              Para acceder necesitas:
-            </h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Para acceder necesitas:</h3>
             <ul className="text-sm text-gray-700 space-y-2 text-left">
               <li className="flex items-start gap-2">
                 <span className="text-amber-600 mt-0.5">•</span>

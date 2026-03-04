@@ -359,10 +359,10 @@ export async function getEffectivePublicationMode(aedId: string) {
  * Filter types for verification lists
  */
 export type VerificationFilterType =
-  | "pending"              // DRAFT, PENDING_REVIEW - no verificados
+  | "pending" // DRAFT, PENDING_REVIEW - no verificados
   | "published_unverified" // PUBLISHED pero sin verificación manual (last_verified_at is null)
-  | "published_verified"   // PUBLISHED con verificación manual
-  | "all_published";       // Todos los PUBLISHED
+  | "published_verified" // PUBLISHED con verificación manual
+  | "all_published"; // Todos los PUBLISHED
 
 /**
  * Get AEDs that a user can verify based on their role and organization memberships

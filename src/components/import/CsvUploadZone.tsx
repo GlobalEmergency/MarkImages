@@ -181,20 +181,12 @@ export default function CsvUploadZone({ onUploadStart }: CsvUploadZoneProps) {
                 dragActive ? "bg-blue-100" : "bg-gray-100"
               }`}
             >
-              <Upload
-                className={`w-8 h-8 ${dragActive ? "text-blue-600" : "text-gray-400"}`}
-              />
+              <Upload className={`w-8 h-8 ${dragActive ? "text-blue-600" : "text-gray-400"}`} />
             </div>
             <div className="text-center">
-              <p className="text-base font-medium text-gray-700">
-                Arrastra tu archivo CSV aquí
-              </p>
-              <p className="text-sm text-gray-500 mt-1">
-                o haz clic para seleccionar
-              </p>
-              <p className="text-xs text-gray-400 mt-2">
-                Archivos CSV (máx. 10MB)
-              </p>
+              <p className="text-base font-medium text-gray-700">Arrastra tu archivo CSV aquí</p>
+              <p className="text-sm text-gray-500 mt-1">o haz clic para seleccionar</p>
+              <p className="text-xs text-gray-400 mt-2">Archivos CSV (máx. 10MB)</p>
             </div>
           </div>
 
@@ -217,9 +209,7 @@ export default function CsvUploadZone({ onUploadStart }: CsvUploadZoneProps) {
               </div>
               <div>
                 <p className="font-medium text-gray-900">{selectedFile.name}</p>
-                <p className="text-sm text-gray-500">
-                  {(selectedFile.size / 1024).toFixed(2)} KB
-                </p>
+                <p className="text-sm text-gray-500">{(selectedFile.size / 1024).toFixed(2)} KB</p>
               </div>
             </div>
             <button

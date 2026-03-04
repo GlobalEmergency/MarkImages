@@ -17,12 +17,7 @@ export class GeographicDistance {
    * @param lng2 Longitude of point 2 (degrees)
    * @returns Distance in meters
    */
-  static calculateDistanceInMeters(
-    lat1: number,
-    lng1: number,
-    lat2: number,
-    lng2: number
-  ): number {
+  static calculateDistanceInMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
     const dLat = this.toRadians(lat2 - lat1);
     const dLng = this.toRadians(lng2 - lng1);
 
@@ -41,12 +36,7 @@ export class GeographicDistance {
   /**
    * Calculate distance in kilometers
    */
-  static calculateDistanceInKm(
-    lat1: number,
-    lng1: number,
-    lat2: number,
-    lng2: number
-  ): number {
+  static calculateDistanceInKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
     return this.calculateDistanceInMeters(lat1, lng1, lat2, lng2) / 1000;
   }
 

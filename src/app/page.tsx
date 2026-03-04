@@ -329,203 +329,212 @@ export default function Home() {
           onAddressChange={handleAddressChange}
         />
 
-      {/* Search Controls Overlay - Desktop: Top Left, Mobile: Top */}
-      <div className="absolute top-4 left-4 right-4 z-[1000] pointer-events-none">
-        <div className="max-w-md pointer-events-auto">
-          {/* Search Box */}
-          <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
-            <form onSubmit={handleSearchByAddress} className="flex items-center gap-2 p-3">
-              <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
-              <input
-                type="text"
-                placeholder="Buscar dirección..."
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                onFocus={() => {
-                  if (addressSuggestions.length > 0) setShowSuggestions(true);
-                }}
-                disabled={loading}
-                className="flex-1 outline-none text-gray-900 placeholder-gray-400 text-sm disabled:opacity-50"
-                autoComplete="off"
-              />
-              {loadingSuggestions && (
-                <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-              )}
-              {address && !loadingSuggestions && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    trackButtonClick("clear_address", "search_box");
-                    setAddress("");
-                    setShowSuggestions(false);
-                    setAddressSuggestions([]);
+        {/* Search Controls Overlay - Desktop: Top Left, Mobile: Top */}
+        <div className="absolute top-4 left-4 right-4 z-[1000] pointer-events-none">
+          <div className="max-w-md pointer-events-auto">
+            {/* Search Box */}
+            <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
+              <form onSubmit={handleSearchByAddress} className="flex items-center gap-2 p-3">
+                <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Buscar dirección..."
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  onFocus={() => {
+                    if (addressSuggestions.length > 0) setShowSuggestions(true);
                   }}
-                  className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <X className="w-4 h-4 text-gray-400" />
-                </button>
-              )}
-            </form>
-
-            {/* Address Suggestions Dropdown */}
-            {showSuggestions && addressSuggestions.length > 0 && (
-              <div className="border-t border-gray-200 max-h-64 overflow-y-auto">
-                {addressSuggestions.map((suggestion, index) => (
+                  disabled={loading}
+                  className="flex-1 outline-none text-gray-900 placeholder-gray-400 text-sm disabled:opacity-50"
+                  autoComplete="off"
+                />
+                {loadingSuggestions && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
+                {address && !loadingSuggestions && (
                   <button
-                    key={index}
                     type="button"
-                    onClick={() => handleSuggestionClick(suggestion, index)}
-                    className="w-full p-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-2"
+                    onClick={() => {
+                      trackButtonClick("clear_address", "search_box");
+                      setAddress("");
+                      setShowSuggestions(false);
+                      setAddressSuggestions([]);
+                    }}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                   >
-                    <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900 truncate">{suggestion.display_name}</p>
-                      {suggestion.address.city && (
-                        <p className="text-xs text-gray-500 mt-0.5">{suggestion.address.city}</p>
-                      )}
-                    </div>
+                    <X className="w-4 h-4 text-gray-400" />
                   </button>
-                ))}
+                )}
+              </form>
+
+              {/* Address Suggestions Dropdown */}
+              {showSuggestions && addressSuggestions.length > 0 && (
+                <div className="border-t border-gray-200 max-h-64 overflow-y-auto">
+                  {addressSuggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => handleSuggestionClick(suggestion, index)}
+                      className="w-full p-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-2"
+                    >
+                      <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900 truncate">{suggestion.display_name}</p>
+                        {suggestion.address.city && (
+                          <p className="text-xs text-gray-500 mt-0.5">{suggestion.address.city}</p>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Geolocation Button - Visible on Desktop */}
+              <div className="hidden md:block border-t border-gray-200">
+                <button
+                  onClick={handleFindNearestByGeolocation}
+                  disabled={loading}
+                  className="w-full p-3 flex items-center gap-3 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin text-blue-600 flex-shrink-0" />
+                      <span className="text-sm font-medium text-gray-700">Buscando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                        <Navigation className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-sm font-medium text-gray-900">Usar mi ubicación</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="mt-2 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2 shadow-lg">
+                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-800">{error}</p>
               </div>
             )}
-
-            {/* Geolocation Button - Visible on Desktop */}
-            <div className="hidden md:block border-t border-gray-200">
-              <button
-                onClick={handleFindNearestByGeolocation}
-                disabled={loading}
-                className="w-full p-3 flex items-center gap-3 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin text-blue-600 flex-shrink-0" />
-                    <span className="text-sm font-medium text-gray-700">Buscando...</span>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                      <Navigation className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">Usar mi ubicación</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="mt-2 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2 shadow-lg">
-              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-800">{error}</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Geolocation Button - Mobile: Bottom Center */}
-      <div className="md:hidden absolute bottom-24 left-1/2 transform -translate-x-1/2 z-[1000]">
-        <button
-          onClick={handleFindNearestByGeolocation}
-          disabled={loading}
-          className="bg-blue-600 text-white rounded-full shadow-2xl p-4 flex items-center gap-3 hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-6 h-6 animate-spin" />
-              <span className="text-sm font-medium pr-2">Buscando...</span>
-            </>
-          ) : (
-            <>
-              <Navigation className="w-6 h-6" />
-              <span className="text-sm font-medium pr-2">Usar mi ubicación</span>
-            </>
-          )}
-        </button>
-      </div>
-
-      {/* Results Panel - Right Side on Desktop, Bottom Sheet on Mobile */}
-      {showResults && nearbyAeds.length > 0 && (
-        <>
-          {/* Desktop: Right Panel */}
-          <div className="hidden md:block absolute top-4 right-4 bottom-4 w-96 z-[1000]">
-            <div className="bg-white rounded-xl shadow-2xl h-full flex flex-col overflow-hidden">
-              {/* Header */}
-              <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-700">
-                <div className="text-white">
-                  <h3 className="font-bold text-lg">
-                    {nearbyAeds.length} DEA{nearbyAeds.length !== 1 ? "s" : ""} encontrado
-                    {nearbyAeds.length !== 1 ? "s" : ""}
-                  </h3>
-                  <p className="text-sm text-blue-100">Ordenados por distancia</p>
-                </div>
-                <button
-                  onClick={handleClearSearch}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5 text-white" />
-                </button>
-              </div>
-
-              {/* Results List */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {nearbyAeds.map((aed, index) => (
-                  <NearbyAedCard key={aed.id} aed={aed} rank={index + 1} onClick={() => handleCardClick(aed, index + 1)} />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile: Bottom Sheet */}
-          <div className="md:hidden absolute bottom-0 left-0 right-0 z-[1000] max-h-[50vh]">
-            <div className="bg-white rounded-t-2xl shadow-2xl overflow-hidden">
-              {/* Handle */}
-              <div className="p-2 flex justify-center">
-                <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
-              </div>
-
-              {/* Header */}
-              <div className="px-4 pb-3 flex items-center justify-between border-b border-gray-200">
-                <div>
-                  <h3 className="font-bold text-lg text-gray-900">
-                    {nearbyAeds.length} DEA{nearbyAeds.length !== 1 ? "s" : ""}
-                  </h3>
-                  <p className="text-sm text-gray-600">Ordenados por distancia</p>
-                </div>
-                <button
-                  onClick={handleClearSearch}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-600" />
-                </button>
-              </div>
-
-              {/* Results List */}
-              <div className="overflow-y-auto max-h-[40vh] p-4 space-y-3">
-                {nearbyAeds.map((aed, index) => (
-                  <NearbyAedCard key={aed.id} aed={aed} rank={index + 1} onClick={() => handleCardClick(aed, index + 1)} compact />
-                ))}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Scroll Down Indicator - Hide when showing results */}
-      {!showResults && (
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-[999] pointer-events-none">
-          <div className="flex flex-col items-center gap-2 text-white drop-shadow-lg">
-            <span className="text-sm font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
-              Más información
-            </span>
-            <ChevronDown className="w-6 h-6 animate-bounce" />
           </div>
         </div>
-      )}
 
-      {/* Detail Modal */}
-      <AedDetailModal aed={selectedAed} isOpen={modalOpen} onClose={handleCloseModal} />
-    </div>
+        {/* Geolocation Button - Mobile: Bottom Center */}
+        <div className="md:hidden absolute bottom-24 left-1/2 transform -translate-x-1/2 z-[1000]">
+          <button
+            onClick={handleFindNearestByGeolocation}
+            disabled={loading}
+            className="bg-blue-600 text-white rounded-full shadow-2xl p-4 flex items-center gap-3 hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-6 h-6 animate-spin" />
+                <span className="text-sm font-medium pr-2">Buscando...</span>
+              </>
+            ) : (
+              <>
+                <Navigation className="w-6 h-6" />
+                <span className="text-sm font-medium pr-2">Usar mi ubicación</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Results Panel - Right Side on Desktop, Bottom Sheet on Mobile */}
+        {showResults && nearbyAeds.length > 0 && (
+          <>
+            {/* Desktop: Right Panel */}
+            <div className="hidden md:block absolute top-4 right-4 bottom-4 w-96 z-[1000]">
+              <div className="bg-white rounded-xl shadow-2xl h-full flex flex-col overflow-hidden">
+                {/* Header */}
+                <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-700">
+                  <div className="text-white">
+                    <h3 className="font-bold text-lg">
+                      {nearbyAeds.length} DEA{nearbyAeds.length !== 1 ? "s" : ""} encontrado
+                      {nearbyAeds.length !== 1 ? "s" : ""}
+                    </h3>
+                    <p className="text-sm text-blue-100">Ordenados por distancia</p>
+                  </div>
+                  <button
+                    onClick={handleClearSearch}
+                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-white" />
+                  </button>
+                </div>
+
+                {/* Results List */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  {nearbyAeds.map((aed, index) => (
+                    <NearbyAedCard
+                      key={aed.id}
+                      aed={aed}
+                      rank={index + 1}
+                      onClick={() => handleCardClick(aed, index + 1)}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile: Bottom Sheet */}
+            <div className="md:hidden absolute bottom-0 left-0 right-0 z-[1000] max-h-[50vh]">
+              <div className="bg-white rounded-t-2xl shadow-2xl overflow-hidden">
+                {/* Handle */}
+                <div className="p-2 flex justify-center">
+                  <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+                </div>
+
+                {/* Header */}
+                <div className="px-4 pb-3 flex items-center justify-between border-b border-gray-200">
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-900">
+                      {nearbyAeds.length} DEA{nearbyAeds.length !== 1 ? "s" : ""}
+                    </h3>
+                    <p className="text-sm text-gray-600">Ordenados por distancia</p>
+                  </div>
+                  <button
+                    onClick={handleClearSearch}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-600" />
+                  </button>
+                </div>
+
+                {/* Results List */}
+                <div className="overflow-y-auto max-h-[40vh] p-4 space-y-3">
+                  {nearbyAeds.map((aed, index) => (
+                    <NearbyAedCard
+                      key={aed.id}
+                      aed={aed}
+                      rank={index + 1}
+                      onClick={() => handleCardClick(aed, index + 1)}
+                      compact
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Scroll Down Indicator - Hide when showing results */}
+        {!showResults && (
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-[999] pointer-events-none">
+            <div className="flex flex-col items-center gap-2 text-white drop-shadow-lg">
+              <span className="text-sm font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
+                Más información
+              </span>
+              <ChevronDown className="w-6 h-6 animate-bounce" />
+            </div>
+          </div>
+        )}
+
+        {/* Detail Modal */}
+        <AedDetailModal aed={selectedAed} isOpen={modalOpen} onClose={handleCloseModal} />
+      </div>
 
       {/* Info Section - After the map */}
       <div className="bg-gradient-to-br from-gray-50 to-gray-100">
@@ -557,7 +566,13 @@ export default function Home() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-700 font-semibold underline decoration-1 underline-offset-2"
-                    onClick={() => trackExternalLink("https://www.globalemergency.online/proyectos/deamap", "Global Emergency", "about_section")}
+                    onClick={() =>
+                      trackExternalLink(
+                        "https://www.globalemergency.online/proyectos/deamap",
+                        "Global Emergency",
+                        "about_section"
+                      )
+                    }
                   >
                     Global Emergency
                   </a>
@@ -569,8 +584,8 @@ export default function Home() {
                 <h3 className="text-xl font-bold text-gray-900 mb-3">¿Cómo funciona?</h3>
                 <p className="text-gray-700 leading-relaxed">
                   Utiliza la búsqueda por ubicación o dirección para encontrar los DEAs más cercanos
-                  a ti. Cada DEA incluye información detallada sobre su ubicación, horarios de acceso
-                  y datos de contacto.
+                  a ti. Cada DEA incluye información detallada sobre su ubicación, horarios de
+                  acceso y datos de contacto.
                 </p>
               </div>
 
@@ -586,7 +601,8 @@ export default function Home() {
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Colabora con nosotros</h3>
                 <p className="text-gray-700 leading-relaxed mb-3">
-                  Si conoces la ubicación de un DEA que no está en el mapa, puedes agregarlo fácilmente.
+                  Si conoces la ubicación de un DEA que no está en el mapa, puedes agregarlo
+                  fácilmente.
                 </p>
                 <Link
                   href="/dea/new"
@@ -647,7 +663,13 @@ export default function Home() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors group"
-                    onClick={() => trackExternalLink("https://www.globalemergency.online/proyectos/deamap", "Global Emergency (footer)", "footer")}
+                    onClick={() =>
+                      trackExternalLink(
+                        "https://www.globalemergency.online/proyectos/deamap",
+                        "Global Emergency (footer)",
+                        "footer"
+                      )
+                    }
                   >
                     <span className="font-semibold">Global Emergency</span>
                     <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
@@ -677,7 +699,13 @@ export default function Home() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-gray-300 hover:text-white transition-colors inline-flex items-center gap-1"
-                        onClick={() => trackExternalLink("https://www.globalemergency.online", "Global Emergency (footer links)", "footer")}
+                        onClick={() =>
+                          trackExternalLink(
+                            "https://www.globalemergency.online",
+                            "Global Emergency (footer links)",
+                            "footer"
+                          )
+                        }
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
                         Global Emergency

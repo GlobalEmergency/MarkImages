@@ -122,7 +122,7 @@ export class CsvPreview {
   ): CsvPreview {
     // 🔧 FIX: Asegurar que los headers estén limpios (ya viene filtrado del parser)
     const cleanHeaders = headers.filter((h) => h.trim().length > 0);
-    
+
     // 🔧 FIX: Normalizar filas para que coincidan con el número de headers
     const normalizedRows = sampleRows.map((row) => {
       // Si la fila tiene menos columnas, rellenar con vacíos

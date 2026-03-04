@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  LayoutDashboard,
-  MapPin,
-  ClipboardCheck,
-  Users,
-  Settings,
-} from "lucide-react";
+import { LayoutDashboard, MapPin, ClipboardCheck, Users, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -92,21 +86,13 @@ export default function OrgBottomNavigation() {
               key={link.href}
               href={link.href}
               className={`flex flex-col items-center justify-center flex-1 h-full px-2 py-1 transition-all duration-200 ${
-                active
-                  ? "text-blue-600"
-                  : "text-gray-500 hover:text-gray-900 active:scale-95"
+                active ? "text-blue-600" : "text-gray-500 hover:text-gray-900 active:scale-95"
               }`}
             >
               <Icon
-                className={`w-6 h-6 mb-1 transition-all ${
-                  active ? "stroke-[2.5]" : "stroke-2"
-                }`}
+                className={`w-6 h-6 mb-1 transition-all ${active ? "stroke-[2.5]" : "stroke-2"}`}
               />
-              <span
-                className={`text-[10px] font-medium ${
-                  active ? "font-semibold" : ""
-                }`}
-              >
+              <span className={`text-[10px] font-medium ${active ? "font-semibold" : ""}`}>
                 {link.label}
               </span>
             </Link>

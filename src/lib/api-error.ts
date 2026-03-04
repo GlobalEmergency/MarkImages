@@ -18,11 +18,7 @@ const isDevelopment = process.env.NODE_ENV === "development";
  * @param status - HTTP status code (default: 500)
  * @param error - Optional original error (details exposed only in development)
  */
-export function apiError(
-  message: string,
-  status: number = 500,
-  error?: unknown
-): NextResponse {
+export function apiError(message: string, status: number = 500, error?: unknown): NextResponse {
   const body: Record<string, unknown> = {
     success: false,
     error: message,

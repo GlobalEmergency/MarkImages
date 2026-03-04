@@ -31,9 +31,7 @@ export class DownloadAndUploadImageUseCase {
     private readonly imageStorage: IImageStorage
   ) {}
 
-  async execute(
-    request: DownloadAndUploadImageRequest
-  ): Promise<DownloadAndUploadImageResponse> {
+  async execute(request: DownloadAndUploadImageRequest): Promise<DownloadAndUploadImageResponse> {
     console.log(`📥 [DownloadAndUpload] Descargando imagen desde: ${request.url}`);
 
     // 1. Verificar que el downloader soporta esta URL

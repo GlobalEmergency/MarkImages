@@ -55,7 +55,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         {
           error: "Configuración inválida",
-          issues: validation.getErrors().map(e => e.toJSON()),
+          issues: validation.getErrors().map((e) => e.toJSON()),
         },
         { status: 400 }
       );

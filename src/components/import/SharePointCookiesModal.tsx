@@ -225,7 +225,8 @@ export default function SharePointCookiesModal({
                     Accede directamente a una imagen de prueba
                   </p>
                   <p className="text-xs text-gray-600">
-                    Haz clic en el botón para abrir la imagen en SharePoint y obtener las cookies desde allí
+                    Haz clic en el botón para abrir la imagen en SharePoint y obtener las cookies
+                    desde allí
                   </p>
                 </div>
               </div>
@@ -237,12 +238,7 @@ export default function SharePointCookiesModal({
                 className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02] mb-3"
               >
                 <span>🔗 Abrir imagen en SharePoint</span>
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"

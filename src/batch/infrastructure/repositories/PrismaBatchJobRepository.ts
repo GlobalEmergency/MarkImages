@@ -140,12 +140,12 @@ export class PrismaBatchJobRepository implements IBatchJobRepository {
     // Include all non-terminal states to prevent duplicate jobs for same data source
     const activeStatuses: BatchJobStatus[] = [
       "PENDING",
-      "QUEUED", 
-      "IN_PROGRESS", 
-      "WAITING", 
+      "QUEUED",
+      "IN_PROGRESS",
+      "WAITING",
       "RESUMING",
       "PAUSED",
-      "INTERRUPTED"
+      "INTERRUPTED",
     ];
 
     const jobs = await this.prisma.batchJob.findMany({
@@ -217,7 +217,7 @@ export class PrismaBatchJobRepository implements IBatchJobRepository {
    * Atomically transition a job from WAITING to IN_PROGRESS
    * Returns true if the transition was successful (lock acquired)
    * Returns false if the job is already being processed or not in WAITING state
-   * 
+   *
    * This prevents race conditions when multiple cron jobs run concurrently
    */
   async tryAcquireJobLock(jobId: string): Promise<boolean> {

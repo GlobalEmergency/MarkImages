@@ -27,8 +27,13 @@ export default function Navigation() {
   const pathname = usePathname();
   const { user, logout, loading } = useAuth();
   const { hasOrganizations, selectedOrganization } = useOrganization();
-  const { trackNavClick, trackLogoClick, trackMobileMenuToggle, trackAuthClick, trackExternalLink } =
-    useAnalytics();
+  const {
+    trackNavClick,
+    trackLogoClick,
+    trackMobileMenuToggle,
+    trackAuthClick,
+    trackExternalLink,
+  } = useAnalytics();
 
   const isHomePage = pathname === "/";
 
@@ -88,9 +93,7 @@ export default function Navigation() {
   return (
     <nav
       className={`sticky top-0 z-[1001] transition-all duration-300 ${
-        isHomePage
-          ? "bg-white/80 backdrop-blur-md shadow-sm"
-          : "bg-white shadow-sm border-b"
+        isHomePage ? "bg-white/80 backdrop-blur-md shadow-sm" : "bg-white shadow-sm border-b"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

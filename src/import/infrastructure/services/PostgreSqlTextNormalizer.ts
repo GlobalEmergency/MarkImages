@@ -1,7 +1,7 @@
 /**
  * Implementación: Normalización de texto compatible con PostgreSQL
  * Capa de Infraestructura
- * 
+ *
  * Replica la lógica de la función normalize_text() de PostgreSQL
  * para mantener consistencia entre JavaScript y la base de datos.
  */
@@ -16,13 +16,11 @@ export class PostgreSqlTextNormalizer implements ITextNormalizationService {
   normalize(text: string | null | undefined): string {
     if (!text) return "";
 
-    return (
-      text
-        .toLowerCase()
-        .trim()
-        .normalize("NFD") // Descomponer caracteres acentuados
-        .replace(/[\u0300-\u036f]/g, "") // Eliminar diacríticos
-    );
+    return text
+      .toLowerCase()
+      .trim()
+      .normalize("NFD") // Descomponer caracteres acentuados
+      .replace(/[\u0300-\u036f]/g, ""); // Eliminar diacríticos
   }
 
   /**

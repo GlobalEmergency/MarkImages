@@ -67,7 +67,6 @@ export interface AnalyticsEvent {
  * - Script loading failures
  */
 export function useAnalytics() {
-
   /**
    * Envía un evento personalizado a GA4
    * Silently fails if GA is not available (blocked or not loaded)

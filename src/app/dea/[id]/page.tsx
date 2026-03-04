@@ -139,7 +139,7 @@ export default function DeaDetailPage() {
                 className="max-w-full max-h-full object-contain cursor-pointer hover:opacity-90 transition-opacity"
                 onClick={() => setShowLightbox(true)}
               />
-              
+
               {/* Image Type Badge */}
               {currentImage && (
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-xs font-medium">

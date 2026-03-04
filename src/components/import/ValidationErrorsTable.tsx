@@ -256,7 +256,11 @@ export default function ValidationErrorsTable({
                     </td>
                     <td className="px-4 py-3">
                       <div className="max-w-xs truncate text-sm text-gray-900 font-mono">
-                        {error.value ? `"${error.value}"` : <span className="text-gray-400">vacío</span>}
+                        {error.value ? (
+                          `"${error.value}"`
+                        ) : (
+                          <span className="text-gray-400">vacío</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-3">

@@ -1,6 +1,6 @@
 /**
  * Import Batch Errors API
- * 
+ *
  * GET /api/import/[id]/errors - Get errors from a specific import batch
  */
 
@@ -13,18 +13,12 @@ import { GetBatchJobErrorsUseCase } from "@/batch/application/use-cases/GetBatch
  * GET /api/import/[id]/errors
  * Obtiene los errores de un batch de importación con paginación
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // Verificar autenticación
     const user = await requireAuth(request);
     if (!user) {
-      return NextResponse.json(
-        { error: "No autenticado" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
     const { id } = await params;
@@ -32,10 +26,7 @@ export async function GET(
     // Validar que el ID sea un UUID válido
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(id)) {
-      return NextResponse.json(
-        { error: "ID de batch inválido" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "ID de batch inválido" }, { status: 400 });
     }
 
     // Parsear parámetros de paginación
@@ -45,10 +36,7 @@ export async function GET(
 
     // Validar parámetros
     if (page < 1 || limit < 1) {
-      return NextResponse.json(
-        { error: "Parámetros de paginación inválidos" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Parámetros de paginación inválidos" }, { status: 400 });
     }
 
     // Verificar que el batch existe
@@ -58,10 +46,7 @@ export async function GET(
     });
 
     if (!batchExists) {
-      return NextResponse.json(
-        { error: "Batch de importación no encontrado" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Batch de importación no encontrado" }, { status: 404 });
     }
 
     // Obtener errores usando el use case

@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import * as faceapi from '@vladmandic/face-api';
-import { Loader2, Plus, Trash2, RotateCcw, Scan } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import * as faceapi from "@vladmandic/face-api";
+import { Loader2, Plus, Trash2, RotateCcw, Scan } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 
-import type { BlurArea } from '@/types/shared';
+import type { BlurArea } from "@/types/shared";
 
 interface ImageBlurProps {
   imageUrl: string;
@@ -20,12 +20,7 @@ interface DrawingArea {
   currentY: number;
 }
 
-export default function ImageBlur({
-  imageUrl,
-  onBlurComplete,
-  onSkip,
-  onCancel
-}: ImageBlurProps) {
+export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }: ImageBlurProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
@@ -36,22 +31,22 @@ export default function ImageBlur({
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
   const [canvasScale, setCanvasScale] = useState(1);
   const [processing, setProcessing] = useState(false);
-  const [loadingState, setLoadingState] = useState<string>('Cargando imagen...');
+  const [loadingState, setLoadingState] = useState<string>("Cargando imagen...");
   const [retryAttempt, setRetryAttempt] = useState<number>(0);
   const [blurIntensity] = useState<number>(10); // Intensidad del blur
   const [isDetectingFaces, setIsDetectingFaces] = useState(false);
-  const [faceDetectionStatus, setFaceDetectionStatus] = useState<string>('');
+  const [faceDetectionStatus, setFaceDetectionStatus] = useState<string>("");
   const [modelsLoaded, setModelsLoaded] = useState(false);
 
   // Cargar imagen
   useEffect(() => {
     setImageLoaded(false);
-    setLoadingState('Cargando imagen...');
+    setLoadingState("Cargando imagen...");
     setRetryAttempt(0);
 
     const loadImageAsync = async () => {
       try {
-        const { loadImageWithRetry } = await import('@/utils/imageLoader');
+        const { loadImageWithRetry } = await import("@/utils/imageLoader");
         const result = await loadImageWithRetry(imageUrl, {
           maxRetries: 3,
           initialDelay: 1000,
@@ -64,24 +59,24 @@ export default function ImageBlur({
             } else {
               setLoadingState(`Reintentando... (${attempt}/${maxRetries})`);
             }
-          }
+          },
         });
 
         const img = result.image;
 
         // Aplicar orientación EXIF
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
 
         if (!ctx) {
-          throw new Error('No se pudo crear el contexto del canvas');
+          throw new Error("No se pudo crear el contexto del canvas");
         }
 
         const finalWidth = img.width;
         const finalHeight = img.height;
 
-        console.log('=== CARGA DE IMAGEN PARA BLUR ===');
-        console.log('Dimensiones:', { width: finalWidth, height: finalHeight });
+        console.log("=== CARGA DE IMAGEN PARA BLUR ===");
+        console.log("Dimensiones:", { width: finalWidth, height: finalHeight });
 
         canvas.width = finalWidth;
         canvas.height = finalHeight;
@@ -98,17 +93,16 @@ export default function ImageBlur({
           setCanvasScale(scale);
 
           imageRef.current = correctedImg;
-          console.log('✅ Imagen cargada para blur');
+          console.log("✅ Imagen cargada para blur");
         };
 
-        correctedImg.src = canvas.toDataURL('image/jpeg', 0.95);
-
+        correctedImg.src = canvas.toDataURL("image/jpeg", 0.95);
       } catch (error) {
-        console.error('❌ Error loading image:', error);
-        setLoadingState('Error al cargar la imagen');
+        console.error("❌ Error loading image:", error);
+        setLoadingState("Error al cargar la imagen");
 
         // Fallback
-        const { loadImageWithProxy } = await import('@/utils/imageLoader');
+        const { loadImageWithProxy } = await import("@/utils/imageLoader");
         const img = await loadImageWithProxy(imageUrl);
 
         setImageDimensions({ width: img.width, height: img.height });
@@ -130,12 +124,12 @@ export default function ImageBlur({
   useEffect(() => {
     const loadModels = async () => {
       try {
-        console.log('🔄 Cargando modelos de detección facial...');
+        console.log("🔄 Cargando modelos de detección facial...");
 
         // Intentar cargar desde local primero, luego desde CDN
         const MODEL_URLS = [
-          '/models', // Local: public/models
-          'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model', // CDN fallback
+          "/models", // Local: public/models
+          "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model", // CDN fallback
         ];
 
         let modelsLoaded = false;
@@ -162,11 +156,11 @@ export default function ImageBlur({
         if (modelsLoaded) {
           setModelsLoaded(true);
         } else {
-          console.error('❌ No se pudieron cargar los modelos de ninguna fuente:', lastError);
+          console.error("❌ No se pudieron cargar los modelos de ninguna fuente:", lastError);
           setModelsLoaded(false);
         }
       } catch (error) {
-        console.error('❌ Error general cargando modelos de face-api:', error);
+        console.error("❌ Error general cargando modelos de face-api:", error);
         setModelsLoaded(false);
       }
     };
@@ -177,34 +171,37 @@ export default function ImageBlur({
   // Detectar caras automáticamente
   const detectFaces = async () => {
     if (!imageRef.current || !imageLoaded) {
-      console.error('❌ Imagen no cargada');
+      console.error("❌ Imagen no cargada");
       return;
     }
 
     if (!modelsLoaded) {
-      setFaceDetectionStatus('Error: Modelos de detección no disponibles');
+      setFaceDetectionStatus("Error: Modelos de detección no disponibles");
       return;
     }
 
     setIsDetectingFaces(true);
-    setFaceDetectionStatus('Detectando caras...');
+    setFaceDetectionStatus("Detectando caras...");
 
     try {
-      console.log('🔍 Iniciando detección de caras...');
+      console.log("🔍 Iniciando detección de caras...");
 
       // Detectar caras con TinyFaceDetector (más rápido)
       const detections = await faceapi
-        .detectAllFaces(imageRef.current, new faceapi.TinyFaceDetectorOptions({
-          inputSize: 416,
-          scoreThreshold: 0.5
-        }))
+        .detectAllFaces(
+          imageRef.current,
+          new faceapi.TinyFaceDetectorOptions({
+            inputSize: 416,
+            scoreThreshold: 0.5,
+          })
+        )
         .withFaceLandmarks();
 
       console.log(`✅ Detectadas ${detections.length} cara(s)`);
 
       if (detections.length === 0) {
-        setFaceDetectionStatus('No se detectaron caras en la imagen');
-        setTimeout(() => setFaceDetectionStatus(''), 3000);
+        setFaceDetectionStatus("No se detectaron caras en la imagen");
+        setTimeout(() => setFaceDetectionStatus(""), 3000);
         return;
       }
 
@@ -221,19 +218,18 @@ export default function ImageBlur({
           y: Math.max(0, box.y - padding),
           width: Math.min(box.width + padding * 2, imageDimensions.width - box.x),
           height: Math.min(box.height + padding * 2, imageDimensions.height - box.y),
-          intensity: blurIntensity
+          intensity: blurIntensity,
         };
       });
 
       // Añadir las nuevas áreas a las existentes
       setBlurAreas([...blurAreas, ...newBlurAreas]);
       setFaceDetectionStatus(`✅ ${detections.length} cara(s) detectada(s) y marcadas`);
-      setTimeout(() => setFaceDetectionStatus(''), 3000);
-
+      setTimeout(() => setFaceDetectionStatus(""), 3000);
     } catch (error) {
-      console.error('❌ Error en detección de caras:', error);
-      setFaceDetectionStatus('Error al detectar caras. Puedes marcar manualmente.');
-      setTimeout(() => setFaceDetectionStatus(''), 3000);
+      console.error("❌ Error en detección de caras:", error);
+      setFaceDetectionStatus("Error al detectar caras. Puedes marcar manualmente.");
+      setTimeout(() => setFaceDetectionStatus(""), 3000);
     } finally {
       setIsDetectingFaces(false);
     }
@@ -244,11 +240,17 @@ export default function ImageBlur({
     const canvas = canvasRef.current;
     const img = imageRef.current;
 
-    if (!canvas || !img || !imageLoaded || imageDimensions.width === 0 || imageDimensions.height === 0) {
+    if (
+      !canvas ||
+      !img ||
+      !imageLoaded ||
+      imageDimensions.width === 0 ||
+      imageDimensions.height === 0
+    ) {
       return;
     }
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     // Calcular escala para ajustar la imagen al canvas
@@ -274,7 +276,7 @@ export default function ImageBlur({
         x: area.x * scale,
         y: area.y * scale,
         width: area.width * scale,
-        height: area.height * scale
+        height: area.height * scale,
       };
 
       // Guardar contexto
@@ -284,15 +286,21 @@ export default function ImageBlur({
       ctx.filter = `blur(${blurIntensity}px)`;
       ctx.drawImage(
         canvas,
-        scaledArea.x, scaledArea.y, scaledArea.width, scaledArea.height,
-        scaledArea.x, scaledArea.y, scaledArea.width, scaledArea.height
+        scaledArea.x,
+        scaledArea.y,
+        scaledArea.width,
+        scaledArea.height,
+        scaledArea.x,
+        scaledArea.y,
+        scaledArea.width,
+        scaledArea.height
       );
 
       // Restaurar contexto
       ctx.restore();
 
       // Dibujar borde del área difuminada
-      ctx.strokeStyle = '#ef4444';
+      ctx.strokeStyle = "#ef4444";
       ctx.lineWidth = 2;
       ctx.setLineDash([5, 5]);
       ctx.strokeRect(scaledArea.x, scaledArea.y, scaledArea.width, scaledArea.height);
@@ -310,18 +318,18 @@ export default function ImageBlur({
         x: x * scale,
         y: y * scale,
         width: width * scale,
-        height: height * scale
+        height: height * scale,
       };
 
       // Borde de selección
-      ctx.strokeStyle = '#3b82f6';
+      ctx.strokeStyle = "#3b82f6";
       ctx.lineWidth = 2;
       ctx.setLineDash([5, 5]);
       ctx.strokeRect(scaledDrawing.x, scaledDrawing.y, scaledDrawing.width, scaledDrawing.height);
       ctx.setLineDash([]);
 
       // Overlay semi-transparente
-      ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
+      ctx.fillStyle = "rgba(59, 130, 246, 0.1)";
       ctx.fillRect(scaledDrawing.x, scaledDrawing.y, scaledDrawing.width, scaledDrawing.height);
     }
   };
@@ -333,14 +341,16 @@ export default function ImageBlur({
   }, [blurAreas, drawingArea, isDrawing, imageLoaded]);
 
   // Obtener coordenadas del mouse o touch
-  const getMousePos = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  const getMousePos = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
+  ) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
 
     const rect = canvas.getBoundingClientRect();
 
     let clientX, clientY;
-    if ('touches' in e) {
+    if ("touches" in e) {
       if (e.touches.length > 0) {
         clientX = e.touches[0].clientX;
         clientY = e.touches[0].clientY;
@@ -357,7 +367,7 @@ export default function ImageBlur({
 
     return {
       x: (clientX - rect.left) / canvasScale,
-      y: (clientY - rect.top) / canvasScale
+      y: (clientY - rect.top) / canvasScale,
     };
   };
 
@@ -368,7 +378,7 @@ export default function ImageBlur({
       startX: pos.x,
       startY: pos.y,
       currentX: pos.x,
-      currentY: pos.y
+      currentY: pos.y,
     });
   };
 
@@ -379,7 +389,7 @@ export default function ImageBlur({
     setDrawingArea({
       ...drawingArea,
       currentX: pos.x,
-      currentY: pos.y
+      currentY: pos.y,
     });
   };
 
@@ -399,7 +409,7 @@ export default function ImageBlur({
         y: Math.max(0, Math.min(y, imageDimensions.height)),
         width: Math.min(width, imageDimensions.width - x),
         height: Math.min(height, imageDimensions.height - y),
-        intensity: blurIntensity
+        intensity: blurIntensity,
       };
 
       setBlurAreas([...blurAreas, newBlurArea]);
@@ -418,7 +428,7 @@ export default function ImageBlur({
       startX: pos.x,
       startY: pos.y,
       currentX: pos.x,
-      currentY: pos.y
+      currentY: pos.y,
     });
   };
 
@@ -430,7 +440,7 @@ export default function ImageBlur({
     setDrawingArea({
       ...drawingArea,
       currentX: pos.x,
-      currentY: pos.y
+      currentY: pos.y,
     });
   };
 
@@ -457,13 +467,13 @@ export default function ImageBlur({
 
     try {
       // Crear canvas temporal con dimensiones originales
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = imageDimensions.width;
       canvas.height = imageDimensions.height;
 
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       if (!ctx) {
-        console.error('No se pudo crear contexto del canvas');
+        console.error("No se pudo crear contexto del canvas");
         return undefined;
       }
 
@@ -476,10 +486,10 @@ export default function ImageBlur({
         const imageData = ctx.getImageData(area.x, area.y, area.width, area.height);
 
         // Crear canvas temporal para el área
-        const tempCanvas = document.createElement('canvas');
+        const tempCanvas = document.createElement("canvas");
         tempCanvas.width = area.width;
         tempCanvas.height = area.height;
-        const tempCtx = tempCanvas.getContext('2d');
+        const tempCtx = tempCanvas.getContext("2d");
 
         if (!tempCtx) return;
 
@@ -495,19 +505,23 @@ export default function ImageBlur({
 
       // Convertir canvas a blob URL
       return new Promise((resolve) => {
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const url = URL.createObjectURL(blob);
-            console.log('✅ Imagen con blur generada:', url);
-            resolve(url);
-          } else {
-            console.error('❌ Error generando blob de imagen');
-            resolve(undefined);
-          }
-        }, 'image/jpeg', 0.95);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const url = URL.createObjectURL(blob);
+              console.log("✅ Imagen con blur generada:", url);
+              resolve(url);
+            } else {
+              console.error("❌ Error generando blob de imagen");
+              resolve(undefined);
+            }
+          },
+          "image/jpeg",
+          0.95
+        );
       });
     } catch (error) {
-      console.error('❌ Error generando imagen con blur:', error);
+      console.error("❌ Error generando imagen con blur:", error);
       return undefined;
     }
   };
@@ -544,10 +558,12 @@ export default function ImageBlur({
           🔒 Protege la privacidad difuminando caras, matrículas u otras áreas sensibles
         </p>
         <p className="text-blue-700 text-sm">
-          • Usa "Detectar Caras Automáticamente" para encontrar y marcar caras en la imagen<br />
-          • O haz clic y arrastra manualmente para dibujar áreas a difuminar<br />
-          • Puedes combinar ambos métodos y añadir múltiples áreas<br />
-          • Si no necesitas difuminar nada, haz clic en "Continuar sin difuminar"
+          • Usa "Detectar Caras Automáticamente" para encontrar y marcar caras en la imagen
+          <br />
+          • O haz clic y arrastra manualmente para dibujar áreas a difuminar
+          <br />
+          • Puedes combinar ambos métodos y añadir múltiples áreas
+          <br />• Si no necesitas difuminar nada, haz clic en "Continuar sin difuminar"
         </p>
       </div>
 
@@ -558,9 +574,7 @@ export default function ImageBlur({
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
               <p className="text-gray-500">{loadingState}</p>
               {retryAttempt > 0 && (
-                <p className="text-xs text-gray-400 mt-2">
-                  Esto puede tomar unos segundos...
-                </p>
+                <p className="text-xs text-gray-400 mt-2">Esto puede tomar unos segundos...</p>
               )}
             </div>
           </div>
@@ -606,19 +620,19 @@ export default function ImageBlur({
 
             {/* Estado de la detección */}
             {faceDetectionStatus && (
-              <p className={`text-sm ${
-                faceDetectionStatus.includes('Error') || faceDetectionStatus.includes('No se')
-                  ? 'text-orange-600'
-                  : 'text-green-600'
-              } font-medium`}>
+              <p
+                className={`text-sm ${
+                  faceDetectionStatus.includes("Error") || faceDetectionStatus.includes("No se")
+                    ? "text-orange-600"
+                    : "text-green-600"
+                } font-medium`}
+              >
                 {faceDetectionStatus}
               </p>
             )}
 
             {!modelsLoaded && !isDetectingFaces && (
-              <p className="text-xs text-gray-500">
-                Cargando modelos de detección...
-              </p>
+              <p className="text-xs text-gray-500">Cargando modelos de detección...</p>
             )}
           </div>
 
@@ -663,7 +677,7 @@ export default function ImageBlur({
               Procesando...
             </>
           ) : (
-            'Continuar sin difuminar'
+            "Continuar sin difuminar"
           )}
         </button>
         <button
@@ -689,9 +703,8 @@ export default function ImageBlur({
         <div className="text-sm text-gray-600 text-center max-w-md px-4">
           <p className="mb-1">
             {blurAreas.length === 0
-              ? 'Haz clic y arrastra sobre la imagen para marcar áreas a difuminar'
-              : `${blurAreas.length} área(s) marcada(s) para difuminar`
-            }
+              ? "Haz clic y arrastra sobre la imagen para marcar áreas a difuminar"
+              : `${blurAreas.length} área(s) marcada(s) para difuminar`}
           </p>
           <p className="text-xs text-gray-500">
             Las áreas difuminadas aparecen con borde rojo punteado

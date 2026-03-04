@@ -5,13 +5,7 @@
 
 "use client";
 
-import {
-  Download,
-  ChevronLeft,
-  ChevronRight,
-  ArrowLeft,
-  FileDown,
-} from "lucide-react";
+import { Download, ChevronLeft, ChevronRight, ArrowLeft, FileDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";

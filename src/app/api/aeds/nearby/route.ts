@@ -91,70 +91,71 @@ export async function GET(request: NextRequest) {
     const distanceMap = new Map(nearbyAeds.map((a) => [a.id, Number(a.distance_km)]));
 
     // Fetch full related data only for the matched AEDs
-    const fullAeds = aedIds.length > 0
-      ? await prisma.aed.findMany({
-          where: { id: { in: aedIds } },
-          select: {
-            id: true,
-            code: true,
-            name: true,
-            establishment_type: true,
-            latitude: true,
-            longitude: true,
-            published_at: true,
-            publication_mode: true,
-            location: {
-              select: {
-                street_type: true,
-                street_name: true,
-                street_number: true,
-                postal_code: true,
-                access_instructions: true,
-                district_name: true,
-                neighborhood_name: true,
-                city_name: true,
-                location_details: true,
+    const fullAeds =
+      aedIds.length > 0
+        ? await prisma.aed.findMany({
+            where: { id: { in: aedIds } },
+            select: {
+              id: true,
+              code: true,
+              name: true,
+              establishment_type: true,
+              latitude: true,
+              longitude: true,
+              published_at: true,
+              publication_mode: true,
+              location: {
+                select: {
+                  street_type: true,
+                  street_name: true,
+                  street_number: true,
+                  postal_code: true,
+                  access_instructions: true,
+                  district_name: true,
+                  neighborhood_name: true,
+                  city_name: true,
+                  location_details: true,
+                },
+              },
+              schedule: {
+                select: {
+                  has_24h_surveillance: true,
+                  has_restricted_access: true,
+                  weekday_opening: true,
+                  weekday_closing: true,
+                  saturday_opening: true,
+                  saturday_closing: true,
+                  sunday_opening: true,
+                  sunday_closing: true,
+                },
+              },
+              responsible: {
+                select: {
+                  name: true,
+                  email: true,
+                  phone: true,
+                },
+              },
+              images: {
+                select: {
+                  id: true,
+                  type: true,
+                  original_url: true,
+                  processed_url: true,
+                  thumbnail_url: true,
+                  order: true,
+                },
+                where: {
+                  is_verified: true,
+                },
+                orderBy: {
+                  order: "asc",
+                },
+                take: 5,
               },
             },
-            schedule: {
-              select: {
-                has_24h_surveillance: true,
-                has_restricted_access: true,
-                weekday_opening: true,
-                weekday_closing: true,
-                saturday_opening: true,
-                saturday_closing: true,
-                sunday_opening: true,
-                sunday_closing: true,
-              },
-            },
-            responsible: {
-              select: {
-                name: true,
-                email: true,
-                phone: true,
-              },
-            },
-            images: {
-              select: {
-                id: true,
-                type: true,
-                original_url: true,
-                processed_url: true,
-                thumbnail_url: true,
-                order: true,
-              },
-              where: {
-                is_verified: true,
-              },
-              orderBy: {
-                order: "asc",
-              },
-              take: 5,
-            },
-          },
-        })
-      : [];
+          })
+        : [];
 
     // Re-sort by PostGIS distance and apply publication filter
     const sortedAeds = fullAeds.sort(

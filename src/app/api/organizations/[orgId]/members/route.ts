@@ -25,10 +25,7 @@ export async function GET(
     });
 
     // Solo ADMIN global o miembros con can_manage_members pueden ver la lista de miembros
-    if (
-      !membership?.can_manage_members &&
-      user.role !== "ADMIN"
-    ) {
+    if (!membership?.can_manage_members && user.role !== "ADMIN") {
       return NextResponse.json(
         { error: "No tienes permisos para ver los miembros" },
         { status: 403 }
@@ -62,9 +59,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error fetching organization members:", error);
-    return NextResponse.json(
-      { error: "Error al obtener miembros" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Error al obtener miembros" }, { status: 500 });
   }
 }

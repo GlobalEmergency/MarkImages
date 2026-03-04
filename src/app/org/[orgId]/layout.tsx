@@ -16,8 +16,7 @@ export default function OrgLayout({
   params: Promise<{ orgId: string }>;
 }) {
   const { user, loading } = useAuth();
-  const { selectedOrganization, organizations, setSelectedOrganization } =
-    useOrganization();
+  const { selectedOrganization, organizations, setSelectedOrganization } = useOrganization();
   const router = useRouter();
   const resolvedParams = use(params);
   const orgId = resolvedParams.orgId;

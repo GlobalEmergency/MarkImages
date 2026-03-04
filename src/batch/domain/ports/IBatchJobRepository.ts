@@ -103,7 +103,7 @@ export interface IBatchJobRepository {
   /**
    * Atomically acquire a lock on a job by transitioning it from WAITING to IN_PROGRESS
    * Returns true if lock was acquired, false if job is not in WAITING state
-   * 
+   *
    * This prevents race conditions when multiple processes try to process the same job
    */
   tryAcquireJobLock(jobId: string): Promise<boolean>;

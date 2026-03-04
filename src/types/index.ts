@@ -3,5 +3,5 @@
  * Re-exports all types for easy imports
  */
 
-export * from './aed';
-export * from './auth';
+export * from "./aed";
+export * from "./auth";

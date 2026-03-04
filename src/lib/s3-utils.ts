@@ -111,14 +111,14 @@ export function parseS3Url(url: string): {
  */
 export function buildS3Url(bucket: string, region: string, key: string): string {
   const cdnBaseUrl = process.env.CDN_BASE_URL;
-  
+
   if (cdnBaseUrl) {
     // Use CDN (CloudFront or other CDN)
     // Remove trailing slash if present
-    const baseUrl = cdnBaseUrl.endsWith('/') ? cdnBaseUrl.slice(0, -1) : cdnBaseUrl;
+    const baseUrl = cdnBaseUrl.endsWith("/") ? cdnBaseUrl.slice(0, -1) : cdnBaseUrl;
     return `${baseUrl}/${key}`;
   }
-  
+
   // Fallback to S3 direct URL
   return `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
 }

@@ -33,18 +33,14 @@ export class InternalGeocodingService implements IGeocodingService {
     // Permitir inyectar URL para testing (Dependency Injection)
     // En servidor (batch jobs), usar localhost. En producción, usar la URL del entorno.
     this.baseUrl =
-      baseUrl ||
-      process.env.NEXT_PUBLIC_APP_URL ||
-      `http://localhost:${process.env.PORT || 3000}`;
+      baseUrl || process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT || 3000}`;
   }
 
   async geocodeAddress(address: string): Promise<GeocodingResult | null> {
     try {
       // Validar que la dirección no esté vacía o sea solo "España"
       if (!address || address.trim() === "" || address.trim() === "España") {
-        console.warn(
-          `[InternalGeocodingService] Invalid or empty address: "${address}"`
-        );
+        console.warn(`[InternalGeocodingService] Invalid or empty address: "${address}"`);
         return null;
       }
 
@@ -71,10 +67,7 @@ export class InternalGeocodingService implements IGeocodingService {
     }
   }
 
-  async reverseGeocode(
-    latitude: number,
-    longitude: number
-  ): Promise<GeocodingResult | null> {
+  async reverseGeocode(latitude: number, longitude: number): Promise<GeocodingResult | null> {
     try {
       // Usar Google Geocoding API directamente para reverse geocoding
       const googleApiKey = process.env.GOOGLE_MAPS_API_KEY;
@@ -90,9 +83,7 @@ export class InternalGeocodingService implements IGeocodingService {
       const response = await fetch(url);
 
       if (!response.ok) {
-        console.error(
-          `[InternalGeocodingService] Reverse geocoding failed: ${response.status}`
-        );
+        console.error(`[InternalGeocodingService] Reverse geocoding failed: ${response.status}`);
         return null;
       }
 
@@ -117,8 +108,7 @@ export class InternalGeocodingService implements IGeocodingService {
       street_name: result.address.road,
       street_number: result.address.house_number,
       postal_code: result.address.postcode,
-      city_name:
-        result.address.city || result.address.town || result.address.municipality,
+      city_name: result.address.city || result.address.town || result.address.municipality,
     };
 
     return {
@@ -135,25 +125,18 @@ export class InternalGeocodingService implements IGeocodingService {
   private mapGoogleResultToGeocodingResult(googleResult: any): GeocodingResult {
     const components = googleResult.address_components || [];
 
-    const streetNumber = components.find((c: any) =>
-      c.types.includes("street_number")
-    )?.long_name;
+    const streetNumber = components.find((c: any) => c.types.includes("street_number"))?.long_name;
     const route = components.find((c: any) => c.types.includes("route"))?.long_name;
-    const postalCode = components.find((c: any) =>
-      c.types.includes("postal_code")
-    )?.long_name;
+    const postalCode = components.find((c: any) => c.types.includes("postal_code"))?.long_name;
     const locality =
       components.find((c: any) => c.types.includes("locality"))?.long_name ||
-      components.find((c: any) => c.types.includes("administrative_area_level_2"))
-        ?.long_name;
+      components.find((c: any) => c.types.includes("administrative_area_level_2"))?.long_name;
 
     // Extraer distrito y barrio de Google (administrative_area_level_3, administrative_area_level_4)
     const district = components.find((c: any) =>
       c.types.includes("administrative_area_level_3")
     )?.long_name;
-    const neighborhood = components.find((c: any) =>
-      c.types.includes("neighborhood")
-    )?.long_name;
+    const neighborhood = components.find((c: any) => c.types.includes("neighborhood"))?.long_name;
 
     const address: GeocodingAddress = {
       street_name: route,

@@ -74,11 +74,14 @@ export default function ImportPreviewTable({ previewRecords }: ImportPreviewTabl
               <div className="text-sm text-gray-700 font-medium">
                 {String(data.proposedName || "Sin nombre")}
               </div>
-              {data.streetName !== undefined && data.streetName !== null && data.streetName !== "" && (
-                <div className="text-sm text-gray-600">
-                  {String(data.streetType || "")} {String(data.streetName)} {String(data.streetNumber || "")}
-                </div>
-              )}
+              {data.streetName !== undefined &&
+                data.streetName !== null &&
+                data.streetName !== "" && (
+                  <div className="text-sm text-gray-600">
+                    {String(data.streetType || "")} {String(data.streetName)}{" "}
+                    {String(data.streetNumber || "")}
+                  </div>
+                )}
             </div>
             {isExpanded ? (
               <ChevronUp className="w-5 h-5 text-gray-400 flex-shrink-0" />
@@ -115,9 +118,7 @@ export default function ImportPreviewTable({ previewRecords }: ImportPreviewTabl
                   return (
                     <div key={key} className="flex flex-col">
                       <span className="text-gray-500 text-xs">{key}:</span>
-                      <span className="text-gray-900 font-medium break-words">
-                        {String(value)}
-                      </span>
+                      <span className="text-gray-900 font-medium break-words">{String(value)}</span>
                     </div>
                   );
                 })}
@@ -202,7 +203,9 @@ export default function ImportPreviewTable({ previewRecords }: ImportPreviewTabl
       <div className="p-4 max-h-96 overflow-y-auto">
         {currentRecords.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            No hay registros {activeTab === "valid" ? "válidos" : activeTab === "invalid" ? "inválidos" : "omitidos"} para mostrar
+            No hay registros{" "}
+            {activeTab === "valid" ? "válidos" : activeTab === "invalid" ? "inválidos" : "omitidos"}{" "}
+            para mostrar
           </div>
         ) : (
           <div>{currentRecords.map(renderRecordCard)}</div>

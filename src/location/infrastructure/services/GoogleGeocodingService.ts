@@ -42,12 +42,11 @@ export class GoogleGeocodingService implements IGeocodingService {
     this.apiKey = apiKey || process.env.GOOGLE_MAPS_API_KEY || "";
 
     if (!this.apiKey) {
-      console.warn(
-        "[GoogleGeocodingService] ⚠️ No API key provided. Geocoding will not work."
-      );
+      console.warn("[GoogleGeocodingService] ⚠️ No API key provided. Geocoding will not work.");
     } else {
       // Log que el servicio está configurado (sin mostrar la key completa)
-      const maskedKey = this.apiKey.substring(0, 8) + "..." + this.apiKey.substring(this.apiKey.length - 4);
+      const maskedKey =
+        this.apiKey.substring(0, 8) + "..." + this.apiKey.substring(this.apiKey.length - 4);
       console.log(`[GoogleGeocodingService] ✅ Initialized with API key: ${maskedKey}`);
     }
   }
@@ -64,9 +63,7 @@ export class GoogleGeocodingService implements IGeocodingService {
     try {
       // Validate address
       if (!address || address.trim() === "" || address.trim() === "España") {
-        console.warn(
-          `[GoogleGeocodingService] Invalid or empty address: "${address}"`
-        );
+        console.warn(`[GoogleGeocodingService] Invalid or empty address: "${address}"`);
         return null;
       }
 
@@ -87,9 +84,7 @@ export class GoogleGeocodingService implements IGeocodingService {
 
       if (data.status !== "OK") {
         if (data.status === "ZERO_RESULTS") {
-          console.warn(
-            `[GoogleGeocodingService] No results for address: ${address}`
-          );
+          console.warn(`[GoogleGeocodingService] No results for address: ${address}`);
         } else {
           console.error(
             `[GoogleGeocodingService] API error: ${data.status} - ${data.error_message || "Unknown error"}`
@@ -99,9 +94,7 @@ export class GoogleGeocodingService implements IGeocodingService {
       }
 
       if (!data.results || data.results.length === 0) {
-        console.warn(
-          `[GoogleGeocodingService] Empty results for address: ${address}`
-        );
+        console.warn(`[GoogleGeocodingService] Empty results for address: ${address}`);
         return null;
       }
 
@@ -120,10 +113,7 @@ export class GoogleGeocodingService implements IGeocodingService {
   /**
    * Reverse geocoding: coordinates -> address
    */
-  async reverseGeocode(
-    latitude: number,
-    longitude: number
-  ): Promise<GeocodingResult | null> {
+  async reverseGeocode(latitude: number, longitude: number): Promise<GeocodingResult | null> {
     if (!this.apiKey) {
       console.error("[GoogleGeocodingService] No API key configured");
       return null;
@@ -132,9 +122,7 @@ export class GoogleGeocodingService implements IGeocodingService {
     try {
       const url = `${this.baseUrl}?latlng=${latitude},${longitude}&key=${this.apiKey}&language=es&region=es`;
 
-      console.log(
-        `[GoogleGeocodingService] Reverse geocoding: ${latitude}, ${longitude}`
-      );
+      console.log(`[GoogleGeocodingService] Reverse geocoding: ${latitude}, ${longitude}`);
 
       const response = await fetch(url);
 
@@ -169,10 +157,7 @@ export class GoogleGeocodingService implements IGeocodingService {
 
       return this.mapGoogleResult(data.results[0]);
     } catch (error) {
-      console.error(
-        `[GoogleGeocodingService] Error in reverse geocoding:`,
-        error
-      );
+      console.error(`[GoogleGeocodingService] Error in reverse geocoding:`, error);
       return null;
     }
   }
@@ -190,11 +175,9 @@ export class GoogleGeocodingService implements IGeocodingService {
     const streetNumber = getComponent("street_number");
     const route = getComponent("route");
     const postalCode = getComponent("postal_code");
-    const locality =
-      getComponent("locality") || getComponent("administrative_area_level_2");
+    const locality = getComponent("locality") || getComponent("administrative_area_level_2");
     const district = getComponent("administrative_area_level_3");
-    const neighborhood =
-      getComponent("neighborhood") || getComponent("sublocality_level_1");
+    const neighborhood = getComponent("neighborhood") || getComponent("sublocality_level_1");
 
     // Try to extract street type from route (e.g., "Calle de Alcalá" -> "Calle")
     let streetType: string | undefined;

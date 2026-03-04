@@ -42,9 +42,7 @@ export default function OrganizationSelector({
   }
 
   // Multiple organizations: show dropdown
-  const selectedOrg = selectedOrgId
-    ? organizations.find((org) => org.id === selectedOrgId)
-    : null;
+  const selectedOrg = selectedOrgId ? organizations.find((org) => org.id === selectedOrgId) : null;
 
   return (
     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

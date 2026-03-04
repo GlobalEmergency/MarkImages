@@ -39,7 +39,7 @@ export async function compressImageFile(
     };
 
     reader.onerror = () => {
-      reject(new Error('Error leyendo el archivo'));
+      reject(new Error("Error leyendo el archivo"));
     };
 
     reader.readAsDataURL(file);
@@ -75,13 +75,13 @@ export async function compressImageDataUrl(
         }
 
         // Crear canvas con las nuevas dimensiones
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement("canvas");
         canvas.width = width;
         canvas.height = height;
 
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext("2d");
         if (!ctx) {
-          reject(new Error('No se pudo crear contexto del canvas'));
+          reject(new Error("No se pudo crear contexto del canvas"));
           return;
         }
 
@@ -90,7 +90,7 @@ export async function compressImageDataUrl(
 
         // Comprimir iterativamente hasta alcanzar el tamaño deseado
         let quality = opts.quality;
-        let compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        let compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
 
         // Calcular tamaño en MB
         const sizeInMB = (compressedDataUrl.length * 0.75) / (1024 * 1024);
@@ -102,10 +102,12 @@ export async function compressImageDataUrl(
 
           while (sizeInMB > opts.maxSizeMB && quality > 0.5 && attempts < maxAttempts) {
             quality -= 0.1;
-            compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
             const newSizeInMB = (compressedDataUrl.length * 0.75) / (1024 * 1024);
 
-            console.log(`🔄 Intento ${attempts + 1}: Calidad ${quality.toFixed(2)}, Tamaño: ${newSizeInMB.toFixed(2)}MB`);
+            console.log(
+              `🔄 Intento ${attempts + 1}: Calidad ${quality.toFixed(2)}, Tamaño: ${newSizeInMB.toFixed(2)}MB`
+            );
 
             if (newSizeInMB <= opts.maxSizeMB) {
               break;
@@ -116,7 +118,9 @@ export async function compressImageDataUrl(
         }
 
         const finalSizeInMB = (compressedDataUrl.length * 0.75) / (1024 * 1024);
-        console.log(`✅ Imagen comprimida: ${width}x${height}, Calidad: ${quality.toFixed(2)}, Tamaño: ${finalSizeInMB.toFixed(2)}MB`);
+        console.log(
+          `✅ Imagen comprimida: ${width}x${height}, Calidad: ${quality.toFixed(2)}, Tamaño: ${finalSizeInMB.toFixed(2)}MB`
+        );
 
         resolve(compressedDataUrl);
       } catch (error) {
@@ -125,7 +129,7 @@ export async function compressImageDataUrl(
     };
 
     img.onerror = () => {
-      reject(new Error('Error cargando la imagen'));
+      reject(new Error("Error cargando la imagen"));
     };
 
     img.src = dataUrl;

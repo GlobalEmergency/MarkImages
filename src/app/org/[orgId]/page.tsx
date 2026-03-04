@@ -64,12 +64,8 @@ export default function OrgDashboard({ params }: { params: Promise<{ orgId: stri
     <div className="px-4 py-6 space-y-6">
       {/* Welcome Section */}
       <div className="space-y-2">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-          ¡Hola! 👋
-        </h1>
-        <p className="text-gray-600">
-          Panel de control de {selectedOrganization?.name}
-        </p>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">¡Hola! 👋</h1>
+        <p className="text-gray-600">Panel de control de {selectedOrganization?.name}</p>
       </div>
 
       {/* Stats Cards Grid */}
@@ -81,9 +77,7 @@ export default function OrgDashboard({ params }: { params: Promise<{ orgId: stri
               <MapPin className="w-5 h-5 text-blue-600" />
             </div>
           </div>
-          <p className="text-2xl md:text-3xl font-bold text-gray-900">
-            {stats?.total_deas || 0}
-          </p>
+          <p className="text-2xl md:text-3xl font-bold text-gray-900">{stats?.total_deas || 0}</p>
           <p className="text-sm text-gray-600 mt-1">DEAs totales</p>
         </div>
 
@@ -141,9 +135,7 @@ export default function OrgDashboard({ params }: { params: Promise<{ orgId: stri
               <p className="text-2xl font-bold text-gray-900">
                 {stats.verifications_this_month} verificaciones
               </p>
-              <p className="text-sm text-gray-600 mt-1">
-                ¡Excelente trabajo del equipo! 🎉
-              </p>
+              <p className="text-sm text-gray-600 mt-1">¡Excelente trabajo del equipo! 🎉</p>
             </div>
           </div>
         </div>

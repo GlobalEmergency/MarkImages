@@ -6,12 +6,8 @@ import { useState } from "react";
 import { useOrganization } from "@/contexts/OrganizationContext";
 
 export default function OrgSelector() {
-  const {
-    selectedOrganization,
-    setSelectedOrganization,
-    organizations,
-    hasOrganizations,
-  } = useOrganization();
+  const { selectedOrganization, setSelectedOrganization, organizations, hasOrganizations } =
+    useOrganization();
   const [isOpen, setIsOpen] = useState(false);
 
   if (!hasOrganizations) {
@@ -29,9 +25,7 @@ export default function OrgSelector() {
           <p className="text-sm font-semibold text-gray-900 truncate">
             {selectedOrganization?.name}
           </p>
-          <p className="text-xs text-gray-600 truncate">
-            {selectedOrganization?.type}
-          </p>
+          <p className="text-xs text-gray-600 truncate">{selectedOrganization?.type}</p>
         </div>
       </div>
     );
@@ -51,9 +45,7 @@ export default function OrgSelector() {
           <p className="text-sm font-semibold text-gray-900 truncate">
             {selectedOrganization?.name}
           </p>
-          <p className="text-xs text-gray-600 truncate">
-            {selectedOrganization?.type}
-          </p>
+          <p className="text-xs text-gray-600 truncate">{selectedOrganization?.type}</p>
         </div>
         <ChevronDown
           className={`w-5 h-5 text-gray-500 transition-transform flex-shrink-0 ${
@@ -66,10 +58,7 @@ export default function OrgSelector() {
       {isOpen && (
         <>
           {/* Overlay para cerrar al hacer click fuera */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
 
           {/* Menú dropdown */}
           <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50 max-h-[60vh] overflow-y-auto">
@@ -102,9 +91,7 @@ export default function OrgSelector() {
                         {org.type} • {org.role}
                       </p>
                     </div>
-                    {isSelected && (
-                      <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                    )}
+                    {isSelected && <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />}
                   </button>
                 );
               })}

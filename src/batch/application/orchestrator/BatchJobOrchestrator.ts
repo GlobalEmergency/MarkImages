@@ -110,7 +110,9 @@ export class BatchJobOrchestrator {
     const processor = this.getProcessor(job.type);
 
     // Initialize processor (get total count, etc.)
-    console.log(`🔧 [Orchestrator] Initializing processor for job ${jobId} (type: ${job.type}, status: ${job.status})`);
+    console.log(
+      `🔧 [Orchestrator] Initializing processor for job ${jobId} (type: ${job.type}, status: ${job.status})`
+    );
     const initResult = await processor.initialize(job.config);
 
     if (!initResult.success) {
@@ -131,7 +133,9 @@ export class BatchJobOrchestrator {
       };
     }
 
-    console.log(`✅ [Orchestrator] Initialization successful for job ${jobId} (totalRecords: ${initResult.totalRecords})`);
+    console.log(
+      `✅ [Orchestrator] Initialization successful for job ${jobId} (totalRecords: ${initResult.totalRecords})`
+    );
 
     // Update job with total records
     job.setTotalRecords(initResult.totalRecords);
@@ -293,17 +297,19 @@ export class BatchJobOrchestrator {
 
       // Recalculate progress based on actual created records
       const updatedProgress = job.progress.withProcessed(createdCount);
-      
+
       // Manually update successful records count by incrementing the difference
       let progress = updatedProgress;
       const diff = createdCount - currentProgress;
       for (let i = 0; i < diff; i++) {
         progress = progress.incrementSuccess();
       }
-      
+
       job.updateProgress(progress);
 
-      console.log(`✅ [Orchestrator] Progress recovered: ${createdCount}/${job.progress.totalRecords} records`);
+      console.log(
+        `✅ [Orchestrator] Progress recovered: ${createdCount}/${job.progress.totalRecords} records`
+      );
     } else if (createdCount === currentProgress) {
       console.log(`✅ [Orchestrator] Progress already in sync: ${createdCount} records`);
     } else {
@@ -507,13 +513,13 @@ export class BatchJobOrchestrator {
         // All done - finalize
         const finalResult = await processor.finalize(job);
         job.updateResult(finalResult);
-        
+
         // If job is in WAITING state, transition to IN_PROGRESS before completing
         // to avoid invalid state transition error
         if (job.status === JobStatus.WAITING) {
           job.continueProcessing();
         }
-        
+
         job.complete();
         await processor.cleanup(job);
       } else if (!chunkResult.shouldContinue) {

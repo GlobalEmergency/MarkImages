@@ -46,9 +46,7 @@ export class ParseCsvPreviewUseCase {
       const rawHeaders = this.parseRow(headerLine, delimiter);
 
       // 🔧 FIX: Filtrar headers vacíos y limpiar espacios
-      const headers = rawHeaders
-        .map((h) => h.trim())
-        .filter((h) => h.length > 0);
+      const headers = rawHeaders.map((h) => h.trim()).filter((h) => h.length > 0);
 
       if (headers.length === 0) {
         return {
@@ -62,7 +60,7 @@ export class ParseCsvPreviewUseCase {
       const dataLines = lines.slice(1);
       const totalRows = dataLines.length;
       const sampleLines = dataLines.slice(0, sampleSize);
-      
+
       // 🔧 FIX: Normalizar filas al mismo número de columnas que headers válidos
       const sampleRows = sampleLines.map((line) => {
         const rawRow = this.parseRow(line, delimiter);

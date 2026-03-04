@@ -79,7 +79,9 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
         // Write to temp file
         await fs.promises.writeFile(tempPath, content);
 
-        console.log(`✅ [AedCsvImportProcessor] CSV downloaded to temp file: ${tempPath} (${content.length} bytes)`);
+        console.log(
+          `✅ [AedCsvImportProcessor] CSV downloaded to temp file: ${tempPath} (${content.length} bytes)`
+        );
 
         // Store for cleanup later
         this.tempFilePath = tempPath;
@@ -87,7 +89,9 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
         return tempPath;
       } catch (error) {
         console.error(`❌ [AedCsvImportProcessor] Failed to download CSV from S3:`, error);
-        throw new Error(`Failed to download CSV from S3: ${error instanceof Error ? error.message : "Unknown error"}`);
+        throw new Error(
+          `Failed to download CSV from S3: ${error instanceof Error ? error.message : "Unknown error"}`
+        );
       }
     }
 
@@ -105,7 +109,10 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
         console.log(`🗑️ [AedCsvImportProcessor] Temporary file deleted: ${this.tempFilePath}`);
         this.tempFilePath = undefined;
       } catch (error) {
-        console.warn(`⚠️ [AedCsvImportProcessor] Failed to delete temp file ${this.tempFilePath}:`, error);
+        console.warn(
+          `⚠️ [AedCsvImportProcessor] Failed to delete temp file ${this.tempFilePath}:`,
+          error
+        );
       }
     }
   }
@@ -488,7 +495,7 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
    * 1. Por ID (si el usuario lo proporciona)
    * 2. Por code
    * 3. Por external_reference
-   * 
+   *
    * Esto permite re-ejecutar importaciones de forma segura
    */
   private async checkDuplicate(
@@ -629,14 +636,14 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
     // 2. CREATE SCHEDULE (if schedule data exists)
     // ========================================
     let scheduleId: string | undefined = undefined;
-    
-    const hasScheduleData = 
-      data.is24x7 || 
-      data.openingMonFri || 
-      data.closingMonFri || 
-      data.openingSat || 
-      data.closingSat || 
-      data.openingSun || 
+
+    const hasScheduleData =
+      data.is24x7 ||
+      data.openingMonFri ||
+      data.closingMonFri ||
+      data.openingSat ||
+      data.closingSat ||
+      data.openingSun ||
       data.closingSun ||
       data.has24hSurveillance;
 
@@ -663,9 +670,9 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
     // ========================================
     let responsibleId: string | undefined = undefined;
 
-    const hasResponsibleData = 
-      data.responsibleName || 
-      data.responsibleEmail || 
+    const hasResponsibleData =
+      data.responsibleName ||
+      data.responsibleEmail ||
       data.responsiblePhone ||
       data.ownership ||
       data.localOwnership;
@@ -701,39 +708,39 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
       const createdAed = await tx.aed.create({
         data: {
           id: aedId, // ← UUID pre-generado para que las imágenes puedan usarlo
-          
+
           // Código e identificadores
           code: data.code || null,
           external_reference: data.externalReference || null,
-          
+
           // Datos básicos
           name: data.proposedName,
           establishment_type: data.establishmentType || null,
-          
+
           // Coordenadas
           latitude,
           longitude,
           coordinates_precision: data.coordinatesPrecision || null,
-          
+
           // Relaciones
           location_id: location.id,
           schedule_id: scheduleId,
           responsible_id: responsibleId,
-          
+
           // Origen y trazabilidad
           source_origin: "CSV_IMPORT",
           source_details: `Importación CSV: ${config.filePath.split("/").pop()}`,
           batch_job_id: jobId, // ✅ Asignar batch_job_id para rastreo y recuperación
-          
+
           // Notas
           public_notes: data.publicNotes || data.freeComment || null,
-          
+
           // Estado inicial
           status: "DRAFT",
         },
         select: { id: true },
       });
-      
+
       return createdAed;
     });
 
@@ -774,8 +781,10 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
         try {
           // If use case is available, download and upload to S3
           if (this.downloadAndUploadImageUseCase) {
-            console.log(`📸 [AedCsvImportProcessor] Processing image ${index + 1}/${imageUrls.length} for AED ${aedId}`);
-            
+            console.log(
+              `📸 [AedCsvImportProcessor] Processing image ${index + 1}/${imageUrls.length} for AED ${aedId}`
+            );
+
             const s3Result = await this.downloadAndUploadImageUseCase.execute({
               url: img.url,
               aedId: aedId,
@@ -798,7 +807,9 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
               },
             });
 
-            console.log(`✅ [AedCsvImportProcessor] Image ${index + 1} uploaded to S3: ${s3Result.url}`);
+            console.log(
+              `✅ [AedCsvImportProcessor] Image ${index + 1} uploaded to S3: ${s3Result.url}`
+            );
           } else {
             // Fallback: crear registro con URL original si no hay use case
             console.warn(
@@ -833,7 +844,9 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
                 is_verified: false,
               },
             });
-            console.log(`📝 [AedCsvImportProcessor] Created fallback image record with original URL`);
+            console.log(
+              `📝 [AedCsvImportProcessor] Created fallback image record with original URL`
+            );
           } catch (fallbackError) {
             console.error(
               `❌ [AedCsvImportProcessor] Failed to create fallback image record:`,

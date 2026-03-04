@@ -22,15 +22,8 @@ interface UseImportBatchesReturn {
   refetch: () => Promise<void>;
 }
 
-export function useImportBatches(
-  options: UseImportBatchesOptions = {}
-): UseImportBatchesReturn {
-  const {
-    page = 1,
-    limit = 20,
-    autoRefresh = true,
-    refreshInterval = 5000,
-  } = options;
+export function useImportBatches(options: UseImportBatchesOptions = {}): UseImportBatchesReturn {
+  const { page = 1, limit = 20, autoRefresh = true, refreshInterval = 5000 } = options;
 
   const [batches, setBatches] = useState<ImportBatch[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,8 +47,7 @@ export function useImportBatches(
       setBatches(data.batches || []);
       setPagination(data.pagination || null);
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Error desconocido";
+      const message = err instanceof Error ? err.message : "Error desconocido";
       setError(message);
       console.error("Error fetching import batches:", err);
     } finally {
@@ -78,9 +70,7 @@ export function useImportBatches(
 
     // Detectar batches que cambiaron de IN_PROGRESS a otro estado
     batches.forEach((currentBatch) => {
-      const previousBatch = previousBatchesRef.current.find(
-        (b) => b.id === currentBatch.id
-      );
+      const previousBatch = previousBatchesRef.current.find((b) => b.id === currentBatch.id);
 
       if (!previousBatch) return; // Nuevo batch, ignorar
 
@@ -108,12 +98,9 @@ export function useImportBatches(
             }
           );
         } else if (currentBatch.status === "FAILED") {
-          toast.error(
-            `❌ Importación "${currentBatch.name}" falló completamente`,
-            {
-              duration: 6000,
-            }
-          );
+          toast.error(`❌ Importación "${currentBatch.name}" falló completamente`, {
+            duration: 6000,
+          });
         }
       }
     });

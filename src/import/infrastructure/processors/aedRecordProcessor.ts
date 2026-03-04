@@ -244,4 +244,3 @@ export function createAedRecordProcessor(
     // un fallo de imagen bloquee la creación del AED.
   };
 }
-

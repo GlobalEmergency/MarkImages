@@ -91,7 +91,7 @@ export class SharePointImageDownloader implements IImageDownloader {
 
         // Extraer filename de la URL
         const filename = this.extractFilename(url);
-        
+
         return {
           buffer,
           contentType,
@@ -122,10 +122,7 @@ export class SharePointImageDownloader implements IImageDownloader {
     );
   }
 
-  private buildRequestConfig(
-    auth?: SharePointAuthConfig,
-    timeout?: number
-  ): AxiosRequestConfig {
+  private buildRequestConfig(auth?: SharePointAuthConfig, timeout?: number): AxiosRequestConfig {
     const config: AxiosRequestConfig = {
       timeout,
       headers: {
@@ -167,11 +164,11 @@ export class SharePointImageDownloader implements IImageDownloader {
     try {
       const urlObj = new URL(url);
       const pathname = urlObj.pathname;
-      const parts = pathname.split('/');
-      const filename = parts[parts.length - 1] || 'image.jpg';
+      const parts = pathname.split("/");
+      const filename = parts[parts.length - 1] || "image.jpg";
       return filename;
     } catch {
-      return 'image.jpg';
+      return "image.jpg";
     }
   }
 

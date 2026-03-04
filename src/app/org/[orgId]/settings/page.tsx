@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  Building2,
-  Mail,
-  Phone,
-  Globe,
-  MapPin,
-  Shield,
-  Info,
-  Tag,
-} from "lucide-react";
+import { Building2, Mail, Phone, Globe, MapPin, Shield, Info, Tag } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, use } from "react";
 
@@ -148,10 +139,7 @@ export default function OrgSettingsPage({ params }: { params: Promise<{ orgId: s
               <Mail className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-xs text-gray-600 mb-0.5">Email</p>
-                <a
-                  href={`mailto:${org.email}`}
-                  className="text-sm text-blue-600 hover:underline"
-                >
+                <a href={`mailto:${org.email}`} className="text-sm text-blue-600 hover:underline">
                   {org.email}
                 </a>
               </div>
@@ -163,10 +151,7 @@ export default function OrgSettingsPage({ params }: { params: Promise<{ orgId: s
               <Phone className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-xs text-gray-600 mb-0.5">Teléfono</p>
-                <a
-                  href={`tel:${org.phone}`}
-                  className="text-sm text-blue-600 hover:underline"
-                >
+                <a href={`tel:${org.phone}`} className="text-sm text-blue-600 hover:underline">
                   {org.phone}
                 </a>
               </div>
@@ -207,9 +192,7 @@ export default function OrgSettingsPage({ params }: { params: Promise<{ orgId: s
         <div className="space-y-2">
           <div>
             <p className="text-xs text-gray-600 mb-0.5">Tipo de ámbito</p>
-            <p className="text-sm font-medium text-gray-900">
-              {getScopeLabel(org.scope_type)}
-            </p>
+            <p className="text-sm font-medium text-gray-900">{getScopeLabel(org.scope_type)}</p>
           </div>
 
           {org.city_name && (
@@ -273,9 +256,7 @@ export default function OrgSettingsPage({ params }: { params: Promise<{ orgId: s
             <span className="text-sm text-gray-700">Requiere aprobación</span>
             <span
               className={`px-2 py-1 rounded text-xs font-medium ${
-                org.require_approval
-                  ? "bg-green-100 text-green-700"
-                  : "bg-gray-100 text-gray-700"
+                org.require_approval ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
               }`}
             >
               {org.require_approval ? "Sí" : "No"}
@@ -285,9 +266,7 @@ export default function OrgSettingsPage({ params }: { params: Promise<{ orgId: s
           {org.approval_authority && (
             <div>
               <p className="text-xs text-gray-600 mb-0.5">Autoridad aprobadora</p>
-              <p className="text-sm font-medium text-gray-900">
-                {org.approval_authority}
-              </p>
+              <p className="text-sm font-medium text-gray-900">{org.approval_authority}</p>
             </div>
           )}
         </div>
@@ -312,8 +291,8 @@ export default function OrgSettingsPage({ params }: { params: Promise<{ orgId: s
           <div className="text-sm text-blue-900">
             <p className="font-medium mb-1">¿Necesitas actualizar la información?</p>
             <p className="text-blue-800 text-xs">
-              Para modificar los datos de la organización, contacta con el administrador
-              del sistema o con soporte técnico.
+              Para modificar los datos de la organización, contacta con el administrador del sistema
+              o con soporte técnico.
             </p>
           </div>
         </div>

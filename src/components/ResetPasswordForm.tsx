@@ -54,9 +54,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         router.push("/login");
       }, 3000);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Error al restablecer la contraseña"
-      );
+      setError(err instanceof Error ? err.message : "Error al restablecer la contraseña");
     } finally {
       setLoading(false);
     }
@@ -81,12 +79,10 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold mb-4 text-gray-800">
-            ¡Contraseña restablecida!
-          </h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-800">¡Contraseña restablecida!</h2>
           <p className="text-gray-600 mb-6">
-            Tu contraseña ha sido restablecida exitosamente. Ya puedes iniciar
-            sesión con tu nueva contraseña.
+            Tu contraseña ha sido restablecida exitosamente. Ya puedes iniciar sesión con tu nueva
+            contraseña.
           </p>
           <p className="text-sm text-gray-500 mb-6">
             Serás redirigido al inicio de sesión en unos segundos...
@@ -104,25 +100,16 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-2 text-center text-gray-800">
-        Restablecer contraseña
-      </h2>
-      <p className="text-sm text-gray-600 mb-6 text-center">
-        Ingresa tu nueva contraseña
-      </p>
+      <h2 className="text-2xl font-bold mb-2 text-center text-gray-800">Restablecer contraseña</h2>
+      <p className="text-sm text-gray-600 mb-6 text-center">Ingresa tu nueva contraseña</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
+          <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">{error}</div>
         )}
 
         <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
             Nueva contraseña
           </label>
           <input
@@ -130,9 +117,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             type="password"
             required
             value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="••••••••"
             minLength={8}
@@ -140,10 +125,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         </div>
 
         <div>
-          <label
-            htmlFor="confirmPassword"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
             Confirmar contraseña
           </label>
           <input
@@ -151,9 +133,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             type="password"
             required
             value={formData.confirmPassword}
-            onChange={(e) =>
-              setFormData({ ...formData, confirmPassword: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="••••••••"
             minLength={8}
@@ -180,10 +160,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       </form>
 
       <p className="mt-4 text-center text-sm text-gray-600">
-        <Link
-          href="/login"
-          className="text-blue-600 hover:text-blue-800 font-medium"
-        >
+        <Link href="/login" className="text-blue-600 hover:text-blue-800 font-medium">
           Volver al inicio de sesión
         </Link>
       </p>

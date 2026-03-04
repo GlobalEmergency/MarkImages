@@ -28,7 +28,11 @@ export default function NewSimpleDeaPage() {
   useEffect(() => {
     if (
       !formStarted &&
-      (formData.name || formData.street || formData.number || formData.city || formData.observations)
+      (formData.name ||
+        formData.street ||
+        formData.number ||
+        formData.city ||
+        formData.observations)
     ) {
       trackFormStart("add_dea_simple");
       setFormStarted(true);

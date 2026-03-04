@@ -320,7 +320,13 @@ export class CkanApiAdapter implements IDataSourceAdapter {
   }
 
   async validateConfig(config: DataSourceConfig): Promise<ValidationResult> {
-    const issues: Array<{ severity: string; message: string; row?: number; field?: string; value?: string }> = [];
+    const issues: Array<{
+      severity: string;
+      message: string;
+      row?: number;
+      field?: string;
+      value?: string;
+    }> = [];
 
     // Verificar si es URL directa o API CKAN
     const hasDirectUrl = config.apiEndpoint && this.isDirectJsonUrl(config.apiEndpoint);

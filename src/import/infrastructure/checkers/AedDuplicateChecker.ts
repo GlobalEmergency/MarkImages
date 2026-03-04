@@ -8,7 +8,11 @@
  * Reutiliza la lÃ³gica existente de DuplicateDetectionService y IAedRepository.
  */
 
-import type { DuplicateChecker, DuplicateCheckResult as BulkImportDuplicateResult, ProcessingContext } from "@batchactions/import";
+import type {
+  DuplicateChecker,
+  DuplicateCheckResult as BulkImportDuplicateResult,
+  ProcessingContext,
+} from "@batchactions/import";
 import type { IAedRepository } from "../../domain/ports/IAedRepository";
 
 export interface AedDuplicateCheckerOptions {
@@ -50,9 +54,7 @@ export class AedDuplicateChecker implements DuplicateChecker {
    * Verifica si un registro es duplicado contra la base de datos.
    * Usa cascade matching: ID â†’ Code â†’ ExternalReference
    */
-  async check(
-    fields: Record<string, unknown>,
-  ): Promise<BulkImportDuplicateResult> {
+  async check(fields: Record<string, unknown>): Promise<BulkImportDuplicateResult> {
     const id = this.extractString(fields, "id");
     const code = this.extractString(fields, "code");
     const externalRef = this.extractString(fields, "externalReference");
@@ -137,7 +139,7 @@ export class AedDuplicateChecker implements DuplicateChecker {
    * 3. Match results back to each record using cascade priority: ID → Code → ExternalRef
    */
   async checkBatch(
-    records: readonly { fields: Record<string, unknown>; context: ProcessingContext }[],
+    records: readonly { fields: Record<string, unknown>; context: ProcessingContext }[]
   ): Promise<readonly BulkImportDuplicateResult[]> {
     // 1. Collect all identifiers from the batch
     const allIds: string[] = [];
@@ -160,7 +162,9 @@ export class AedDuplicateChecker implements DuplicateChecker {
     const [idMatches, codeMatches, refMatches] = await Promise.all([
       allIds.length > 0 ? this.aedRepository.findByIds(allIds) : new Map(),
       allCodes.length > 0 ? this.aedRepository.findByCodes(allCodes) : new Map(),
-      allExternalRefs.length > 0 ? this.aedRepository.findByExternalReferences(allExternalRefs) : new Map(),
+      allExternalRefs.length > 0
+        ? this.aedRepository.findByExternalReferences(allExternalRefs)
+        : new Map(),
     ]);
 
     // 3. Match results back to each record using cascade priority
@@ -235,4 +239,3 @@ export class AedDuplicateChecker implements DuplicateChecker {
     return str || undefined;
   }
 }
-

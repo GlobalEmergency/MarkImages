@@ -117,9 +117,7 @@ export default function OrgVerifyPage({ params }: { params: Promise<{ orgId: str
       {/* Header */}
       <div className="space-y-2">
         <h1 className="text-2xl font-bold text-gray-900">Verificaciones</h1>
-        <p className="text-sm text-gray-600">
-          {aeds.length} DEAs pendientes de verificación
-        </p>
+        <p className="text-sm text-gray-600">{aeds.length} DEAs pendientes de verificación</p>
       </div>
 
       {/* Empty State */}
@@ -128,12 +126,8 @@ export default function OrgVerifyPage({ params }: { params: Promise<{ orgId: str
           <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
             <ClipboardCheck className="w-8 h-8 text-green-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            ¡Todo al día!
-          </h3>
-          <p className="text-gray-600">
-            No hay DEAs pendientes de verificación en tu organización
-          </p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">¡Todo al día!</h3>
+          <p className="text-gray-600">No hay DEAs pendientes de verificación en tu organización</p>
         </div>
       ) : (
         <>
@@ -163,9 +157,7 @@ export default function OrgVerifyPage({ params }: { params: Promise<{ orgId: str
                 {/* Content */}
                 <div className="space-y-2">
                   {/* Title */}
-                  <h3 className="font-semibold text-gray-900 line-clamp-1">
-                    {aed.name}
-                  </h3>
+                  <h3 className="font-semibold text-gray-900 line-clamp-1">{aed.name}</h3>
 
                   {/* Type */}
                   {aed.establishment_type && (
@@ -177,9 +169,7 @@ export default function OrgVerifyPage({ params }: { params: Promise<{ orgId: str
                   {/* Address */}
                   <div className="flex items-start gap-2">
                     <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {getFullAddress(aed)}
-                    </p>
+                    <p className="text-sm text-gray-600 line-clamp-2">{getFullAddress(aed)}</p>
                   </div>
 
                   {/* Status Badge */}
@@ -216,9 +206,8 @@ export default function OrgVerifyPage({ params }: { params: Promise<{ orgId: str
           <div className="text-sm text-blue-900">
             <p className="font-medium mb-1">¿Cómo funciona la verificación?</p>
             <p className="text-blue-800">
-              Selecciona un DEA para iniciar el proceso de verificación. Podrás validar
-              la ubicación, actualizar fotos y confirmar que el dispositivo está
-              operativo.
+              Selecciona un DEA para iniciar el proceso de verificación. Podrás validar la
+              ubicación, actualizar fotos y confirmar que el dispositivo está operativo.
             </p>
           </div>
         </div>

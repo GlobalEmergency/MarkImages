@@ -3,7 +3,7 @@
  * Following DDD principles and mobile-first design
  */
 
-export type FilterType = 'search' | 'select' | 'multiselect';
+export type FilterType = "search" | "select" | "multiselect";
 
 export interface FilterOption {
   value: string;
@@ -20,7 +20,7 @@ export interface FilterConfig {
 
 export interface PaginationConfig {
   enabled: boolean;
-  serverSide: boolean;  // true = API handles pagination, false = client-side
+  serverSide: boolean; // true = API handles pagination, false = client-side
   defaultLimit: number;
   limitOptions: number[];
 }

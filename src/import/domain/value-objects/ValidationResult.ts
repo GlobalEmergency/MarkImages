@@ -5,7 +5,12 @@
  * Contiene estadísticas, errores y advertencias.
  */
 
-import { ValidationError, ValidationErrorData, ValidationErrorType, ValidationSeverity } from "./ValidationError";
+import {
+  ValidationError,
+  ValidationErrorData,
+  ValidationErrorType,
+  ValidationSeverity,
+} from "./ValidationError";
 
 // Re-exportar tipos para facilitar el uso desde adapters
 export { ValidationError };
@@ -13,7 +18,7 @@ export type { ValidationErrorData, ValidationErrorType, ValidationSeverity };
 
 export interface PreviewRecord {
   rowNumber: number;
-  status: 'valid' | 'invalid' | 'skipped';
+  status: "valid" | "invalid" | "skipped";
   mappedData: Record<string, unknown>;
   originalData: Record<string, unknown>;
   errors?: ValidationErrorData[];
@@ -62,13 +67,19 @@ export class ValidationResult {
   ) {}
 
   static empty(): ValidationResult {
-    return new ValidationResult([], [], {
-      totalRecords: 0,
-      validRecords: 0,
-      invalidRecords: 0,
-      skippedRecords: 0,
-      warningRecords: 0,
-    }, [], undefined);
+    return new ValidationResult(
+      [],
+      [],
+      {
+        totalRecords: 0,
+        validRecords: 0,
+        invalidRecords: 0,
+        skippedRecords: 0,
+        warningRecords: 0,
+      },
+      [],
+      undefined
+    );
   }
 
   static create(
@@ -228,7 +239,15 @@ export class ValidationResult {
    * Crea un resultado con issues desde los adaptadores
    * (Compatibilidad con IDataSourceAdapter)
    */
-  static withIssues(issues: Array<{ severity: string; message: string; row?: number; field?: string; value?: string }>): ValidationResult {
+  static withIssues(
+    issues: Array<{
+      severity: string;
+      message: string;
+      row?: number;
+      field?: string;
+      value?: string;
+    }>
+  ): ValidationResult {
     const errors = issues
       .filter((i) => i.severity === "CRITICAL" || i.severity === "ERROR")
       .map((i) =>
@@ -255,13 +274,19 @@ export class ValidationResult {
         })
       );
 
-    return new ValidationResult(errors, warnings, {
-      totalRecords: 0,
-      validRecords: 0,
-      invalidRecords: errors.length,
-      skippedRecords: 0,
-      warningRecords: warnings.length,
-    }, undefined, undefined);
+    return new ValidationResult(
+      errors,
+      warnings,
+      {
+        totalRecords: 0,
+        validRecords: 0,
+        invalidRecords: errors.length,
+        skippedRecords: 0,
+        warningRecords: warnings.length,
+      },
+      undefined,
+      undefined
+    );
   }
 
   /**

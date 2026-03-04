@@ -1,7 +1,7 @@
 /**
  * System User Constants
- * 
- * Defines the special UUID for system operations (automated processes, 
+ *
+ * Defines the special UUID for system operations (automated processes,
  * validations, cron jobs, etc.) where no real user is involved.
  */
 

@@ -12,7 +12,13 @@
  * Uniqueness â†’ afterValidate â†’ beforeProcess â†’ Processor â†’ afterProcess
  */
 
-import type { JobHooks, RawRecord, ProcessedRecord, ParsedRecord, HookContext } from "@batchactions/import";
+import type {
+  JobHooks,
+  RawRecord,
+  ProcessedRecord,
+  ParsedRecord,
+  HookContext,
+} from "@batchactions/import";
 import type { DownloadAndUploadImageUseCase } from "@/storage/application/use-cases/DownloadAndUploadImageUseCase";
 import type { SharePointAuthConfig } from "@/storage/domain/ports/IImageDownloader";
 import type { PrismaClient } from "@/generated/client/client";
@@ -125,9 +131,7 @@ function createAfterValidate(
     if (!record.errors || record.errors.length === 0) return record;
 
     // Verificar si hay errores de duplicado externo
-    const hasExternalDuplicate = record.errors.some(
-      (e) => e.code === "EXTERNAL_DUPLICATE"
-    );
+    const hasExternalDuplicate = record.errors.some((e) => e.code === "EXTERNAL_DUPLICATE");
 
     if (!hasExternalDuplicate) return record;
 
@@ -143,9 +147,7 @@ function createAfterValidate(
     });
 
     // Recalcular status: si solo quedan warnings, el record es vÃ¡lido
-    const hasBlockingErrors = adjustedErrors.some(
-      (e) => (e.severity || "error") === "error"
-    );
+    const hasBlockingErrors = adjustedErrors.some((e) => (e.severity || "error") === "error");
 
     return {
       ...record,
@@ -228,12 +230,14 @@ function createAfterProcess(
   return async (record: ProcessedRecord, _context: HookContext): Promise<void> => {
     const parsed = record.parsed as Record<string, unknown>;
     const aedId = parsed._aedId as string | undefined;
-    const imageUrls = parsed._imageUrls as Array<{
-      url: string;
-      type: AedImageType;
-      imageId: string;
-      field: string;
-    }> | undefined;
+    const imageUrls = parsed._imageUrls as
+      | Array<{
+          url: string;
+          type: AedImageType;
+          imageId: string;
+          field: string;
+        }>
+      | undefined;
 
     if (!aedId || !imageUrls || imageUrls.length === 0) return;
 
@@ -265,9 +269,7 @@ function createAfterProcess(
             },
           });
 
-          console.log(
-            `[AedImportHooks] Image ${index + 1} uploaded to S3: ${s3Result.url}`
-          );
+          console.log(`[AedImportHooks] Image ${index + 1} uploaded to S3: ${s3Result.url}`);
         } else {
           // Fallback: guardar URL original si no hay use case de descarga
           console.warn(
@@ -303,14 +305,9 @@ function createAfterProcess(
               is_verified: false,
             },
           });
-          console.log(
-            "[AedImportHooks] Created fallback image record with original URL"
-          );
+          console.log("[AedImportHooks] Created fallback image record with original URL");
         } catch (fallbackError) {
-          console.error(
-            "[AedImportHooks] Failed to create fallback image record:",
-            fallbackError
-          );
+          console.error("[AedImportHooks] Failed to create fallback image record:", fallbackError);
         }
       }
     }
@@ -351,4 +348,3 @@ export function createAedImportHooks(options: AedImportHooksOptions): JobHooks {
     afterProcess,
   };
 }
-

@@ -25,4 +25,4 @@
  * - No need to create a "system" user in the database
  * - Industry-standard approach for system operations
  */
-export const SYSTEM_USER_UUID = '00000000-0000-0000-0000-000000000000';
+export const SYSTEM_USER_UUID = "00000000-0000-0000-0000-000000000000";

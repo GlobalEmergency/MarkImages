@@ -3,9 +3,9 @@
  * Procesa imágenes con crop, blur y arrow usando Sharp
  */
 
-import sharp from 'sharp';
-import type { BlurArea, CropData, ArrowData } from '@/types/shared';
-import { ARROW_CONFIG } from '@/utils/arrowConstants';
+import sharp from "sharp";
+import type { BlurArea, CropData, ArrowData } from "@/types/shared";
+import { ARROW_CONFIG } from "@/utils/arrowConstants";
 
 export interface ProcessImageOptions {
   imageBuffer: Buffer;
@@ -38,7 +38,9 @@ export async function processImage(options: ProcessImageOptions): Promise<Buffer
 
   // 1. Aplicar crop si existe
   if (cropData) {
-    console.log(`🔲 Aplicando crop: ${cropData.width}x${cropData.height} en (${cropData.x}, ${cropData.y})`);
+    console.log(
+      `🔲 Aplicando crop: ${cropData.width}x${cropData.height} en (${cropData.x}, ${cropData.y})`
+    );
     image = image.extract({
       left: Math.round(cropData.x),
       top: Math.round(cropData.y),
@@ -68,18 +70,22 @@ export async function processImage(options: ProcessImageOptions): Promise<Buffer
 
       // Componer la región difuminada sobre la imagen
       buffer = await sharp(buffer)
-        .composite([{
-          input: blurRegion,
-          left: Math.round(area.x),
-          top: Math.round(area.y),
-        }])
+        .composite([
+          {
+            input: blurRegion,
+            left: Math.round(area.x),
+            top: Math.round(area.y),
+          },
+        ])
         .toBuffer();
     }
   }
 
   // 3. Dibujar flecha si existe
   if (arrowData) {
-    console.log(`🎯 Dibujando flecha desde (${arrowData.startX}, ${arrowData.startY}) hasta (${arrowData.endX}, ${arrowData.endY})`);
+    console.log(
+      `🎯 Dibujando flecha desde (${arrowData.startX}, ${arrowData.startY}) hasta (${arrowData.endX}, ${arrowData.endY})`
+    );
 
     const metadata = await sharp(buffer).metadata();
     const width = metadata.width || 1000;
@@ -90,20 +96,20 @@ export async function processImage(options: ProcessImageOptions): Promise<Buffer
 
     // Componer la flecha sobre la imagen
     buffer = await sharp(buffer)
-      .composite([{
-        input: Buffer.from(arrowSvg),
-        top: 0,
-        left: 0,
-      }])
+      .composite([
+        {
+          input: Buffer.from(arrowSvg),
+          top: 0,
+          left: 0,
+        },
+      ])
       .toBuffer();
   }
 
   // 4. Optimizar imagen final
-  const finalImage = await sharp(buffer)
-    .jpeg({ quality: 90, mozjpeg: true })
-    .toBuffer();
+  const finalImage = await sharp(buffer).jpeg({ quality: 90, mozjpeg: true }).toBuffer();
 
-  console.log('✅ Imagen procesada exitosamente');
+  console.log("✅ Imagen procesada exitosamente");
 
   return finalImage;
 }
@@ -172,7 +178,9 @@ export interface ImageToProcess {
   arrowData?: ArrowData;
 }
 
-export async function processVerificationImages(images: ImageToProcess[]): Promise<Map<string, Buffer>> {
+export async function processVerificationImages(
+  images: ImageToProcess[]
+): Promise<Map<string, Buffer>> {
   const processedImages = new Map<string, Buffer>();
 
   for (const img of images) {

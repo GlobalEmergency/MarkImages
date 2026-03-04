@@ -11,10 +11,7 @@
  */
 
 import { PrismaClient } from "@/generated/client/client";
-import {
-  IGeocodingService,
-  GeocodingResult,
-} from "@/location/domain/ports/IGeocodingService";
+import { IGeocodingService, GeocodingResult } from "@/location/domain/ports/IGeocodingService";
 import { CoordinateValidation } from "@/location/domain/value-objects/CoordinateValidation";
 import { GeographicDistance } from "@/location/domain/value-objects/GeographicDistance";
 
@@ -61,9 +58,7 @@ export class EnrichLocationWithGeocodingUseCase {
   ) {}
 
   async execute(input: EnrichLocationInput): Promise<EnrichLocationOutput> {
-    console.log(
-      `[EnrichLocationUseCase] Starting enrichment for location: ${input.locationId}`
-    );
+    console.log(`[EnrichLocationUseCase] Starting enrichment for location: ${input.locationId}`);
 
     // 1. Leer ubicación actual
     const location = await this.prisma.aedLocation.findUnique({
@@ -76,10 +71,7 @@ export class EnrichLocationWithGeocodingUseCase {
 
     // 2. Verificar si necesita enriquecimiento
     const needsEnrichment =
-      input.forceEnrich ||
-      !location.postal_code ||
-      !location.city_name ||
-      !location.district_name;
+      input.forceEnrich || !location.postal_code || !location.city_name || !location.district_name;
 
     if (!needsEnrichment) {
       console.log(
@@ -105,9 +97,7 @@ export class EnrichLocationWithGeocodingUseCase {
       console.log(
         `[EnrichLocationUseCase] Using forward geocoding with address: ${input.rawAddress}`
       );
-      geocodingResult = await this.geocodingService.geocodeAddress(
-        input.rawAddress
-      );
+      geocodingResult = await this.geocodingService.geocodeAddress(input.rawAddress);
     } else if (input.originalCoords) {
       // Estrategia 2: Reverse geocoding como fallback
       console.log(
@@ -130,9 +120,7 @@ export class EnrichLocationWithGeocodingUseCase {
     }
 
     if (!geocodingResult) {
-      console.warn(
-        `[EnrichLocationUseCase] No geocoding results for location ${input.locationId}`
-      );
+      console.warn(`[EnrichLocationUseCase] No geocoding results for location ${input.locationId}`);
       return {
         locationId: input.locationId,
         enriched: false,
@@ -192,11 +180,7 @@ export class EnrichLocationWithGeocodingUseCase {
     const VERIFICATION_THRESHOLD_METERS = 100;
 
     if (distanceMeters < VALID_THRESHOLD_METERS) {
-      return CoordinateValidation.createValid(
-        distanceMeters,
-        originalCoords,
-        geocodedCoords
-      );
+      return CoordinateValidation.createValid(distanceMeters, originalCoords, geocodedCoords);
     } else if (distanceMeters < VERIFICATION_THRESHOLD_METERS) {
       return CoordinateValidation.createNeedsVerification(
         distanceMeters,
@@ -204,11 +188,7 @@ export class EnrichLocationWithGeocodingUseCase {
         geocodedCoords
       );
     } else {
-      return CoordinateValidation.createInvalid(
-        distanceMeters,
-        originalCoords,
-        geocodedCoords
-      );
+      return CoordinateValidation.createInvalid(distanceMeters, originalCoords, geocodedCoords);
     }
   }
 
@@ -232,27 +212,18 @@ export class EnrichLocationWithGeocodingUseCase {
       fieldsUpdated.push("city_name");
     }
 
-    if (
-      !currentLocation.district_name &&
-      geocodingResult.address.district_name
-    ) {
+    if (!currentLocation.district_name && geocodingResult.address.district_name) {
       updateData.district_name = geocodingResult.address.district_name;
       fieldsUpdated.push("district_name");
     }
 
-    if (
-      !currentLocation.neighborhood_name &&
-      geocodingResult.address.neighborhood_name
-    ) {
+    if (!currentLocation.neighborhood_name && geocodingResult.address.neighborhood_name) {
       updateData.neighborhood_name = geocodingResult.address.neighborhood_name;
       fieldsUpdated.push("neighborhood_name");
     }
 
     // Actualizar street_number si está vacío
-    if (
-      !currentLocation.street_number &&
-      geocodingResult.address.street_number
-    ) {
+    if (!currentLocation.street_number && geocodingResult.address.street_number) {
       updateData.street_number = geocodingResult.address.street_number;
       fieldsUpdated.push("street_number");
     }

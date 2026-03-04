@@ -1,6 +1,6 @@
 /**
  * Use Case: Get Batch Job Errors
- * 
+ *
  * Obtiene la lista de errores de un batch job específico
  * con soporte para paginación.
  */

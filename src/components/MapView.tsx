@@ -310,9 +310,7 @@ export default function MapView({
             <Popup>
               <div className="min-w-[200px]">
                 <h3 className="font-bold text-red-600 mb-2">📍 Tu ubicación</h3>
-                <p className="text-sm text-gray-600 mb-2">
-                  Buscando DEAs cercanos desde aquí
-                </p>
+                <p className="text-sm text-gray-600 mb-2">Buscando DEAs cercanos desde aquí</p>
                 <p className="text-xs text-gray-500 italic mb-2">
                   💡 Arrastra este marcador para ajustar la búsqueda
                 </p>

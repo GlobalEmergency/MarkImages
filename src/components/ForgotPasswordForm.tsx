@@ -31,9 +31,7 @@ export default function ForgotPasswordForm() {
 
       setSuccess(true);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Error al procesar la solicitud"
-      );
+      setError(err instanceof Error ? err.message : "Error al procesar la solicitud");
     } finally {
       setLoading(false);
     }
@@ -58,12 +56,10 @@ export default function ForgotPasswordForm() {
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold mb-4 text-gray-800">
-            Revisa tu correo
-          </h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-800">Revisa tu correo</h2>
           <p className="text-gray-600 mb-6">
-            Si el email existe en nuestro sistema, recibirás un correo con
-            instrucciones para recuperar tu contraseña.
+            Si el email existe en nuestro sistema, recibirás un correo con instrucciones para
+            recuperar tu contraseña.
           </p>
           <p className="text-sm text-gray-500 mb-6">
             El enlace expirará en 1 hora por razones de seguridad.
@@ -85,22 +81,16 @@ export default function ForgotPasswordForm() {
         ¿Olvidaste tu contraseña?
       </h2>
       <p className="text-sm text-gray-600 mb-6 text-center">
-        Ingresa tu email y te enviaremos instrucciones para restablecer tu
-        contraseña.
+        Ingresa tu email y te enviaremos instrucciones para restablecer tu contraseña.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
+          <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">{error}</div>
         )}
 
         <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
             Email
           </label>
           <input
@@ -124,10 +114,7 @@ export default function ForgotPasswordForm() {
       </form>
 
       <p className="mt-4 text-center text-sm text-gray-600">
-        <Link
-          href="/login"
-          className="text-blue-600 hover:text-blue-800 font-medium"
-        >
+        <Link href="/login" className="text-blue-600 hover:text-blue-800 font-medium">
           Volver al inicio de sesión
         </Link>
       </p>

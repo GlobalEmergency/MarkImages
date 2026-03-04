@@ -1,7 +1,7 @@
 // src/types/shared.ts
 
 export interface CropperConfig {
-  aspectRatio?: number;          // 1 para cuadrado, 16/9 para rectangular, etc.
+  aspectRatio?: number; // 1 para cuadrado, 16/9 para rectangular, etc.
   outputSize?: {
     width: number;
     height: number;
@@ -13,7 +13,7 @@ export interface CropperConfig {
 }
 
 export interface ArrowConfig {
-  startPosition?: 'bottom' | 'top' | 'left' | 'right' | 'custom';
+  startPosition?: "bottom" | "top" | "left" | "right" | "custom";
   color?: string;
   width?: number;
   headLength?: number;
@@ -52,7 +52,7 @@ export interface BlurArea {
 
 export interface ImageProcessingStep {
   id: string;
-  type: 'crop' | 'blur' | 'arrow' | 'filter' | 'resize';
+  type: "crop" | "blur" | "arrow" | "filter" | "resize";
   config: CropperConfig | ArrowConfig | Record<string, unknown>;
   completed: boolean;
   data?: CropData | BlurArea[] | ArrowData | Record<string, unknown>;
@@ -98,6 +98,6 @@ export interface UseArrowMarkerProps {
 export interface UseStepFlowProps {
   steps: string[];
   initialStep?: string;
-  onStepChange?: (step: string, direction: 'next' | 'previous') => void;
+  onStepChange?: (step: string, direction: "next" | "previous") => void;
   onComplete?: () => void;
 }

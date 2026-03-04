@@ -11,12 +11,7 @@
  * existente del sistema BatchJob.
  */
 
-import type {
-  StateStore,
-  JobState,
-  ProcessedRecord,
-  JobProgress,
-} from "@batchactions/import";
+import type { StateStore, JobState, ProcessedRecord, JobProgress } from "@batchactions/import";
 import type { BatchState } from "@batchactions/core";
 import { PrismaClient, BatchJobStatus, BatchCheckpointStatus } from "@/generated/client/client";
 
@@ -178,9 +173,7 @@ export class PrismaStateStore implements StateStore {
     }>;
 
     const status: BulkImportStatus =
-      (metadata.bulkimport_status as BulkImportStatus) ||
-      PRISMA_TO_STATUS[job.status] ||
-      "CREATED";
+      (metadata.bulkimport_status as BulkImportStatus) || PRISMA_TO_STATUS[job.status] || "CREATED";
 
     return {
       id: job.id,
@@ -241,7 +234,8 @@ export class PrismaStateStore implements StateStore {
     _batchId: string,
     record: ProcessedRecord
   ): Promise<void> {
-    const checkpointStatus = RECORD_STATUS_TO_CHECKPOINT[record.status] || BatchCheckpointStatus.SKIPPED;
+    const checkpointStatus =
+      RECORD_STATUS_TO_CHECKPOINT[record.status] || BatchCheckpointStatus.SKIPPED;
 
     // Guardar checkpoint
     await this.prisma.batchJobCheckpoint.upsert({
@@ -419,18 +413,14 @@ export class PrismaStateStore implements StateStore {
     // processed_records ya incluye los failed (ver saveJobState:
     // processedRecords = sum(batch.processedCount) que incluye éxitos + fallos)
     const totalProcessed = job.processed_records;
-    const elapsedMs = job.started_at
-      ? Date.now() - job.started_at.getTime()
-      : 0;
-    const percentage = job.total_records > 0
-      ? Math.round((totalProcessed / job.total_records) * 100)
-      : 0;
+    const elapsedMs = job.started_at ? Date.now() - job.started_at.getTime() : 0;
+    const percentage =
+      job.total_records > 0 ? Math.round((totalProcessed / job.total_records) * 100) : 0;
 
     const recordsPerSecond = elapsedMs > 0 ? (totalProcessed / elapsedMs) * 1000 : 0;
     const remaining = job.total_records - totalProcessed;
-    const estimatedRemainingMs = recordsPerSecond > 0
-      ? Math.round(remaining / recordsPerSecond * 1000)
-      : undefined;
+    const estimatedRemainingMs =
+      recordsPerSecond > 0 ? Math.round((remaining / recordsPerSecond) * 1000) : undefined;
 
     return {
       totalRecords: job.total_records,
@@ -490,13 +480,15 @@ export class PrismaStateStore implements StateStore {
     const source = schema as Record<string, unknown>;
     const fields = Array.isArray(source.fields)
       ? source.fields
-        .filter((field): field is Record<string, unknown> => Boolean(field && typeof field === "object"))
-        .map((field) => ({
-          name: field.name,
-          type: field.type,
-          required: field.required,
-          aliases: field.aliases,
-        }))
+          .filter((field): field is Record<string, unknown> =>
+            Boolean(field && typeof field === "object")
+          )
+          .map((field) => ({
+            name: field.name,
+            type: field.type,
+            required: field.required,
+            aliases: field.aliases,
+          }))
       : [];
 
     return {
@@ -533,4 +525,3 @@ export class PrismaStateStore implements StateStore {
     }
   }
 }
-

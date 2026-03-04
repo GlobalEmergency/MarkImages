@@ -5,13 +5,7 @@
 
 "use client";
 
-import {
-  Upload,
-  ChevronLeft,
-  ChevronRight,
-  ArrowLeft,
-  FileUp,
-} from "lucide-react";
+import { Upload, ChevronLeft, ChevronRight, ArrowLeft, FileUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";

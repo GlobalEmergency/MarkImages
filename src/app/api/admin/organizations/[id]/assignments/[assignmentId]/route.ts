@@ -58,10 +58,7 @@ export async function GET(
     });
 
     if (!assignment) {
-      return NextResponse.json(
-        { success: false, error: "Assignment not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: "Assignment not found" }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -120,10 +117,7 @@ export async function PATCH(
     });
 
     if (!existingAssignment) {
-      return NextResponse.json(
-        { success: false, error: "Assignment not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: "Assignment not found" }, { status: 404 });
     }
 
     // Build update data
@@ -144,7 +138,8 @@ export async function PATCH(
 
     if (publication_mode !== undefined) updateData.publication_mode = publication_mode;
     if (approved_for_full !== undefined) updateData.approved_for_full = approved_for_full;
-    if (approved_by_authority !== undefined) updateData.approved_by_authority = approved_by_authority;
+    if (approved_by_authority !== undefined)
+      updateData.approved_by_authority = approved_by_authority;
     if (approval_notes !== undefined) updateData.approval_notes = approval_notes;
 
     const assignment = await prisma.aedOrganizationAssignment.update({
@@ -222,10 +217,7 @@ export async function DELETE(
     });
 
     if (!existingAssignment) {
-      return NextResponse.json(
-        { success: false, error: "Assignment not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: "Assignment not found" }, { status: 404 });
     }
 
     // Soft delete - set status to REVOKED

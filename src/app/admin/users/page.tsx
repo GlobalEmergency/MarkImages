@@ -110,7 +110,10 @@ export default function UsersPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/admin" className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-block">
+          <Link
+            href="/admin"
+            className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-block"
+          >
             ← Volver al panel
           </Link>
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
@@ -161,7 +164,11 @@ export default function UsersPage() {
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
               <div className="ml-3">
@@ -175,18 +182,14 @@ export default function UsersPage() {
         <div className="bg-white shadow overflow-hidden sm:rounded-md">
           <ul className="divide-y divide-gray-200">
             {users.length === 0 ? (
-              <li className="px-6 py-8 text-center text-gray-500">
-                No se encontraron usuarios
-              </li>
+              <li className="px-6 py-8 text-center text-gray-500">No se encontraron usuarios</li>
             ) : (
               users.map((user) => (
                 <li key={user.id} className="px-6 py-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-medium text-gray-900">
-                          {user.name}
-                        </h3>
+                        <h3 className="text-lg font-medium text-gray-900">{user.name}</h3>
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(
                             user.role
@@ -206,9 +209,7 @@ export default function UsersPage() {
                         )}
                       </div>
 
-                      <div className="text-sm text-gray-600 mb-3">
-                        {user.email}
-                      </div>
+                      <div className="text-sm text-gray-600 mb-3">{user.email}</div>
 
                       {user.organizations.length > 0 && (
                         <div className="mt-3">
@@ -240,9 +241,7 @@ export default function UsersPage() {
                     </div>
 
                     <div className="ml-6 flex-shrink-0 text-right text-sm text-gray-500">
-                      <div>
-                        Registrado: {new Date(user.created_at).toLocaleDateString()}
-                      </div>
+                      <div>Registrado: {new Date(user.created_at).toLocaleDateString()}</div>
                       {user.last_login_at && (
                         <div className="mt-1">
                           Último acceso: {new Date(user.last_login_at).toLocaleDateString()}

@@ -3,11 +3,11 @@
  * Muestra indicadores visuales del progreso y validación
  */
 
-'use client';
+"use client";
 
-import { CheckCircle, AlertCircle, Circle, XCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle, Circle, XCircle } from "lucide-react";
 
-import type { MappingSummary as MappingSummaryType } from '@/hooks/useColumnMapping';
+import type { MappingSummary as MappingSummaryType } from "@/hooks/useColumnMapping";
 
 interface MappingSummaryProps {
   summary: MappingSummaryType;
@@ -41,11 +41,11 @@ export default function MappingSummary({ summary }: MappingSummaryProps) {
           )}
           <div>
             <h3 className="font-bold text-gray-900">
-              {canProceed ? '¡Listo para continuar!' : 'Mapeo incompleto'}
+              {canProceed ? "¡Listo para continuar!" : "Mapeo incompleto"}
             </h3>
             <p className="text-sm text-gray-600">
               {canProceed
-                ? 'Todos los campos requeridos están mapeados'
+                ? "Todos los campos requeridos están mapeados"
                 : `Faltan ${requiredTotal - requiredMapped} campos requeridos`}
             </p>
           </div>
@@ -65,7 +65,7 @@ export default function MappingSummary({ summary }: MappingSummaryProps) {
           }
           label="Campos requeridos"
           value={`${requiredMapped}/${requiredTotal}`}
-          color={requiredMapped === requiredTotal ? 'green' : 'red'}
+          color={requiredMapped === requiredTotal ? "green" : "red"}
         />
 
         {/* Campos opcionales */}
@@ -99,9 +99,7 @@ export default function MappingSummary({ summary }: MappingSummaryProps) {
           <div className="flex items-start space-x-2">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h4 className="font-medium text-red-900 mb-1">
-                Campos requeridos faltantes
-              </h4>
+              <h4 className="font-medium text-red-900 mb-1">Campos requeridos faltantes</h4>
               <p className="text-sm text-red-700 mb-2">
                 Debes mapear los siguientes campos antes de continuar:
               </p>
@@ -141,14 +139,14 @@ function StatCard({
   icon: React.ReactNode;
   label: string;
   value: string;
-  color: 'green' | 'red' | 'blue' | 'purple' | 'gray';
+  color: "green" | "red" | "blue" | "purple" | "gray";
 }) {
   const colorClasses = {
-    green: 'bg-green-50 border-green-200',
-    red: 'bg-red-50 border-red-200',
-    blue: 'bg-blue-50 border-blue-200',
-    purple: 'bg-purple-50 border-purple-200',
-    gray: 'bg-gray-50 border-gray-200',
+    green: "bg-green-50 border-green-200",
+    red: "bg-red-50 border-red-200",
+    blue: "bg-blue-50 border-blue-200",
+    purple: "bg-purple-50 border-purple-200",
+    gray: "bg-gray-50 border-gray-200",
   };
 
   return (
@@ -165,10 +163,10 @@ function StatCard({
 // Componente auxiliar para leyenda
 function LegendItem({ color, label }: { color: string; label: string }) {
   const colorClasses: Record<string, string> = {
-    green: 'bg-green-500',
-    blue: 'bg-blue-500',
-    amber: 'bg-amber-500',
-    gray: 'bg-gray-400',
+    green: "bg-green-500",
+    blue: "bg-blue-500",
+    amber: "bg-amber-500",
+    gray: "bg-gray-400",
   };
 
   return (

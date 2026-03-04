@@ -32,9 +32,7 @@ export function DeasList({ organizationId, config, adminMode = false }: DeasList
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [currentLimit, setCurrentLimit] = useState(
-    config.pagination?.defaultLimit || 25
-  );
+  const [currentLimit, setCurrentLimit] = useState(config.pagination?.defaultLimit || 25);
   const [paginationInfo, setPaginationInfo] = useState<any>(null);
 
   // Organizations state
@@ -236,27 +234,17 @@ export function DeasList({ organizationId, config, adminMode = false }: DeasList
       )}
 
       {/* Results count */}
-      {deas.length > 0 && (
-        <p className="px-4 text-sm text-gray-600">{deas.length} resultados</p>
-      )}
+      {deas.length > 0 && <p className="px-4 text-sm text-gray-600">{deas.length} resultados</p>}
 
       {/* DEAs List */}
       <div className="space-y-3">
         {deas.length === 0 ? (
           <div className="text-center py-12">
             <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-600">
-              {config.emptyMessage || "No se encontraron DEAs"}
-            </p>
+            <p className="text-gray-600">{config.emptyMessage || "No se encontraron DEAs"}</p>
           </div>
         ) : (
-          deas.map((dea) => (
-            <DeaListItem
-              key={dea.id}
-              dea={dea}
-              adminMode={adminMode}
-            />
-          ))
+          deas.map((dea) => <DeaListItem key={dea.id} dea={dea} adminMode={adminMode} />)
         )}
       </div>
 

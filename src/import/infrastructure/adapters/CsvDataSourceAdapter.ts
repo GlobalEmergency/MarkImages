@@ -44,7 +44,13 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
   }
 
   async validateConfig(config: DataSourceConfig): Promise<ValidationResult> {
-    const issues: Array<{ severity: string; message: string; row?: number; field?: string; value?: string }> = [];
+    const issues: Array<{
+      severity: string;
+      message: string;
+      row?: number;
+      field?: string;
+      value?: string;
+    }> = [];
 
     if (!config.filePath) {
       issues.push({

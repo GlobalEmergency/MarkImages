@@ -11,10 +11,7 @@ import { prisma } from "@/lib/db";
  * GET /api/admin/organizations/[id]/verifications
  * Get all verifications performed by an organization
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdmin(request);
   if (!admin) {
     return NextResponse.json(
@@ -85,10 +82,7 @@ export async function GET(
  * POST /api/admin/organizations/[id]/verifications
  * Create a new verification record
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdmin(request);
   if (!admin) {
     return NextResponse.json(
@@ -116,10 +110,7 @@ export async function POST(
 
     // Validate required fields
     if (!aed_id) {
-      return NextResponse.json(
-        { success: false, error: "aed_id is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "aed_id is required" }, { status: 400 });
     }
 
     // Check if organization exists
@@ -140,10 +131,7 @@ export async function POST(
     });
 
     if (!aed) {
-      return NextResponse.json(
-        { success: false, error: "AED not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: "AED not found" }, { status: 404 });
     }
 
     // Mark previous verifications from this org for this AED as superseded

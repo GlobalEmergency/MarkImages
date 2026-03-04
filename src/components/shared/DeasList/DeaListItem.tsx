@@ -46,9 +46,7 @@ export function DeaListItem({ dea, adminMode = false }: DeaListItemProps) {
       {/* Main content - vertical on mobile, part of grid on desktop */}
       <div className="flex-1 min-w-0 mb-3 md:mb-0">
         <div className="flex items-start justify-between gap-2 mb-1">
-          <h3 className="font-semibold text-gray-900 truncate">
-            {dea.name || "DEA sin nombre"}
-          </h3>
+          <h3 className="font-semibold text-gray-900 truncate">{dea.name || "DEA sin nombre"}</h3>
           {/* Status icon - mobile only */}
           {hasAssignment && (
             <div className="md:hidden flex-shrink-0">
@@ -60,11 +58,7 @@ export function DeaListItem({ dea, adminMode = false }: DeaListItemProps) {
             </div>
           )}
         </div>
-        {dea.code && (
-          <p className="text-xs text-gray-500 mb-1">
-            Código: {dea.code}
-          </p>
-        )}
+        {dea.code && <p className="text-xs text-gray-500 mb-1">Código: {dea.code}</p>}
       </div>
 
       {/* Address - full width on mobile, grid column on desktop */}
@@ -101,7 +95,11 @@ export function DeaListItem({ dea, adminMode = false }: DeaListItemProps) {
         {dea.coordinate_validation === "INVALID" && (
           <span
             className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-red-100 text-red-700"
-            title={dea.coordinate_distance ? `Distancia: ${dea.coordinate_distance.toFixed(1)}m` : "Coordenadas sospechosas"}
+            title={
+              dea.coordinate_distance
+                ? `Distancia: ${dea.coordinate_distance.toFixed(1)}m`
+                : "Coordenadas sospechosas"
+            }
           >
             <AlertTriangle className="w-3 h-3" />
             <span className="hidden sm:inline">Coords. inválidas</span>

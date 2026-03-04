@@ -24,10 +24,7 @@ export async function GET(request: NextRequest) {
     // Verify authentication
     const user = await requireAuth(request);
     if (!user) {
-      return NextResponse.json(
-        { error: "No autenticado" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
     // Parse query parameters

@@ -26,10 +26,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Verify authentication
     const user = await requireAuth(request);
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: "No autenticado" },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, error: "No autenticado" }, { status: 401 });
     }
 
     const { id } = await params;
@@ -43,10 +40,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!job) {
-      return NextResponse.json(
-        { success: false, error: `Job ${id} not found` },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: `Job ${id} not found` }, { status: 404 });
     }
 
     // Verificar que el usuario es dueño del job o admin
@@ -99,21 +93,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Motor: Legacy (BatchJobOrchestrator)
     // ========================================
     // Lazy-import para no cargar dependencias legacy si no se necesitan
-    const { PrismaBatchJobRepository } = await import(
-      "@/batch/infrastructure/repositories/PrismaBatchJobRepository"
-    );
-    const { BatchJobOrchestrator } = await import(
-      "@/batch/application/orchestrator/BatchJobOrchestrator"
-    );
-    const { CancelBatchJobUseCase } = await import(
-      "@/batch/application/use-cases"
-    );
-    const { initializeProcessors } = await import(
-      "@/batch/application/processors"
-    );
-    const { PrismaDataSourceRepository } = await import(
-      "@/import/infrastructure/repositories/PrismaDataSourceRepository"
-    );
+    const { PrismaBatchJobRepository } =
+      await import("@/batch/infrastructure/repositories/PrismaBatchJobRepository");
+    const { BatchJobOrchestrator } =
+      await import("@/batch/application/orchestrator/BatchJobOrchestrator");
+    const { CancelBatchJobUseCase } = await import("@/batch/application/use-cases");
+    const { initializeProcessors } = await import("@/batch/application/processors");
+    const { PrismaDataSourceRepository } =
+      await import("@/import/infrastructure/repositories/PrismaDataSourceRepository");
 
     const repository = new PrismaBatchJobRepository(prisma);
     const dataSourceRepository = new PrismaDataSourceRepository(prisma);
@@ -132,10 +119,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
       console.error(`❌ [Import Cancel] Failed to cancel legacy import ${id}:`, result.error);
 
-      return NextResponse.json({
-        success: false,
-        error: result.error,
-      }, { status });
+      return NextResponse.json(
+        {
+          success: false,
+          error: result.error,
+        },
+        { status }
+      );
     }
 
     console.log(`✅ [Import Cancel] Legacy import ${id} cancelled successfully`);

@@ -365,7 +365,9 @@ function ValidationStep({
             >
               <h3
                 className={`font-bold mb-2 ${
-                  validationResult.validation?.isValid && validationResult.summary?.errors === 0 ? "text-green-900" : "text-red-900"
+                  validationResult.validation?.isValid && validationResult.summary?.errors === 0
+                    ? "text-green-900"
+                    : "text-red-900"
                 }`}
               >
                 {validationResult.validation?.isValid && validationResult.summary?.errors === 0
@@ -374,7 +376,9 @@ function ValidationStep({
               </h3>
               <p
                 className={`text-sm ${
-                  validationResult.validation?.isValid && validationResult.summary?.errors === 0 ? "text-green-700" : "text-red-700"
+                  validationResult.validation?.isValid && validationResult.summary?.errors === 0
+                    ? "text-green-700"
+                    : "text-red-700"
                 }`}
               >
                 {validationResult.validation?.isValid && validationResult.summary?.errors === 0

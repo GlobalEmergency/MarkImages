@@ -292,9 +292,7 @@ export default function VerifyPage() {
             <div className="flex flex-col gap-4">
               {/* Search field */}
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">
-                  Buscar DEA
-                </label>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Buscar DEA</label>
                 <form onSubmit={handleSearch} className="flex gap-2">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -323,9 +321,7 @@ export default function VerifyPage() {
                   </button>
                 </form>
                 {searchTerm && (
-                  <p className="mt-1 text-xs text-blue-600">
-                    Buscando: &quot;{searchTerm}&quot;
-                  </p>
+                  <p className="mt-1 text-xs text-blue-600">Buscando: &quot;{searchTerm}&quot;</p>
                 )}
               </div>
 
@@ -371,7 +367,8 @@ export default function VerifyPage() {
               <div className="flex items-center justify-between text-sm text-blue-800">
                 <span>
                   Mostrando <strong>{aeds.length}</strong> de{" "}
-                  <strong>{pagination.totalRecords}</strong> DEAs ({currentFilter.label.toLowerCase()})
+                  <strong>{pagination.totalRecords}</strong> DEAs (
+                  {currentFilter.label.toLowerCase()})
                 </span>
                 <span className="text-blue-600">
                   Página {pagination.currentPage} de {pagination.totalPages}
