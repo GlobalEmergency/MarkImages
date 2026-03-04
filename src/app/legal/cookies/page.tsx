@@ -4,6 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Política de Cookies - DeaMap",
   description: "Política de cookies de DeaMap. Información sobre el uso de cookies en nuestra plataforma.",
+  robots: { index: false, follow: false },
 };
 
 export default function CookiePolicyPage() {
@@ -141,7 +142,7 @@ export default function CookiePolicyPage() {
             <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">7. Contacto</h2>
             <p>
               Si tienes preguntas sobre nuestra política de cookies, contacta con nosotros en{" "}
-              <a href="mailto:contacto@deamap.es" className="text-blue-600 hover:underline">contacto@deamap.es</a>.
+              <a href="mailto:rgpd@globalemergency.online" className="text-blue-600 hover:underline">rgpd@globalemergency.online</a>.
             </p>
           </section>
         </div>

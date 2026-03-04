@@ -4,6 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Política de Privacidad - DeaMap",
   description: "Política de privacidad de DeaMap. Información sobre el tratamiento de datos personales.",
+  robots: { index: false, follow: false },
 };
 
 export default function PrivacyPolicyPage() {
@@ -17,12 +18,12 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">1. Responsable del tratamiento</h2>
             <p>
-              El responsable del tratamiento de los datos personales recogidos a través de este sitio web es
-              <strong> Global Emergency</strong>, proyecto al que pertenece DeaMap.
+              DeaMap es un proyecto desarrollado por <strong>Global Emergency</strong>, que actúa como responsable
+              del tratamiento de los datos personales recogidos a través de este sitio web.
             </p>
             <ul className="list-disc pl-5 space-y-1 mt-2">
               <li>Sitio web: <a href="https://www.globalemergency.online" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">www.globalemergency.online</a></li>
-              <li>Correo de contacto: <a href="mailto:contacto@deamap.es" className="text-blue-600 hover:underline">contacto@deamap.es</a></li>
+              <li>Correo de protección de datos: <a href="mailto:rgpd@globalemergency.online" className="text-blue-600 hover:underline">rgpd@globalemergency.online</a></li>
             </ul>
           </section>
 
@@ -64,9 +65,9 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">5. Conservación de los datos</h2>
             <p>
               Los datos personales se conservarán mientras mantengas tu cuenta activa. Si solicitas la eliminación de
-              tu cuenta, los datos serán eliminados salvo aquellos que debamos conservar por obligación legal.
-              Los datos de desfibriladores aportados por los usuarios se consideran de interés público y podrán
-              mantenerse de forma anonimizada tras la eliminación de la cuenta.
+              tu cuenta, tus datos personales serán eliminados salvo aquellos que debamos conservar por obligación legal.
+              Los datos de desfibriladores que hayas aportado podrán mantenerse de forma anonimizada tras la eliminación
+              de tu cuenta, dado su interés para la seguridad pública, salvo que solicites expresamente su retirada.
             </p>
           </section>
 
@@ -92,7 +93,7 @@ export default function PrivacyPolicyPage() {
             </ul>
             <p className="mt-2">
               Para ejercer estos derechos, contacta con nosotros en{" "}
-              <a href="mailto:contacto@deamap.es" className="text-blue-600 hover:underline">contacto@deamap.es</a>.
+              <a href="mailto:rgpd@globalemergency.online" className="text-blue-600 hover:underline">rgpd@globalemergency.online</a>.
             </p>
           </section>
 
@@ -126,7 +127,7 @@ export default function PrivacyPolicyPage() {
             <p>
               Si tienes preguntas sobre esta política de privacidad o sobre el tratamiento de tus datos, puedes
               contactarnos en{" "}
-              <a href="mailto:contacto@deamap.es" className="text-blue-600 hover:underline">contacto@deamap.es</a>.
+              <a href="mailto:rgpd@globalemergency.online" className="text-blue-600 hover:underline">rgpd@globalemergency.online</a>.
             </p>
           </section>
         </div>

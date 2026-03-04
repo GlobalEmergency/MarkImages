@@ -4,6 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Condiciones de Uso - DeaMap",
   description: "Condiciones de uso del servicio DeaMap. Términos y condiciones para el uso de la plataforma.",
+  robots: { index: false, follow: false },
 };
 
 export default function TermsOfServicePage() {
@@ -64,11 +65,17 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">5. Contenido del usuario</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">5. Contenido del usuario y propiedad de los datos</h2>
             <p>
-              Al aportar información a DeaMap (ubicaciones de DEAs, imágenes, verificaciones, etc.), otorgas una
-              licencia no exclusiva, gratuita y mundial para utilizar, mostrar y distribuir dicho contenido dentro
-              de la plataforma con el fin de mejorar el servicio y contribuir a la seguridad pública.
+              Los datos de desfibriladores que aportes a DeaMap (ubicaciones, imágenes, verificaciones, etc.)
+              siguen siendo de tu propiedad. Al aportarlos, otorgas a DeaMap una licencia no exclusiva y gratuita
+              para utilizar, mostrar y compartir públicamente dichos datos dentro de la plataforma, con el fin de
+              mejorar el servicio y contribuir a la seguridad pública.
+            </p>
+            <p className="mt-2">
+              Algunos datos de desfibriladores pueden estar sujetos a restricciones de visibilidad establecidas por
+              las organizaciones o usuarios que los aportan. DeaMap respeta dichas restricciones y no compartirá
+              públicamente datos marcados como restringidos.
             </p>
             <p className="mt-2">
               Eres responsable de la veracidad y legalidad del contenido que aportes. DeaMap se reserva el derecho
@@ -107,8 +114,9 @@ export default function TermsOfServicePage() {
             <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">8. Propiedad intelectual</h2>
             <p>
               El diseño, código fuente, logotipos y contenido original de DeaMap son propiedad de Global Emergency.
-              Los datos de desfibriladores aportados por la comunidad se consideran de interés público y se
-              gestionan bajo los principios de datos abiertos cuando es posible.
+              Los datos de desfibriladores aportados por los usuarios son propiedad de quienes los aportan;
+              DeaMap dispone de licencia de uso para mostrarlos y compartirlos en la plataforma conforme a la
+              sección 5 de estas condiciones.
             </p>
           </section>
 
@@ -150,7 +158,7 @@ export default function TermsOfServicePage() {
             <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">13. Contacto</h2>
             <p>
               Si tienes preguntas sobre estas condiciones de uso, contacta con nosotros en{" "}
-              <a href="mailto:contacto@deamap.es" className="text-blue-600 hover:underline">contacto@deamap.es</a>.
+              <a href="mailto:rgpd@globalemergency.online" className="text-blue-600 hover:underline">rgpd@globalemergency.online</a>.
             </p>
           </section>
         </div>
