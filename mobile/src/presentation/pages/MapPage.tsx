@@ -96,7 +96,7 @@ const MapPage: React.FC = () => {
           handleBehavior="cycle"
         >
           {selectedAed && (
-            <>
+            <IonContent>
               <AedDetailSheet aedId={selectedAed.id} name={selectedAed.name} />
               <div className="ion-padding" style={{ paddingTop: 0 }}>
                 <IonButton expand="block" fill="outline" onClick={handleViewDetail}>
@@ -104,7 +104,7 @@ const MapPage: React.FC = () => {
                   Ver detalle completo
                 </IonButton>
               </div>
-            </>
+            </IonContent>
           )}
         </IonModal>
       </IonContent>

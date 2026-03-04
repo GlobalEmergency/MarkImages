@@ -1,13 +1,5 @@
 import React from "react";
-import {
-  IonContent,
-  IonText,
-  IonButton,
-  IonIcon,
-  IonSpinner,
-  IonChip,
-  IonLabel,
-} from "@ionic/react";
+import { IonText, IonButton, IonIcon, IonSpinner, IonChip, IonLabel } from "@ionic/react";
 import { navigate as navigateIcon, time, call, location } from "ionicons/icons";
 
 import { useAedDetail } from "../hooks/useAedDetail";
@@ -18,6 +10,12 @@ interface AedDetailSheetProps {
   name: string;
 }
 
+/**
+ * Detail card shown inside the sheet modal on MapPage.
+ * Does NOT use IonContent — the parent modal provides the single scroll
+ * container so all children (this card + the "Ver detalle" button) flow
+ * naturally without empty-space gaps.
+ */
 const AedDetailSheet: React.FC<AedDetailSheetProps> = ({ aedId, name }) => {
   const { aed, loading, error } = useAedDetail(aedId);
 
@@ -29,43 +27,44 @@ const AedDetailSheet: React.FC<AedDetailSheetProps> = ({ aedId, name }) => {
 
   if (loading) {
     return (
-      <IonContent className="ion-padding">
+      <div className="ion-padding">
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <IonSpinner />
           <IonText>Cargando {name}...</IonText>
         </div>
-      </IonContent>
+      </div>
     );
   }
 
   if (error || !aed) {
     return (
-      <IonContent className="ion-padding">
+      <div className="ion-padding">
         <IonText color="danger">{error || "DEA no encontrado"}</IonText>
-      </IonContent>
+      </div>
     );
   }
 
   return (
-    <IonContent className="ion-padding">
+    <div className="ion-padding" style={{ paddingBottom: 0 }}>
       <IonText>
         <h2 style={{ marginTop: 0, marginBottom: 4 }}>{aed.name}</h2>
       </IonText>
 
-      {aed.code && (
-        <IonChip color="primary" style={{ marginBottom: 8 }}>
-          <IonLabel>{aed.code}</IonLabel>
-        </IonChip>
-      )}
-
-      {aed.establishment_type && (
-        <IonChip color="medium" style={{ marginBottom: 12 }}>
-          <IonLabel>{aed.establishment_type}</IonLabel>
-        </IonChip>
-      )}
+      <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
+        {aed.code && (
+          <IonChip color="primary">
+            <IonLabel>{aed.code}</IonLabel>
+          </IonChip>
+        )}
+        {aed.establishment_type && (
+          <IonChip color="medium">
+            <IonLabel>{aed.establishment_type}</IonLabel>
+          </IonChip>
+        )}
+      </div>
 
       {aed.location && (
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 8 }}>
           <IonIcon
             icon={location}
             style={{ fontSize: 20, marginTop: 2, color: "var(--ion-color-primary)" }}
@@ -88,7 +87,7 @@ const AedDetailSheet: React.FC<AedDetailSheetProps> = ({ aedId, name }) => {
       )}
 
       {aed.schedule && (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
           <IonIcon icon={time} style={{ fontSize: 20, color: "var(--ion-color-primary)" }} />
           <IonText>
             {aed.schedule.has_24h_surveillance ? (
@@ -105,7 +104,7 @@ const AedDetailSheet: React.FC<AedDetailSheetProps> = ({ aedId, name }) => {
       )}
 
       {aed.responsible?.phone && (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
           <IonIcon icon={call} style={{ fontSize: 20, color: "var(--ion-color-primary)" }} />
           <IonText>
             <p style={{ margin: 0 }}>{aed.responsible.phone}</p>
@@ -113,11 +112,11 @@ const AedDetailSheet: React.FC<AedDetailSheetProps> = ({ aedId, name }) => {
         </div>
       )}
 
-      <IonButton expand="block" onClick={handleNavigate} style={{ marginTop: 16 }}>
+      <IonButton expand="block" onClick={handleNavigate} style={{ marginTop: 8 }}>
         <IonIcon icon={navigateIcon} slot="start" />
         Cómo llegar
       </IonButton>
-    </IonContent>
+    </div>
   );
 };
 
