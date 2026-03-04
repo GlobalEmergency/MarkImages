@@ -1,0 +1,563 @@
+name: Release Mobile App
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g., 1.0.0)"
+        required: true
+        type: string
+      deploy_android:
+        description: "Deploy to Google Play Store"
+        required: false
+        type: boolean
+        default: true
+      deploy_ios:
+        description: "Deploy to TestFlight"
+        required: false
+        type: boolean
+        default: true
+      android_track:
+        description: "Android release track"
+        required: false
+        type: choice
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
+        default: internal
+
+# Minimal top-level permissions — jobs override as needed
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+  JAVA_VERSION: "21"
+
+jobs:
+  # ──────────────────────────────────────────────────────────────
+  # 1. Prepare — extract version + build number
+  # ──────────────────────────────────────────────────────────────
+  prepare:
+    name: Prepare Release
+    runs-on: ubuntu-latest
+    # Only run for mobile tags or manual dispatch
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'release' && startsWith(github.event.release.tag_name, 'mobile@'))
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      build_number: ${{ steps.version.outputs.build_number }}
+
+    steps:
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            # Tag format: mobile@x.y.z → extract version after @
+            VERSION="${{ github.event.release.tag_name }}"
+            VERSION="${VERSION#*@}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+
+          # Validate version format (x.y.z)
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Invalid version format: '$VERSION'. Expected semver (e.g., 1.0.0)"
+            exit 1
+          fi
+
+          # Same formula as scripts/propagate-version.js:
+          # major * 1_000_000 + minor * 1_000 + patch
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          BUILD_NUMBER=$(( MAJOR * 1000000 + MINOR * 1000 + PATCH ))
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Release version: $VERSION (build $BUILD_NUMBER)"
+
+  # ──────────────────────────────────────────────────────────────
+  # 2. Check Play Store — decide build vs promote vs skip
+  # ──────────────────────────────────────────────────────────────
+  check-play-store:
+    name: Check Play Store
+    needs: prepare
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' || github.event.inputs.deploy_android == 'true'
+    outputs:
+      action: ${{ steps.check.outputs.action }}
+      source_track: ${{ steps.check.outputs.source_track }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install googleapis
+        run: npm install googleapis
+
+      - name: Check version on Play Store
+        id: check
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          PACKAGE_NAME: es.deamap.mobile
+          WHATSNEW_DIR: mobile/whatsnew
+        run: |
+          node .github/scripts/google-play-version.mjs check \
+            --version-code ${{ needs.prepare.outputs.build_number }} \
+            --target-track ${{ github.event.inputs.android_track || 'internal' }}
+
+  # ──────────────────────────────────────────────────────────────
+  # 3a. Build Android (when version not on Play Store yet)
+  # ──────────────────────────────────────────────────────────────
+  build-android:
+    name: Build Android
+    needs: [prepare, check-play-store]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    if: needs.check-play-store.outputs.action == 'build'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('mobile/android/**/*.gradle*', 'mobile/android/**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: mobile
+
+      - name: Build web assets (Vite)
+        run: npm run build
+        working-directory: mobile
+        env:
+          VITE_API_BASE_URL: "https://deamap.es"
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+        working-directory: mobile
+
+      - name: Update version in build.gradle
+        working-directory: mobile/android/app
+        run: |
+          sed -i "s/versionName \".*\"/versionName \"${{ needs.prepare.outputs.version }}\"/" build.gradle
+          sed -i "s/versionCode .*/versionCode ${{ needs.prepare.outputs.build_number }}/" build.gradle
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+        working-directory: mobile/android
+
+      - name: Build Release APK & AAB
+        working-directory: mobile/android
+        run: |
+          ./gradlew assembleRelease
+          ./gradlew bundleRelease
+
+      - name: Sign Release APK
+        uses: r0adkll/sign-android-release@349ebdef58775b1e0d8099458af0816dc79b6407 # v1
+        id: sign_apk
+        with:
+          releaseDirectory: mobile/android/app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+          alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
+
+      - name: Sign Release AAB
+        uses: r0adkll/sign-android-release@349ebdef58775b1e0d8099458af0816dc79b6407 # v1
+        id: sign_aab
+        with:
+          releaseDirectory: mobile/android/app/build/outputs/bundle/release
+          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+          alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
+
+      - name: Upload Release Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-android-${{ needs.prepare.outputs.version }}
+          path: |
+            ${{ steps.sign_apk.outputs.signedReleaseFile }}
+            ${{ steps.sign_aab.outputs.signedReleaseFile }}
+          retention-days: 30
+
+      - name: Generate release notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_BODY: ${{ github.event.release.body || '' }}
+        run: bash .github/scripts/generate-whatsnew.sh ./mobile/whatsnew
+
+      - name: Upload to Google Play Store
+        if: success()
+        uses: r0adkll/upload-google-play@935ef9c68bb393a8e6116b1575626a7f5be3a7fb # v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: es.deamap.mobile
+          releaseFiles: ${{ steps.sign_aab.outputs.signedReleaseFile }}
+          track: ${{ github.event.inputs.android_track || 'internal' }}
+          status: completed
+          whatsNewDirectory: ./mobile/whatsnew
+
+  # ──────────────────────────────────────────────────────────────
+  # 3b. Promote Android (when version exists on different track)
+  # ──────────────────────────────────────────────────────────────
+  promote-android:
+    name: Promote Android
+    needs: [prepare, check-play-store]
+    runs-on: ubuntu-latest
+    if: needs.check-play-store.outputs.action == 'promote'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install googleapis
+        run: npm install googleapis
+
+      - name: Promote version on Play Store
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          PACKAGE_NAME: es.deamap.mobile
+          WHATSNEW_DIR: mobile/whatsnew
+        run: |
+          node .github/scripts/google-play-version.mjs promote \
+            --version-code ${{ needs.prepare.outputs.build_number }} \
+            --from-track ${{ needs.check-play-store.outputs.source_track }} \
+            --to-track ${{ github.event.inputs.android_track || 'internal' }}
+
+  # ──────────────────────────────────────────────────────────────
+  # 4. Build iOS (when deploying to TestFlight)
+  # ──────────────────────────────────────────────────────────────
+  build-ios:
+    name: Build iOS
+    needs: prepare
+    runs-on: macos-15
+    timeout-minutes: 60
+    if: |
+      github.event_name == 'release' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_ios == 'true')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: mobile
+
+      - name: Build web assets (Vite)
+        run: npm run build
+        working-directory: mobile
+        env:
+          VITE_API_BASE_URL: "https://deamap.es"
+
+      - name: Sync Capacitor
+        run: npx cap sync ios
+        working-directory: mobile
+
+      - name: Run native setup script
+        run: bash scripts/setup-native.sh
+        working-directory: mobile
+
+      - name: Cache SPM packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/spm-cache
+          key: ${{ runner.os }}-spm-${{ hashFiles('mobile/ios/App/CapApp-SPM/Package.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Install Apple certificate and provisioning profile
+        env:
+          IOS_CERTIFICATE_P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          # Create temporary keychain
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -hex 24)"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import certificate
+          CERTIFICATE_PATH="$RUNNER_TEMP/certificate.p12"
+          echo "$IOS_CERTIFICATE_P12_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
+          security import "$CERTIFICATE_PATH" \
+            -P "$IOS_CERTIFICATE_PASSWORD" \
+            -A \
+            -t cert \
+            -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+          security set-key-partition-list \
+            -S apple-tool:,apple: \
+            -k "$KEYCHAIN_PASSWORD" \
+            "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+
+          # Install provisioning profile
+          PROFILE_PATH="$RUNNER_TEMP/profile.mobileprovision"
+          echo "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
+
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin \
+            <<< "$(security cms -D -i "$PROFILE_PATH")")
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp "$PROFILE_PATH" \
+            "$HOME/Library/MobileDevice/Provisioning Profiles/${PROFILE_UUID}.mobileprovision"
+
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+          echo "PROVISIONING_PROFILE_UUID=$PROFILE_UUID" >> "$GITHUB_ENV"
+
+      - name: Resolve Swift packages
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/spm-cache"
+        working-directory: mobile
+
+      - name: Update version in Xcode project
+        working-directory: mobile
+        run: |
+          node -e "
+            const fs = require('fs');
+            const pbx = 'ios/App/App.xcodeproj/project.pbxproj';
+            let content = fs.readFileSync(pbx, 'utf-8');
+            content = content.replace(/MARKETING_VERSION = [^;]+;/g, 'MARKETING_VERSION = ${{ needs.prepare.outputs.version }};');
+            content = content.replace(/CURRENT_PROJECT_VERSION = [^;]+;/g, 'CURRENT_PROJECT_VERSION = ${{ needs.prepare.outputs.build_number }};');
+            fs.writeFileSync(pbx, content);
+            console.log('Updated pbxproj: MARKETING_VERSION=${{ needs.prepare.outputs.version }}, CURRENT_PROJECT_VERSION=${{ needs.prepare.outputs.build_number }}');
+          "
+
+      - name: Build and archive
+        env:
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+        run: |
+          xcodebuild archive \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -destination "generic/platform=iOS" \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/spm-cache" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            DEVELOPMENT_TEAM="$IOS_TEAM_ID" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            PROVISIONING_PROFILE="$PROVISIONING_PROFILE_UUID" \
+            OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN_PATH" \
+            -allowProvisioningUpdates=NO
+        working-directory: mobile
+
+      - name: Create ExportOptions.plist
+        env:
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+            "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>teamID</key>
+            <string>${IOS_TEAM_ID}</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>es.deamap.mobile</key>
+              <string>${PROVISIONING_PROFILE_UUID}</string>
+            </dict>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>destination</key>
+            <string>upload</string>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Export IPA
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -allowProvisioningUpdates=NO
+
+      - name: Rename IPA with version
+        id: ipa_info
+        run: |
+          IPA_NAME="DeaMap-v${{ needs.prepare.outputs.version }}.ipa"
+          mv "$RUNNER_TEMP/export/App.ipa" "$RUNNER_TEMP/export/${IPA_NAME}"
+          echo "ipa_path=$RUNNER_TEMP/export/${IPA_NAME}" >> "$GITHUB_OUTPUT"
+          echo "ipa_name=${IPA_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-ios-${{ needs.prepare.outputs.version }}
+          path: ${{ steps.ipa_info.outputs.ipa_path }}
+          retention-days: 30
+
+      - name: Upload to TestFlight
+        if: success()
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+        run: |
+          mkdir -p private_keys
+          echo "$APP_STORE_CONNECT_API_KEY_BASE64" | base64 --decode \
+            > "private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
+
+          xcrun altool --upload-app \
+            --type ios \
+            --file "${{ steps.ipa_info.outputs.ipa_path }}" \
+            --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_API_ISSUER_ID"
+
+      - name: Cleanup keychain
+        if: always()
+        run: |
+          if [ -n "$KEYCHAIN_PATH" ] && [ -f "$KEYCHAIN_PATH" ]; then
+            security delete-keychain "$KEYCHAIN_PATH" || true
+          fi
+
+  # ──────────────────────────────────────────────────────────────
+  # 5. Update GitHub Release with build artifacts
+  # ──────────────────────────────────────────────────────────────
+  create-github-release:
+    name: Update GitHub Release
+    needs: [prepare, build-android, build-ios]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && always()
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download Android artifacts
+        if: needs.build-android.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: app-release-android-${{ needs.prepare.outputs.version }}
+          path: ./android
+
+      - name: Download iOS artifacts
+        if: needs.build-ios.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: app-release-ios-${{ needs.prepare.outputs.version }}
+          path: ./ios
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@c062e08bd532815e2082a7e09ce9f200309e996d # v2.2.1
+        with:
+          files: |
+            ./android/*
+            ./ios/*
+
+  # ──────────────────────────────────────────────────────────────
+  # 6. Release Summary (always runs)
+  # ──────────────────────────────────────────────────────────────
+  notify:
+    name: Release Summary
+    needs: [prepare, check-play-store, build-android, promote-android, build-ios]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Create summary
+        run: |
+          echo "## 📱 Mobile Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ needs.prepare.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Number:** ${{ needs.prepare.outputs.build_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Target Track:** ${{ github.event.inputs.android_track || 'internal' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Android action taken
+          ACTION="${{ needs.check-play-store.outputs.action }}"
+          case "$ACTION" in
+            build)
+              ANDROID_ACTION="Build + Upload"
+              ;;
+            promote)
+              ANDROID_ACTION="Promoted from ${{ needs.check-play-store.outputs.source_track }}"
+              ;;
+            skip)
+              ANDROID_ACTION="Skipped (already on target track)"
+              ;;
+            *)
+              ANDROID_ACTION="-"
+              ;;
+          esac
+
+          # Android result
+          if [ "${{ needs.build-android.result }}" == "success" ] || [ "${{ needs.promote-android.result }}" == "success" ]; then
+            ANDROID_STATUS="✅"
+          elif [ "$ACTION" == "skip" ]; then
+            ANDROID_STATUS="⏭️"
+          elif [ "${{ needs.build-android.result }}" == "skipped" ] && [ "${{ needs.promote-android.result }}" == "skipped" ]; then
+            ANDROID_STATUS="⏭️"
+          else
+            ANDROID_STATUS="❌"
+          fi
+
+          echo "| Platform | Status | Action |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Android | $ANDROID_STATUS | $ANDROID_ACTION |" >> $GITHUB_STEP_SUMMARY
+          echo "| iOS | ${{ needs.build-ios.result == 'success' && '✅' || needs.build-ios.result == 'skipped' && '⏭️' || '❌' }} | ${{ needs.build-ios.result == 'success' && 'TestFlight' || '-' }} |" >> $GITHUB_STEP_SUMMARY
