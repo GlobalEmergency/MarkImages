@@ -74,7 +74,7 @@ const MapPage: React.FC = () => {
       <IonContent fullscreen scrollY={false}>
         {/* Absolute positioning ensures the map gets real pixel dimensions
             inside Ionic's shadow DOM scroll container */}
-        <div style={{ position: "absolute", inset: 0 }}>
+        <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}>
           <MapView
             onMarkerSelect={handleMarkerSelect}
             userPosition={position}
