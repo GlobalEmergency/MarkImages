@@ -2,13 +2,18 @@ import React from "react";
 import { IonIcon } from "@ionic/react";
 import { imageOutline } from "ionicons/icons";
 
-import { AedImage } from "../../domain/models/Aed";
+import { AedImage, AedImageType } from "../../domain/models/Aed";
 
-interface ImageGalleryProps {
-  images: AedImage[];
-}
+const IMAGE_TYPE_LABELS: Record<AedImageType, string> = {
+  FRONT: "Vista frontal del DEA",
+  LOCATION: "Ubicación del DEA",
+  ACCESS: "Acceso al DEA",
+  SIGNAGE: "Señalización del DEA",
+  CONTEXT: "Entorno del DEA",
+  PLATE: "Placa del DEA",
+};
 
-const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
+const ImageGallery: React.FC<{ images: AedImage[] }> = ({ images }) => {
   if (!images || images.length === 0) {
     return (
       <div
@@ -43,7 +48,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
         <img
           key={img.id}
           src={img.processed_url || img.original_url}
-          alt={img.type}
+          alt={IMAGE_TYPE_LABELS[img.type] || img.type}
           style={{
             width: images.length === 1 ? "100%" : "85%",
             height: 220,

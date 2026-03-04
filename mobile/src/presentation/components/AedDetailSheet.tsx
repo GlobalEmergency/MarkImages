@@ -11,6 +11,7 @@ import {
 import { navigate as navigateIcon, time, call, location } from "ionicons/icons";
 
 import { useAedDetail } from "../hooks/useAedDetail";
+import { buildNavigationUrl } from "../utils/navigation";
 
 interface AedDetailSheetProps {
   aedId: string;
@@ -22,8 +23,7 @@ const AedDetailSheet: React.FC<AedDetailSheetProps> = ({ aedId, name }) => {
 
   const handleNavigate = () => {
     if (aed) {
-      const url = `geo:${aed.latitude},${aed.longitude}?q=${aed.latitude},${aed.longitude}(${encodeURIComponent(aed.name)})`;
-      window.open(url, "_system");
+      window.open(buildNavigationUrl(aed.latitude, aed.longitude, aed.name), "_system");
     }
   };
 

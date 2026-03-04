@@ -1,5 +1,5 @@
-import { useMapEvents } from "react-leaflet";
-import type { LeafletEvent } from "leaflet";
+import React from "react";
+import { useMap, useMapEvents } from "react-leaflet";
 
 import { BoundingBox } from "../../../domain/models/Location";
 
@@ -8,8 +8,9 @@ interface MapEventHandlerProps {
 }
 
 const MapEventHandler: React.FC<MapEventHandlerProps> = ({ onBoundsChange }) => {
-  const handleMapChange = (e: LeafletEvent) => {
-    const map = e.target;
+  const map = useMap();
+
+  const handleMapChange = () => {
     const b = map.getBounds();
     const zoom = map.getZoom();
     onBoundsChange(

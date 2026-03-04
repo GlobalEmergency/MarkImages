@@ -1,7 +1,7 @@
 import { IAuthRepository, AuthResult } from "../../domain/ports/IAuthRepository";
 import { ITokenStorage } from "../../domain/ports/ITokenStorage";
 import { UserPublic } from "../../domain/models/User";
-import { AuthResponse } from "../../application/dto/AuthDTO";
+import { AuthResponse, LoginRequest, RegisterRequest } from "../../application/dto/AuthDTO";
 import { IHttpClient } from "../../domain/ports/IHttpClient";
 
 export class ApiAuthRepository implements IAuthRepository {
@@ -11,10 +11,8 @@ export class ApiAuthRepository implements IAuthRepository {
   ) {}
 
   async login(email: string, password: string): Promise<AuthResult> {
-    const response = await this.httpClient.post<AuthResponse>("/api/auth/login", {
-      email,
-      password,
-    });
+    const body: LoginRequest = { email, password };
+    const response = await this.httpClient.post<AuthResponse>("/api/auth/login", body);
 
     if (!response.token) {
       throw new Error("No se recibió token del servidor");
@@ -26,11 +24,8 @@ export class ApiAuthRepository implements IAuthRepository {
   }
 
   async register(name: string, email: string, password: string): Promise<AuthResult> {
-    const response = await this.httpClient.post<AuthResponse>("/api/auth/register", {
-      name,
-      email,
-      password,
-    });
+    const body: RegisterRequest = { name, email, password };
+    const response = await this.httpClient.post<AuthResponse>("/api/auth/register", body);
 
     if (!response.token) {
       throw new Error("No se recibió token del servidor");

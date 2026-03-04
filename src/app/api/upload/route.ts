@@ -7,10 +7,7 @@ import { requireAuth } from "@/lib/auth";
 export async function POST(request: NextRequest) {
   try {
     // Require authentication for image uploads
-    const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-    }
+    await requireAuth(request);
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;

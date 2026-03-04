@@ -45,14 +45,11 @@ interface PaginationInfo {
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-    }
+    await requireAuth(request);
 
     const searchParams = request.nextUrl.searchParams;
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "20", 10);
     const skip = (page - 1) * limit;
 
     // Filtros opcionales
@@ -123,17 +120,15 @@ export async function GET(request: NextRequest) {
         if (!aed.internal_notes || !Array.isArray(aed.internal_notes)) return false;
 
         // Look for duplicate note with score
-        const duplicateNote = aed.internal_notes.find((n) =>
-          n.text?.includes("score:")
-        );
+        const duplicateNote = aed.internal_notes.find((n) => n.text?.includes("score:"));
         if (!duplicateNote?.text) return false;
 
         const scoreMatch = duplicateNote.text.match(/score:\s*(\d+)/);
         if (!scoreMatch) return false;
 
-        const score = parseInt(scoreMatch[1]);
-        if (minScore && score < parseInt(minScore)) return false;
-        if (maxScore && score > parseInt(maxScore)) return false;
+        const score = parseInt(scoreMatch[1], 10);
+        if (minScore && score < parseInt(minScore, 10)) return false;
+        if (maxScore && score > parseInt(maxScore, 10)) return false;
 
         return true;
       });

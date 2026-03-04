@@ -7,6 +7,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin, AuthError } from "@/lib/auth";
 import type { CreateOrganizationRequest } from "@/types/organization";
+import type { Prisma } from "@/generated/client/client";
+import type { OrganizationType } from "@/generated/client/enums";
 
 /**
  * GET /api/admin/organizations
@@ -21,8 +23,8 @@ export async function GET(request: NextRequest) {
     const cityCode = searchParams.get("city_code");
 
     // Build where clause
-    const where: any = {};
-    if (type) where.type = type;
+    const where: Prisma.OrganizationWhereInput = {};
+    if (type) where.type = type as OrganizationType;
     if (isActive) where.is_active = isActive === "true";
     if (cityCode) where.city_code = cityCode;
 

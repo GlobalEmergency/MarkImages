@@ -8,9 +8,6 @@ import { VerificationStep } from "@/types/verification";
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-    }
 
     const { id } = await params;
 
@@ -83,14 +80,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const validationData = validation.data as { current_step?: string; user_id?: string } | null;
     const currentStep = validationData?.current_step || VerificationStep.ADDRESS_VALIDATION;
 
-    console.log("=== GET /api/verify/[id] - Returning data ===");
-    console.log("Validation ID:", validation.id);
-    console.log("Validation status:", validation.status);
-    console.log("Validation created at:", validation.created_at);
-    console.log("Validation data (full):", validation.data);
-    console.log("Extracted current_step:", validationData?.current_step);
-    console.log("Final current_step to return:", currentStep);
-
     return NextResponse.json({
       aed,
       validation,
@@ -104,19 +93,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-    }
+    await requireAuth(request);
 
     const { id } = await params;
     const body = await request.json();
     const { step, data } = body;
-
-    console.log("=== PUT /api/verify/[id] - Updating step ===");
-    console.log("AED ID:", id);
-    console.log("New step:", step);
-    console.log("Step data:", data);
 
     // Find the active validation
     const validation = await prisma.aedValidation.findFirst({
@@ -129,9 +110,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (!validation) {
       return NextResponse.json({ error: "Sesión de verificación no encontrada" }, { status: 404 });
     }
-
-    console.log("Found validation:", validation.id);
-    console.log("Current validation data:", validation.data);
 
     // Update the validation with new step and data
     // IMPORTANT: current_step must be last to avoid being overwritten by stepData
@@ -146,9 +124,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         updated_at: new Date(),
       },
     });
-
-    console.log("Updated validation data:", updatedValidation.data);
-    console.log("Confirmed current_step in DB:", (updatedValidation.data as any)?.current_step);
 
     // Create a session record for this step
     await prisma.validationSession.create({
@@ -172,10 +147,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-    }
+    await requireAuth(request);
 
     const { id } = await params;
 

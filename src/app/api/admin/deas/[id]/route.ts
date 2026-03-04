@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
+import { requireAdmin, AuthError } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { uploadToS3 } from "@/lib/s3";
 
@@ -17,13 +17,7 @@ import { uploadToS3 } from "@/lib/s3";
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // Require ADMIN authentication
-    const user = await requireAuth(request);
-    if (!user || user.role !== "ADMIN") {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized - Admin access required" },
-        { status: 403 }
-      );
-    }
+    const user = await requireAdmin(request);
 
     const { id } = await params;
 
@@ -164,6 +158,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       },
     });
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      );
+    }
     console.error("Error fetching admin AED detail:", error);
     return NextResponse.json(
       {
@@ -240,13 +240,7 @@ function trackNestedChanges(
  */
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requireAuth(request);
-    if (!user || user.role !== "ADMIN") {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized - Admin access required" },
-        { status: 403 }
-      );
-    }
+    const user = await requireAdmin(request);
 
     const { id } = await params;
     const body = await request.json();
@@ -612,6 +606,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       images_added: addImages?.length || 0,
     });
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      );
+    }
     console.error("Error updating AED:", error);
     return NextResponse.json(
       {

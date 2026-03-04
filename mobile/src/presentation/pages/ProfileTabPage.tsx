@@ -57,7 +57,10 @@ const ProfileTabPage: React.FC = () => {
               padding: 32,
             }}
           >
-            <IonIcon icon={heartOutline} style={{ fontSize: 72, color: "#16a34a" }} />
+            <IonIcon
+              icon={heartOutline}
+              style={{ fontSize: 72, color: "var(--ion-color-primary)" }}
+            />
             <h2 style={{ margin: 0, fontSize: 22 }}>DeaMap</h2>
             <p style={{ color: "var(--ion-color-medium)", margin: 0 }}>
               Inicia sesión para contribuir registrando nuevos desfibriladores y ayudar a salvar

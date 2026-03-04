@@ -36,16 +36,6 @@ export async function POST(request: NextRequest) {
   try {
     // Require authentication
     const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Unauthorized",
-          message: "Authentication required to change publication mode",
-        },
-        { status: 401 }
-      );
-    }
 
     const body: BulkUpdatePublicationRequest = await request.json();
 

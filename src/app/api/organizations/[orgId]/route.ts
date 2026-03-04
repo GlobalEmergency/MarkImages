@@ -10,10 +10,6 @@ export async function GET(
   try {
     const user = await requireAuth(request);
 
-    if (!user) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
-
     const { orgId } = await params;
 
     // Verificar que el usuario pertenece a la organización
@@ -25,10 +21,7 @@ export async function GET(
     });
 
     if (!membership && user.role !== "ADMIN") {
-      return NextResponse.json(
-        { error: "No tienes acceso a esta organización" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "No tienes acceso a esta organización" }, { status: 403 });
     }
 
     // Obtener detalles de la organización
@@ -39,10 +32,7 @@ export async function GET(
     });
 
     if (!organization) {
-      return NextResponse.json(
-        { error: "Organización no encontrada" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Organización no encontrada" }, { status: 404 });
     }
 
     return NextResponse.json(organization);

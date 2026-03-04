@@ -32,6 +32,7 @@ import L from "leaflet";
 import { useAedDetail } from "../hooks/useAedDetail";
 import ImageGallery from "../components/ImageGallery";
 import ScheduleBadge from "../components/ScheduleBadge";
+import { buildNavigationUrl, buildTelUrl } from "../utils/navigation";
 
 /** Forces Leaflet to recalculate container size after the card finishes layout */
 const InvalidateSize: React.FC = () => {
@@ -60,13 +61,12 @@ const DeaDetailPage: React.FC = () => {
 
   const handleNavigate = () => {
     if (!aed) return;
-    const url = `geo:${aed.latitude},${aed.longitude}?q=${aed.latitude},${aed.longitude}(${encodeURIComponent(aed.name)})`;
-    window.open(url, "_system");
+    window.open(buildNavigationUrl(aed.latitude, aed.longitude, aed.name), "_system");
   };
 
   const handleCall = () => {
     if (!aed?.responsible?.phone) return;
-    window.open(`tel:${aed.responsible.phone}`, "_system");
+    window.open(buildTelUrl(aed.responsible.phone), "_system");
   };
 
   if (loading) {

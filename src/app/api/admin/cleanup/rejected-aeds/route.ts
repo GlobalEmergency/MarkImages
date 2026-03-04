@@ -9,10 +9,7 @@ import { prisma } from "@/lib/db";
  */
 export async function DELETE(request: NextRequest) {
   try {
-    const user = await requireAdmin(request);
-    if (!user) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-    }
+    await requireAdmin(request);
 
     // Obtener parámetros de la URL
     const { searchParams } = new URL(request.url);

@@ -11,13 +11,6 @@ export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth(request);
 
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: "No autorizado" },
-        { status: 401 }
-      );
-    }
-
     const isAdmin = user.role === "ADMIN";
 
     // Get organizations
@@ -38,7 +31,7 @@ export async function GET(request: NextRequest) {
     } else {
       // Non-admin: Only their organizations
       const userOrgs = await prisma.organizationMember.findMany({
-        where: { 
+        where: {
           user_id: user.userId,
           organization: {
             is_active: true,

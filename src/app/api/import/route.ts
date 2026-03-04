@@ -31,13 +31,7 @@ import {
 export async function GET(request: NextRequest) {
   try {
     // Verify authentication
-    const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json(
-        { error: "No autenticado" },
-        { status: 401 }
-      );
-    }
+    await requireAuth(request);
 
     // Parse query parameters
     const searchParams = request.nextUrl.searchParams;
@@ -135,9 +129,6 @@ export async function POST(request: NextRequest) {
   try {
     // Verify authentication
     const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-    }
 
     // Parse request body
     const body = await request.json();
@@ -190,7 +181,9 @@ export async function POST(request: NextRequest) {
         prefix: "batch-jobs/csv-imports",
       });
 
-      console.log(`âœ… [Import] CSV uploaded to S3: ${s3Url} (${fileSize} bytes, hash: ${fileHash.substring(0, 8)}...)`);
+      console.log(
+        `âœ… [Import] CSV uploaded to S3: ${s3Url} (${fileSize} bytes, hash: ${fileHash.substring(0, 8)}...)`
+      );
 
       // Clean up temporary file
       await fs.unlink(filePath);
@@ -246,8 +239,8 @@ export async function POST(request: NextRequest) {
 
     console.log(
       `ðŸ“‹ [Import] Job ${result.jobId} â€” first chunk processed: ` +
-      `${result.progress.processedRecords}/${result.progress.totalRecords} records ` +
-      `(${hasMore ? "more chunks pending" : "completed"})`
+        `${result.progress.processedRecords}/${result.progress.totalRecords} records ` +
+        `(${hasMore ? "more chunks pending" : "completed"})`
     );
 
     return NextResponse.json({
@@ -257,7 +250,10 @@ export async function POST(request: NextRequest) {
       progress: {
         totalRecords: result.progress.totalRecords,
         processedRecords: result.progress.processedRecords,
-        successfulRecords: Math.max(0, result.progress.processedRecords - result.progress.failedRecords),
+        successfulRecords: Math.max(
+          0,
+          result.progress.processedRecords - result.progress.failedRecords
+        ),
         failedRecords: result.progress.failedRecords,
         percentage: result.progress.percentage,
         hasMore,
@@ -276,4 +272,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

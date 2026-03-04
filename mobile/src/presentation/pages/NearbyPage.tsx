@@ -24,6 +24,27 @@ import { useNearbyAeds } from "../hooks/useNearbyAeds";
 import { formatDistance } from "../utils/format";
 import ScheduleBadge from "../components/ScheduleBadge";
 
+interface CenteredMessageProps {
+  children: React.ReactNode;
+}
+
+const CenteredMessage: React.FC<CenteredMessageProps> = ({ children }) => (
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "60vh",
+      flexDirection: "column",
+      gap: 12,
+      padding: 32,
+      textAlign: "center",
+    }}
+  >
+    {children}
+  </div>
+);
+
 const NearbyPage: React.FC = () => {
   const { aeds, loading, error, refresh, locationDenied } = useNearbyAeds(5, 10);
   const history = useHistory();
@@ -50,34 +71,14 @@ const NearbyPage: React.FC = () => {
         </IonRefresher>
 
         {loading && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              height: "60vh",
-              flexDirection: "column",
-              gap: 16,
-            }}
-          >
+          <CenteredMessage>
             <IonSpinner name="crescent" />
             <IonNote>Buscando DEAs cercanos...</IonNote>
-          </div>
+          </CenteredMessage>
         )}
 
         {locationDenied && !loading && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              height: "60vh",
-              flexDirection: "column",
-              gap: 12,
-              padding: 32,
-              textAlign: "center",
-            }}
-          >
+          <CenteredMessage>
             <IonIcon
               icon={locationOutline}
               style={{ fontSize: 64, color: "var(--ion-color-medium)" }}
@@ -86,47 +87,25 @@ const NearbyPage: React.FC = () => {
             <IonNote>
               Activa los permisos de ubicación para ver los desfibriladores más cercanos a ti.
             </IonNote>
-          </div>
+          </CenteredMessage>
         )}
 
         {error && !loading && !locationDenied && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              height: "60vh",
-              flexDirection: "column",
-              gap: 12,
-              padding: 32,
-              textAlign: "center",
-            }}
-          >
+          <CenteredMessage>
             <IonNote color="danger">{error}</IonNote>
             <IonNote>Desliza hacia abajo para reintentar</IonNote>
-          </div>
+          </CenteredMessage>
         )}
 
         {!loading && !error && !locationDenied && aeds.length === 0 && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              height: "60vh",
-              flexDirection: "column",
-              gap: 12,
-              padding: 32,
-              textAlign: "center",
-            }}
-          >
+          <CenteredMessage>
             <IonIcon
               icon={heartOutline}
               style={{ fontSize: 64, color: "var(--ion-color-medium)" }}
             />
             <h2 style={{ margin: 0, fontSize: 18 }}>No se encontraron DEAs</h2>
             <IonNote>No hay desfibriladores registrados cerca de tu ubicación.</IonNote>
-          </div>
+          </CenteredMessage>
         )}
 
         {!loading && aeds.length > 0 && (

@@ -35,13 +35,7 @@ const orchestrator = new BatchJobOrchestrator(repository);
 export async function GET(request: NextRequest) {
   try {
     // Verify authentication
-    const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json(
-        { error: "No autenticado" },
-        { status: 401 }
-      );
-    }
+    await requireAuth(request);
 
     // Parse query parameters
     const searchParams = request.nextUrl.searchParams;
@@ -99,7 +93,7 @@ export async function GET(request: NextRequest) {
         startedAt: job.started_at,
         completedAt: job.completed_at,
         durationSeconds: job.duration_seconds,
-        errorMessage: (job.error_summary as Record<string, unknown>)?.message as string ?? null,
+        errorMessage: ((job.error_summary as Record<string, unknown>)?.message as string) ?? null,
         exportedBy: job.created_by,
         createdAt: job.created_at,
         updatedAt: job.updated_at,
@@ -136,21 +130,12 @@ export async function POST(request: NextRequest) {
   try {
     // Verify authentication
     const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json(
-        { error: "No autenticado" },
-        { status: 401 }
-      );
-    }
 
     const body = await request.json();
 
     // Validate request
     if (!body.name) {
-      return NextResponse.json(
-        { error: "El nombre es requerido" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "El nombre es requerido" }, { status: 400 });
     }
 
     // Determine format
@@ -187,10 +172,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
     return NextResponse.json(

@@ -1,5 +1,34 @@
-import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
-import { getAppUrl } from './url';
+import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import { getAppUrl } from "./url";
+
+let _sesClient: SESClient | null = null;
+
+/**
+ * Returns the shared SESClient singleton.
+ * Lazily initialized on first call.
+ */
+function getSESClient(): SESClient {
+  if (!_sesClient) {
+    if (
+      !process.env.AWS_REGION ||
+      !process.env.AWS_ACCESS_KEY_ID ||
+      !process.env.AWS_SECRET_ACCESS_KEY
+    ) {
+      throw new Error(
+        "AWS SES is not properly configured. Please set AWS_REGION, AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY"
+      );
+    }
+
+    _sesClient = new SESClient({
+      region: process.env.AWS_REGION,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      },
+    });
+  }
+  return _sesClient;
+}
 
 export interface SendPasswordResetEmailParams {
   to: string;
@@ -14,23 +43,11 @@ export async function sendPasswordResetEmail({
 }: SendPasswordResetEmailParams): Promise<void> {
   const resetUrl = `${getAppUrl()}/reset-password?token=${resetToken}`;
 
-  // Validate AWS SES configuration
-  if (!process.env.AWS_REGION || !process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
-    throw new Error('AWS SES is not properly configured. Please set AWS_REGION, AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY');
-  }
-
   if (!process.env.EMAIL_FROM) {
-    throw new Error('EMAIL_FROM is not configured');
+    throw new Error("EMAIL_FROM is not configured");
   }
 
-  // Initialize AWS SES client
-  const sesClient = new SESClient({
-    region: process.env.AWS_REGION,
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    },
-  });
+  const sesClient = getSESClient();
 
   const htmlBody = `
     <!DOCTYPE html>
@@ -120,17 +137,17 @@ Si no solicitaste restablecer tu contraseña, por favor ignora este correo.
     },
     Message: {
       Subject: {
-        Data: 'Recuperación de contraseña - DeaMap',
-        Charset: 'UTF-8',
+        Data: "Recuperación de contraseña - DeaMap",
+        Charset: "UTF-8",
       },
       Body: {
         Html: {
           Data: htmlBody,
-          Charset: 'UTF-8',
+          Charset: "UTF-8",
         },
         Text: {
           Data: textBody,
-          Charset: 'UTF-8',
+          Charset: "UTF-8",
         },
       },
     },
@@ -139,7 +156,7 @@ Si no solicitaste restablecer tu contraseña, por favor ignora este correo.
   try {
     await sesClient.send(command);
   } catch (error) {
-    console.error('Error sending password reset email via AWS SES:', error);
-    throw new Error('Failed to send password reset email');
+    console.error("Error sending password reset email via AWS SES:", error);
+    throw new Error("Failed to send password reset email");
   }
 }

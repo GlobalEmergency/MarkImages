@@ -151,7 +151,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     // Usar transacción si hay cambio de estado o cambio de imágenes
     if (hasStatusChange || hasImageChanges) {
-      const result = await prisma.$transaction(async (tx: any) => {
+      const result = await prisma.$transaction(async (tx) => {
         // Eliminar imágenes si se especificaron
         if (deleteImageIds && deleteImageIds.length > 0) {
           await tx.aedImage.deleteMany({

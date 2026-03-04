@@ -1,12 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { prisma } from '@/lib/db';
-import { sendPasswordResetEmail } from '@/lib/email';
-import { authRateLimiter } from '@/lib/rate-limit';
-import crypto from 'crypto';
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { prisma } from "@/lib/db";
+import { sendPasswordResetEmail } from "@/lib/email";
+import { authRateLimiter } from "@/lib/rate-limit";
+import crypto from "crypto";
+
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 const forgotPasswordSchema = z.object({
-  email: z.string().email('Email inválido'),
+  email: z.string().email("Email inválido"),
 });
 
 export async function POST(request: NextRequest) {
@@ -28,16 +30,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           message:
-            'Si el email existe en nuestro sistema, recibirás un correo con instrucciones para recuperar tu contraseña.',
+            "Si el email existe en nuestro sistema, recibirás un correo con instrucciones para recuperar tu contraseña.",
         },
         { status: 200 }
       );
     }
 
     // Generate secure reset token — store only the hash in DB
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
-    const resetTokenExpires = new Date(Date.now() + 3600000); // 1 hour from now
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
+    const resetTokenExpires = new Date(Date.now() + RESET_TOKEN_TTL_MS);
 
     // Save hashed token to database (plain token sent via email)
     await prisma.user.update({
@@ -56,29 +58,23 @@ export async function POST(request: NextRequest) {
         userName: user.name,
       });
     } catch (emailError) {
-      console.error('Failed to send password reset email:', emailError);
+      console.error("Failed to send password reset email:", emailError);
       // Don't expose email sending errors to the user
     }
 
     return NextResponse.json(
       {
         message:
-          'Si el email existe en nuestro sistema, recibirás un correo con instrucciones para recuperar tu contraseña.',
+          "Si el email existe en nuestro sistema, recibirás un correo con instrucciones para recuperar tu contraseña.",
       },
       { status: 200 }
     );
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.issues[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: error.issues[0].message }, { status: 400 });
     }
 
-    console.error('Forgot password error:', error);
-    return NextResponse.json(
-      { error: 'Error al procesar la solicitud' },
-      { status: 500 }
-    );
+    console.error("Forgot password error:", error);
+    return NextResponse.json({ error: "Error al procesar la solicitud" }, { status: 500 });
   }
 }

@@ -29,7 +29,7 @@ const MapPage: React.FC = () => {
   // Auto-request geolocation on mount
   useEffect(() => {
     getCurrentPosition();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [getCurrentPosition]);
 
   // Leaflet needs a resize event after Ionic page transition animation
   // to recalculate container dimensions and render tiles correctly

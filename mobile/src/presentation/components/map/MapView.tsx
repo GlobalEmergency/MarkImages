@@ -9,10 +9,7 @@ import MapEventHandler from "./MapEventHandler";
 import ClusterMarker from "./ClusterMarker";
 import DeaMarker from "./DeaMarker";
 import UserPositionMarker from "./UserPositionMarker";
-
-// Default center: Madrid
-const DEFAULT_CENTER: [number, number] = [40.4168, -3.7038];
-const DEFAULT_ZOOM = 12;
+import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from "../../utils/constants";
 
 interface MapViewProps {
   onMarkerSelect: (aed: AedMapMarker) => void;
@@ -25,7 +22,7 @@ const MapView: React.FC<MapViewProps> = ({ onMarkerSelect, userPosition, flyToCo
   const mapRef = useRef<LeafletMap | null>(null);
   const hasCentered = useRef(false);
   const [bounds, setBounds] = useState<BoundingBox | null>(null);
-  const [zoom, setZoom] = useState(DEFAULT_ZOOM);
+  const [zoom, setZoom] = useState(DEFAULT_MAP_ZOOM);
 
   const { markers, clusters, loading } = useAedsByBounds(bounds, zoom);
 
@@ -70,8 +67,8 @@ const MapView: React.FC<MapViewProps> = ({ onMarkerSelect, userPosition, flyToCo
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <MapContainer
-        center={DEFAULT_CENTER}
-        zoom={DEFAULT_ZOOM}
+        center={DEFAULT_MAP_CENTER}
+        zoom={DEFAULT_MAP_ZOOM}
         style={{ width: "100%", height: "100%" }}
         ref={mapRef}
         zoomControl={false}

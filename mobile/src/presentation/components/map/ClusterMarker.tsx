@@ -23,7 +23,7 @@ function getClusterColor(count: number): string {
   return "#ef4444"; // red
 }
 
-const ClusterMarker: React.FC<ClusterMarkerProps> = ({ cluster, onZoomToCluster }) => {
+const ClusterMarker: React.FC<ClusterMarkerProps> = React.memo(({ cluster, onZoomToCluster }) => {
   const size = getClusterSize(cluster.count);
   const color = getClusterColor(cluster.count);
 
@@ -64,6 +64,8 @@ const ClusterMarker: React.FC<ClusterMarkerProps> = ({ cluster, onZoomToCluster 
       </Popup>
     </Marker>
   );
-};
+});
+
+ClusterMarker.displayName = "ClusterMarker";
 
 export default ClusterMarker;

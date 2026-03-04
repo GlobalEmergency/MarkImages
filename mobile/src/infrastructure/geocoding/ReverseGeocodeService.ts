@@ -7,6 +7,7 @@ import {
 export type { ReverseGeocodeResult } from "../../domain/ports/IReverseGeocodeService";
 
 const NOMINATIM_BASE_URL = "https://nominatim.openstreetmap.org";
+const USER_AGENT = "DeaMap-Mobile/1.0 (https://deamap.es)";
 
 export class ReverseGeocodeService implements IReverseGeocodeService {
   async reverse(coords: Coordinates, signal?: AbortSignal): Promise<ReverseGeocodeResult | null> {
@@ -15,7 +16,7 @@ export class ReverseGeocodeService implements IReverseGeocodeService {
         `${NOMINATIM_BASE_URL}/reverse?format=json&lat=${coords.latitude}&lon=${coords.longitude}&zoom=18&addressdetails=1`,
         {
           signal,
-          headers: { "User-Agent": "DeaMap-Mobile/1.0 (https://deamap.es)" },
+          headers: { "User-Agent": USER_AGENT },
         }
       );
       const data = await response.json();

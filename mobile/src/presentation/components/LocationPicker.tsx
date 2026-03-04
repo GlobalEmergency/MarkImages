@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 
 import { Coordinates } from "../../domain/models/Location";
+import { DEFAULT_MAP_CENTER } from "../utils/constants";
 
 interface LocationPickerProps {
   initialPosition?: Coordinates;
@@ -59,7 +60,7 @@ const DraggableMarker: React.FC<{
 const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition, onChange }) => {
   const center = useMemo<[number, number]>(
     () =>
-      initialPosition ? [initialPosition.latitude, initialPosition.longitude] : [40.4168, -3.7038],
+      initialPosition ? [initialPosition.latitude, initialPosition.longitude] : DEFAULT_MAP_CENTER,
     [initialPosition]
   );
 

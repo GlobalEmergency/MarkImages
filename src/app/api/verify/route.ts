@@ -1,22 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/auth";
-import {
-  getVerifiableAedsForUser,
-  VerificationFilterType,
-} from "@/lib/organization-permissions";
+import { getVerifiableAedsForUser, VerificationFilterType } from "@/lib/organization-permissions";
 
 export async function GET(request: NextRequest) {
   try {
     // Require authentication
     const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-    }
 
     const searchParams = request.nextUrl.searchParams;
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "12");
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "12", 10);
     const organizationId = searchParams.get("organization_id") || undefined;
     const filterType = (searchParams.get("filter_type") || "pending") as VerificationFilterType;
     const search = searchParams.get("search") || undefined;
@@ -29,10 +23,7 @@ export async function GET(request: NextRequest) {
       "all_published",
     ];
     if (!validFilterTypes.includes(filterType)) {
-      return NextResponse.json(
-        { error: "Tipo de filtro no válido" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Tipo de filtro no válido" }, { status: 400 });
     }
 
     // Get AEDs based on user's role and organization memberships
