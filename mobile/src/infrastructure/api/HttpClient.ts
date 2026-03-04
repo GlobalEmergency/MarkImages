@@ -9,10 +9,16 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+/** Default request timeout in milliseconds (15 seconds) */
+const REQUEST_TIMEOUT_MS = 15_000;
+
 /**
  * HTTP client that uses CapacitorHttp on native platforms to bypass
  * the WebView's local server interception (hostname: "deamap.es").
  * Falls back to standard fetch on web/dev.
+ *
+ * All requests have a 15-second timeout to prevent the UI from hanging
+ * indefinitely when the network is unreachable or the server is down.
  */
 export class HttpClient implements IHttpClient {
   private onUnauthorized?: () => void;
@@ -69,6 +75,7 @@ export class HttpClient implements IHttpClient {
   /**
    * Native: uses CapacitorHttp.request() which goes through the native HTTP
    * engine, completely bypassing the WebView's local server.
+   * Wrapped with a timeout to avoid hanging indefinitely.
    */
   private async nativeRequest<T>(
     url: string,
@@ -76,12 +83,15 @@ export class HttpClient implements IHttpClient {
     headers: Record<string, string>,
     body?: unknown
   ): Promise<T> {
-    const response = await CapacitorHttp.request({
-      url,
-      method,
-      headers,
-      data: body ?? undefined,
-    });
+    const response = await this.withTimeout(
+      CapacitorHttp.request({
+        url,
+        method,
+        headers,
+        data: body ?? undefined,
+      }),
+      url
+    );
 
     if (response.status === 401) {
       const errorData = typeof response.data === "object" ? response.data : {};
@@ -104,6 +114,7 @@ export class HttpClient implements IHttpClient {
 
   /**
    * Web/dev: uses standard fetch (routed through Vite proxy in development).
+   * Uses AbortController for native timeout support.
    */
   private async webRequest<T>(
     url: string,
@@ -111,11 +122,25 @@ export class HttpClient implements IHttpClient {
     headers: Record<string, string>,
     body?: unknown
   ): Promise<T> {
-    const response = await fetch(url, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method,
+        headers,
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
+      });
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        throw new ApiError(`Tiempo de espera agotado: ${url}`, 0);
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (response.status === 401) {
       const errorBody = await response.json().catch(() => ({}));
@@ -133,6 +158,28 @@ export class HttpClient implements IHttpClient {
     }
 
     return response.json();
+  }
+
+  /**
+   * Race a promise against a timeout. Used for CapacitorHttp which does
+   * not support AbortController natively.
+   */
+  private withTimeout<T>(promise: Promise<T>, url: string): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(
+        () => reject(new ApiError(`Tiempo de espera agotado: ${url}`, 0)),
+        REQUEST_TIMEOUT_MS
+      );
+      promise
+        .then((result) => {
+          clearTimeout(timer);
+          resolve(result);
+        })
+        .catch((err) => {
+          clearTimeout(timer);
+          reject(err);
+        });
+    });
   }
 }
 

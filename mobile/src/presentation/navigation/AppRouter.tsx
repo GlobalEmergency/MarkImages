@@ -6,7 +6,10 @@ import {
   IonIcon,
   IonLabel,
   IonRouterOutlet,
-  IonLoading,
+  IonPage,
+  IonContent,
+  IonSpinner,
+  IonText,
 } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 import { Route, Redirect } from "react-router-dom";
@@ -26,7 +29,26 @@ const AppRouter: React.FC = () => {
   const { isLoading } = useAuth();
 
   if (isLoading) {
-    return <IonLoading isOpen message="Cargando..." />;
+    return (
+      <IonPage>
+        <IonContent>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%",
+            }}
+          >
+            <IonSpinner name="crescent" />
+            <IonText color="medium">
+              <p>Cargando...</p>
+            </IonText>
+          </div>
+        </IonContent>
+      </IonPage>
+    );
   }
 
   return (

@@ -11,7 +11,7 @@ import {
   IonTextarea,
   IonButton,
   IonText,
-  IonLoading,
+  IonSpinner,
   useIonToast,
 } from "@ionic/react";
 import { useHistory } from "react-router-dom";
@@ -235,11 +235,9 @@ const NewDeaPage: React.FC = () => {
           />
 
           <IonButton expand="block" type="submit" disabled={loading || !name || !coords}>
-            Registrar DEA
+            {loading ? <IonSpinner name="crescent" /> : "Registrar DEA"}
           </IonButton>
         </form>
-
-        <IonLoading isOpen={loading} message="Registrando DEA..." />
       </IonContent>
     </IonPage>
   );

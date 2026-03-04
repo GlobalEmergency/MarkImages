@@ -5,7 +5,6 @@ import {
   IonInput,
   IonButton,
   IonText,
-  IonLoading,
   IonSpinner,
   useIonToast,
 } from "@ionic/react";
@@ -145,8 +144,6 @@ const RegisterPage: React.FC = () => {
             ¿Ya tienes cuenta? Inicia sesión
           </IonButton>
         </div>
-
-        <IonLoading isOpen={loading} message="Creando cuenta..." />
       </IonContent>
     </IonPage>
   );

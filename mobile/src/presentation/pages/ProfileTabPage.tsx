@@ -13,7 +13,6 @@ import {
   IonChip,
   IonInput,
   IonText,
-  IonLoading,
   IonSpinner,
   useIonToast,
 } from "@ionic/react";
@@ -218,11 +217,6 @@ const AuthForm: React.FC = () => {
       <IonButton fill="clear" size="small" onClick={toggleMode} style={{ marginTop: 12 }}>
         {mode === "login" ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
       </IonButton>
-
-      <IonLoading
-        isOpen={loading}
-        message={mode === "login" ? "Iniciando sesión..." : "Creando cuenta..."}
-      />
     </div>
   );
 };
