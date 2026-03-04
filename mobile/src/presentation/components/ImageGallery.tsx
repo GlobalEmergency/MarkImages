@@ -1,6 +1,4 @@
 import React from "react";
-import { IonIcon } from "@ionic/react";
-import { imageOutline } from "ionicons/icons";
 
 import { AedImage, AedImageType } from "../../domain/models/Aed";
 
@@ -15,23 +13,7 @@ const IMAGE_TYPE_LABELS: Record<AedImageType, string> = {
 
 const ImageGallery: React.FC<{ images: AedImage[] }> = ({ images }) => {
   if (!images || images.length === 0) {
-    return (
-      <div
-        style={{
-          height: 200,
-          background: "var(--ion-color-light)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-          gap: 8,
-          color: "var(--ion-color-medium)",
-        }}
-      >
-        <IonIcon icon={imageOutline} style={{ fontSize: 48 }} />
-        <span style={{ fontSize: 14 }}>Sin imágenes</span>
-      </div>
-    );
+    return null;
   }
 
   return (
