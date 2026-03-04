@@ -1,18 +1,24 @@
 /// <reference types="vitest" />
 
-import legacy from "@vitejs/plugin-legacy";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-    legacy({
-      // Support older Android WebViews (globalThis, optional chaining, etc.)
-      targets: ["defaults", "Chrome >= 61", "Android >= 5"],
-    }),
-  ],
+  build: {
+    // Target Chrome 66+ to support older Android WebViews (Android 8+).
+    // Chrome 66 supports ES modules but lacks newer syntax (?.  ??  ??= etc.).
+    // esbuild transpiles these automatically for this target.
+    // Runtime API polyfills (globalThis, queueMicrotask) are in index.html.
+    //
+    // NOTE: @vitejs/plugin-legacy was removed because it generates a dual
+    // module/nomodule bundle, but Chrome 66+ loads the modern bundle (since
+    // it supports ES modules) — defeating the purpose. A single bundle
+    // targeting chrome66 is simpler and correct for a Capacitor WebView app.
+    target: "chrome66",
+  },
+
+  plugins: [react()],
 
   server: {
     // Proxy API calls to avoid CORS issues in dev mode.
