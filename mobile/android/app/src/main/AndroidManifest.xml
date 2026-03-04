@@ -18,12 +18,11 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-                    <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="deamap.es" />
-            </intent-filter>
+            <!-- NOTE: No App Links intent filter needed here. Credential autofill
+                 association is handled via Digital Asset Links (assetlinks.json on
+                 deamap.es) + the WebView hostname, NOT via an intent filter.
+                 An intent filter for https://deamap.es conflicts with Capacitor's
+                 WebView which serves local content at that same hostname. -->
         </activity>
 
         <provider

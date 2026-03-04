@@ -26,20 +26,14 @@ if [ -f "$ANDROID_MANIFEST" ]; then
     echo "  ⏭️  Android location permissions already present"
   fi
 
-  # Android: deep link intent filter for credential association
-  if ! grep -q "android:host=\"deamap.es\"" "$ANDROID_MANIFEST"; then
-    echo "  ✅ Adding Android deep link intent filter for credential autofill..."
-    sed -i.bak 's|</activity>|            <intent-filter android:autoVerify="true">\
-                <action android:name="android.intent.action.VIEW" />\
-                <category android:name="android.intent.category.DEFAULT" />\
-                <category android:name="android.intent.category.BROWSABLE" />\
-                <data android:scheme="https" android:host="deamap.es" />\
-            </intent-filter>\
-        </activity>|' "$ANDROID_MANIFEST"
-    rm -f "${ANDROID_MANIFEST}.bak"
-  else
-    echo "  ⏭️  Android deep link intent filter already present"
-  fi
+  # NOTE: No App Links intent filter is added here.
+  # Credential autofill association is handled via Digital Asset Links
+  # (assetlinks.json on deamap.es with get_login_creds + matching SHA256)
+  # plus the Capacitor WebView hostname (hostname: "deamap.es").
+  # An App Links intent filter for https://deamap.es MUST NOT be added
+  # because it conflicts with Capacitor's WebView which serves local
+  # content at the same hostname, causing Activity restart loops on
+  # physical devices.
 else
   echo "  ⚠️  Android manifest not found (run 'npx cap add android' first)"
 fi
