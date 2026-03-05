@@ -28,6 +28,8 @@
     "assets:generate": "npx @capacitor/assets generate --android --ios --pwa"
   },
   "dependencies": {
+    "@capacitor-firebase/crashlytics": "^8.1.0",
+    "@capacitor-firebase/performance": "^8.1.0",
     "@capacitor/android": "^8.1.0",
     "@capacitor/app": "8.0.1",
     "@capacitor/core": "8.1.0",
@@ -43,6 +45,7 @@
     "@ionic/react-router": "^8.5.0",
     "@types/react-router": "^5.1.20",
     "@types/react-router-dom": "^5.3.3",
+    "firebase": "^12.10.0",
     "ionicons": "^7.4.0",
     "leaflet": "^1.9.4",
     "react": "19.0.0",

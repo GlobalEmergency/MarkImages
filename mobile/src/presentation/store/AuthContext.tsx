@@ -3,6 +3,7 @@ import React, { createContext, useCallback, useEffect, useState } from "react";
 import { UserPublic } from "../../domain/models/User";
 import {
   authRepository,
+  crashReporter,
   loginUseCase,
   registerUseCase,
   checkSessionUseCase,
@@ -27,22 +28,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     checkSessionUseCase
       .execute()
-      .then(setUser)
+      .then((restoredUser) => {
+        setUser(restoredUser);
+        if (restoredUser) {
+          crashReporter.setUserId(restoredUser.id).catch(() => {});
+        }
+      })
       .finally(() => setIsLoading(false));
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const result = await loginUseCase.execute(email, password);
     setUser(result.user);
+    crashReporter.setUserId(result.user.id).catch(() => {});
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
     const result = await registerUseCase.execute(name, email, password);
     setUser(result.user);
+    crashReporter.setUserId(result.user.id).catch(() => {});
   }, []);
 
   const logout = useCallback(async () => {
     await authRepository.logout();
+    crashReporter.clearUserId().catch(() => {});
     setUser(null);
   }, []);
 
