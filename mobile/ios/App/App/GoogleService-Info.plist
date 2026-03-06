@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyDjFsBFa7GMSZOtv9A63_8erCmxELyjEKg</string>
+	<string>AIzaSyDOJ6ZADmzWPIOmef0OOUuJM5StEfh1R5I</string>
 	<key>GCM_SENDER_ID</key>
-	<string>1074068464695</string>
+	<string>760929568765</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>online.patroltech.app</string>
+	<string>es.deamap.mobile</string>
 	<key>PROJECT_ID</key>
-	<string>patroltech-online</string>
+	<string>ge-deamap</string>
 	<key>STORAGE_BUCKET</key>
-	<string>patroltech-online.firebasestorage.app</string>
+	<string>ge-deamap.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:1074068464695:ios:6767fd170387e9d0b30bb2</string>
+	<string>1:760929568765:ios:30368427f8b2f686cf7b94</string>
 </dict>
 </plist>
