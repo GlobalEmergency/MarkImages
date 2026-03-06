@@ -15,13 +15,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; assignmentId: string }> }
 ) {
-  const admin = await requireAdmin(request);
-  if (!admin) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized - Admin access required" },
-      { status: 403 }
-    );
-  }
+  await requireAdmin(request);
 
   const { id, assignmentId } = await params;
 
@@ -88,12 +82,6 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string; assignmentId: string }> }
 ) {
   const admin = await requireAdmin(request);
-  if (!admin) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized - Admin access required" },
-      { status: 403 }
-    );
-  }
 
   const { id, assignmentId } = await params;
 
@@ -190,12 +178,6 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; assignmentId: string }> }
 ) {
   const admin = await requireAdmin(request);
-  if (!admin) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized - Admin access required" },
-      { status: 403 }
-    );
-  }
 
   const { id, assignmentId } = await params;
 

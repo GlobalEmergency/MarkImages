@@ -275,8 +275,20 @@ export async function getAedsForUserOrganizations(
 }
 
 /**
- * Check if an assignment would conflict with existing assignments
- * Only ONE active CIVIL_PROTECTION assignment per AED
+ * Assignment types that only allow ONE active assignment per AED.
+ * Other types (CERTIFIED_COMPANY, VERIFICATION) allow multiple.
+ */
+const SINGLE_ASSIGNMENT_TYPES = ["CIVIL_PROTECTION", "OWNERSHIP", "MAINTENANCE"];
+
+const ASSIGNMENT_TYPE_LABELS: Record<string, string> = {
+  CIVIL_PROTECTION: "Protección Civil",
+  OWNERSHIP: "Propietario",
+  MAINTENANCE: "Mantenedor",
+};
+
+/**
+ * Check if an assignment would conflict with existing assignments.
+ * CIVIL_PROTECTION, OWNERSHIP, and MAINTENANCE only allow ONE active per AED.
  */
 export async function checkAssignmentConflict(
   aedId: string,
@@ -286,25 +298,27 @@ export async function checkAssignmentConflict(
   hasConflict: boolean;
   conflictMessage?: string;
 }> {
-  // Check for existing active assignment of the same type
-  if (assignmentType === "CIVIL_PROTECTION") {
-    const existing = await prisma.aedOrganizationAssignment.findFirst({
-      where: {
-        aed_id: aedId,
-        assignment_type: "CIVIL_PROTECTION",
-        status: "ACTIVE",
-      },
-      include: {
-        organization: true,
-      },
-    });
+  if (!SINGLE_ASSIGNMENT_TYPES.includes(assignmentType)) {
+    return { hasConflict: false };
+  }
 
-    if (existing && existing.organization_id !== organizationId) {
-      return {
-        hasConflict: true,
-        conflictMessage: `Este DEA ya está asignado a ${existing.organization.name} como Protección Civil. Debe revocarse esa asignación primero.`,
-      };
-    }
+  const existing = await prisma.aedOrganizationAssignment.findFirst({
+    where: {
+      aed_id: aedId,
+      assignment_type: assignmentType as any,
+      status: "ACTIVE",
+    },
+    include: {
+      organization: true,
+    },
+  });
+
+  if (existing && existing.organization_id !== organizationId) {
+    const label = ASSIGNMENT_TYPE_LABELS[assignmentType] || assignmentType;
+    return {
+      hasConflict: true,
+      conflictMessage: `Este DEA ya está asignado a ${existing.organization.name} como ${label}. Debe revocarse esa asignación primero.`,
+    };
   }
 
   return { hasConflict: false };

@@ -8,6 +8,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdminOrAedPermission, AuthError } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { uploadToS3 } from "@/lib/s3";
+import { validateStatusTransition } from "@/lib/aed-status";
+import { recordStatusChange } from "@/lib/audit";
 
 /**
  * GET /api/admin/deas/[id]
@@ -175,6 +177,37 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 }
 
+// ── AED Field Allowlist (single source of truth) ──────────────────────
+// Fields that can be updated AND tracked in the audit trail.
+// Additional admin-only fields that are updatable but NOT individually
+// tracked in field changes are listed separately below.
+const TRACKABLE_AED_FIELDS = [
+  "name",
+  "code",
+  "provisional_number",
+  "establishment_type",
+  "status",
+  "publication_mode",
+  "is_publicly_accessible",
+  "public_notes",
+  "rejection_reason",
+  "requires_attention",
+  "installation_date",
+  "latitude",
+  "longitude",
+  "coordinates_precision",
+  "source_origin",
+  "source_details",
+  "external_reference",
+  "verification_method",
+] as const;
+
+// Fields that are updatable but NOT individually tracked (bulk/metadata fields)
+const UNTRACKED_AED_FIELDS = ["internal_notes"] as const;
+
+// All fields allowed in prisma.aed.update
+const ALLOWED_AED_FIELDS: readonly string[] = [...TRACKABLE_AED_FIELDS, ...UNTRACKED_AED_FIELDS];
+
 // ── Helpers for field-change tracking ──────────────────────────────────
 
 type FieldChangeRecord = {
@@ -286,24 +319,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const fieldChanges: FieldChangeRecord[] = [];
 
     // ── Track AED-level field changes ──
-    const aedFields = [
-      "name",
-      "code",
-      "provisional_number",
-      "establishment_type",
-      "status",
-      "publication_mode",
-      "is_publicly_accessible",
-      "public_notes",
-      "rejection_reason",
-      "requires_attention",
-      "installation_date",
-      "latitude",
-      "longitude",
-      "coordinates_precision",
-    ];
-
-    for (const key of aedFields) {
+    for (const key of TRACKABLE_AED_FIELDS) {
       if (key in aedUpdateFields) {
         trackChange(
           fieldChanges,
@@ -381,6 +397,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           change_source: "WEB_UI",
         });
       });
+    }
+
+    // Validate status transition before proceeding
+    if (aedUpdateFields.status && aedUpdateFields.status !== currentAed.status) {
+      try {
+        validateStatusTransition(currentAed.status, aedUpdateFields.status);
+      } catch (error) {
+        return NextResponse.json(
+          { success: false, error: error instanceof Error ? error.message : "Transición inválida" },
+          { status: 400 }
+        );
+      }
     }
 
     // Detect status changes for history
@@ -521,29 +549,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
       // 6. Build AED update data (only schema-valid fields)
       const validAedFields: Record<string, unknown> = {};
-      const allowedAedFields = [
-        "name",
-        "code",
-        "provisional_number",
-        "establishment_type",
-        "status",
-        "publication_mode",
-        "is_publicly_accessible",
-        "public_notes",
-        "internal_notes",
-        "rejection_reason",
-        "requires_attention",
-        "installation_date",
-        "latitude",
-        "longitude",
-        "coordinates_precision",
-        "source_origin",
-        "source_details",
-        "external_reference",
-        "verification_method",
-      ];
 
-      for (const key of allowedAedFields) {
+      for (const key of ALLOWED_AED_FIELDS) {
         if (key in aedUpdateFields) {
           validAedFields[key] = aedUpdateFields[key];
         }
@@ -575,14 +582,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
       // 7. Record status change in history
       if (hasStatusChange) {
-        await tx.aedStatusChange.create({
-          data: {
-            aed_id: id,
-            previous_status: currentAed.status,
-            new_status: aedUpdateFields.status,
-            reason: "Cambio desde panel de administración",
-            modified_by: user.userId,
-          },
+        await recordStatusChange(tx, {
+          aedId: id,
+          previousStatus: currentAed.status,
+          newStatus: aedUpdateFields.status,
+          modifiedBy: user.userId,
+          reason: "Cambio desde panel de administración",
         });
       }
 

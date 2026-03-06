@@ -22,14 +22,7 @@ interface AddMemberRequest {
  * List all members of an organization
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  // Verify admin permissions
-  const admin = await requireAdmin(request);
-  if (!admin) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized - Admin access required" },
-      { status: 403 }
-    );
-  }
+  await requireAdmin(request);
 
   try {
     const { id } = await params;
@@ -87,14 +80,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
  * Add a user to an organization
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  // Verify admin permissions
   const admin = await requireAdmin(request);
-  if (!admin) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized - Admin access required" },
-      { status: 403 }
-    );
-  }
 
   try {
     const { id: organizationId } = await params;

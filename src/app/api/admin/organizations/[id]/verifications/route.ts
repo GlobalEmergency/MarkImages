@@ -12,14 +12,7 @@ import { prisma } from "@/lib/db";
  * Get all verifications performed by an organization
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const admin = await requireAdmin(request);
-  if (!admin) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized - Admin access required" },
-      { status: 403 }
-    );
-  }
-
+  await requireAdmin(request);
   const { id } = await params;
 
   try {
@@ -84,13 +77,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdmin(request);
-  if (!admin) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized - Admin access required" },
-      { status: 403 }
-    );
-  }
-
   const { id } = await params;
 
   try {
@@ -134,62 +120,69 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ success: false, error: "AED not found" }, { status: 404 });
     }
 
-    // Mark previous verifications from this org for this AED as superseded
-    await prisma.aedOrganizationVerification.updateMany({
-      where: {
-        aed_id,
-        organization_id: id,
-        is_current: true,
-      },
-      data: {
-        is_current: false,
-        superseded_at: new Date(),
-      },
-    });
+    const now = new Date();
 
-    // Create the new verification
-    const verification = await prisma.aedOrganizationVerification.create({
-      data: {
-        aed_id,
-        organization_id: id,
-        verification_type,
-        verified_by: admin.userId,
-        verified_at: new Date(),
-        verified_address,
-        verified_schedule,
-        verified_photos,
-        verified_access,
-        verified_signage,
-        certificate_number,
-        certificate_expiry: certificate_expiry ? new Date(certificate_expiry) : null,
-        is_current: true,
-        notes,
-      },
-      include: {
-        aed: {
-          select: {
-            id: true,
-            code: true,
-            name: true,
-            status: true,
+    // Wrap all writes in a transaction to avoid inconsistent state
+    const verification = await prisma.$transaction(async (tx) => {
+      // 1. Mark previous verifications from this org for this AED as superseded
+      await tx.aedOrganizationVerification.updateMany({
+        where: {
+          aed_id,
+          organization_id: id,
+          is_current: true,
+        },
+        data: {
+          is_current: false,
+          superseded_at: now,
+        },
+      });
+
+      // 2. Create the new verification
+      const created = await tx.aedOrganizationVerification.create({
+        data: {
+          aed_id,
+          organization_id: id,
+          verification_type,
+          verified_by: admin.userId,
+          verified_at: now,
+          verified_address,
+          verified_schedule,
+          verified_photos,
+          verified_access,
+          verified_signage,
+          certificate_number,
+          certificate_expiry: certificate_expiry ? new Date(certificate_expiry) : null,
+          is_current: true,
+          notes,
+        },
+        include: {
+          aed: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+              status: true,
+            },
+          },
+          organization: {
+            select: {
+              id: true,
+              name: true,
+            },
           },
         },
-        organization: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    });
+      });
 
-    // Update the AED's last_verified_at field
-    await prisma.aed.update({
-      where: { id: aed_id },
-      data: {
-        last_verified_at: new Date(),
-        verification_method: verification_type,
-      },
+      // 3. Update the AED's verification timestamp
+      await tx.aed.update({
+        where: { id: aed_id },
+        data: {
+          last_verified_at: now,
+          verification_method: verification_type,
+        },
+      });
+
+      return created;
     });
 
     return NextResponse.json(

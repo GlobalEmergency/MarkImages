@@ -13,14 +13,7 @@ import type { UpdateOrganizationRequest } from "@/types/organization";
  * Get organization details
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  // Verify admin permissions
-  const admin = await requireAdmin(request);
-  if (!admin) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized - Admin access required" },
-      { status: 403 }
-    );
-  }
+  await requireAdmin(request);
 
   try {
     const { id } = await params;
@@ -119,14 +112,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
  * Update organization
  */
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  // Verify admin permissions
   const admin = await requireAdmin(request);
-  if (!admin) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized - Admin access required" },
-      { status: 403 }
-    );
-  }
 
   try {
     const { id } = await params;
@@ -227,14 +213,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Verify admin permissions
   const admin = await requireAdmin(request);
-  if (!admin) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized - Admin access required" },
-      { status: 403 }
-    );
-  }
 
   try {
     const { id } = await params;

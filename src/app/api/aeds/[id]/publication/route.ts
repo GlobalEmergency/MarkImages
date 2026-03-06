@@ -31,18 +31,7 @@ interface UpdatePublicationRequest {
  */
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    // Require authentication
     const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Unauthorized",
-          message: "Authentication required to change publication mode",
-        },
-        { status: 401 }
-      );
-    }
 
     const { id } = await params;
     const body: UpdatePublicationRequest = await request.json();

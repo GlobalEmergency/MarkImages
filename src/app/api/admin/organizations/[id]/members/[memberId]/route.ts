@@ -24,14 +24,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; memberId: string }> }
 ) {
-  // Verify admin permissions
-  const admin = await requireAdmin(request);
-  if (!admin) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized - Admin access required" },
-      { status: 403 }
-    );
-  }
+  await requireAdmin(request);
 
   try {
     const { id: organizationId, memberId } = await params;
@@ -87,14 +80,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; memberId: string }> }
 ) {
-  // Verify admin permissions
   const admin = await requireAdmin(request);
-  if (!admin) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized - Admin access required" },
-      { status: 403 }
-    );
-  }
 
   try {
     const { id: organizationId, memberId } = await params;
@@ -177,14 +163,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; memberId: string }> }
 ) {
-  // Verify admin permissions
-  const admin = await requireAdmin(request);
-  if (!admin) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized - Admin access required" },
-      { status: 403 }
-    );
-  }
+  await requireAdmin(request);
 
   try {
     const { id: organizationId, memberId } = await params;
