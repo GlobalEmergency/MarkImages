@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1074068464695",
+    "project_id": "patroltech-online",
+    "storage_bucket": "patroltech-online.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1074068464695:android:ae10a3af09ab7818b30bb2",
+        "android_client_info": {
+          "package_name": "online.patroltech.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9qZIsdD0mzFHYTz4uMyZRsErUw04qLys"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

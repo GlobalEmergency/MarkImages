@@ -38,10 +38,6 @@ yarn-error.log*
 # Environment files with potential secrets
 .env.production
 
-# Firebase config files (contain API keys, decoded from CI secrets)
-android/app/google-services.json
-ios/App/App/GoogleService-Info.plist
-
 # Keystores and signing credentials (NEVER commit these)
 /keystores/*.keystore
 /keystores/*.jks
