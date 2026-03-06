@@ -28,6 +28,15 @@ DeaMap is an AED (Automated External Defibrillator) management platform built wi
 - ESLint and Prettier are configured — run `npm run lint` and `npm run format:check`
 - Pre-commit hooks run type-check, lint, and build automatically
 
+### API Route Patterns (IMPORTANT)
+
+- **Auth helpers throw, never return null**: `requireAuth()` and `requireAdmin()` throw `AuthError`. NEVER add `if (!user)` / `if (!admin)` null checks after calling them — that's dead code.
+- **Transactions**: ALL multi-write DB operations MUST use `prisma.$transaction()`. Network I/O (S3, downloads) goes OUTSIDE the transaction; only DB writes go INSIDE.
+- **Audit trail**: Use shared helpers from `src/lib/audit.ts` — `recordStatusChange()`, `recordFieldChange()`, `appendInternalNote()`. Do NOT create inline `aedStatusChange.create()` or `aedFieldChange.create()` calls.
+- **Status changes**: Always validate with `validateStatusTransition()` from `src/lib/aed-status.ts` before changing AED status.
+- **Org permissions**: Use `requireAdminOrAedPermission()` for admin DEA routes that org members with specific flags (can_edit, can_verify) should access.
+- **Field allowlists**: Admin DEA PATCH uses `TRACKABLE_AED_FIELDS` + `UNTRACKED_AED_FIELDS` = `ALLOWED_AED_FIELDS` constants. Do NOT duplicate field lists.
+
 ## Architecture
 
 ### Tech Stack
@@ -45,6 +54,10 @@ src/
 ├── app/              # Next.js App Router (pages + API routes)
 ├── components/       # React components
 ├── lib/              # Shared utilities (db, jwt, auth, etc.)
+│   ├── auth.ts       # Auth: requireAuth, requireAdmin, requireAdminOrAedPermission
+│   ├── audit.ts      # Audit trail: recordStatusChange, recordFieldChange, appendInternalNote
+│   ├── aed-status.ts # Status state machine: validateStatusTransition
+│   └── organization-permissions.ts # Org permissions: getUserPermissionsForAed
 ├── import/           # DDD module for CSV import
 │   ├── domain/       # Entities, Value Objects, Repository interfaces
 │   ├── application/  # Use Cases

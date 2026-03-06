@@ -282,6 +282,10 @@ DeaMap/
 │   ├── app/                    # App Router (pages + API routes)
 │   ├── components/             # React components
 │   ├── lib/                    # Shared utilities (db, jwt, auth)
+│   │   ├── auth.ts             # Auth helpers (requireAuth, requireAdmin, requireAdminOrAedPermission)
+│   │   ├── audit.ts            # Audit trail helpers (recordStatusChange, recordFieldChange, appendInternalNote)
+│   │   ├── aed-status.ts       # AED status state machine (validateStatusTransition)
+│   │   └── organization-permissions.ts  # Org permission checks (getUserPermissionsForAed, checkAssignmentConflict)
 │   ├── import/                 # DDD module: CSV import
 │   │   ├── domain/
 │   │   ├── application/
@@ -511,12 +515,29 @@ npm run ios:open          # Abrir Xcode
 
 ### Backend — Seguridad
 
-- **requireAuth** lanza `AuthError` (nunca retorna null). No necesita null-check después.
+- **requireAuth** lanza `AuthError` (nunca retorna null). No necesita null-check después. **NUNCA** añadir `if (!user)` / `if (!admin)` después de requireAuth/requireAdmin — es dead code.
 - **requireAdmin** envuelve requireAuth + role check. Usar en rutas admin en vez de check manual.
+- **requireAdminOrAedPermission**: Permite a miembros de organización con permisos específicos (can_edit, can_verify) acceder a rutas admin de DEAs asignados a su organización. Devuelve `{ user, isGlobalAdmin, permissions }`.
 - **Image proxy**: requiere auth (NO en PUBLIC_PATHS). Previene SSRF.
-- **PATCH endpoints**: deben usar allowlist de campos. Previene mass-assignment.
+- **PATCH endpoints**: deben usar allowlist de campos. Previene mass-assignment. Admin DEA PATCH usa constantes `TRACKABLE_AED_FIELDS` + `UNTRACKED_AED_FIELDS` = `ALLOWED_AED_FIELDS`.
 - **Rate limiting**: usar `createRateLimiter()` de `src/lib/rate-limit.ts`. No crear rate limiters artesanales.
 - **API errors**: usar `apiError()` de `src/lib/api-error.ts`. No exponer `error.message` en producción.
+
+### Backend — Transacciones y Audit Trail
+
+- **Transacciones**: TODAS las operaciones multi-write DEBEN usar `prisma.$transaction()`. I/O de red (S3 uploads, image downloads) va FUERA de la transacción; solo DB writes van DENTRO.
+- **Audit trail**: Usar helpers centralizados de `src/lib/audit.ts`:
+  - `recordStatusChange(tx, params)` — registra cambios de estado de AED
+  - `recordFieldChange(tx, params)` — registra cambios de campos individuales
+  - `appendInternalNote(currentNotes, text, type, author)` — construye array de notas internas (compatible con JSON de Prisma)
+  - Todos aceptan `AuditTxClient` interface (funciona con prisma y con tx client dentro de transacción)
+- **AED Status State Machine**: Usar `validateStatusTransition()` de `src/lib/aed-status.ts` antes de cualquier cambio de estado. Transiciones válidas: DRAFT→PENDING_REVIEW→PUBLISHED→INACTIVE, PUBLISHED→PENDING_REVIEW (re-verificación), REJECTED→DRAFT.
+
+### Backend — Permisos de Organización
+
+- `getUserPermissionsForAed()` en `src/lib/organization-permissions.ts` verifica membresía en organización + flags (can_edit, can_verify, can_approve).
+- `checkAssignmentConflict()` valida conflictos de asignación (ownership, maintenance, civil protection).
+- Los permisos se basan en **flags** del `OrganizationMember` (can_edit, can_verify), no en el rol directamente.
 
 ### Backend — SES/S3 Singletons
 
