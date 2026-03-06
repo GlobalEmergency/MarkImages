@@ -359,10 +359,9 @@ export async function getEffectivePublicationMode(aedId: string) {
  * Filter types for verification lists
  */
 export type VerificationFilterType =
-  | "pending" // DRAFT, PENDING_REVIEW - no verificados
-  | "published_unverified" // PUBLISHED pero sin verificación manual (last_verified_at is null)
-  | "published_verified" // PUBLISHED con verificación manual
-  | "all_published"; // Todos los PUBLISHED
+  | "never_verified" // Nunca verificados (last_verified_at is null), cualquier estado
+  | "requires_attention" // Marcados como requires_attention = true
+  | "verification_expired"; // Verificación caducada (last_verified_at > 6 meses)
 
 /**
  * Get AEDs that a user can verify based on their role and organization memberships
@@ -376,7 +375,6 @@ export async function getVerifiableAedsForUser(
   userId: string,
   userRole: string,
   filters?: {
-    status?: string[];
     organization_id?: string;
     page?: number;
     limit?: number;
@@ -387,11 +385,10 @@ export async function getVerifiableAedsForUser(
   const page = filters?.page || 1;
   const limit = filters?.limit || 12;
   const skip = (page - 1) * limit;
-  const filterType = filters?.filter_type || "pending";
+  const filterType = filters?.filter_type || "never_verified";
   const searchTerm = filters?.search?.trim();
 
   // Build where clause based on filter_type
-  let statusFilter: string[];
   let additionalWhere: Record<string, unknown> = {};
 
   // Build search filter if search term provided
@@ -413,31 +410,28 @@ export async function getVerifiableAedsForUser(
       }
     : {};
 
+  // 6 months ago for expiration check
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
   switch (filterType) {
-    case "published_unverified":
-      // Publicados pero SIN verificación manual
-      statusFilter = ["PUBLISHED"];
+    case "requires_attention":
+      // DEAs marcados como que requieren atención
+      additionalWhere = {
+        requires_attention: true,
+      };
+      break;
+    case "verification_expired":
+      // DEAs con verificación caducada (> 6 meses)
+      additionalWhere = {
+        last_verified_at: { not: null, lt: sixMonthsAgo },
+      };
+      break;
+    case "never_verified":
+    default:
+      // DEAs que nunca se han verificado
       additionalWhere = {
         last_verified_at: null,
-      };
-      break;
-    case "published_verified":
-      // Publicados CON verificación manual
-      statusFilter = ["PUBLISHED"];
-      additionalWhere = {
-        last_verified_at: { not: null },
-      };
-      break;
-    case "all_published":
-      // Todos los publicados
-      statusFilter = ["PUBLISHED"];
-      break;
-    case "pending":
-    default:
-      // Pendientes de revisión (comportamiento original)
-      statusFilter = filters?.status || ["DRAFT", "PENDING_REVIEW"];
-      additionalWhere = {
-        requires_attention: false,
       };
       break;
   }
@@ -445,9 +439,6 @@ export async function getVerifiableAedsForUser(
   // ADMIN: can see all AEDs
   if (userRole === "ADMIN") {
     const whereClause = {
-      status: {
-        in: statusFilter as any,
-      },
       ...additionalWhere,
       ...searchWhere,
     };
@@ -526,9 +517,6 @@ export async function getVerifiableAedsForUser(
   // Get AEDs with filters
   const whereClause = {
     id: { in: aedIds },
-    status: {
-      in: statusFilter as any,
-    },
     ...additionalWhere,
     ...searchWhere,
   };

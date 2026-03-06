@@ -8,7 +8,7 @@ import NoOrganizationMessage from "@/components/verification/NoOrganizationMessa
 import OrganizationSelector from "@/components/verification/OrganizationSelector";
 import { useAuth } from "@/contexts/AuthContext";
 
-type FilterType = "pending" | "published_unverified" | "published_verified" | "all_published";
+type FilterType = "never_verified" | "requires_attention" | "verification_expired";
 
 interface FilterOption {
   value: FilterType;
@@ -67,32 +67,25 @@ interface ApiResponse {
 
 const FILTER_OPTIONS: FilterOption[] = [
   {
-    value: "pending",
-    label: "Pendientes de verificar",
-    description: "DEAs en borrador o pendientes de revisión",
+    value: "never_verified",
+    label: "Nunca verificados",
+    description: "DEAs que nunca han sido verificados manualmente",
     badgeColor: "bg-yellow-100 text-yellow-800",
-    badgeText: "Pendiente",
-  },
-  {
-    value: "published_unverified",
-    label: "Publicados sin verificar",
-    description: "DEAs publicados pero sin verificación manual",
-    badgeColor: "bg-orange-100 text-orange-800",
     badgeText: "Sin verificar",
   },
   {
-    value: "published_verified",
-    label: "Publicados verificados",
-    description: "DEAs publicados y verificados manualmente",
-    badgeColor: "bg-green-100 text-green-800",
-    badgeText: "Verificado",
+    value: "requires_attention",
+    label: "Requieren atención",
+    description: "DEAs marcados como que necesitan revisión",
+    badgeColor: "bg-red-100 text-red-800",
+    badgeText: "Atención",
   },
   {
-    value: "all_published",
-    label: "Todos los publicados",
-    description: "Todos los DEAs publicados",
-    badgeColor: "bg-blue-100 text-blue-800",
-    badgeText: "Publicado",
+    value: "verification_expired",
+    label: "Verificación caducada",
+    description: "DEAs cuya verificación tiene más de 6 meses",
+    badgeColor: "bg-orange-100 text-orange-800",
+    badgeText: "Caducada",
   },
 ];
 
@@ -102,7 +95,7 @@ export default function VerifyPage() {
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [userOrganizations, setUserOrganizations] = useState<UserOrganization[]>([]);
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
-  const [filterType, setFilterType] = useState<FilterType>("pending");
+  const [filterType, setFilterType] = useState<FilterType>("never_verified");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -400,33 +393,29 @@ export default function VerifyPage() {
             <div className="text-gray-400 text-6xl mb-4">
               {searchTerm
                 ? "🔍"
-                : filterType === "pending"
+                : filterType === "never_verified"
                   ? "✅"
-                  : filterType === "published_verified"
-                    ? "🎉"
-                    : "📋"}
+                  : filterType === "requires_attention"
+                    ? "👍"
+                    : "🎉"}
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               {searchTerm
                 ? "No se encontraron resultados"
-                : filterType === "pending"
-                  ? "No hay DEAs pendientes de verificar"
-                  : filterType === "published_unverified"
-                    ? "No hay DEAs publicados sin verificar"
-                    : filterType === "published_verified"
-                      ? "No hay DEAs verificados"
-                      : "No hay DEAs publicados"}
+                : filterType === "never_verified"
+                  ? "No hay DEAs sin verificar"
+                  : filterType === "requires_attention"
+                    ? "No hay DEAs que requieran atención"
+                    : "No hay DEAs con verificación caducada"}
             </h3>
             <p className="text-gray-600">
               {searchTerm
                 ? `No se encontraron DEAs que coincidan con "${searchTerm}"`
-                : filterType === "pending"
-                  ? "Todos los DEAs han sido verificados"
-                  : filterType === "published_unverified"
-                    ? "Todos los DEAs publicados ya han sido verificados manualmente"
-                    : filterType === "published_verified"
-                      ? "No hay DEAs que hayan sido verificados manualmente"
-                      : "No hay DEAs publicados en el sistema"}
+                : filterType === "never_verified"
+                  ? "Todos los DEAs han sido verificados al menos una vez"
+                  : filterType === "requires_attention"
+                    ? "No hay DEAs marcados como que necesitan revisión"
+                    : "Todas las verificaciones están al día"}
             </p>
             {searchTerm && (
               <button

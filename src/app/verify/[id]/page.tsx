@@ -90,11 +90,6 @@ export default function VerifyPage({ params }: VerifyPageProps) {
       return;
     }
 
-    if (!authLoading && user && !user.is_verified) {
-      router.push("/");
-      return;
-    }
-
     if (user) {
       fetchVerificationData();
     }

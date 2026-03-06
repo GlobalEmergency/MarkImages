@@ -12,15 +12,15 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "12", 10);
     const organizationId = searchParams.get("organization_id") || undefined;
-    const filterType = (searchParams.get("filter_type") || "pending") as VerificationFilterType;
+    const filterType = (searchParams.get("filter_type") ||
+      "never_verified") as VerificationFilterType;
     const search = searchParams.get("search") || undefined;
 
     // Validate filter_type
     const validFilterTypes: VerificationFilterType[] = [
-      "pending",
-      "published_unverified",
-      "published_verified",
-      "all_published",
+      "never_verified",
+      "requires_attention",
+      "verification_expired",
     ];
     if (!validFilterTypes.includes(filterType)) {
       return NextResponse.json({ error: "Tipo de filtro no válido" }, { status: 400 });
