@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { validateStatusTransition } from "@/lib/aed-status";
+import { recordStatusChange, recordFieldChange, appendInternalNote } from "@/lib/audit";
 
 interface RouteParams {
   params: Promise<{
@@ -15,11 +17,7 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-    }
-
+    await requireAuth(request);
     const { id } = await params;
 
     // Obtener el DEA posible duplicado
@@ -135,10 +133,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-    }
-
     const { id } = await params;
     const body = await request.json();
     const { action, notes } = body;
@@ -156,23 +150,36 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     if (action === "not_duplicate") {
-      // Quitar la marca de posible duplicado
-      // Append a new note to internal_notes JSON array
-      const currentNotes = Array.isArray(aed.internal_notes) ? aed.internal_notes : [];
-      const newNote = {
-        text: `Revisión de duplicado por ${user.email}: No es duplicado. ${notes || ""}`.trim(),
-        date: new Date().toISOString(),
-        type: "duplicate_review",
-        author: user.email,
-      };
+      const noteText =
+        `Revisión de duplicado por ${user.email}: No es duplicado. ${notes || ""}`.trim();
+      const updatedNotes = appendInternalNote(
+        aed.internal_notes,
+        noteText,
+        "duplicate_review",
+        user.email || user.userId
+      );
 
-      const updatedAed = await prisma.aed.update({
-        where: { id },
-        data: {
-          requires_attention: false,
-          internal_notes: [...currentNotes, newNote],
-          updated_by: user.userId,
-        },
+      // Wrap update + audit in a single transaction
+      const updatedAed = await prisma.$transaction(async (tx) => {
+        const updated = await tx.aed.update({
+          where: { id },
+          data: {
+            requires_attention: false,
+            internal_notes: updatedNotes,
+            updated_by: user.userId,
+          },
+        });
+
+        await recordFieldChange(tx, {
+          aedId: id,
+          fieldName: "requires_attention",
+          oldValue: "true",
+          newValue: "false",
+          changedBy: user.userId,
+          changeSource: "WEB_UI",
+        });
+
+        return updated;
       });
 
       return NextResponse.json({
@@ -181,27 +188,52 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         aed: updatedAed,
       });
     } else if (action === "confirm_duplicate") {
-      // Marcar como rechazado (duplicado confirmado)
+      // Validate status transition via state machine
+      try {
+        validateStatusTransition(aed.status, "REJECTED");
+      } catch {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `No se puede rechazar un DEA en estado ${aed.status}. Solo se pueden rechazar DEAs en PENDING_REVIEW.`,
+          },
+          { status: 400 }
+        );
+      }
+
       const rejectionReason = `Duplicado confirmado durante revisión manual. ${notes || ""}`.trim();
+      const noteText =
+        `Revisión de duplicado por ${user.email}: Duplicado confirmado. ${notes || ""}`.trim();
+      const updatedNotes = appendInternalNote(
+        aed.internal_notes,
+        noteText,
+        "duplicate_review",
+        user.email || user.userId
+      );
 
-      // Append a new note to internal_notes JSON array
-      const currentNotes = Array.isArray(aed.internal_notes) ? aed.internal_notes : [];
-      const newNote = {
-        text: `Revisión de duplicado por ${user.email}: Duplicado confirmado. ${notes || ""}`.trim(),
-        date: new Date().toISOString(),
-        type: "duplicate_review",
-        author: user.email,
-      };
+      // Wrap update + audit in a single transaction
+      const updatedAed = await prisma.$transaction(async (tx) => {
+        const updated = await tx.aed.update({
+          where: { id },
+          data: {
+            status: "REJECTED",
+            rejection_reason: rejectionReason,
+            requires_attention: false,
+            internal_notes: updatedNotes,
+            updated_by: user.userId,
+          },
+        });
 
-      const updatedAed = await prisma.aed.update({
-        where: { id },
-        data: {
-          status: "REJECTED",
-          rejection_reason: rejectionReason,
-          requires_attention: false,
-          internal_notes: [...currentNotes, newNote],
-          updated_by: user.userId,
-        },
+        await recordStatusChange(tx, {
+          aedId: id,
+          previousStatus: aed.status,
+          newStatus: "REJECTED",
+          modifiedBy: user.userId,
+          reason: rejectionReason,
+          notes: `Duplicado confirmado por ${user.email}`,
+        });
+
+        return updated;
       });
 
       return NextResponse.json({
