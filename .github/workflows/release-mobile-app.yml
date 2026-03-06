@@ -491,13 +491,46 @@ jobs:
           fi
 
   # ──────────────────────────────────────────────────────────────
-  # 5. Update GitHub Release with build artifacts
+  # 5a. Create GitHub Release (for workflow_dispatch only)
   # ──────────────────────────────────────────────────────────────
-  create-github-release:
-    name: Update GitHub Release
-    needs: [prepare, build-android, build-ios]
+  create-release:
+    name: Create GitHub Release
+    needs: prepare
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' && always()
+    if: github.event_name == 'workflow_dispatch'
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="mobile@${{ needs.prepare.outputs.version }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "✅ Release $TAG already exists — skipping creation"
+          else
+            echo "📦 Creating GitHub Release for $TAG"
+            gh release create "$TAG" \
+              --title "Mobile v${{ needs.prepare.outputs.version }}" \
+              --generate-notes
+            echo "✅ Release created"
+          fi
+
+  # ──────────────────────────────────────────────────────────────
+  # 5b. Upload build artifacts to GitHub Release
+  # ──────────────────────────────────────────────────────────────
+  upload-release-artifacts:
+    name: Upload Release Artifacts
+    needs: [prepare, build-android, build-ios, create-release]
+    runs-on: ubuntu-latest
+    if: always() && (needs.build-android.result == 'success' || needs.build-ios.result == 'success')
 
     permissions:
       contents: write
@@ -518,18 +551,45 @@ jobs:
           path: ./ios
 
       - name: Upload to Release
-        uses: softprops/action-gh-release@c062e08bd532815e2082a7e09ce9f200309e996d # v2.2.1
-        with:
-          files: |
-            ./android/*
-            ./ios/*
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="mobile@${{ needs.prepare.outputs.version }}"
+          # Upload all artifacts found
+          FILES=""
+          if [ -d ./android ]; then
+            for f in ./android/*; do
+              [ -f "$f" ] && FILES="$FILES $f"
+            done
+          fi
+          if [ -d ./ios ]; then
+            for f in ./ios/*; do
+              [ -f "$f" ] && FILES="$FILES $f"
+            done
+          fi
+          if [ -n "$FILES" ]; then
+            echo "📦 Uploading artifacts to release $TAG"
+            gh release upload "$TAG" $FILES --clobber
+            echo "✅ Artifacts uploaded"
+          else
+            echo "⚠️ No artifacts to upload"
+          fi
 
   # ──────────────────────────────────────────────────────────────
   # 6. Release Summary (always runs)
   # ──────────────────────────────────────────────────────────────
   notify:
     name: Release Summary
-    needs: [prepare, check-play-store, build-android, promote-android, build-ios]
+    needs:
+      [
+        prepare,
+        check-play-store,
+        build-android,
+        promote-android,
+        build-ios,
+        create-release,
+        upload-release-artifacts,
+      ]
     runs-on: ubuntu-latest
     if: always()
 
@@ -575,3 +635,19 @@ jobs:
           echo "|----------|--------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Android | $ANDROID_STATUS | $ANDROID_ACTION |" >> $GITHUB_STEP_SUMMARY
           echo "| iOS | ${{ needs.build-ios.result == 'success' && '✅' || needs.build-ios.result == 'skipped' && '⏭️' || '❌' }} | ${{ needs.build-ios.result == 'success' && 'TestFlight' || '-' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # GitHub Release status
+          if [ "${{ needs.create-release.result }}" == "success" ]; then
+            echo "**GitHub Release:** ✅ Created" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.create-release.result }}" == "skipped" ]; then
+            echo "**GitHub Release:** ⏭️ Already exists" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.upload-release-artifacts.result }}" == "success" ]; then
+            echo "**Release Artifacts:** ✅ Uploaded" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.upload-release-artifacts.result }}" == "skipped" ]; then
+            echo "**Release Artifacts:** ⏭️ Skipped" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.upload-release-artifacts.result }}" == "failure" ]; then
+            echo "**Release Artifacts:** ❌ Failed" >> $GITHUB_STEP_SUMMARY
+          fi

@@ -16,6 +16,7 @@ jobs:
 
     permissions:
       contents: write
+      actions: write
 
     steps:
       - name: Checkout
@@ -34,22 +35,39 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Ensure mobile tag
+        id: mobile-tag
         run: |
           if [ -f mobile/version.json ]; then
             VERSION=$(node -e "console.log(require('./mobile/version.json').version)")
             TAG="mobile@${VERSION}"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
             if git rev-parse "$TAG" >/dev/null 2>&1; then
               echo "✅ Tag $TAG already exists — skipping"
+              echo "created=false" >> "$GITHUB_OUTPUT"
             else
               echo "📦 Creating tag $TAG"
               git tag "$TAG"
               git push origin "$TAG"
               echo "✅ Tag $TAG created and pushed"
+              echo "created=true" >> "$GITHUB_OUTPUT"
             fi
           else
             echo "⚠️ mobile/version.json not found — skipping mobile tag"
+            echo "created=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Trigger mobile release workflow
+        if: steps.mobile-tag.outputs.created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "🚀 Triggering release workflow for v${{ steps.mobile-tag.outputs.version }}"
+          gh workflow run release-mobile-app.yml \
+            -f version=${{ steps.mobile-tag.outputs.version }} \
+            -f deploy_android=true \
+            -f deploy_ios=true \
+            -f android_track=internal
 
       - name: Ensure web tag
         run: |
