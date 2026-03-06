@@ -21,3 +21,18 @@
 
 # Firebase Crashlytics — keep exception classes
 -keep public class * extends java.lang.Exception
+
+# ──────────────────────────────────────────────────────────────
+# Capacitor — prevent R8 from breaking the plugin bridge
+# ──────────────────────────────────────────────────────────────
+
+# Keep the entire Capacitor bridge framework (R8 breaks permission
+# handling on older Android versions when these classes are optimized).
+-keep class com.getcapacitor.** { *; }
+
+# Keep ION native libraries used by Capacitor plugins
+-keep class io.ionic.libs.** { *; }
+
+# Keep all runtime annotations (needed for @CapacitorPlugin,
+# @Permission, @PluginMethod, @PermissionCallback resolution).
+-keepattributes *Annotation*,InnerClasses,Signature,Exceptions
