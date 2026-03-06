@@ -12,12 +12,10 @@ root.render(
   </React.StrictMode>
 );
 
+// Register global error handlers unconditionally — recordException is already fire-and-forget
+setupGlobalErrorHandlers(crashReporter);
+
 // Initialize crash reporting (fire-and-forget, non-blocking)
-crashReporter
-  .initialize()
-  .then(() => {
-    setupGlobalErrorHandlers(crashReporter);
-  })
-  .catch((err) => {
-    console.warn("Failed to initialize crash reporter:", err);
-  });
+crashReporter.initialize().catch((err) => {
+  console.warn("Failed to initialize crash reporter:", err);
+});

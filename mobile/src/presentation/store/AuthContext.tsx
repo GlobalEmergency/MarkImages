@@ -34,6 +34,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           crashReporter.setUserId(restoredUser.id).catch(() => {});
         }
       })
+      .catch(() => {
+        setUser(null);
+      })
       .finally(() => setIsLoading(false));
   }, []);
 
