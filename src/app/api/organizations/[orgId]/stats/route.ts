@@ -9,11 +9,6 @@ export async function GET(
 ) {
   try {
     const user = await requireAuth(request);
-
-    if (!user) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
-
     const { orgId } = await params;
 
     // Verificar que el usuario pertenece a la organización
@@ -37,7 +32,7 @@ export async function GET(
       verificationsThisMonth,
       deasByStatus,
     ] = await Promise.all([
-      // Total de DEAs asignados a la organización
+      // Total de DEAs asignados a la organización (any assignment type)
       prisma.aedOrganizationAssignment.count({
         where: {
           organization_id: orgId,
@@ -45,12 +40,11 @@ export async function GET(
         },
       }),
 
-      // DEAs verificados
+      // DEAs verificados (any assignment type)
       prisma.aedOrganizationAssignment.count({
         where: {
           organization_id: orgId,
           status: "ACTIVE",
-          assignment_type: "VERIFICATION",
           aed: {
             last_verified_at: {
               not: null,
@@ -59,12 +53,11 @@ export async function GET(
         },
       }),
 
-      // Verificaciones pendientes
+      // Verificaciones pendientes (any assignment type)
       prisma.aedOrganizationAssignment.count({
         where: {
           organization_id: orgId,
           status: "ACTIVE",
-          assignment_type: "VERIFICATION",
           aed: {
             OR: [
               { last_verified_at: null },
@@ -127,8 +120,9 @@ export async function GET(
       }
     });
 
-    // Add verifications pending to the pending count
-    deasByStatusMap.pending += pendingVerifications;
+    // Note: pending_verifications is an independent metric (DEAs needing re-verification)
+    // and is NOT added to deas_by_status.pending to avoid double-counting DEAs that
+    // are both in DRAFT/PENDING_REVIEW status AND have no/expired verification.
 
     return NextResponse.json({
       total_deas: totalDeas,
