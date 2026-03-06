@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin, AuthError } from "@/lib/auth";
+import { requireAdminOrAedPermission, AuthError } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { uploadToS3 } from "@/lib/s3";
 
@@ -16,10 +16,9 @@ import { uploadToS3 } from "@/lib/s3";
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    // Require ADMIN authentication
-    const user = await requireAdmin(request);
-
     const { id } = await params;
+    // Require ADMIN role or org-level can_view permission for this AED
+    const { user } = await requireAdminOrAedPermission(request, id, "can_view");
 
     // Fetch AED with ALL relationships
     const aed = await prisma.aed.findUnique({
@@ -240,9 +239,8 @@ function trackNestedChanges(
  */
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requireAdmin(request);
-
     const { id } = await params;
+    const { user } = await requireAdminOrAedPermission(request, id, "can_edit");
     const body = await request.json();
 
     // Separate nested objects from top-level fields

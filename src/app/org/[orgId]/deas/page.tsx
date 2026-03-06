@@ -1,20 +1,25 @@
 /**
- * Organization DEAs Page - Public View
- * Uses unified DeasList component
+ * Organization DEAs Page
+ * Shows admin mode (editable links) for org editors/verifiers,
+ * public view for regular members.
  */
 
 "use client";
 
 import { use } from "react";
 import { DeasList } from "@/components/shared/DeasList";
+import { useOrganization } from "@/contexts/OrganizationContext";
 
 export default function OrgDeasPage({ params }: { params: Promise<{ orgId: string }> }) {
   const resolvedParams = use(params);
   const orgId = resolvedParams.orgId;
+  const { canEdit, canVerify } = useOrganization();
+  const hasAdminAccess = canEdit || canVerify;
 
   return (
     <DeasList
       organizationId={orgId}
+      adminMode={hasAdminAccess}
       config={{
         filters: [
           {
@@ -41,7 +46,7 @@ export default function OrgDeasPage({ params }: { params: Promise<{ orgId: strin
         },
         permissions: {
           canView: true,
-          canEdit: false,
+          canEdit: canEdit,
           canDelete: false,
           canCreate: false,
         },

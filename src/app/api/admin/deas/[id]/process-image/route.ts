@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin, AuthError } from "@/lib/auth";
+import { requireAdminOrAedPermission, AuthError } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { uploadToS3 } from "@/lib/s3";
 import { buildImageKey, extractExtension } from "@/lib/s3-utils";
@@ -31,9 +31,8 @@ interface ProcessImageBody {
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requireAdmin(request);
-
     const { id: aedId } = await params;
+    const { user } = await requireAdminOrAedPermission(request, aedId, "can_edit");
     const body: ProcessImageBody = await request.json();
     const { imageId, newImageDataUrl, imageType, cropData, blurAreas, arrowData } = body;
 
