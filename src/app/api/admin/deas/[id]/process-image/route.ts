@@ -5,7 +5,7 @@
  *   - Existing images: downloads original from S3, processes, uploads result
  *   - New images: receives base64, uploads original + processes, uploads result
  *
- * Requires ADMIN authentication
+ * Requires ADMIN authentication or org-level can_edit permission
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -14,6 +14,7 @@ import { prisma } from "@/lib/db";
 import { uploadToS3 } from "@/lib/s3";
 import { buildImageKey, extractExtension } from "@/lib/s3-utils";
 import { processImage, downloadImage } from "@/lib/imageProcessing";
+import { recordFieldChange } from "@/lib/audit";
 import type { CropData, ArrowData, BlurArea } from "@/types/shared";
 
 interface ProcessImageBody {
@@ -47,14 +48,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     let originalBuffer: Buffer;
-    let originalUrl: string;
-    let dbImageId: string;
     let extension = "jpg";
     const validTypes = ["FRONT", "LOCATION", "ACCESS", "SIGNAGE", "CONTEXT", "PLATE"];
     const type = imageType && validTypes.includes(imageType) ? imageType : "FRONT";
 
+    // ── Phase 1: Resolve original image (network I/O, outside transaction) ──
+    let isNewImage = false;
+    let existingDbImageId: string | undefined;
+    let newImageContentType = "image/jpeg";
+
     if (imageId) {
-      // ── Process existing image ──
+      // Process existing image
       const existingImage = aed.images.find((img) => img.id === imageId);
       if (!existingImage) {
         return NextResponse.json(
@@ -64,14 +68,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       }
 
       console.log(`🔄 Admin processing existing image ${imageId} for AED ${aedId}`);
-      originalUrl = existingImage.original_url;
-      dbImageId = imageId;
+      existingDbImageId = imageId;
       extension = extractExtension(existingImage.original_url);
-
-      // Download original
-      originalBuffer = await downloadImage(originalUrl);
+      originalBuffer = await downloadImage(existingImage.original_url);
     } else if (newImageDataUrl) {
-      // ── Process new upload ──
+      // Process new upload
       const matches = newImageDataUrl.match(/^data:([^;]+);base64,(.+)$/);
       if (!matches) {
         return NextResponse.json(
@@ -80,42 +81,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         );
       }
 
-      const contentType = matches[1];
+      newImageContentType = matches[1];
       const base64Data = matches[2];
       originalBuffer = Buffer.from(base64Data, "base64");
-      extension = contentType.includes("png") ? "png" : "jpg";
+      extension = newImageContentType.includes("png") ? "png" : "jpg";
+      isNewImage = true;
 
       console.log(`🔄 Admin processing new image upload for AED ${aedId}`);
-
-      // Create AedImage record first to get an ID
-      const newImage = await prisma.aedImage.create({
-        data: {
-          aed_id: aedId,
-          type: type as "FRONT" | "LOCATION" | "ACCESS" | "SIGNAGE" | "CONTEXT" | "PLATE",
-          order: aed.images.length + 1,
-          original_url: "pending", // Will be updated below
-          created_at: new Date(),
-        },
-      });
-
-      dbImageId = newImage.id;
-
-      // Upload original to S3
-      const originalKey = buildImageKey(aedId, dbImageId, "original", extension);
-      originalUrl = await uploadToS3({
-        buffer: originalBuffer,
-        filename: originalKey,
-        contentType: contentType,
-        prefix: aedId,
-      });
-
-      // Update the record with the real URL
-      await prisma.aedImage.update({
-        where: { id: dbImageId },
-        data: { original_url: originalUrl },
-      });
-
-      console.log(`☁️ Original uploaded: ${originalUrl}`);
     } else {
       return NextResponse.json(
         { success: false, error: "Either imageId or newImageDataUrl is required" },
@@ -123,13 +95,47 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       );
     }
 
-    // ── Process image with Sharp ──
+    // ── Phase 2: Process image with Sharp (CPU, outside transaction) ──
     const processedBuffer = await processImage({
       imageBuffer: originalBuffer,
       cropData,
       blurAreas: blurAreas && blurAreas.length > 0 ? blurAreas : undefined,
       arrowData,
     });
+
+    // ── Phase 3: Upload to S3 (network I/O, outside transaction) ──
+    // For new images we need a DB record to get an ID for the S3 key.
+    // Create a temporary record, then do S3 uploads, then finalize in transaction.
+    let dbImageId: string;
+    let originalUrl: string;
+
+    if (isNewImage) {
+      // Create minimal record to get an ID for S3 key
+      const tempImage = await prisma.aedImage.create({
+        data: {
+          aed_id: aedId,
+          type: type as "FRONT" | "LOCATION" | "ACCESS" | "SIGNAGE" | "CONTEXT" | "PLATE",
+          order: aed.images.length + 1,
+          original_url: "pending",
+          created_at: new Date(),
+        },
+      });
+      dbImageId = tempImage.id;
+
+      // Upload original to S3
+      const originalKey = buildImageKey(aedId, dbImageId, "original", extension);
+      originalUrl = await uploadToS3({
+        buffer: originalBuffer,
+        filename: originalKey,
+        contentType: newImageContentType,
+        prefix: aedId,
+      });
+      console.log(`☁️ Original uploaded: ${originalUrl}`);
+    } else {
+      dbImageId = existingDbImageId!;
+      const existingImage = aed.images.find((img) => img.id === imageId)!;
+      originalUrl = existingImage.original_url;
+    }
 
     // Upload processed image to S3
     const processedKey = buildImageKey(aedId, dbImageId, "processed", extension);
@@ -139,41 +145,45 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       contentType: "image/jpeg",
       prefix: aedId,
     });
-
     console.log(`☁️ Processed uploaded: ${processedUrl}`);
 
-    // Update DB record with processed URL and verification info
-    const updatedImage = await prisma.aedImage.update({
-      where: { id: dbImageId },
-      data: {
-        original_url: originalUrl,
-        processed_url: processedUrl,
-        is_verified: true,
-        verified_at: new Date(),
-        verified_by: user.userId,
-        type: type as "FRONT" | "LOCATION" | "ACCESS" | "SIGNAGE" | "CONTEXT" | "PLATE",
-      },
-    });
+    // ── Phase 4: All DB writes in a single transaction ──
+    const now = new Date();
 
-    // Record field change for audit
-    await prisma.aedFieldChange.create({
-      data: {
-        aed_id: aedId,
-        field_name: imageId ? "image_reprocessed" : "image_processed",
-        old_value: imageId ? `${type} - original` : "",
-        new_value: `${type} - procesada (crop${cropData ? "✓" : "✗"}, blur${blurAreas?.length ? "✓" : "✗"}, arrow${arrowData ? "✓" : "✗"})`,
-        changed_by: user.userId,
-        change_source: "WEB_UI",
-      },
-    });
+    const updatedImage = await prisma.$transaction(async (tx) => {
+      // 1. Update image record with final URLs and verification
+      const image = await tx.aedImage.update({
+        where: { id: dbImageId },
+        data: {
+          original_url: originalUrl,
+          processed_url: processedUrl,
+          is_verified: true,
+          verified_at: now,
+          verified_by: user.userId,
+          type: type as "FRONT" | "LOCATION" | "ACCESS" | "SIGNAGE" | "CONTEXT" | "PLATE",
+        },
+      });
 
-    // Update AED verification date
-    await prisma.aed.update({
-      where: { id: aedId },
-      data: {
-        updated_by: user.userId,
-        updated_at: new Date(),
-      },
+      // 2. Record field change for audit
+      await recordFieldChange(tx, {
+        aedId,
+        fieldName: imageId ? "image_reprocessed" : "image_processed",
+        oldValue: imageId ? `${type} - original` : "",
+        newValue: `${type} - procesada (crop${cropData ? "✓" : "✗"}, blur${blurAreas?.length ? "✓" : "✗"}, arrow${arrowData ? "✓" : "✗"})`,
+        changedBy: user.userId,
+        changeSource: "WEB_UI",
+      });
+
+      // 3. Update AED timestamp
+      await tx.aed.update({
+        where: { id: aedId },
+        data: {
+          updated_by: user.userId,
+          updated_at: now,
+        },
+      });
+
+      return image;
     });
 
     console.log(`✅ Image ${dbImageId} processed successfully`);
