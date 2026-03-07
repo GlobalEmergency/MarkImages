@@ -569,13 +569,13 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                   }));
                 }
 
-                // Only send lightweight coordinates to the server (NO image data)
+                // Send coordinates + preview URL so the REVIEW step works after page reload
                 const newProcessedImage: ProcessedImageData = {
                   image_id: currentImage.id,
                   crop_data: currentCropData,
                   blur_areas: currentBlurAreas.length > 0 ? currentBlurAreas : undefined,
                   arrow_data: arrowData,
-                  // processed_url deliberately omitted — kept client-side only
+                  processed_url: processedImageUrl,
                 };
 
                 const updatedProcessedImages = [...processedImages, newProcessedImage];
@@ -668,8 +668,8 @@ export default function VerifyPage({ params }: VerifyPageProps) {
             hasCrop: !!processed?.crop_data,
             hasBlur: !!(processed?.blur_areas && processed.blur_areas.length > 0),
             hasArrow: !!processed?.arrow_data,
-            // Use client-side preview URL (data: URL kept in local state, not on server)
-            processedUrl: localImageUrls.processedUrls[imageId],
+            // Prefer client-side preview; fall back to server-persisted data URL after reload
+            processedUrl: localImageUrls.processedUrls[imageId] || processed?.processed_url,
           };
         };
 
