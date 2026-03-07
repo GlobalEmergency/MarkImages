@@ -41,6 +41,7 @@ import type {
   ImageProcessingState,
 } from "@/types/verification";
 import { VerificationStep, VERIFICATION_STEPS_CONFIG } from "@/types/verification";
+import { regenerateProcessedImage } from "@/utils/imageRegeneration";
 
 interface VerificationData {
   aed: Aed & {
@@ -81,6 +82,8 @@ export default function VerifyPage({ params }: VerifyPageProps) {
   const [savingStep, setSavingStep] = useState(false);
   // Lightbox for image preview in REVIEW step
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  // True while regenerating processed images from stored params (after reload)
+  const [regeneratingImages, setRegeneratingImages] = useState(false);
   const router = useRouter();
   const resolvedParams = use(params);
 
@@ -278,6 +281,54 @@ export default function VerifyPage({ params }: VerifyPageProps) {
       setShowRejectDialog(false);
     }
   };
+
+  // ── Regenerate processed image previews when entering REVIEW after reload ──
+  const currentStep = data?.current_step;
+  useEffect(() => {
+    if (currentStep !== VerificationStep.REVIEW || !data) return;
+
+    const validationData = data.validation.data as ImageProcessingState | null;
+    const validatedImages = validationData?.validated_images || [];
+    const processedImages = validationData?.processed_images || [];
+
+    // Find images that have processing params but no local preview URL
+    const missing = processedImages.filter(
+      (p) =>
+        !localImageUrls.processedUrls[p.image_id] && (p.crop_data || p.blur_areas || p.arrow_data)
+    );
+
+    if (missing.length === 0) return;
+
+    setRegeneratingImages(true);
+
+    const originalMap = Object.fromEntries(validatedImages.map((v) => [v.id, v.url]));
+
+    Promise.all(
+      missing.map(async (p) => {
+        try {
+          const url = await regenerateProcessedImage(originalMap[p.image_id], p);
+          return { imageId: p.image_id, url };
+        } catch (err) {
+          console.error(`Failed to regenerate image ${p.image_id}:`, err);
+          return null;
+        }
+      })
+    )
+      .then((results) => {
+        const successful = results.filter((r): r is { imageId: string; url: string } => r !== null);
+        if (successful.length > 0) {
+          setLocalImageUrls((prev) => ({
+            ...prev,
+            processedUrls: {
+              ...prev.processedUrls,
+              ...Object.fromEntries(successful.map((r) => [r.imageId, r.url])),
+            },
+          }));
+        }
+      })
+      .finally(() => setRegeneratingImages(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep]);
 
   const getStepProgress = () => {
     if (!data) return { current: 0, total: 0, percentage: 0 };
@@ -678,8 +729,8 @@ export default function VerifyPage({ params }: VerifyPageProps) {
             hasCrop: !!processed?.crop_data,
             hasBlur: !!(processed?.blur_areas && processed.blur_areas.length > 0),
             hasArrow: !!processed?.arrow_data,
-            // Client-side preview only (base64 too large for server storage).
-            // After reload, falls back to original image with processing badges.
+            // Client-side preview: either from the live session or regenerated
+            // from stored params (crop_data + blur_areas + arrow_data) after reload.
             processedUrl: localImageUrls.processedUrls[imageId],
           };
         };
@@ -721,6 +772,14 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                   {frontImages.length > 0 && ` • ${frontImages.length} frontal(es)`}
                   {interiorImages.length > 0 && ` • ${interiorImages.length} interior(es)`}
                 </p>
+
+                {/* Regeneration indicator */}
+                {regeneratingImages && (
+                  <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 px-3 py-2 rounded-lg mb-3">
+                    <Loader2 className="animate-spin h-4 w-4" />
+                    Regenerando previsualizaciones de imágenes procesadas...
+                  </div>
+                )}
 
                 {/* Gallery of validated images */}
                 {validatedImages.length > 0 ? (
