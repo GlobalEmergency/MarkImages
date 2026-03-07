@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin, requireAdminOrAedPermission, AuthError } from "@/lib/auth";
+import { requireAdminOrAedPermission, AuthError } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { uploadToS3 } from "@/lib/s3";
 import { validateStatusTransition } from "@/lib/aed-status";
@@ -630,15 +630,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 /**
  * DELETE /api/admin/deas/[id]
  * Permanently delete an AED and all its related records.
- * Admin-only — org members cannot delete AEDs.
+ * Accessible by global admins and org members with can_edit permission.
  */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin(request);
     const { id } = await params;
+    await requireAdminOrAedPermission(request, id, "can_edit");
 
     // Fetch AED with FK references to clean up orphans
     const aed = await prisma.aed.findUnique({
