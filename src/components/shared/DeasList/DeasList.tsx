@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { Suspense, useEffect, useState, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { MapPin, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import { DataListFilters } from "../DataListFilters";
@@ -21,7 +21,21 @@ interface DeasListProps {
   adminMode?: boolean;
 }
 
-export function DeasList({ organizationId, config, adminMode = false }: DeasListProps) {
+export function DeasList(props: DeasListProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      }
+    >
+      <DeasListInner {...props} />
+    </Suspense>
+  );
+}
+
+function DeasListInner({ organizationId, config, adminMode = false }: DeasListProps) {
   const searchParams = useSearchParams();
   const [deas, setDeas] = useState<DeaItem[]>([]);
   const [loading, setLoading] = useState(true);
