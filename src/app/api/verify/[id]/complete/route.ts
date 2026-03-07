@@ -69,9 +69,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Procesar todas las imágenes (CPU/network — done outside transaction)
-    const processedBuffers = await processVerificationImages(imagesToProcess);
+    // Errors on individual images do NOT abort the verification.
+    const { processedImages: processedBuffers, errors: processingErrors } =
+      await processVerificationImages(imagesToProcess);
 
-    console.log(`✅ ${processedBuffers.size} imágenes procesadas`);
+    if (processingErrors.length > 0) {
+      console.warn(
+        `⚠️ ${processingErrors.length} imagen(es) con errores de procesamiento:`,
+        processingErrors
+      );
+    }
+    console.log(`✅ ${processedBuffers.size} imágenes procesadas correctamente`);
 
     // ── Upload images to S3 (network I/O — outside transaction) ──────
     const imageUpdates: Array<{
@@ -79,47 +87,55 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       newOriginalUrl: string;
       processedUrl: string;
     }> = [];
+    const uploadErrors: Array<{ imageId: string; error: string }> = [];
 
     for (const [imageId, processedBuffer] of processedBuffers) {
       const imageRecord = validation.aed.images.find((img) => img.id === imageId);
       if (!imageRecord) continue;
 
-      const extension = extractExtension(imageRecord.original_url);
+      try {
+        const extension = extractExtension(imageRecord.original_url);
 
-      console.log(`☁️ Descargando y re-subiendo imagen original ${imageId}...`);
+        console.log(`☁️ Descargando y re-subiendo imagen original ${imageId}...`);
 
-      // Descargar imagen original
-      const originalResponse = await fetch(imageRecord.original_url);
-      if (!originalResponse.ok) {
-        throw new Error(`Failed to download original image: ${originalResponse.statusText}`);
+        // Descargar imagen original
+        const originalResponse = await fetch(imageRecord.original_url);
+        if (!originalResponse.ok) {
+          throw new Error(`Failed to download original image: ${originalResponse.statusText}`);
+        }
+        const originalArrayBuffer = await originalResponse.arrayBuffer();
+        const originalBuffer = Buffer.from(originalArrayBuffer);
+
+        // Subir imagen original a S3 con formato estructurado
+        const originalKey = buildImageKey(id, imageId, "original", extension);
+        const newOriginalUrl = await uploadToS3({
+          buffer: originalBuffer,
+          filename: originalKey,
+          contentType: imageRecord.original_url.includes(".png") ? "image/png" : "image/jpeg",
+          prefix: id,
+        });
+
+        console.log(`✅ Imagen original ${imageId} re-subida: ${newOriginalUrl}`);
+
+        // Subir imagen procesada
+        const processedKey = buildImageKey(id, imageId, "processed", extension);
+        console.log(`☁️ Subiendo imagen procesada ${imageId} a S3...`);
+        const processedUrl = await uploadToS3({
+          buffer: processedBuffer,
+          filename: processedKey,
+          contentType: "image/jpeg",
+          prefix: id,
+        });
+
+        console.log(`✅ Imagen ${imageId} subida: ${processedUrl}`);
+
+        imageUpdates.push({ imageId, newOriginalUrl, processedUrl });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        console.error(`❌ Error subiendo imagen ${imageId}: ${message}`);
+        uploadErrors.push({ imageId, error: message });
+        // Continue with remaining images
       }
-      const originalArrayBuffer = await originalResponse.arrayBuffer();
-      const originalBuffer = Buffer.from(originalArrayBuffer);
-
-      // Subir imagen original a S3 con formato estructurado
-      const originalKey = buildImageKey(id, imageId, "original", extension);
-      const newOriginalUrl = await uploadToS3({
-        buffer: originalBuffer,
-        filename: originalKey,
-        contentType: imageRecord.original_url.includes(".png") ? "image/png" : "image/jpeg",
-        prefix: id,
-      });
-
-      console.log(`✅ Imagen original ${imageId} re-subida: ${newOriginalUrl}`);
-
-      // Subir imagen procesada
-      const processedKey = buildImageKey(id, imageId, "processed", extension);
-      console.log(`☁️ Subiendo imagen procesada ${imageId} a S3...`);
-      const processedUrl = await uploadToS3({
-        buffer: processedBuffer,
-        filename: processedKey,
-        contentType: "image/jpeg",
-        prefix: id,
-      });
-
-      console.log(`✅ Imagen ${imageId} subida: ${processedUrl}`);
-
-      imageUpdates.push({ imageId, newOriginalUrl, processedUrl });
     }
 
     // ── Wrap all DB writes in a single transaction ───────────────────
@@ -149,7 +165,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           result: {
             completed_by: user.userId,
             completed_at: now,
-            processed_images_count: processedBuffers.size,
+            processed_images_count: imageUpdates.length,
+            total_images: imagesToProcess.length,
+            ...(processingErrors.length > 0 && {
+              processing_errors: processingErrors,
+            }),
+            ...(uploadErrors.length > 0 && {
+              upload_errors: uploadErrors,
+            }),
           },
         },
       });
@@ -176,7 +199,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           newStatus: "PUBLISHED",
           modifiedBy: user.userId,
           reason: "Verificación fotográfica completada",
-          notes: `${processedBuffers.size} imagen(es) procesada(s). Dirección ${validationData?.validated_address ? "validada" : "no validada"}.`,
+          notes: `${imageUpdates.length} imagen(es) procesada(s). Dirección ${validationData?.validated_address ? "validada" : "no validada"}.`,
         });
       }
 
@@ -222,7 +245,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
             verified_schedule: false,
             verified_signage: false,
             is_current: true,
-            notes: `Verificación fotográfica completada. ${processedBuffers.size} imagen(es) procesada(s).`,
+            notes: `Verificación fotográfica completada. ${imageUpdates.length} imagen(es) procesada(s).`,
           },
         });
       }
@@ -230,9 +253,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return completedValidation;
     });
 
-    console.log("🎉 Verificación completada exitosamente");
+    const allErrors = [...processingErrors, ...uploadErrors];
+    if (allErrors.length > 0) {
+      console.warn(`⚠️ Verificación completada con ${allErrors.length} advertencia(s):`, allErrors);
+    } else {
+      console.log("🎉 Verificación completada exitosamente");
+    }
 
-    return NextResponse.json(updatedValidation);
+    return NextResponse.json({
+      ...updatedValidation,
+      // Include warnings so the client can display them
+      ...(allErrors.length > 0 && {
+        warnings: allErrors.map((e) => `Imagen ${e.imageId}: ${e.error}`),
+      }),
+    });
   } catch (error) {
     console.error("Error completing verification:", error);
     return NextResponse.json(

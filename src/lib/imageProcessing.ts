@@ -184,10 +184,16 @@ export interface ImageToProcess {
   arrowData?: ArrowData;
 }
 
+export interface ProcessVerificationResult {
+  processedImages: Map<string, Buffer>;
+  errors: Array<{ imageId: string; error: string }>;
+}
+
 export async function processVerificationImages(
   images: ImageToProcess[]
-): Promise<Map<string, Buffer>> {
+): Promise<ProcessVerificationResult> {
   const processedImages = new Map<string, Buffer>();
+  const errors: Array<{ imageId: string; error: string }> = [];
 
   for (const img of images) {
     console.log(`📸 Procesando imagen ${img.imageId}...`);
@@ -207,10 +213,12 @@ export async function processVerificationImages(
       processedImages.set(img.imageId, processedBuffer);
       console.log(`✅ Imagen ${img.imageId} procesada`);
     } catch (error) {
-      console.error(`❌ Error procesando imagen ${img.imageId}:`, error);
-      throw error;
+      const message = error instanceof Error ? error.message : "Unknown error";
+      console.error(`❌ Error procesando imagen ${img.imageId}: ${message}`);
+      errors.push({ imageId: img.imageId, error: message });
+      // Continue processing remaining images — don't abort the entire verification
     }
   }
 
-  return processedImages;
+  return { processedImages, errors };
 }
