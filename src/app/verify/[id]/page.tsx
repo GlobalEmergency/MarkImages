@@ -138,11 +138,21 @@ export default function VerifyPage({ params }: VerifyPageProps) {
     });
 
     // ── Persist to server in the background (non-blocking) ──
+    // Strip processed_url (base64 data URLs) from processed_images to keep
+    // the payload under Vercel's body-size limit. The local optimistic state
+    // keeps the full data for preview; the server only stores coordinates.
+    const serverData = { ...(stepData || {}) };
+    if (Array.isArray(serverData.processed_images)) {
+      serverData.processed_images = (serverData.processed_images as ProcessedImageData[]).map(
+        ({ processed_url: _stripped, ...rest }) => rest
+      );
+    }
+
     setSavingStep(true);
     fetch(`/api/verify/${resolvedParams.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ step, data: stepData || {} }),
+      body: JSON.stringify({ step, data: serverData }),
     })
       .then(async (response) => {
         if (!response.ok) {
@@ -668,8 +678,9 @@ export default function VerifyPage({ params }: VerifyPageProps) {
             hasCrop: !!processed?.crop_data,
             hasBlur: !!(processed?.blur_areas && processed.blur_areas.length > 0),
             hasArrow: !!processed?.arrow_data,
-            // Prefer client-side preview; fall back to server-persisted data URL after reload
-            processedUrl: localImageUrls.processedUrls[imageId] || processed?.processed_url,
+            // Client-side preview only (base64 too large for server storage).
+            // After reload, falls back to original image with processing badges.
+            processedUrl: localImageUrls.processedUrls[imageId],
           };
         };
 
