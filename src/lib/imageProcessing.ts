@@ -34,19 +34,29 @@ export async function downloadImage(url: string): Promise<Buffer> {
 export async function processImage(options: ProcessImageOptions): Promise<Buffer> {
   const { imageBuffer, cropData, blurAreas, arrowData } = options;
 
+  // Get original image dimensions for bounds checking
+  const metadata = await sharp(imageBuffer).metadata();
+  const imgWidth = metadata.width || 0;
+  const imgHeight = metadata.height || 0;
+
   let image = sharp(imageBuffer);
+  let currentWidth = imgWidth;
+  let currentHeight = imgHeight;
 
   // 1. Aplicar crop si existe
   if (cropData) {
+    // Clamp coordinates to image bounds to prevent "extract_area: bad extract area"
+    const left = Math.max(0, Math.min(Math.round(cropData.x), imgWidth - 1));
+    const top = Math.max(0, Math.min(Math.round(cropData.y), imgHeight - 1));
+    const width = Math.max(1, Math.min(Math.round(cropData.width), imgWidth - left));
+    const height = Math.max(1, Math.min(Math.round(cropData.height), imgHeight - top));
+
     console.log(
-      `🔲 Aplicando crop: ${cropData.width}x${cropData.height} en (${cropData.x}, ${cropData.y})`
+      `🔲 Aplicando crop: ${width}x${height} en (${left}, ${top}) [imagen: ${imgWidth}x${imgHeight}]`
     );
-    image = image.extract({
-      left: Math.round(cropData.x),
-      top: Math.round(cropData.y),
-      width: Math.round(cropData.width),
-      height: Math.round(cropData.height),
-    });
+    image = image.extract({ left, top, width, height });
+    currentWidth = width;
+    currentHeight = height;
   }
 
   // Obtener el buffer después del crop
@@ -57,26 +67,21 @@ export async function processImage(options: ProcessImageOptions): Promise<Buffer
     console.log(`🔒 Aplicando ${blurAreas.length} área(s) de blur`);
 
     for (const area of blurAreas) {
+      // Clamp blur area to current image bounds (post-crop dimensions)
+      const left = Math.max(0, Math.min(Math.round(area.x), currentWidth - 1));
+      const top = Math.max(0, Math.min(Math.round(area.y), currentHeight - 1));
+      const width = Math.max(1, Math.min(Math.round(area.width), currentWidth - left));
+      const height = Math.max(1, Math.min(Math.round(area.height), currentHeight - top));
+
       // Extraer la región a difuminar
       const blurRegion = await sharp(buffer)
-        .extract({
-          left: Math.round(area.x),
-          top: Math.round(area.y),
-          width: Math.round(area.width),
-          height: Math.round(area.height),
-        })
+        .extract({ left, top, width, height })
         .blur(area.intensity || 10)
         .toBuffer();
 
       // Componer la región difuminada sobre la imagen
       buffer = await sharp(buffer)
-        .composite([
-          {
-            input: blurRegion,
-            left: Math.round(area.x),
-            top: Math.round(area.y),
-          },
-        ])
+        .composite([{ input: blurRegion, left, top }])
         .toBuffer();
     }
   }
@@ -87,9 +92,10 @@ export async function processImage(options: ProcessImageOptions): Promise<Buffer
       `🎯 Dibujando flecha desde (${arrowData.startX}, ${arrowData.startY}) hasta (${arrowData.endX}, ${arrowData.endY})`
     );
 
-    const metadata = await sharp(buffer).metadata();
-    const width = metadata.width || 1000;
-    const height = metadata.height || 1000;
+    // Re-read dimensions (may have changed after crop/blur)
+    const arrowMeta = await sharp(buffer).metadata();
+    const width = arrowMeta.width || currentWidth || 1000;
+    const height = arrowMeta.height || currentHeight || 1000;
 
     // Crear SVG de la flecha
     const arrowSvg = generateArrowSVG(arrowData, width, height);
