@@ -53,12 +53,15 @@ export async function GET(
         },
       }),
 
-      // Verificaciones pendientes (any assignment type)
+      // Verificaciones pendientes (only verifiable statuses — must match
+      // the filter in getVerifiableAedsForUser so the count is consistent
+      // with what the verification list actually shows)
       prisma.aedOrganizationAssignment.count({
         where: {
           organization_id: orgId,
           status: "ACTIVE",
           aed: {
+            status: { in: ["PUBLISHED", "PENDING_REVIEW"] },
             OR: [
               { last_verified_at: null },
               {
