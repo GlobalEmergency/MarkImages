@@ -5,7 +5,6 @@ import { prisma } from "@/lib/db";
 import { uploadToS3 } from "@/lib/s3";
 import { buildImageKey, extractExtension } from "@/lib/s3-utils";
 import { processVerificationImages, type ImageToProcess } from "@/lib/imageProcessing";
-import { validateStatusTransition } from "@/lib/aed-status";
 import { recordStatusChange } from "@/lib/audit";
 import type { ProcessedImageData } from "@/types/verification";
 
@@ -33,21 +32,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: "Sesión de verificación no encontrada" }, { status: 404 });
     }
 
-    // Validate status transition via state machine
+    // Completing a verification IS the approval mechanism — the user went
+    // through every step (address, images, responsible, review). The result
+    // is always PUBLISHED regardless of the previous status.
+    // The status state machine applies to manual PATCH changes, not to
+    // structured verification completions.
     const previousStatus = validation.aed.status;
-    if (previousStatus !== "PUBLISHED") {
-      try {
-        validateStatusTransition(previousStatus, "PUBLISHED");
-      } catch {
-        return NextResponse.json(
-          {
-            success: false,
-            error: `No se puede publicar un DEA en estado ${previousStatus} mediante verificación.`,
-          },
-          { status: 400 }
-        );
-      }
-    }
 
     console.log("🔄 Iniciando procesamiento de imágenes...");
 

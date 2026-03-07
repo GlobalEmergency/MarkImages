@@ -51,6 +51,7 @@ interface VerificationData {
   };
   validation: AedValidation;
   current_step: VerificationStep;
+  status_warning?: string;
 }
 
 interface VerifyPageProps {
@@ -1082,6 +1083,14 @@ export default function VerifyPage({ params }: VerifyPageProps) {
             </div>
           </div>
         </div>
+
+        {/* Status warning for non-standard AED states (e.g. REJECTED) */}
+        {data.status_warning && (
+          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
+            <span className="text-amber-600 text-xl">⚠️</span>
+            <p className="text-sm text-amber-800">{data.status_warning}</p>
+          </div>
+        )}
 
         {/* DEA Information - Editable */}
         <div className="mb-6">

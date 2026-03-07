@@ -44,6 +44,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: "DEA no encontrado" }, { status: 404 });
     }
 
+    // Non-admin users cannot verify AEDs in non-verifiable states
+    const VERIFIABLE_STATUSES = ["PUBLISHED", "PENDING_REVIEW"];
+    if (!VERIFIABLE_STATUSES.includes(aed.status) && user.role !== "ADMIN") {
+      return NextResponse.json(
+        {
+          error: `Este DEA está en estado ${aed.status} y no se puede verificar. Contacta a un administrador.`,
+        },
+        { status: 400 }
+      );
+    }
+
     // Get the active validation session with a direct query (avoid nested include caching issues)
     let validation = await prisma.aedValidation.findFirst({
       where: {
@@ -80,10 +91,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const validationData = validation.data as { current_step?: string; user_id?: string } | null;
     const currentStep = validationData?.current_step || VerificationStep.ADDRESS_VALIDATION;
 
+    // Warn admin if AED is in a non-standard state (verification still allowed)
+    const statusWarning = !VERIFIABLE_STATUSES.includes(aed.status)
+      ? `Este DEA está en estado ${aed.status}. Al completar la verificación se publicará.`
+      : undefined;
+
     return NextResponse.json({
       aed,
       validation,
       current_step: currentStep,
+      ...(statusWarning && { status_warning: statusWarning }),
     });
   } catch (error) {
     console.error("Error fetching verification session:", error);
