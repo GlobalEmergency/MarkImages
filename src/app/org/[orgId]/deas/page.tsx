@@ -1,7 +1,7 @@
 /**
  * Organization DEAs Page
- * Shows admin mode (editable links) for org editors/verifiers,
- * public view for regular members.
+ * Shows admin mode (editable links) for org editors,
+ * public view for regular members and verifiers.
  */
 
 "use client";
@@ -14,13 +14,12 @@ import { AED_STATUS_FILTER_OPTIONS_USER } from "@/lib/aed-status-config";
 export default function OrgDeasPage({ params }: { params: Promise<{ orgId: string }> }) {
   const resolvedParams = use(params);
   const orgId = resolvedParams.orgId;
-  const { canEdit, canVerify } = useOrganization();
-  const hasAdminAccess = canEdit || canVerify;
+  const { canEdit } = useOrganization();
 
   return (
     <DeasList
       organizationId={orgId}
-      adminMode={hasAdminAccess}
+      adminMode={canEdit}
       config={{
         filters: [
           {

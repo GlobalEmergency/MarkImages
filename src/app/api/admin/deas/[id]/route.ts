@@ -416,7 +416,47 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const hasImageChanges =
       (deleteImageIds && deleteImageIds.length > 0) || (addImages && addImages.length > 0);
 
-    // ── Execute all updates in a transaction ──
+    // ── Pre-process: upload images to S3 OUTSIDE the transaction ──
+    // Network I/O (S3) must not hold open a DB transaction connection.
+    const resolvedImages: Array<{ url: string; type: string; order: number }> = [];
+    if (addImages && addImages.length > 0) {
+      for (const img of addImages as Array<{ url: string; type: string; order: number }>) {
+        const validTypes = ["FRONT", "LOCATION", "ACCESS", "SIGNAGE", "CONTEXT", "PLATE"];
+        if (!validTypes.includes(img.type)) {
+          return NextResponse.json(
+            { success: false, error: `Tipo de imagen inválido: ${img.type}` },
+            { status: 400 }
+          );
+        }
+
+        let originalUrl = img.url;
+
+        if (img.url.startsWith("data:")) {
+          const matches = img.url.match(/^data:([^;]+);base64,(.+)$/);
+          if (!matches) {
+            return NextResponse.json(
+              { success: false, error: "Formato de imagen inválido" },
+              { status: 400 }
+            );
+          }
+          const contentType = matches[1];
+          const base64Data = matches[2];
+          const buffer = Buffer.from(base64Data, "base64");
+          const ext = contentType.includes("png") ? "png" : "jpg";
+
+          originalUrl = await uploadToS3({
+            buffer,
+            filename: `admin_upload.${ext}`,
+            contentType,
+            prefix: id,
+          });
+        }
+
+        resolvedImages.push({ url: originalUrl, type: img.type, order: img.order || 1 });
+      }
+    }
+
+    // ── Execute all DB writes in a transaction ──
     const result = await prisma.$transaction(async (tx) => {
       // 1. Delete images
       if (deleteImageIds && deleteImageIds.length > 0) {
@@ -428,43 +468,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         });
       }
 
-      // 2. Add new images (upload base64 to S3)
-      if (addImages && addImages.length > 0) {
-        for (const img of addImages as Array<{ url: string; type: string; order: number }>) {
-          const validTypes = ["FRONT", "LOCATION", "ACCESS", "SIGNAGE", "CONTEXT", "PLATE"];
-          if (!validTypes.includes(img.type)) {
-            throw new Error(`Tipo de imagen inválido: ${img.type}`);
-          }
-
-          let originalUrl = img.url;
-
-          // If it's a data: URL or blob, upload to S3
-          if (img.url.startsWith("data:")) {
-            const matches = img.url.match(/^data:([^;]+);base64,(.+)$/);
-            if (!matches) throw new Error("Formato de imagen inválido");
-            const contentType = matches[1];
-            const base64Data = matches[2];
-            const buffer = Buffer.from(base64Data, "base64");
-            const ext = contentType.includes("png") ? "png" : "jpg";
-
-            originalUrl = await uploadToS3({
-              buffer,
-              filename: `admin_upload.${ext}`,
-              contentType,
-              prefix: id,
-            });
-          }
-
-          await tx.aedImage.create({
-            data: {
-              aed_id: id,
-              original_url: originalUrl,
-              type: img.type as "FRONT" | "LOCATION" | "ACCESS" | "SIGNAGE" | "CONTEXT" | "PLATE",
-              order: img.order || 1,
-              created_at: new Date(),
-            },
-          });
-        }
+      // 2. Create image records (URLs already resolved from S3)
+      for (const img of resolvedImages) {
+        await tx.aedImage.create({
+          data: {
+            aed_id: id,
+            original_url: img.url,
+            type: img.type as "FRONT" | "LOCATION" | "ACCESS" | "SIGNAGE" | "CONTEXT" | "PLATE",
+            order: img.order,
+            created_at: new Date(),
+          },
+        });
       }
 
       // 3. Update location if provided
