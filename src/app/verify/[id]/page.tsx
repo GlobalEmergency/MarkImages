@@ -456,9 +456,8 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                   ...prev,
                   croppedImageUrl: croppedImageUrl || currentImage.url,
                 }));
-                // Only send the lightweight crop coordinates to the server
+                // Only send the new crop data — server merges with existing validation data
                 updateStep(VerificationStep.IMAGE_BLUR, {
-                  ...validationData,
                   current_crop_data: cropData,
                 });
               }}
@@ -470,15 +469,10 @@ export default function VerifyPage({ params }: VerifyPageProps) {
 
       case VerificationStep.IMAGE_BLUR: {
         // Obtener el estado de procesamiento de imágenes
-        const validationData = data.validation.data as
-          | (ImageProcessingState & {
-              current_crop_data?: CropData;
-            })
-          | null;
+        const validationData = data.validation.data as ImageProcessingState | null;
         const validatedImages = validationData?.validated_images || [];
         const currentIndex = validationData?.current_image_index || 0;
         const currentImage = validatedImages[currentIndex];
-        const currentCropData = validationData?.current_crop_data;
         // Use client-side blob: URL from crop step (never stored on server)
         const currentCroppedImageUrl = localImageUrls.croppedImageUrl;
 
@@ -508,10 +502,8 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                   ...prev,
                   blurredImageUrl: blurredImageUrl || currentCroppedImageUrl || currentImage.url,
                 }));
-                // Only send lightweight blur coordinates to the server
+                // Only send the new blur data — server merges with existing validation data
                 updateStep(VerificationStep.IMAGE_ARROW, {
-                  ...validationData,
-                  current_crop_data: currentCropData,
                   current_blur_areas: blurAreas,
                 });
               }}
@@ -522,8 +514,6 @@ export default function VerifyPage({ params }: VerifyPageProps) {
                   blurredImageUrl: currentCroppedImageUrl || currentImage.url,
                 }));
                 updateStep(VerificationStep.IMAGE_ARROW, {
-                  ...validationData,
-                  current_crop_data: currentCropData,
                   current_blur_areas: [],
                 });
               }}
