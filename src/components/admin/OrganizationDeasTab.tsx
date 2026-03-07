@@ -6,6 +6,7 @@
 "use client";
 
 import { DeasList } from "@/components/shared/DeasList";
+import { AED_STATUS_FILTER_OPTIONS_ALL } from "@/lib/aed-status-config";
 
 interface OrganizationDeasTabProps {
   organizationId: string;
@@ -28,13 +29,7 @@ export function OrganizationDeasTab({ organizationId }: OrganizationDeasTabProps
               key: "aed_status",
               type: "select",
               label: "Estado DEA",
-              options: [
-                { value: "PUBLISHED", label: "Publicado" },
-                { value: "PENDING_REVIEW", label: "Pendiente revisión" },
-                { value: "DRAFT", label: "Borrador" },
-                { value: "INACTIVE", label: "Inactivo" },
-                { value: "REJECTED", label: "Rechazado" },
-              ],
+              options: AED_STATUS_FILTER_OPTIONS_ALL,
             },
             {
               key: "assignment_type",

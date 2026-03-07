@@ -8,6 +8,7 @@ import { useState } from "react";
 import { X, Download, Loader2 } from "lucide-react";
 
 import { ExportFilters } from "@/export/domain/ports/IExportRepository";
+import { AED_STATUS_OPTIONS } from "@/lib/aed-status-config";
 
 interface ExportDialogProps {
   isOpen: boolean;
@@ -23,13 +24,7 @@ export default function ExportDialog({ isOpen, onClose, onExport }: ExportDialog
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const statusOptions = [
-    { value: "DRAFT", label: "Borrador" },
-    { value: "PENDING_REVIEW", label: "Pendiente de revisión" },
-    { value: "PUBLISHED", label: "Publicado" },
-    { value: "INACTIVE", label: "Inactivo" },
-    { value: "REJECTED", label: "Rechazado" },
-  ];
+  const statusOptions = AED_STATUS_OPTIONS;
 
   const sourceOriginOptions = [
     { value: "", label: "Todos los orígenes" },

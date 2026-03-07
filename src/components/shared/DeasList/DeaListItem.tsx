@@ -9,6 +9,7 @@
 import { MapPin, CheckCircle, XCircle, Clock, AlertTriangle, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import type { DeaListItem as DeaItemType } from "@/types/dea-list.types";
+import { getStatusLabel, getStatusColor } from "@/lib/aed-status-config";
 
 interface DeaListItemProps {
   dea: DeaItemType;
@@ -71,6 +72,13 @@ export function DeaListItem({ dea, adminMode = false }: DeaListItemProps) {
 
       {/* Badges - wrap on mobile, single column on desktop */}
       <div className="flex flex-wrap gap-2 mb-3 md:mb-0 md:flex-col md:items-start">
+        {/* AED status badge */}
+        <span
+          className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(dea.status)}`}
+        >
+          {getStatusLabel(dea.status)}
+        </span>
+
         {dea.establishment_type && (
           <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
             {dea.establishment_type}

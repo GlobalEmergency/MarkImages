@@ -34,6 +34,7 @@ import {
 import dynamic from "next/dynamic";
 import type { ImageProcessingResult } from "@/components/dea/DeaImageProcessor";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { getStatusLabel, getStatusColor, AED_STATUS_OPTIONS } from "@/lib/aed-status-config";
 
 // Lazy-load to avoid SSR issues with canvas/leaflet
 const DeaImageProcessor = dynamic(() => import("@/components/dea/DeaImageProcessor"), {
@@ -702,25 +703,20 @@ export default function AdminDeaDetailPage() {
 
   // ── Badge helpers ──
   const getStatusBadge = (status: string) => {
-    const badges: Record<string, { label: string; color: string; icon: typeof CheckCircle }> = {
-      PUBLISHED: { label: "Publicado", color: "bg-green-100 text-green-800", icon: CheckCircle },
-      DRAFT: { label: "Borrador", color: "bg-gray-100 text-gray-800", icon: FileText },
-      PENDING_REVIEW: {
-        label: "Pendiente",
-        color: "bg-yellow-100 text-yellow-800",
-        icon: AlertCircle,
-      },
-      REJECTED: { label: "Rechazado", color: "bg-red-100 text-red-800", icon: XCircle },
-      INACTIVE: { label: "Inactivo", color: "bg-gray-100 text-gray-600", icon: XCircle },
+    const icons: Record<string, typeof CheckCircle> = {
+      PUBLISHED: CheckCircle,
+      DRAFT: FileText,
+      PENDING_REVIEW: AlertCircle,
+      REJECTED: XCircle,
+      INACTIVE: XCircle,
     };
-    const badge = badges[status] || badges.DRAFT;
-    const Icon = badge.icon;
+    const Icon = icons[status] || AlertCircle;
     return (
       <span
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${badge.color}`}
+        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${getStatusColor(status)}`}
       >
         <Icon className="w-4 h-4" />
-        {badge.label}
+        {getStatusLabel(status)}
       </span>
     );
   };
@@ -981,13 +977,7 @@ export default function AdminDeaDetailPage() {
                   onChange={(v) => handleAedChange("status", v)}
                   isEditing={isEditing}
                   type="select"
-                  options={[
-                    { value: "DRAFT", label: "Borrador" },
-                    { value: "PENDING_REVIEW", label: "Pendiente de revisión" },
-                    { value: "PUBLISHED", label: "Publicado" },
-                    { value: "REJECTED", label: "Rechazado" },
-                    { value: "INACTIVE", label: "Inactivo" },
-                  ]}
+                  options={AED_STATUS_OPTIONS}
                   displayValue={getStatusBadge(aed.status) as unknown as string}
                 />
                 <EditableField

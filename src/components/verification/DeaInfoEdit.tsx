@@ -2,6 +2,7 @@
 
 import { Loader2, Pencil, X, Check } from "lucide-react";
 import { useState } from "react";
+import { getStatusLabel, getStatusColor } from "@/lib/aed-status-config";
 
 interface DeaInfoEditProps {
   aedId: string;
@@ -97,26 +98,6 @@ export default function DeaInfoEdit({ aedId, initialData, onUpdate }: DeaInfoEdi
     if (initialData.code) return initialData.code;
     if (initialData.provisional_number) return `#${initialData.provisional_number}`;
     return "Sin código";
-  };
-
-  const getStatusLabel = (status: string) => {
-    const statusMap: Record<string, string> = {
-      DRAFT: "Borrador",
-      PENDING_REVIEW: "Pendiente de revisión",
-      PUBLISHED: "Publicado",
-      REJECTED: "Rechazado",
-    };
-    return statusMap[status] || status;
-  };
-
-  const getStatusColor = (status: string) => {
-    const colorMap: Record<string, string> = {
-      DRAFT: "bg-gray-100 text-gray-800",
-      PENDING_REVIEW: "bg-yellow-100 text-yellow-800",
-      PUBLISHED: "bg-green-100 text-green-800",
-      REJECTED: "bg-red-100 text-red-800",
-    };
-    return colorMap[status] || "bg-gray-100 text-gray-800";
   };
 
   if (!isEditing) {

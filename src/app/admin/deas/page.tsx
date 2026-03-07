@@ -6,6 +6,7 @@
 "use client";
 
 import { DeasList } from "@/components/shared/DeasList";
+import { AED_STATUS_FILTER_OPTIONS_ALL } from "@/lib/aed-status-config";
 
 export default function AdminDeasPage() {
   return (
@@ -32,14 +33,7 @@ export default function AdminDeasPage() {
                 key: "aed_status",
                 type: "select",
                 label: "Estado del DEA",
-                options: [
-                  { value: "all", label: "Todos" },
-                  { value: "PUBLISHED", label: "Publicados" },
-                  { value: "PENDING_REVIEW", label: "Pendientes de revisión" },
-                  { value: "DRAFT", label: "Borradores" },
-                  { value: "REJECTED", label: "Rechazados" },
-                  { value: "INACTIVE", label: "Inactivos" },
-                ],
+                options: AED_STATUS_FILTER_OPTIONS_ALL,
               },
               {
                 key: "coordinate_validation",

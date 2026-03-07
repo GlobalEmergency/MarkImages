@@ -18,6 +18,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import NoOrganizationMessage from "@/components/verification/NoOrganizationMessage";
 import OrganizationSelector from "@/components/verification/OrganizationSelector";
 import { useAuth } from "@/contexts/AuthContext";
+import { AED_STATUS_CONFIG } from "@/lib/aed-status-config";
 
 type FilterType = "never_verified" | "requires_attention" | "verification_expired" | "rejected";
 
@@ -104,8 +105,8 @@ const REJECTED_FILTER_OPTION: FilterOption = {
   value: "rejected",
   label: "Descartados",
   description: "DEAs rechazados que se pueden re-verificar",
-  badgeColor: "bg-gray-100 text-gray-800",
-  badgeText: "Rechazado",
+  badgeColor: AED_STATUS_CONFIG.REJECTED.color,
+  badgeText: AED_STATUS_CONFIG.REJECTED.label,
 };
 
 export default function VerifyPage() {
