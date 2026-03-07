@@ -4,6 +4,7 @@ import { requireAuth, getUserFromRequest } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { filterAedByPublicationMode } from "@/lib/publication-filter";
 import type { AedFullData } from "@/lib/publication-filter";
+import { validateStatusTransition } from "@/lib/aed-status";
 
 /**
  * GET /api/aeds/[id]
@@ -93,8 +94,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { id } = await params;
     const body = await request.json();
 
-    // Extraer deleteImageIds y addImages del body
-    const { deleteImageIds, addImages, ...updateFields } = body;
+    // Extraer deleteImageIds, addImages y rejection_reason del body
+    const { deleteImageIds, addImages, rejection_reason, ...updateFields } = body;
 
     // Verificar si hay cambio de estado
     const currentAed = await prisma.aed.findUnique({
@@ -107,6 +108,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     const hasStatusChange = updateFields.status && updateFields.status !== currentAed.status;
+
+    // Validar transición de estado usando el state machine
+    if (hasStatusChange) {
+      try {
+        validateStatusTransition(currentAed.status, updateFields.status);
+      } catch (error) {
+        return NextResponse.json(
+          { error: error instanceof Error ? error.message : "Transición de estado inválida" },
+          { status: 400 }
+        );
+      }
+    }
     const hasImageChanges =
       (deleteImageIds && deleteImageIds.length > 0) || (addImages && addImages.length > 0);
 
@@ -212,7 +225,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
               aed_id: id,
               previous_status: currentAed.status,
               new_status: updateFields.status,
-              reason: updateFields.status_metadata?.reason || null,
+              reason: updateFields.status_metadata?.reason || rejection_reason || null,
               notes: updateFields.status_metadata?.details || null,
               modified_by: user.userId,
             },

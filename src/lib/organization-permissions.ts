@@ -428,17 +428,24 @@ export async function getVerifiableAedsForUser(
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
+  // Solo DEAs en estado verificable (excluir DRAFT, REJECTED, INACTIVE)
+  const verifiableStatusFilter = {
+    status: { in: ["PUBLISHED", "PENDING_REVIEW"] },
+  };
+
   switch (filterType) {
     case "requires_attention":
       // DEAs marcados como que requieren atención
       additionalWhere = {
         requires_attention: true,
+        ...verifiableStatusFilter,
       };
       break;
     case "verification_expired":
       // DEAs con verificación caducada (> 6 meses)
       additionalWhere = {
         last_verified_at: { not: null, lt: sixMonthsAgo },
+        ...verifiableStatusFilter,
       };
       break;
     case "never_verified":
@@ -446,6 +453,7 @@ export async function getVerifiableAedsForUser(
       // DEAs que nunca se han verificado
       additionalWhere = {
         last_verified_at: null,
+        ...verifiableStatusFilter,
       };
       break;
   }
