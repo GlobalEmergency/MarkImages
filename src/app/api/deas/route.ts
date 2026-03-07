@@ -32,7 +32,8 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
     const search = searchParams.get("search") || undefined;
     const status = searchParams.get("status") || undefined; // Assignment status
-    const aedStatus = searchParams.get("aed_status") || undefined;
+    const rawAedStatus = searchParams.get("aed_status");
+    const aedStatus = rawAedStatus && rawAedStatus !== "all" ? rawAedStatus : undefined;
     const assignmentType = searchParams.get("assignment_type") || undefined;
 
     // Check permissions
