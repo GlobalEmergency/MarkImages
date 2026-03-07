@@ -49,14 +49,14 @@ export const AED_STATUS_CONFIG: Record<AedStatus, AedStatusInfo> = {
     pluralLabel: "Rechazados",
     color: "bg-red-100 text-red-800",
     dotColor: "bg-red-500",
-    visibleToAll: false,
+    visibleToAll: true,
   },
   INACTIVE: {
     label: "Inactivo",
     pluralLabel: "Inactivos",
     color: "bg-gray-100 text-gray-600",
     dotColor: "bg-gray-300",
-    visibleToAll: false,
+    visibleToAll: true,
   },
 };
 

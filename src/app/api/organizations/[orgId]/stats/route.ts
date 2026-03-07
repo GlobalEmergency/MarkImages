@@ -106,26 +106,11 @@ export async function GET(
       }),
     ]);
 
-    // Procesar DEAs por estado
-    const deasByStatusMap = {
-      active: 0,
-      inactive: 0,
-      pending: 0,
-    };
-
+    // Build per-status counts (individual, not grouped)
+    const deasByStatusDetail: Record<string, number> = {};
     deasByStatus.forEach((item) => {
-      if (item.status === "PUBLISHED") {
-        deasByStatusMap.active += item._count;
-      } else if (item.status === "INACTIVE" || item.status === "REJECTED") {
-        deasByStatusMap.inactive += item._count;
-      } else if (item.status === "DRAFT" || item.status === "PENDING_REVIEW") {
-        deasByStatusMap.pending += item._count;
-      }
+      deasByStatusDetail[item.status] = item._count;
     });
-
-    // Note: pending_verifications is an independent metric (DEAs needing re-verification)
-    // and is NOT added to deas_by_status.pending to avoid double-counting DEAs that
-    // are both in DRAFT/PENDING_REVIEW status AND have no/expired verification.
 
     return NextResponse.json({
       total_deas: totalDeas,
@@ -133,7 +118,7 @@ export async function GET(
       pending_verifications: pendingVerifications,
       members_count: membersCount,
       verifications_this_month: verificationsThisMonth,
-      deas_by_status: deasByStatusMap,
+      deas_by_status: deasByStatusDetail,
     });
   } catch (error) {
     console.error("Error fetching organization stats:", error);

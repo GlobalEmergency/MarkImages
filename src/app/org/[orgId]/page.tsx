@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useEffect, useState, use } from "react";
 
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { AED_STATUS_CONFIG } from "@/lib/aed-status-config";
 
 interface OrgStats {
   total_deas: number;
@@ -20,11 +21,8 @@ interface OrgStats {
   pending_verifications: number;
   members_count: number;
   verifications_this_month: number;
-  deas_by_status: {
-    active: number;
-    inactive: number;
-    pending: number;
-  };
+  /** Per-status counts: { PUBLISHED: 3537, INACTIVE: 12, ... } */
+  deas_by_status: Record<string, number>;
 }
 
 export default function OrgDashboard({ params }: { params: Promise<{ orgId: string }> }) {
@@ -214,44 +212,30 @@ export default function OrgDashboard({ params }: { params: Promise<{ orgId: stri
       </div>
 
       {/* Status Overview */}
-      {stats && (
+      {stats && stats.deas_by_status && (
         <div className="bg-white rounded-xl p-5 border border-gray-200">
           <h3 className="font-semibold text-gray-900 mb-4">Estado de los DEAs</h3>
           <div className="space-y-3">
-            {/* Active */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                <span className="text-sm text-gray-700">Activos</span>
-              </div>
-              <span className="text-sm font-semibold text-gray-900">
-                {stats.deas_by_status?.active || 0}
-              </span>
-            </div>
-
-            {/* Inactive */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-gray-400"></div>
-                <span className="text-sm text-gray-700">Inactivos</span>
-              </div>
-              <span className="text-sm font-semibold text-gray-900">
-                {stats.deas_by_status?.inactive || 0}
-              </span>
-            </div>
-
-            {/* Pending */}
-            {stats.deas_by_status?.pending > 0 && (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                  <span className="text-sm text-gray-700">Pendientes</span>
-                </div>
-                <span className="text-sm font-semibold text-gray-900">
-                  {stats.deas_by_status.pending}
-                </span>
-              </div>
-            )}
+            {Object.entries(AED_STATUS_CONFIG).map(([status, config]) => {
+              const count = stats.deas_by_status[status] || 0;
+              if (count === 0) return null;
+              return (
+                <Link
+                  key={status}
+                  href={`/org/${orgId}/deas?aed_status=${status}`}
+                  className="flex items-center justify-between hover:bg-gray-50 -mx-2 px-2 py-1 rounded-lg transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full ${config.dotColor}`}></div>
+                    <span className="text-sm text-gray-700">{config.pluralLabel}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-semibold text-gray-900">{count}</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}

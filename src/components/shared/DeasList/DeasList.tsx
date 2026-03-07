@@ -6,7 +6,8 @@
 
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { MapPin, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import { DataListFilters } from "../DataListFilters";
 import { DataListPagination } from "../DataListPagination";
@@ -21,14 +22,27 @@ interface DeasListProps {
 }
 
 export function DeasList({ organizationId, config, adminMode = false }: DeasListProps) {
+  const searchParams = useSearchParams();
   const [deas, setDeas] = useState<DeaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [_permissions, _setPermissions] = useState<PermissionContext>(config.permissions);
 
+  // Initialize filter values from URL search params (e.g. ?aed_status=INACTIVE)
+  const initialFilters = useMemo(() => {
+    const filters: Record<string, string> = {};
+    config.filters?.forEach((f) => {
+      const urlValue = searchParams.get(f.key);
+      if (urlValue) {
+        filters[f.key] = urlValue;
+      }
+    });
+    return filters;
+  }, [searchParams, config.filters]);
+
   // Filter state
-  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
-  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [filterValues, setFilterValues] = useState<Record<string, string>>(initialFilters);
+  const [filtersExpanded, setFiltersExpanded] = useState(Object.keys(initialFilters).length > 0);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
