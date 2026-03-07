@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import type { ImageProcessingResult } from "@/components/dea/DeaImageProcessor";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 // Lazy-load to avoid SSR issues with canvas/leaflet
 const DeaImageProcessor = dynamic(() => import("@/components/dea/DeaImageProcessor"), {
@@ -379,6 +380,10 @@ export default function AdminDeaDetailPage() {
   });
   const [processingImageId, setProcessingImageId] = useState<string | null>(null);
 
+  // Delete state
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Image upload ref
   const imageInputRef = useRef<HTMLInputElement>(null);
 
@@ -668,6 +673,33 @@ export default function AdminDeaDetailPage() {
     }
   };
 
+  // ── Delete ──
+  const handleDelete = async (reason?: string) => {
+    if (!data) return;
+
+    try {
+      setIsDeleting(true);
+      setShowDeleteDialog(false);
+
+      const response = await fetch(`/api/admin/deas/${params.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Error al eliminar DEA");
+      }
+
+      // Redirect to list after successful deletion
+      router.push("/admin/deas");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al eliminar DEA");
+      setIsDeleting(false);
+    }
+  };
+
   // ── Badge helpers ──
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { label: string; color: string; icon: typeof CheckCircle }> = {
@@ -827,13 +859,23 @@ export default function AdminDeaDetailPage() {
                 <span className="text-red-600 text-sm font-medium max-w-xs truncate">{error}</span>
               )}
               {!isEditing ? (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  Editar
-                </button>
+                <>
+                  <button
+                    onClick={() => setShowDeleteDialog(true)}
+                    disabled={isDeleting}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    {isDeleting ? "Eliminando..." : "Eliminar"}
+                  </button>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    Editar
+                  </button>
+                </>
               ) : (
                 <>
                   <button
@@ -2029,6 +2071,21 @@ export default function AdminDeaDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteDialog}
+        title="Eliminar DEA permanentemente"
+        message={`¿Estás seguro de que deseas eliminar "${data?.aed.name || "este DEA"}"? Esta acción no se puede deshacer. Se eliminarán todas las imágenes, verificaciones, historial y asignaciones asociadas.`}
+        confirmText="Eliminar definitivamente"
+        cancelText="Cancelar"
+        confirmColor="red"
+        requiresInput={true}
+        inputLabel="Motivo de eliminación"
+        inputPlaceholder="Ej: Duplicado, datos incorrectos, DEA no existe..."
+        onConfirm={(reason) => handleDelete(reason)}
+        onCancel={() => setShowDeleteDialog(false)}
+      />
     </div>
   );
 }

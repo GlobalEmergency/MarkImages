@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminOrAedPermission, AuthError } from "@/lib/auth";
+import { requireAdmin, requireAdminOrAedPermission, AuthError } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { uploadToS3 } from "@/lib/s3";
 import { validateStatusTransition } from "@/lib/aed-status";
@@ -620,6 +620,103 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       {
         success: false,
         error: "Failed to update AED",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/admin/deas/[id]
+ * Permanently delete an AED and all its related records.
+ * Admin-only — org members cannot delete AEDs.
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    await requireAdmin(request);
+    const { id } = await params;
+
+    // Fetch AED with FK references to clean up orphans
+    const aed = await prisma.aed.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        status: true,
+        location_id: true,
+        schedule_id: true,
+        responsible_id: true,
+      },
+    });
+
+    if (!aed) {
+      return NextResponse.json({ success: false, error: "DEA no encontrado" }, { status: 404 });
+    }
+
+    // Optional reason from body
+    let reason: string | undefined;
+    try {
+      const body = await request.json();
+      reason = body?.reason;
+    } catch {
+      // No body or invalid JSON — that's fine
+    }
+
+    console.log(
+      `🗑️ Admin deleting AED ${id} (${aed.code || aed.name}). Status: ${aed.status}. Reason: ${reason || "N/A"}`
+    );
+
+    // Delete AED in a transaction. Cascade handles most relations.
+    // Then clean up orphaned location/schedule (they don't cascade).
+    await prisma.$transaction(async (tx) => {
+      // 1. Delete the AED (cascades to images, validations, status_changes, etc.)
+      await tx.aed.delete({ where: { id } });
+
+      // 2. Clean up orphaned location (if no other AED references it)
+      if (aed.location_id) {
+        const locationRefCount = await tx.aed.count({
+          where: { location_id: aed.location_id },
+        });
+        if (locationRefCount === 0) {
+          await tx.aedLocation.delete({ where: { id: aed.location_id } });
+        }
+      }
+
+      // 3. Clean up orphaned schedule (if no other AED references it)
+      if (aed.schedule_id) {
+        const scheduleRefCount = await tx.aed.count({
+          where: { schedule_id: aed.schedule_id },
+        });
+        if (scheduleRefCount === 0) {
+          await tx.aedSchedule.delete({ where: { id: aed.schedule_id } });
+        }
+      }
+
+      // Note: responsible_id is NOT cleaned up — it may be shared across AEDs
+    });
+
+    return NextResponse.json({
+      success: true,
+      deleted: true,
+      aed: { id: aed.id, name: aed.name, code: aed.code },
+    });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      );
+    }
+    console.error("Error deleting AED:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Error al eliminar DEA",
         message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
