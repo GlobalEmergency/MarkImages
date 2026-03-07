@@ -3,9 +3,11 @@
  *
  * Validates status transitions and provides helpers for status changes.
  * See docs/features/dea-lifecycle-workflows.md for the full lifecycle diagram.
+ *
+ * For status labels, colors, and filter options, see `./aed-status-config.ts`.
  */
 
-type AedStatus = "DRAFT" | "PENDING_REVIEW" | "PUBLISHED" | "INACTIVE" | "REJECTED";
+import type { AedStatus } from "./aed-status-config";
 
 const VALID_TRANSITIONS: Record<AedStatus, AedStatus[]> = {
   DRAFT: ["PENDING_REVIEW", "PUBLISHED"],

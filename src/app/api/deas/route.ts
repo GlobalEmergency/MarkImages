@@ -18,11 +18,6 @@ import type { DeaListItem } from "@/types/dea-list.types";
 export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth(request);
-
-    if (!user) {
-      return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
 
     // Parse filters

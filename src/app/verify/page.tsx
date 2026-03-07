@@ -287,7 +287,7 @@ export default function VerifyPage() {
       setIsDeleting(true);
       setShowDeleteDialog(false);
 
-      const response = await fetch("/api/admin/deas/batch?", {
+      const response = await fetch("/api/admin/deas/batch", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: Array.from(selectedIds) }),

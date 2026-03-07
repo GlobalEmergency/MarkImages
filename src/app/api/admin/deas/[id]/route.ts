@@ -130,19 +130,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    // Get counts for summary
+    // Get counts for summary (parallel queries for performance)
+    const [statusChangesCount, fieldChangesCount, validationsCount] = await Promise.all([
+      prisma.aedStatusChange.count({ where: { aed_id: id } }),
+      prisma.aedFieldChange.count({ where: { aed_id: id } }),
+      prisma.aedValidation.count({ where: { aed_id: id } }),
+    ]);
+
     const counts = {
       images: aed.images.length,
       verified_images: aed.images.filter((img) => img.is_verified).length,
-      status_changes: await prisma.aedStatusChange.count({
-        where: { aed_id: id },
-      }),
-      field_changes: await prisma.aedFieldChange.count({
-        where: { aed_id: id },
-      }),
-      validations: await prisma.aedValidation.count({
-        where: { aed_id: id },
-      }),
+      status_changes: statusChangesCount,
+      field_changes: fieldChangesCount,
+      validations: validationsCount,
       active_assignments: aed.assignments.filter((a) => a.status === "ACTIVE").length,
       verifications: aed.org_verifications.length + aed.validations.length,
       pending_proposals: aed.change_proposals.filter((p) => p.status === "PENDING").length,
