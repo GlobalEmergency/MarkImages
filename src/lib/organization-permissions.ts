@@ -375,7 +375,8 @@ export async function getEffectivePublicationMode(aedId: string) {
 export type VerificationFilterType =
   | "never_verified" // Nunca verificados (last_verified_at is null), cualquier estado
   | "requires_attention" // Marcados como requires_attention = true
-  | "verification_expired"; // Verificación caducada (last_verified_at > 6 meses)
+  | "verification_expired" // Verificación caducada (last_verified_at > 6 meses)
+  | "rejected"; // DEAs en estado REJECTED (solo admins)
 
 /**
  * Get AEDs that a user can verify based on their role and organization memberships
@@ -446,6 +447,12 @@ export async function getVerifiableAedsForUser(
       additionalWhere = {
         last_verified_at: { not: null, lt: sixMonthsAgo },
         ...verifiableStatusFilter,
+      };
+      break;
+    case "rejected":
+      // DEAs descartados/rechazados (admin-only, enforced in API route)
+      additionalWhere = {
+        status: "REJECTED",
       };
       break;
     case "never_verified":

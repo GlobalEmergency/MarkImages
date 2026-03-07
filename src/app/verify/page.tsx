@@ -8,7 +8,7 @@ import NoOrganizationMessage from "@/components/verification/NoOrganizationMessa
 import OrganizationSelector from "@/components/verification/OrganizationSelector";
 import { useAuth } from "@/contexts/AuthContext";
 
-type FilterType = "never_verified" | "requires_attention" | "verification_expired";
+type FilterType = "never_verified" | "requires_attention" | "verification_expired" | "rejected";
 
 interface FilterOption {
   value: FilterType;
@@ -65,7 +65,7 @@ interface ApiResponse {
   isAdmin: boolean;
 }
 
-const FILTER_OPTIONS: FilterOption[] = [
+const BASE_FILTER_OPTIONS: FilterOption[] = [
   {
     value: "never_verified",
     label: "Nunca verificados",
@@ -89,6 +89,14 @@ const FILTER_OPTIONS: FilterOption[] = [
   },
 ];
 
+const REJECTED_FILTER_OPTION: FilterOption = {
+  value: "rejected",
+  label: "Descartados",
+  description: "DEAs rechazados que se pueden re-verificar",
+  badgeColor: "bg-gray-100 text-gray-800",
+  badgeText: "Rechazado",
+};
+
 export default function VerifyPage() {
   const { user, loading: authLoading } = useAuth();
   const [aeds, setAeds] = useState<AedForVerification[]>([]);
@@ -102,6 +110,11 @@ export default function VerifyPage() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Admin sees the "rejected" filter; regular users don't
+  const FILTER_OPTIONS = isAdmin
+    ? [...BASE_FILTER_OPTIONS, REJECTED_FILTER_OPTION]
+    : BASE_FILTER_OPTIONS;
   const router = useRouter();
 
   useEffect(() => {
@@ -393,29 +406,35 @@ export default function VerifyPage() {
             <div className="text-gray-400 text-6xl mb-4">
               {searchTerm
                 ? "🔍"
-                : filterType === "never_verified"
-                  ? "✅"
-                  : filterType === "requires_attention"
-                    ? "👍"
-                    : "🎉"}
+                : filterType === "rejected"
+                  ? "✨"
+                  : filterType === "never_verified"
+                    ? "✅"
+                    : filterType === "requires_attention"
+                      ? "👍"
+                      : "🎉"}
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               {searchTerm
                 ? "No se encontraron resultados"
-                : filterType === "never_verified"
-                  ? "No hay DEAs sin verificar"
-                  : filterType === "requires_attention"
-                    ? "No hay DEAs que requieran atención"
-                    : "No hay DEAs con verificación caducada"}
+                : filterType === "rejected"
+                  ? "No hay DEAs descartados"
+                  : filterType === "never_verified"
+                    ? "No hay DEAs sin verificar"
+                    : filterType === "requires_attention"
+                      ? "No hay DEAs que requieran atención"
+                      : "No hay DEAs con verificación caducada"}
             </h3>
             <p className="text-gray-600">
               {searchTerm
                 ? `No se encontraron DEAs que coincidan con "${searchTerm}"`
-                : filterType === "never_verified"
-                  ? "Todos los DEAs han sido verificados al menos una vez"
-                  : filterType === "requires_attention"
-                    ? "No hay DEAs marcados como que necesitan revisión"
-                    : "Todas las verificaciones están al día"}
+                : filterType === "rejected"
+                  ? "No hay DEAs en estado rechazado"
+                  : filterType === "never_verified"
+                    ? "Todos los DEAs han sido verificados al menos una vez"
+                    : filterType === "requires_attention"
+                      ? "No hay DEAs marcados como que necesitan revisión"
+                      : "Todas las verificaciones están al día"}
             </p>
             {searchTerm && (
               <button

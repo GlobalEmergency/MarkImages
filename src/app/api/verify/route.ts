@@ -21,9 +21,18 @@ export async function GET(request: NextRequest) {
       "never_verified",
       "requires_attention",
       "verification_expired",
+      "rejected",
     ];
     if (!validFilterTypes.includes(filterType)) {
       return NextResponse.json({ error: "Tipo de filtro no válido" }, { status: 400 });
+    }
+
+    // "rejected" filter is admin-only
+    if (filterType === "rejected" && user.role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Solo administradores pueden ver DEAs descartados" },
+        { status: 403 }
+      );
     }
 
     // Get AEDs based on user's role and organization memberships
