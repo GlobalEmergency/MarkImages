@@ -429,9 +429,10 @@ export async function getVerifiableAedsForUser(
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-  // Solo DEAs en estado verificable (excluir DRAFT, REJECTED, INACTIVE)
+  // Solo DEAs en estado verificable (excluir REJECTED, INACTIVE)
+  // DRAFT IS verifiable — verification is the mechanism to review and publish
   const verifiableStatusFilter = {
-    status: { in: ["PUBLISHED", "PENDING_REVIEW"] },
+    status: { in: ["DRAFT", "PENDING_REVIEW", "PUBLISHED"] },
   };
 
   switch (filterType) {

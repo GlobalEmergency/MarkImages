@@ -61,7 +61,7 @@ export async function GET(
           organization_id: orgId,
           status: "ACTIVE",
           aed: {
-            status: { in: ["PUBLISHED", "PENDING_REVIEW"] },
+            status: { in: ["DRAFT", "PENDING_REVIEW", "PUBLISHED"] },
             OR: [
               { last_verified_at: null },
               {

@@ -44,8 +44,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: "DEA no encontrado" }, { status: 404 });
     }
 
-    // Non-admin users cannot verify AEDs in non-verifiable states
-    const VERIFIABLE_STATUSES = ["PUBLISHED", "PENDING_REVIEW"];
+    // Non-admin users cannot verify REJECTED/INACTIVE AEDs.
+    // DRAFT and PENDING_REVIEW ARE verifiable — verification is the mechanism
+    // to review and publish them. PUBLISHED AEDs are re-verified periodically.
+    const VERIFIABLE_STATUSES = ["DRAFT", "PENDING_REVIEW", "PUBLISHED"];
     if (!VERIFIABLE_STATUSES.includes(aed.status) && user.role !== "ADMIN") {
       return NextResponse.json(
         {
