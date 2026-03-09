@@ -139,7 +139,8 @@ export default function ImportWizard({
           sharepointCookies: sessionData.sharepointCookies,
           batchName: `Importación ${new Date().toLocaleString()}`,
           organizationId: selectedOrgId || undefined,
-          assignmentType: selectedOrgId ? assignmentType : undefined,
+          // Only admin sends assignmentType override; org editors auto-derive on backend
+          assignmentType: selectedOrgId && isGlobalAdmin ? assignmentType : undefined,
         }),
       });
 
@@ -254,8 +255,8 @@ export default function ImportWizard({
                     </select>
                   </div>
 
-                  {/* Assignment type selector (only when org is selected) */}
-                  {selectedOrgId && (
+                  {/* Assignment type: admin can override, org editors see auto-derived */}
+                  {selectedOrgId && isGlobalAdmin && (
                     <div>
                       <label
                         htmlFor="assignment-type"

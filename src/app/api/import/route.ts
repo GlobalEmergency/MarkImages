@@ -26,6 +26,23 @@ import {
 } from "@/import/constants";
 
 /**
+ * Maps OrganizationType → AssignmentType for automatic org assignment.
+ */
+function mapOrgTypeToAssignmentType(orgType: string | null): string {
+  switch (orgType) {
+    case "CIVIL_PROTECTION":
+      return "CIVIL_PROTECTION";
+    case "CERTIFIED_COMPANY":
+      return "CERTIFIED_COMPANY";
+    case "OWNER":
+      return "OWNERSHIP";
+    default:
+      // MUNICIPALITY, HEALTH_SERVICE, VOLUNTEER_GROUP, null → OWNERSHIP
+      return "OWNERSHIP";
+  }
+}
+
+/**
  * GET /api/import
  * List import batches with pagination
  */
@@ -156,31 +173,51 @@ export async function POST(request: NextRequest) {
       body;
 
     // Verify authentication and import permissions
-    const { user, organizationId: resolvedOrgId } = await requireImportPermission(
-      request,
-      organizationId
-    );
+    const {
+      user,
+      isGlobalAdmin,
+      organizationId: resolvedOrgId,
+    } = await requireImportPermission(request, organizationId);
 
     if (!filePath || !mappings || !Array.isArray(mappings)) {
       return NextResponse.json(
-        { error: "Faltan parÃ¡metros requeridos (filePath, mappings)" },
+        { error: "Faltan parámetros requeridos (filePath, mappings)" },
         { status: 400 }
       );
     }
 
-    // Validate assignmentType if provided
-    const validAssignmentTypes = [
-      "CIVIL_PROTECTION",
-      "CERTIFIED_COMPANY",
-      "OWNERSHIP",
-      "MAINTENANCE",
-      "VERIFICATION",
-    ];
-    if (assignmentType && !validAssignmentTypes.includes(assignmentType)) {
-      return NextResponse.json(
-        { error: `Tipo de asignaciÃ³n no vÃ¡lido. Opciones: ${validAssignmentTypes.join(", ")}` },
-        { status: 400 }
-      );
+    // Resolve assignmentType:
+    // - Admin: can specify any valid type (defaults to OWNERSHIP if org selected)
+    // - Org editor: auto-derived from org type, cannot override
+    let resolvedAssignmentType: string | undefined;
+
+    if (resolvedOrgId) {
+      if (isGlobalAdmin && assignmentType) {
+        // Admin can override — validate the value
+        const validAssignmentTypes = [
+          "CIVIL_PROTECTION",
+          "CERTIFIED_COMPANY",
+          "OWNERSHIP",
+          "MAINTENANCE",
+          "VERIFICATION",
+        ];
+        if (!validAssignmentTypes.includes(assignmentType)) {
+          return NextResponse.json(
+            {
+              error: `Tipo de asignación no válido. Opciones: ${validAssignmentTypes.join(", ")}`,
+            },
+            { status: 400 }
+          );
+        }
+        resolvedAssignmentType = assignmentType;
+      } else {
+        // Derive from organization type
+        const org = await prisma.organization.findUnique({
+          where: { id: resolvedOrgId },
+          select: { type: true },
+        });
+        resolvedAssignmentType = mapOrgTypeToAssignmentType(org?.type ?? null);
+      }
     }
 
     // Validar que filePath esté dentro de /tmp o del directorio temporal del OS
@@ -262,7 +299,7 @@ export async function POST(request: NextRequest) {
       maxDurationMs: VERCEL_API_MAX_DURATION_MS,
       jobName: batchName || `ImportaciÃ³n CSV ${new Date().toISOString()}`,
       organizationId: resolvedOrgId || undefined,
-      assignmentType: assignmentType || undefined,
+      assignmentType: resolvedAssignmentType,
     });
 
     // Crear artifact para tracking del archivo CSV
