@@ -10,13 +10,11 @@ import { PrismaBatchJobRepository } from "@/batch/infrastructure";
 import { BatchJobOrchestrator } from "@/batch/application";
 import { RetryBatchJobUseCase } from "@/batch/application/use-cases";
 import { initializeProcessors } from "@/batch/application/processors";
-import { PrismaDataSourceRepository } from "@/import/infrastructure/repositories/PrismaDataSourceRepository";
 
 const repository = new PrismaBatchJobRepository(prisma);
-const dataSourceRepository = new PrismaDataSourceRepository(prisma);
 
 // Initialize processors
-initializeProcessors(prisma, dataSourceRepository);
+initializeProcessors(prisma);
 
 const orchestrator = new BatchJobOrchestrator(repository);
 

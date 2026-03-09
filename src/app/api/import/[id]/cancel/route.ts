@@ -23,12 +23,7 @@ interface RouteParams {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    // Verify authentication
     const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "No autenticado" }, { status: 401 });
-    }
-
     const { id } = await params;
 
     console.log(`🚫 [Import Cancel] Cancelling import ${id} by user ${user.userId}`);
@@ -99,12 +94,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       await import("@/batch/application/orchestrator/BatchJobOrchestrator");
     const { CancelBatchJobUseCase } = await import("@/batch/application/use-cases");
     const { initializeProcessors } = await import("@/batch/application/processors");
-    const { PrismaDataSourceRepository } =
-      await import("@/import/infrastructure/repositories/PrismaDataSourceRepository");
 
     const repository = new PrismaBatchJobRepository(prisma);
-    const dataSourceRepository = new PrismaDataSourceRepository(prisma);
-    initializeProcessors(prisma, dataSourceRepository);
+    initializeProcessors(prisma);
 
     const orchestrator = new BatchJobOrchestrator(repository);
     const useCase = new CancelBatchJobUseCase(orchestrator);

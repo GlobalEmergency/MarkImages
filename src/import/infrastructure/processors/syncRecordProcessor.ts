@@ -1,0 +1,505 @@
+/**
+ * Sync Record Processor — @batchactions/core RecordProcessorFn
+ *
+ * Processes a single record from an external data source sync.
+ * Handles both creation of new AEDs and updating existing ones.
+ *
+ * Business logic ported from ExternalSyncProcessor:
+ * - 3-tier duplicate detection (external_ref → coordinates → skip)
+ * - 4 merge scenarios (isMerging × isAutomaticSync)
+ * - Verified AED protection
+ * - Code protection (existing codes are never overwritten)
+ * - Audit trail via internal_notes and AedFieldChange
+ *
+ * Key optimization: existing AEDs are batch pre-loaded in beforeProcess
+ * hook and stored in the record's _existingAed field, eliminating N+1 queries.
+ */
+
+import type { ParsedRecord, ProcessingContext } from "@batchactions/core";
+import type { PrismaClient } from "@/generated/client/client";
+import type { AedStatus, PublicationMode, SourceOrigin } from "@/generated/client/enums";
+import { SYSTEM_USER_UUID } from "@/constants/system";
+import { recordFieldChange, appendInternalNote } from "@/lib/audit";
+
+// ============================================================
+// Types
+// ============================================================
+
+export interface SyncProcessorOptions {
+  prisma: PrismaClient;
+  dataSourceId: string;
+  /** Source origin string (e.g. "EXTERNAL_API", "HEALTH_API") */
+  sourceOrigin: string;
+  /** Sync frequency from data source config */
+  syncFrequency: string;
+  /** Whether this is a dry run (no DB writes) */
+  dryRun?: boolean;
+}
+
+/** Existing AED data pre-loaded by beforeProcess hook */
+interface ExistingAedData {
+  id: string;
+  location_id: string;
+  schedule_id: string | null;
+  responsible_id: string | null;
+  last_verified_at: Date | null;
+  name: string;
+  code: string | null;
+  establishment_type: string | null;
+  external_reference: string | null;
+  data_source_id: string | null;
+  source_origin: string;
+  internal_notes: unknown;
+}
+
+/** Data source defaults pre-loaded once */
+interface DataSourceDefaults {
+  default_status: string | null;
+  default_requires_attention: boolean | null;
+  default_publication_mode: string | null;
+}
+
+// ============================================================
+// Helpers
+// ============================================================
+
+function toStringOrNull(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  const str = String(value).trim();
+  return str || null;
+}
+
+function parseCoordinate(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  const str = String(value).trim().replace(/,/g, ".");
+  if (!str) return null;
+  const num = parseFloat(str);
+  return isNaN(num) ? null : num;
+}
+
+function isRealExternalRef(ref: string | null): boolean {
+  if (!ref) return false;
+  return (
+    !ref.startsWith("row-") &&
+    !ref.startsWith("api-") &&
+    !ref.startsWith("json-") &&
+    !ref.startsWith("record-")
+  );
+}
+
+function combineLocationDetails(additionalInfo: unknown, specificLocation: unknown): string | null {
+  const parts: string[] = [];
+  if (additionalInfo) parts.push(String(additionalInfo).trim());
+  if (specificLocation) parts.push(String(specificLocation).trim());
+  return parts.length > 0 ? parts.join(". ").trim() : null;
+}
+
+// ============================================================
+// Factory
+// ============================================================
+
+/**
+ * Creates the RecordProcessorFn for external sync operations.
+ *
+ * The record's `_existingAed` field is populated by the beforeProcess hook
+ * (see syncHooks.ts). If present, the processor updates the existing AED.
+ * If absent, a new AED is created.
+ */
+export function createSyncRecordProcessor(
+  options: SyncProcessorOptions
+): (record: ParsedRecord, context: ProcessingContext) => Promise<void> {
+  const { prisma, dataSourceId, sourceOrigin, syncFrequency, dryRun = false } = options;
+
+  const isAutomaticSync = syncFrequency !== "MANUAL";
+
+  // Cache data source defaults (loaded on first call)
+  let dataSourceDefaults: DataSourceDefaults | null = null;
+
+  async function getDefaults(): Promise<DataSourceDefaults> {
+    if (!dataSourceDefaults) {
+      const ds = await prisma.externalDataSource.findUnique({
+        where: { id: dataSourceId },
+        select: {
+          default_status: true,
+          default_requires_attention: true,
+          default_publication_mode: true,
+        },
+      });
+      dataSourceDefaults = ds || {
+        default_status: null,
+        default_requires_attention: null,
+        default_publication_mode: null,
+      };
+    }
+    return dataSourceDefaults;
+  }
+
+  return async (record: ParsedRecord, _context: ProcessingContext): Promise<void> => {
+    const data = record as Record<string, unknown>;
+    const existingAed = data._existingAed as ExistingAedData | undefined;
+    const externalId = toStringOrNull(data.externalId);
+
+    if (dryRun) return;
+
+    if (existingAed) {
+      await updateAed(prisma, existingAed, data, {
+        dataSourceId,
+        sourceOrigin,
+        isAutomaticSync,
+        externalId,
+      });
+    } else {
+      await createAed(prisma, data, {
+        dataSourceId,
+        sourceOrigin,
+        externalId,
+        getDefaults,
+      });
+    }
+  };
+}
+
+// ============================================================
+// Create AED
+// ============================================================
+
+async function createAed(
+  prisma: PrismaClient,
+  data: Record<string, unknown>,
+  opts: {
+    dataSourceId: string;
+    sourceOrigin: string;
+    externalId: string | null;
+    getDefaults: () => Promise<DataSourceDefaults>;
+  }
+): Promise<void> {
+  const defaults = await opts.getDefaults();
+  const latitude = parseCoordinate(data.latitude);
+  const longitude = parseCoordinate(data.longitude);
+  const locationDetails = combineLocationDetails(data.additionalInfo, data.specificLocation);
+  const code = isRealExternalRef(opts.externalId) ? opts.externalId : null;
+
+  await prisma.$transaction(async (tx) => {
+    // 1. Location
+    const location = await tx.aedLocation.create({
+      data: {
+        street_type: toStringOrNull(data.streetType),
+        street_name: toStringOrNull(data.streetName),
+        street_number: toStringOrNull(data.streetNumber),
+        postal_code: toStringOrNull(data.postalCode),
+        floor: toStringOrNull(data.floor),
+        location_details: locationDetails,
+        access_instructions: toStringOrNull(data.accessDescription),
+        city_name: toStringOrNull(data.city),
+        city_code: toStringOrNull(data.cityCode),
+        district_name: toStringOrNull(data.district),
+      },
+    });
+
+    // 2. Schedule (conditional)
+    let scheduleId: string | null = null;
+    if (data.accessSchedule || data.scheduleDescription) {
+      const schedule = await tx.aedSchedule.create({
+        data: {
+          description: toStringOrNull(data.accessSchedule || data.scheduleDescription),
+        },
+      });
+      scheduleId = schedule.id;
+    }
+
+    // 3. Responsible (conditional)
+    let responsibleId: string | null = null;
+    if (
+      data.ownershipType ||
+      data.ownership ||
+      data.submitterName ||
+      data.submitterEmail ||
+      data.submitterPhone
+    ) {
+      const responsible = await tx.aedResponsible.create({
+        data: {
+          name:
+            toStringOrNull(data.submitterName) ||
+            toStringOrNull(data.ownershipType) ||
+            "Sin nombre",
+          email: toStringOrNull(data.submitterEmail),
+          phone: toStringOrNull(data.submitterPhone),
+          ownership: toStringOrNull(data.ownershipType || data.ownership),
+        },
+      });
+      responsibleId = responsible.id;
+    }
+
+    // 4. AED
+    await tx.aed.create({
+      data: {
+        name: toStringOrNull(data.name) || "Sin nombre",
+        code,
+        establishment_type: toStringOrNull(data.establishmentType),
+        latitude,
+        longitude,
+        location_id: location.id,
+        schedule_id: scheduleId,
+        responsible_id: responsibleId,
+        external_reference: opts.externalId,
+        source_origin: (opts.sourceOrigin || "EXTERNAL_API") as SourceOrigin,
+        source_details: JSON.stringify(data._rawData || data),
+        data_source_id: opts.dataSourceId,
+        status: (defaults.default_status || "PUBLISHED") as AedStatus,
+        requires_attention: defaults.default_requires_attention ?? true,
+        publication_mode: (defaults.default_publication_mode || "LOCATION_ONLY") as PublicationMode,
+        last_synced_at: new Date(),
+        created_by: SYSTEM_USER_UUID,
+      },
+    });
+  });
+}
+
+// ============================================================
+// Update AED — 4 merge scenarios
+// ============================================================
+
+async function updateAed(
+  prisma: PrismaClient,
+  aed: ExistingAedData,
+  data: Record<string, unknown>,
+  opts: {
+    dataSourceId: string;
+    sourceOrigin: string;
+    isAutomaticSync: boolean;
+    externalId: string | null;
+  }
+): Promise<void> {
+  const { dataSourceId, sourceOrigin, isAutomaticSync, externalId } = opts;
+
+  // Is this a merge (different external_reference)?
+  const isMerging = aed.external_reference && externalId && aed.external_reference !== externalId;
+
+  await prisma.$transaction(async (tx) => {
+    // ==============================
+    // MERGE LOGIC (internal_notes + source transition)
+    // ==============================
+    if (isMerging) {
+      if (isAutomaticSync) {
+        // CASE 1: Automatic sync takeover
+        const notes = appendInternalNote(
+          aed.internal_notes,
+          `DEA asumido por sincronización automática. ` +
+            `Datos previos: external_reference="${aed.external_reference}", source_origin="${aed.source_origin}". ` +
+            `Nuevos datos: external_reference="${externalId}", source_origin="${sourceOrigin}".`,
+          "automatic_sync_takeover",
+          "ExternalSyncService"
+        );
+
+        try {
+          await recordFieldChange(tx, {
+            aedId: aed.id,
+            fieldName: "source_origin_automatic_transition",
+            oldValue: `${aed.source_origin}:${aed.external_reference}`,
+            newValue: `${sourceOrigin}:${externalId}`,
+            changedBy: SYSTEM_USER_UUID,
+            changeSource: "IMPORT",
+          });
+        } catch {
+          /* non-critical */
+        }
+
+        await tx.aed.update({
+          where: { id: aed.id },
+          data: {
+            internal_notes: notes,
+            external_reference: externalId,
+            source_origin: sourceOrigin as SourceOrigin,
+            data_source_id: dataSourceId,
+            last_synced_at: new Date(),
+          },
+        });
+      } else {
+        // CASE 2: Manual import merge — keep original source
+        const notes = appendInternalNote(
+          aed.internal_notes,
+          `Actualizado por importación puntual. ` +
+            `Se mantiene: external_reference="${aed.external_reference}", source_origin="${aed.source_origin}". ` +
+            `Datos de importación: external_reference="${externalId}", fuente="${dataSourceId}".`,
+          "manual_import_update",
+          "ExternalSyncService"
+        );
+
+        try {
+          await recordFieldChange(tx, {
+            aedId: aed.id,
+            fieldName: "manual_import_merge",
+            oldValue: aed.external_reference || "",
+            newValue: externalId || "",
+            changedBy: SYSTEM_USER_UUID,
+            changeSource: "IMPORT",
+          });
+        } catch {
+          /* non-critical */
+        }
+
+        await tx.aed.update({
+          where: { id: aed.id },
+          data: {
+            internal_notes: notes,
+            last_synced_at: new Date(),
+            data_source_id: dataSourceId,
+          },
+        });
+      }
+    }
+
+    // ==============================
+    // VERIFIED AED PROTECTION
+    // ==============================
+    if (aed.last_verified_at) {
+      const verifiedUpdate: Record<string, unknown> = {
+        data_source_id: dataSourceId,
+        last_synced_at: new Date(),
+      };
+      if (!isMerging) {
+        verifiedUpdate.external_reference = externalId;
+      }
+      await tx.aed.update({ where: { id: aed.id }, data: verifiedUpdate });
+      return;
+    }
+
+    // ==============================
+    // UNVERIFIED AED: Update business data
+    // ==============================
+    const latitude = parseCoordinate(data.latitude);
+    const longitude = parseCoordinate(data.longitude);
+    const locationDetails = combineLocationDetails(data.additionalInfo, data.specificLocation);
+
+    // Update location
+    if (aed.location_id) {
+      await tx.aedLocation.update({
+        where: { id: aed.location_id },
+        data: {
+          street_type: toStringOrNull(data.streetType),
+          street_name: toStringOrNull(data.streetName),
+          street_number: toStringOrNull(data.streetNumber),
+          postal_code: toStringOrNull(data.postalCode),
+          floor: toStringOrNull(data.floor),
+          location_details: locationDetails,
+          access_instructions: toStringOrNull(data.accessDescription),
+          city_name: toStringOrNull(data.city),
+          city_code: toStringOrNull(data.cityCode),
+          district_name: toStringOrNull(data.district),
+        },
+      });
+    }
+
+    // Update or create schedule
+    let scheduleIdUpdate: string | null | undefined;
+    if (data.accessSchedule || data.scheduleDescription) {
+      const desc = toStringOrNull(data.accessSchedule || data.scheduleDescription);
+      if (aed.schedule_id) {
+        await tx.aedSchedule.update({
+          where: { id: aed.schedule_id },
+          data: { description: desc },
+        });
+      } else {
+        const schedule = await tx.aedSchedule.create({
+          data: { description: desc },
+        });
+        scheduleIdUpdate = schedule.id;
+      }
+    }
+
+    // Update or create responsible
+    let responsibleIdUpdate: string | null | undefined;
+    if (
+      data.ownershipType ||
+      data.ownership ||
+      data.submitterName ||
+      data.submitterEmail ||
+      data.submitterPhone
+    ) {
+      const respData = {
+        name:
+          toStringOrNull(data.submitterName) || toStringOrNull(data.ownershipType) || "Sin nombre",
+        email: toStringOrNull(data.submitterEmail),
+        phone: toStringOrNull(data.submitterPhone),
+        ownership: toStringOrNull(data.ownershipType || data.ownership),
+      };
+      if (aed.responsible_id) {
+        await tx.aedResponsible.update({
+          where: { id: aed.responsible_id },
+          data: respData,
+        });
+      } else {
+        const resp = await tx.aedResponsible.create({ data: respData });
+        responsibleIdUpdate = resp.id;
+      }
+    }
+
+    // Code protection: only assign if AED has no code
+    let codeUpdate: string | null | undefined;
+    if (!aed.code && isRealExternalRef(externalId)) {
+      codeUpdate = externalId;
+    }
+
+    // Build AED update based on merge scenario
+    const updateData: Record<string, unknown> = {
+      schedule_id: scheduleIdUpdate,
+      responsible_id: responsibleIdUpdate,
+      last_synced_at: new Date(),
+      data_source_id: dataSourceId,
+    };
+
+    if (isMerging && isAutomaticSync) {
+      // CASE 1: Merge + automatic sync — update ALL fields (authoritative source)
+      updateData.name = toStringOrNull(data.name) || undefined;
+      updateData.code = codeUpdate;
+      updateData.establishment_type = toStringOrNull(data.establishmentType);
+      updateData.latitude = latitude;
+      updateData.longitude = longitude;
+      updateData.external_reference = externalId;
+      updateData.source_origin = sourceOrigin;
+      updateData.source_details = JSON.stringify({
+        current_source: sourceOrigin,
+        previous_source: {
+          origin: aed.source_origin,
+          external_reference: aed.external_reference,
+          data_source_id: aed.data_source_id,
+        },
+        raw_data: data._rawData || data,
+      });
+    } else if (isMerging && !isAutomaticSync) {
+      // CASE 2: Merge + manual import — only complementary fields
+      if (!aed.code && codeUpdate) updateData.code = codeUpdate;
+      if (latitude && longitude) {
+        updateData.latitude = latitude;
+        updateData.longitude = longitude;
+      }
+      if (toStringOrNull(data.establishmentType) && !aed.establishment_type) {
+        updateData.establishment_type = toStringOrNull(data.establishmentType);
+      }
+      updateData.source_details = JSON.stringify({
+        original_source: aed.source_origin,
+        original_external_ref: aed.external_reference,
+        last_import: {
+          external_reference: externalId,
+          data_source_id: dataSourceId,
+          imported_at: new Date().toISOString(),
+          raw_data: data._rawData || data,
+        },
+      });
+    } else {
+      // CASE 3: Normal update (same external_reference)
+      updateData.name = toStringOrNull(data.name) || undefined;
+      updateData.code = codeUpdate;
+      updateData.establishment_type = toStringOrNull(data.establishmentType);
+      updateData.latitude = latitude;
+      updateData.longitude = longitude;
+      updateData.external_reference = externalId;
+      updateData.source_details = JSON.stringify(data._rawData || data);
+      if (isAutomaticSync) {
+        updateData.source_origin = sourceOrigin;
+      }
+    }
+
+    await tx.aed.update({ where: { id: aed.id }, data: updateData });
+  });
+}

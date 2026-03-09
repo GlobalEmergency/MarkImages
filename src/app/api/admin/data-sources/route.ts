@@ -5,19 +5,15 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, AuthError } from "@/lib/auth";
 
 /**
  * GET /api/admin/data-sources
  * Lista todas las fuentes de datos externas
  */
 export async function GET(request: NextRequest) {
-  const user = await requireAdmin(request);
-  if (!user) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
-
   try {
+    await requireAdmin(request);
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type");
     const isActive = searchParams.get("isActive");
@@ -76,6 +72,9 @@ export async function GET(request: NextRequest) {
       total: formattedSources.length,
     });
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     console.error("Error fetching data sources:", error);
     return NextResponse.json({ error: "Error al obtener las fuentes de datos" }, { status: 500 });
   }
@@ -86,12 +85,8 @@ export async function GET(request: NextRequest) {
  * Crea una nueva fuente de datos externa
  */
 export async function POST(request: NextRequest) {
-  const user = await requireAdmin(request);
-  if (!user) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
-
   try {
+    await requireAdmin(request);
     const body = await request.json();
 
     // Validar campos requeridos
@@ -157,6 +152,9 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     console.error("Error creating data source:", error);
     return NextResponse.json({ error: "Error al crear la fuente de datos" }, { status: 500 });
   }

@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, AuthError } from "@/lib/auth";
 import { DataSourceAdapterFactory } from "@/import/infrastructure/adapters/DataSourceAdapterFactory";
 import { buildDataSourceConfig } from "@/import/infrastructure/adapters/buildAdapterConfig";
 import type { DataSourceType } from "@/import/domain/ports/IDataSourceAdapter";
@@ -20,12 +20,8 @@ interface RouteParams {
  * Obtiene una muestra de datos de la fuente externa
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const user = await requireAdmin(request);
-  if (!user) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
-
   try {
+    await requireAdmin(request);
     const { id } = await params;
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "10");
@@ -122,6 +118,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     });
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     console.error("Error fetching preview:", error);
     return NextResponse.json(
       {
@@ -138,12 +137,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  * Prueba la conexión con la fuente de datos
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
-  const user = await requireAdmin(request);
-  if (!user) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
-
   try {
+    await requireAdmin(request);
     const { id } = await params;
 
     // Obtener la fuente de datos
@@ -176,6 +171,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       },
     });
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     console.error("Error testing connection:", error);
     return NextResponse.json(
       {

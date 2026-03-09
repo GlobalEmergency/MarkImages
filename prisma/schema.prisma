@@ -1258,3 +1258,55 @@ enum ArtifactType {
   DATA
   REPORT
 }
+
+// ============================================
+// @batchactions/state-prisma — State Store Tables
+// ============================================
+
+model BatchactionsJob {
+  id           String  @id @db.VarChar(36)
+  status       String  @db.VarChar(20)
+  config       Json
+  batches      Json    @default("[]")
+  totalRecords Int     @default(0)
+  startedAt    BigInt?
+  completedAt  BigInt?
+  distributed  Boolean @default(false)
+
+  @@map("batchactions_jobs")
+}
+
+model BatchactionsRecord {
+  id              Int     @id @default(autoincrement())
+  jobId           String  @db.VarChar(36)
+  batchId         String  @db.VarChar(36)
+  recordIndex     Int
+  status          String  @db.VarChar(10)
+  raw             Json
+  parsed          Json
+  errors          Json    @default("[]")
+  processingError String? @db.Text
+
+  @@unique([jobId, recordIndex])
+  @@index([jobId, status])
+  @@index([jobId, batchId])
+  @@map("batchactions_records")
+}
+
+model BatchactionsBatch {
+  id               String  @id @db.VarChar(36)
+  jobId            String  @db.VarChar(36)
+  batchIndex       Int
+  status           String  @default("PENDING") @db.VarChar(20)
+  workerId         String? @db.VarChar(128)
+  claimedAt        BigInt?
+  recordStartIndex Int     @default(0)
+  recordEndIndex   Int     @default(0)
+  processedCount   Int     @default(0)
+  failedCount      Int     @default(0)
+  version          Int     @default(0)
+
+  @@unique([jobId, batchIndex])
+  @@index([jobId, status])
+  @@map("batchactions_batches")
+}

@@ -22,13 +22,14 @@ import {
   getWarnings,
 } from "@batchactions/import";
 import type { ChunkResult, JobProgress, ProcessedRecord, SourceParser } from "@batchactions/import";
+import { PrismaStateStore } from "@batchactions/state-prisma";
+import type { PrismaBatchactionsClient } from "@batchactions/state-prisma";
 import type { PrismaClient } from "@/generated/client/client";
 import type { SharePointAuthConfig } from "@/storage/domain/ports/IImageDownloader";
 import type { DownloadAndUploadImageUseCase } from "@/storage/application/use-cases/DownloadAndUploadImageUseCase";
 import type { IAedRepository } from "../../domain/ports/IAedRepository";
 
 import { aedImportSchema } from "../../domain/schemas/aedImportSchema";
-import { PrismaStateStore } from "../../infrastructure/state/PrismaStateStore";
 import { S3DataSource } from "../../infrastructure/sources/S3DataSource";
 import { AedDuplicateChecker } from "../../infrastructure/checkers/AedDuplicateChecker";
 import { createAedImportHooks } from "../../infrastructure/hooks/aedImportHooks";
@@ -39,6 +40,15 @@ import {
   DEFAULT_CHUNK_MAX_RECORDS,
   VERCEL_API_MAX_DURATION_MS,
 } from "../../constants";
+
+/** Import context persisted in batch_jobs metadata for resume/CRON */
+export interface ImportContext {
+  s3Url: string;
+  fileName: string;
+  delimiter?: string;
+  sharePointAuth?: { rtFa?: string; fedAuth?: string };
+  skipDuplicates?: boolean;
+}
 
 // ============================================================
 // Tipos
@@ -160,6 +170,15 @@ export class BulkImportService {
   ) {}
 
   /**
+   * Prisma v7 $transaction has extra overloads that make it structurally
+   * incompatible with PrismaBatchactionsClient's narrower signature.
+   * The runtime API is identical so a cast is safe.
+   */
+  private get stateStorePrisma(): PrismaBatchactionsClient {
+    return this.prisma as unknown as PrismaBatchactionsClient;
+  }
+
+  /**
    * Preview: parsea y valida un CSV sin procesarlo.
    * Útil para mostrar preview de datos y errores antes de importar.
    */
@@ -277,6 +296,16 @@ export class BulkImportService {
       const jobId = importer.getJobId();
       const progress = await stateStore.getProgress(jobId);
 
+      // Create batch_jobs registry entry for UI/CRON compatibility
+      await this.upsertJobRegistry({
+        jobId,
+        jobName: jobName || `Import ${fileName}`,
+        userId,
+        progress,
+        done: chunk.done,
+        importContext: { s3Url, fileName, delimiter, sharePointAuth, skipDuplicates },
+      });
+
       return { jobId, chunk, progress };
     } finally {
       // Liberar memoria del CSV descargado (~100MB max)
@@ -341,6 +370,21 @@ export class BulkImportService {
       // Obtener progreso
       const progress = await stateStore.getProgress(jobId);
 
+      // Update batch_jobs registry for UI/CRON compatibility
+      await this.upsertJobRegistry({
+        jobId,
+        userId,
+        progress,
+        done: chunk.done,
+        importContext: {
+          s3Url,
+          fileName: fileName || "",
+          delimiter,
+          sharePointAuth,
+          skipDuplicates,
+        },
+      });
+
       return { jobId, chunk, progress };
     } finally {
       // Liberar memoria del CSV descargado (~100MB max)
@@ -351,10 +395,8 @@ export class BulkImportService {
   /**
    * Obtiene el progreso de un job existente.
    */
-  async getProgress(jobId: string, userId: string): Promise<JobProgress> {
-    const stateStore = new PrismaStateStore(this.prisma, {
-      createdBy: userId,
-    });
+  async getProgress(jobId: string, _userId?: string): Promise<JobProgress> {
+    const stateStore = new PrismaStateStore(this.stateStorePrisma);
     return stateStore.getProgress(jobId);
   }
 
@@ -394,10 +436,8 @@ export class BulkImportService {
   /**
    * Obtiene los registros fallidos de un job.
    */
-  async getFailedRecords(jobId: string, userId: string) {
-    const stateStore = new PrismaStateStore(this.prisma, {
-      createdBy: userId,
-    });
+  async getFailedRecords(jobId: string, _userId?: string) {
+    const stateStore = new PrismaStateStore(this.stateStorePrisma);
     return stateStore.getFailedRecords(jobId);
   }
 
@@ -468,19 +508,10 @@ export class BulkImportService {
     sharePointAuth?: SharePointAuthConfig;
     jobName?: string;
   }) {
-    const { s3Url, fileName, userId, delimiter, skipDuplicates, sharePointAuth, jobName } = params;
+    const { s3Url, fileName, skipDuplicates, sharePointAuth } = params;
 
-    const stateStore = new PrismaStateStore(this.prisma, {
-      createdBy: userId,
-      ...(jobName && { jobName }),
-      importContext: {
-        s3Url,
-        fileName,
-        delimiter,
-        sharePointAuth,
-        skipDuplicates,
-      },
-    });
+    // Official @batchactions/state-prisma — persists state in batchactions_* tables
+    const stateStore = new PrismaStateStore(this.stateStorePrisma);
 
     const duplicateChecker = new AedDuplicateChecker(this.aedRepository, {
       skipDuplicates,
@@ -501,6 +532,70 @@ export class BulkImportService {
     });
 
     return { stateStore, source, processor, duplicateChecker, hooks };
+  }
+
+  /**
+   * Creates/updates a batch_jobs record as a lightweight registry entry.
+   * This keeps the admin UI and CRON compatible while @batchactions manages state
+   * in its own batchactions_* tables.
+   */
+  private async upsertJobRegistry(params: {
+    jobId: string;
+    jobName?: string;
+    userId: string;
+    progress: JobProgress;
+    done: boolean;
+    importContext: ImportContext;
+  }): Promise<void> {
+    const { jobId, jobName, userId, progress, done, importContext } = params;
+
+    const status = done ? "COMPLETED" : "WAITING";
+    const failedRecords = progress.failedRecords ?? 0;
+
+    try {
+      await this.prisma.batchJob.upsert({
+        where: { id: jobId },
+        create: {
+          id: jobId,
+          type: "AED_CSV_IMPORT",
+          name: jobName || `Import ${importContext.fileName}`,
+          status,
+          config: {} as object,
+          total_records: progress.totalRecords,
+          processed_records: progress.processedRecords,
+          successful_records: Math.max(0, progress.processedRecords - failedRecords),
+          failed_records: failedRecords,
+          current_chunk: progress.currentBatch,
+          total_chunks: progress.totalBatches,
+          started_at: progress.elapsedMs > 0 ? new Date(Date.now() - progress.elapsedMs) : null,
+          completed_at: done ? new Date() : null,
+          last_heartbeat: new Date(),
+          created_by: userId,
+          metadata: {
+            engine: "bulkimport",
+            import_context: importContext,
+          } as object,
+        },
+        update: {
+          status,
+          total_records: progress.totalRecords,
+          processed_records: progress.processedRecords,
+          successful_records: Math.max(0, progress.processedRecords - failedRecords),
+          failed_records: failedRecords,
+          current_chunk: progress.currentBatch,
+          total_chunks: progress.totalBatches,
+          completed_at: done ? new Date() : null,
+          last_heartbeat: new Date(),
+          metadata: {
+            engine: "bulkimport",
+            import_context: importContext,
+          } as object,
+        },
+      });
+    } catch (error) {
+      // Non-critical: log but don't fail the import
+      console.error(`[Import] Failed to update job registry for ${jobId}:`, error);
+    }
   }
 
   /**

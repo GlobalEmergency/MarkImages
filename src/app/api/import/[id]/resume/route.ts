@@ -13,7 +13,7 @@ import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { UserRole } from "@/generated/client/enums";
 import { getBulkImportService } from "@/import/infrastructure/factories/createBulkImportService";
-import type { ImportContext } from "@/import/infrastructure/state/PrismaStateStore";
+import type { ImportContext } from "@/import/application/services/BulkImportService";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -25,12 +25,7 @@ interface RouteParams {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    // Verify authentication
     const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "No autenticado" }, { status: 401 });
-    }
-
     const { id } = await params;
 
     console.log(`📥 [Import Resume] Resuming import ${id} by user ${user.userId}`);
@@ -112,12 +107,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       await import("@/batch/application/orchestrator/BatchJobOrchestrator");
     const { ContinueBatchJobUseCase } = await import("@/batch/application/use-cases");
     const { initializeProcessors } = await import("@/batch/application/processors");
-    const { PrismaDataSourceRepository } =
-      await import("@/import/infrastructure/repositories/PrismaDataSourceRepository");
 
     const repository = new PrismaBatchJobRepository(prisma);
-    const dataSourceRepository = new PrismaDataSourceRepository(prisma);
-    initializeProcessors(prisma, dataSourceRepository);
+    initializeProcessors(prisma);
 
     const orchestrator = new BatchJobOrchestrator(repository);
     const useCase = new ContinueBatchJobUseCase(orchestrator);

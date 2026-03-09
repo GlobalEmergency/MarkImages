@@ -1,27 +1,15 @@
 /**
- * Admin API para ejecutar sincronizaciรณn de una fuente de datos
+ * Admin API para ejecutar sincronización de una fuente de datos
  * Solo accesible para usuarios con rol ADMIN
  *
- * Uses the new BatchJob system for external sync
+ * Uses ExternalSyncService with @batchactions/core BatchEngine
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
-import { PrismaBatchJobRepository } from "@/batch/infrastructure";
-import { BatchJobOrchestrator } from "@/batch/application";
-import { CreateBatchJobUseCase, ContinueBatchJobUseCase } from "@/batch/application/use-cases";
-import { initializeProcessors } from "@/batch/application/processors";
-import { PrismaDataSourceRepository } from "@/import/infrastructure/repositories/PrismaDataSourceRepository";
-import { JobType, ExternalSyncConfig, JobStatus } from "@/batch/domain";
-
-const repository = new PrismaBatchJobRepository(prisma);
-const dataSourceRepository = new PrismaDataSourceRepository(prisma);
-
-// Initialize processors
-initializeProcessors(prisma, dataSourceRepository);
-
-const orchestrator = new BatchJobOrchestrator(repository);
+import { requireAdmin, AuthError } from "@/lib/auth";
+import { getExternalSyncService } from "@/import/infrastructure/factories/createBulkImportService";
+import type { SyncContext } from "@/import/application/services/ExternalSyncService";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -29,19 +17,15 @@ interface RouteParams {
 
 /**
  * POST /api/admin/data-sources/[id]/sync
- * Ejecuta la sincronizaciรณn de una fuente de datos
+ * Ejecuta la sincronización de una fuente de datos
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
-  const user = await requireAdmin(request);
-  if (!user) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
-
   try {
+    const user = await requireAdmin(request);
     const { id } = await params;
     const body = await request.json().catch(() => ({}));
 
-    // Verificar que la fuente existe y estรก activa
+    // Verificar que la fuente existe y está activa
     const dataSource = await prisma.externalDataSource.findUnique({
       where: { id },
     });
@@ -51,176 +35,96 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     if (!dataSource.is_active) {
-      return NextResponse.json({ error: "La fuente de datos no estรก activa" }, { status: 400 });
+      return NextResponse.json({ error: "La fuente de datos no está activa" }, { status: 400 });
     }
+
+    const service = getExternalSyncService();
+    const parsedBatchSize = body.batchSize ? parseInt(body.batchSize, 10) : 30;
+    const batchSize = isNaN(parsedBatchSize) || parsedBatchSize < 1 ? 30 : parsedBatchSize;
 
     // Check if we should continue an existing job
     const continueJobId = body.continueJobId as string | undefined;
-    const batchSize = body.batchSize ? parseInt(body.batchSize) : 30; // Reduced from 100 to 30 to avoid timeouts
 
-    // If continuing a job, use the continue flow
     if (continueJobId) {
-      const continueUseCase = new ContinueBatchJobUseCase(orchestrator);
-      const continueResult = await continueUseCase.execute({ jobId: continueJobId });
-
-      if (!continueResult.success) {
-        return NextResponse.json({ error: continueResult.error }, { status: 400 });
+      const extracted = await extractSyncContextAndTotal(continueJobId, id, dataSource.name);
+      if (!extracted) {
+        return NextResponse.json({ error: "Job not found or not a sync job" }, { status: 400 });
       }
 
-      const job = continueResult.job!;
-      const progress = job.progress;
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          jobId: job.id,
-          dataSourceId: id,
-          dryRun: false,
-          stats: {
-            total: progress.totalRecords,
-            processed: progress.processedRecords,
-            created: progress.successfulRecords,
-            updated: 0, // Would need to track separately
-            skipped: progress.skippedRecords,
-            failed: progress.failedRecords,
-          },
-          progress: {
-            total: progress.totalRecords,
-            processed: progress.processedRecords,
-            percentage: progress.percentage,
-            hasMore: progress.hasMore,
-            status: job.status,
-          },
-        },
-        message: progress.hasMore
-          ? `Procesando: ${progress.processedRecords}/${progress.totalRecords} registros (${progress.percentage}%)`
-          : `Sincronizaciรณn completada: ${progress.successfulRecords} exitosos`,
+      const result = await service.resumeSync({
+        jobId: continueJobId,
+        syncContext: extracted.syncContext,
+        sourceTotalRecords: extracted.totalRecords,
       });
+      return buildSyncResponse(result, id, true);
     }
 
     // Check for existing active job for this data source
-    const activeJobs = await repository.findActiveJobs({
-      types: [JobType.AED_EXTERNAL_SYNC],
-    });
-
-    const existingJob = activeJobs.find((j) => {
-      const config = j.config as ExternalSyncConfig;
-      return config.dataSourceId === id;
-    });
-
-    if (existingJob) {
-      // Continue the existing job
-      const continueUseCase = new ContinueBatchJobUseCase(orchestrator);
-      const continueResult = await continueUseCase.execute({ jobId: existingJob.id });
-
-      if (!continueResult.success) {
-        return NextResponse.json({ error: continueResult.error }, { status: 400 });
-      }
-
-      const job = continueResult.job!;
-      const progress = job.progress;
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          jobId: job.id,
-          dataSourceId: id,
-          continued: true,
-          stats: {
-            total: progress.totalRecords,
-            processed: progress.processedRecords,
-            created: progress.successfulRecords,
-            skipped: progress.skippedRecords,
-            failed: progress.failedRecords,
-          },
-          progress: {
-            total: progress.totalRecords,
-            processed: progress.processedRecords,
-            percentage: progress.percentage,
-            hasMore: progress.hasMore,
-            status: job.status,
-          },
-        },
-        message: `Continuando job existente: ${progress.processedRecords}/${progress.totalRecords}`,
-      });
-    }
-
-    // Create new sync job
-    const config: ExternalSyncConfig = {
-      type: JobType.AED_EXTERNAL_SYNC,
-      dataSourceId: id,
-      forceFullSync: body.forceFullSync === true,
-      autoDeactivateMissing: body.deactivateMissing ?? dataSource.auto_deactivate_missing,
-      // Base config
-      chunkSize: batchSize,
-      maxRetries: 3,
-      retryDelayMs: 1000,
-      timeoutMs: 85000, // 85 seconds to leave margin for Vercel's 100s limit
-      checkpointFrequency: 5, // Save checkpoint every 5 records
-      heartbeatIntervalMs: 15000, // More frequent heartbeats
-      skipOnError: true,
-      dryRun: body.dryRun === true,
-      validateOnly: false,
-      notifyOnComplete: false,
-      notifyOnError: false,
-    };
-
-    const createUseCase = new CreateBatchJobUseCase(orchestrator);
-
-    // Create job but DON'T start it immediately
-    // Let the cron job pick it up and process it in the background
-    // This avoids Vercel's 30-second timeout limit
-    const result = await createUseCase.execute({
-      type: JobType.AED_EXTERNAL_SYNC,
-      name: `Sync: ${dataSource.name}`,
-      description: `Sincronización automática desde ${dataSource.type}`,
-      config,
-      createdBy: user.userId,
-      dataSourceId: id,
-      startImmediately: false, // Let cron job handle execution
-      metadata: {
-        dataSourceName: dataSource.name,
-        dataSourceType: dataSource.type,
-        regionCode: dataSource.region_code,
+    const existingActiveJob = await prisma.batchJob.findFirst({
+      where: {
+        type: "AED_EXTERNAL_SYNC",
+        data_source_id: id,
+        status: { in: ["PENDING", "QUEUED", "IN_PROGRESS", "WAITING", "PAUSED", "INTERRUPTED"] },
       },
-      tags: ["sync", dataSource.region_code, dataSource.type.toLowerCase()],
+      orderBy: { created_at: "desc" },
     });
 
-    if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+    if (existingActiveJob) {
+      const syncContext = extractSyncContextFromMetadata(
+        existingActiveJob.metadata,
+        existingActiveJob.config,
+        id,
+        dataSource.name
+      );
+
+      if (syncContext) {
+        const result = await service.resumeSync({
+          jobId: existingActiveJob.id,
+          syncContext,
+          sourceTotalRecords: existingActiveJob.total_records,
+        });
+        return buildSyncResponse(result, id, true);
+      }
     }
 
-    const job = result.job!;
-    const progress = job.progress;
+    // Start new sync job
+    const result = await service.startSync({
+      dataSourceId: id,
+      userId: user.userId,
+      dryRun: body.dryRun === true,
+      batchSize,
+    });
 
-    // Return immediately - the cron job will process it
+    const hasMore = !result.chunk.done;
+
     return NextResponse.json({
       success: true,
       data: {
-        jobId: job.id,
+        jobId: result.jobId,
         dataSourceId: id,
-        dryRun: config.dryRun,
+        dryRun: body.dryRun === true,
         stats: {
-          total: progress.totalRecords,
-          processed: progress.processedRecords,
-          created: progress.successfulRecords,
-          skipped: progress.skippedRecords,
-          failed: progress.failedRecords,
+          total: result.progress.totalRecords,
+          processed: result.progress.processedRecords,
+          created: Math.max(0, result.progress.processedRecords - result.progress.failedRecords),
+          skipped: 0,
+          failed: result.progress.failedRecords,
         },
         progress: {
-          total: progress.totalRecords,
-          processed: progress.processedRecords,
-          percentage: progress.percentage,
-          hasMore: progress.hasMore,
-          status: job.status,
+          total: result.progress.totalRecords,
+          processed: result.progress.processedRecords,
+          percentage: result.progress.percentage,
+          hasMore,
+          status: hasMore ? "WAITING" : "COMPLETED",
         },
       },
-      message: `Sincronización programada. El proceso se ejecutará automáticamente en segundo plano.`,
+      message: hasMore
+        ? `Sincronización iniciada. Procesando en segundo plano.`
+        : `Sincronización completada: ${result.progress.processedRecords} registros procesados`,
     });
   } catch (error) {
     console.error("Error during sync:", error);
 
-    // Check if it's a timeout error
     if (error instanceof Error && error.message.includes("timeout")) {
       return NextResponse.json(
         {
@@ -232,6 +136,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     return NextResponse.json(
       {
         error: "Error durante la sincronización",
@@ -244,30 +151,20 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
 /**
  * GET /api/admin/data-sources/[id]/sync
- * Obtiene el estado de la รบltima sincronizaciรณn
+ * Obtiene el estado de la última sincronización
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const user = await requireAdmin(request);
-  if (!user) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
-
   try {
+    await requireAdmin(request);
     const { id } = await params;
 
-    // Find the last job for this data source
-    const jobs = await repository.findMany(
-      {
-        types: [JobType.AED_EXTERNAL_SYNC],
+    // Find the last sync job for this data source
+    const lastJob = await prisma.batchJob.findFirst({
+      where: {
+        type: "AED_EXTERNAL_SYNC",
+        data_source_id: id,
       },
-      { page: 1, pageSize: 1 },
-      { field: "createdAt", direction: "desc" }
-    );
-
-    // Filter by data source ID
-    const lastJob = jobs.jobs.find((job) => {
-      const config = job.config as ExternalSyncConfig;
-      return config.dataSourceId === id;
+      orderBy: { created_at: "desc" },
     });
 
     if (!lastJob) {
@@ -278,12 +175,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       });
     }
 
-    // Get errors from database
     const errors = await prisma.batchJobError.findMany({
       where: { job_id: lastJob.id },
       take: 10,
       orderBy: { created_at: "desc" },
     });
+
+    const canContinue = ["WAITING", "PAUSED", "INTERRUPTED"].includes(lastJob.status);
 
     return NextResponse.json({
       success: true,
@@ -291,15 +189,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         jobId: lastJob.id,
         name: lastJob.name,
         status: lastJob.status,
-        totalRecords: lastJob.progress.totalRecords,
-        successfulRecords: lastJob.progress.successfulRecords,
-        failedRecords: lastJob.progress.failedRecords,
-        createdAt: lastJob.createdAt,
-        completedAt: lastJob.completedAt,
-        lastHeartbeat: lastJob.lastHeartbeat,
-        canContinue: (
-          [JobStatus.WAITING, JobStatus.PAUSED, JobStatus.INTERRUPTED] as JobStatus[]
-        ).includes(lastJob.status),
+        totalRecords: lastJob.total_records,
+        successfulRecords: lastJob.successful_records,
+        failedRecords: lastJob.failed_records,
+        createdAt: lastJob.created_at,
+        completedAt: lastJob.completed_at,
+        lastHeartbeat: lastJob.last_heartbeat,
+        canContinue,
         recentErrors: errors.map((err) => ({
           recordIndex: err.record_index,
           errorType: err.error_type,
@@ -309,10 +205,119 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     });
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     console.error("Error fetching sync status:", error);
     return NextResponse.json(
-      { error: "Error al obtener el estado de sincronizaciรณn" },
+      { error: "Error al obtener el estado de sincronización" },
       { status: 500 }
     );
   }
+}
+
+// ============================================================
+// Helpers
+// ============================================================
+
+async function extractSyncContextAndTotal(
+  jobId: string,
+  dataSourceId: string,
+  dataSourceName: string
+): Promise<{ syncContext: SyncContext; totalRecords: number } | null> {
+  const job = await prisma.batchJob.findUnique({
+    where: { id: jobId },
+    select: { metadata: true, config: true, total_records: true },
+  });
+
+  if (!job) return null;
+  const syncContext = extractSyncContextFromMetadata(
+    job.metadata,
+    job.config,
+    dataSourceId,
+    dataSourceName
+  );
+  if (!syncContext) return null;
+  return { syncContext, totalRecords: job.total_records };
+}
+
+function extractSyncContextFromMetadata(
+  metadata: unknown,
+  config: unknown,
+  dataSourceId: string,
+  dataSourceName: string
+): SyncContext | null {
+  const meta = metadata as Record<string, unknown> | null;
+  const conf = config as Record<string, unknown> | null;
+
+  // New engine: sync_context in metadata
+  const syncContext = meta?.sync_context as Record<string, unknown> | undefined;
+  if (meta?.engine === "externalsync" && syncContext) {
+    const scDsId = syncContext.dataSourceId as string;
+    if (scDsId !== dataSourceId) return null;
+    return {
+      dataSourceId: scDsId,
+      sourceOrigin: (syncContext.sourceOrigin as string) || "",
+      syncFrequency: (syncContext.syncFrequency as string) || "MANUAL",
+      regionCode: (syncContext.regionCode as string) || "",
+      dataSourceName: (syncContext.dataSourceName as string) || dataSourceName,
+      dryRun: (syncContext.dryRun as boolean) || false,
+    };
+  }
+
+  // Legacy engine: dataSourceId in config
+  if (conf?.dataSourceId === dataSourceId) {
+    return {
+      dataSourceId,
+      sourceOrigin: "",
+      syncFrequency: "MANUAL",
+      regionCode: (meta?.regionCode as string) || "",
+      dataSourceName: (meta?.dataSourceName as string) || dataSourceName,
+      dryRun: (conf?.dryRun as boolean) || false,
+    };
+  }
+
+  return null;
+}
+
+function buildSyncResponse(
+  result: {
+    jobId: string;
+    chunk: { done: boolean };
+    progress: {
+      totalRecords: number;
+      processedRecords: number;
+      failedRecords: number;
+      percentage: number;
+    };
+  },
+  dataSourceId: string,
+  continued: boolean
+) {
+  const hasMore = !result.chunk.done;
+  return NextResponse.json({
+    success: true,
+    data: {
+      jobId: result.jobId,
+      dataSourceId,
+      continued,
+      stats: {
+        total: result.progress.totalRecords,
+        processed: result.progress.processedRecords,
+        created: Math.max(0, result.progress.processedRecords - result.progress.failedRecords),
+        skipped: 0,
+        failed: result.progress.failedRecords,
+      },
+      progress: {
+        total: result.progress.totalRecords,
+        processed: result.progress.processedRecords,
+        percentage: result.progress.percentage,
+        hasMore,
+        status: hasMore ? "WAITING" : "COMPLETED",
+      },
+    },
+    message: hasMore
+      ? `Procesando: ${result.progress.processedRecords}/${result.progress.totalRecords} registros (${result.progress.percentage}%)`
+      : `Sincronización completada: ${result.progress.processedRecords} registros procesados`,
+  });
 }

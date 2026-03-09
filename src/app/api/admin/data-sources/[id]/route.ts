@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, AuthError } from "@/lib/auth";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -16,12 +16,8 @@ interface RouteParams {
  * Obtiene los detalles de una fuente de datos
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const user = await requireAdmin(request);
-  if (!user) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
-
   try {
+    await requireAdmin(request);
     const { id } = await params;
 
     const dataSource = await prisma.externalDataSource.findUnique({
@@ -121,6 +117,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true, data: response });
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     console.error("Error fetching data source:", error);
     return NextResponse.json({ error: "Error al obtener la fuente de datos" }, { status: 500 });
   }
@@ -131,12 +130,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  * Actualiza una fuente de datos
  */
 export async function PUT(request: NextRequest, { params }: RouteParams) {
-  const user = await requireAdmin(request);
-  if (!user) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
-
   try {
+    await requireAdmin(request);
     const { id } = await params;
     const body = await request.json();
 
@@ -196,6 +191,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       message: "Fuente de datos actualizada exitosamente",
     });
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     console.error("Error updating data source:", error);
     return NextResponse.json({ error: "Error al actualizar la fuente de datos" }, { status: 500 });
   }
@@ -206,12 +204,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
  * Elimina una fuente de datos (solo si no tiene AEDs asociados)
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  const user = await requireAdmin(request);
-  if (!user) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
-
   try {
+    await requireAdmin(request);
     const { id } = await params;
 
     // Verificar que existe y obtener conteo de AEDs
@@ -256,6 +250,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       message: "Fuente de datos eliminada exitosamente",
     });
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     console.error("Error deleting data source:", error);
     return NextResponse.json({ error: "Error al eliminar la fuente de datos" }, { status: 500 });
   }

@@ -21,11 +21,7 @@ import { getBulkImportService } from "@/import/infrastructure/factories/createBu
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify authentication
-    const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-    }
+    await requireAuth(request);
 
     // Parse query parameters
     const searchParams = request.nextUrl.searchParams;

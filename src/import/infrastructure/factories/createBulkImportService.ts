@@ -10,12 +10,15 @@
 
 import { prisma } from "@/lib/db";
 import { BulkImportService } from "../../application/services/BulkImportService";
+import { ExternalSyncService } from "../../application/services/ExternalSyncService";
 import { PrismaAedRepository } from "../repositories/PrismaAedRepository";
+import { PrismaDataSourceRepository } from "../repositories/PrismaDataSourceRepository";
 import { HttpImageDownloader } from "@/storage/infrastructure/adapters/HttpImageDownloader";
 import { S3ImageStorageAdapter } from "@/storage/infrastructure/adapters/S3ImageStorageAdapter";
 import { DownloadAndUploadImageUseCase } from "@/storage/application/use-cases/DownloadAndUploadImageUseCase";
 
 let _instance: BulkImportService | null = null;
+let _syncInstance: ExternalSyncService | null = null;
 
 /**
  * Obtiene la instancia singleton de BulkImportService.
@@ -45,4 +48,15 @@ export function getBulkImportService(): BulkImportService {
   }
 
   return _instance;
+}
+
+/**
+ * Obtiene la instancia singleton de ExternalSyncService.
+ */
+export function getExternalSyncService(): ExternalSyncService {
+  if (!_syncInstance) {
+    const dataSourceRepository = new PrismaDataSourceRepository(prisma);
+    _syncInstance = new ExternalSyncService(prisma, dataSourceRepository);
+  }
+  return _syncInstance;
 }

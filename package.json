@@ -55,6 +55,7 @@
     "@aws-sdk/client-ses": "^3.993.0",
     "@batchactions/core": "^0.0.4",
     "@batchactions/import": "^0.0.4",
+    "@batchactions/state-prisma": "^0.0.2",
     "@paralleldrive/cuid2": "^3.3.0",
     "@prisma/adapter-pg": "^7.4.0",
     "@vercel/analytics": "^1.6.0",

@@ -13,4 +13,3 @@ export * from "./ListBatchJobsUseCase";
 export * from "./RecoverStuckJobsUseCase";
 export * from "./ForceResetJobUseCase";
 export * from "./GetJobsHealthUseCase";
-export * from "./GetDataSourceCurrentJobUseCase";

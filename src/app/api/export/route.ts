@@ -17,14 +17,12 @@ import { PrismaBatchJobRepository } from "@/batch/infrastructure";
 import { BatchJobOrchestrator } from "@/batch/application";
 import { CreateBatchJobUseCase } from "@/batch/application/use-cases";
 import { initializeProcessors } from "@/batch/application/processors";
-import { PrismaDataSourceRepository } from "@/import/infrastructure/repositories/PrismaDataSourceRepository";
 import { ExportFilters } from "@/export/domain/ports/IExportRepository";
 
 const repository = new PrismaBatchJobRepository(prisma);
-const dataSourceRepository = new PrismaDataSourceRepository(prisma);
 
 // Initialize processors
-initializeProcessors(prisma, dataSourceRepository);
+initializeProcessors(prisma);
 
 const orchestrator = new BatchJobOrchestrator(repository);
 
