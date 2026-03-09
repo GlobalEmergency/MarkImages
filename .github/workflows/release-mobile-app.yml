@@ -182,12 +182,6 @@ jobs:
         run: npx cap sync android
         working-directory: mobile
 
-      - name: Update version in build.gradle
-        working-directory: mobile/android/app
-        run: |
-          sed -i "s/versionName \".*\"/versionName \"${{ needs.prepare.outputs.version }}\"/" build.gradle
-          sed -i "s/versionCode .*/versionCode ${{ needs.prepare.outputs.build_number }}/" build.gradle
-
       - name: Make gradlew executable
         run: chmod +x ./gradlew
         working-directory: mobile/android
@@ -362,19 +356,6 @@ jobs:
             -scheme App \
             -clonedSourcePackagesDirPath "$RUNNER_TEMP/spm-cache"
         working-directory: mobile
-
-      - name: Update version in Xcode project
-        working-directory: mobile
-        run: |
-          node -e "
-            const fs = require('fs');
-            const pbx = 'ios/App/App.xcodeproj/project.pbxproj';
-            let content = fs.readFileSync(pbx, 'utf-8');
-            content = content.replace(/MARKETING_VERSION = [^;]+;/g, 'MARKETING_VERSION = ${{ needs.prepare.outputs.version }};');
-            content = content.replace(/CURRENT_PROJECT_VERSION = [^;]+;/g, 'CURRENT_PROJECT_VERSION = ${{ needs.prepare.outputs.build_number }};');
-            fs.writeFileSync(pbx, content);
-            console.log('Updated pbxproj: MARKETING_VERSION=${{ needs.prepare.outputs.version }}, CURRENT_PROJECT_VERSION=${{ needs.prepare.outputs.build_number }}');
-          "
 
       - name: Set provisioning profile for App target
         env:

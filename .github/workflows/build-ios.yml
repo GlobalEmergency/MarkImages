@@ -1,12 +1,8 @@
 name: Build iOS
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "mobile/**"
-    tags:
-      - "mobile@*"
+  # Legacy workflow — automated builds go through release-mobile-app.yml
+  # Kept as manual fallback only
   workflow_dispatch:
     inputs:
       deploy_to_testflight:

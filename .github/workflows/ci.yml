@@ -110,6 +110,9 @@ jobs:
             echo "✅ All new migrations are non-destructive (safe for production)"
           fi
 
+      - name: Check version bump
+        run: node scripts/version-bump-check.js
+
   quality:
     name: Quality Checks
     runs-on: ubuntu-latest
