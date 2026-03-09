@@ -42,9 +42,15 @@ jobs:
           cache: npm
           cache-dependency-path: mobile/package-lock.json
 
-      - name: Select Xcode version
+      - name: Select Xcode version and install iOS platform
         run: |
           sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+          # Xcode 16+ ships iOS platforms as downloadable components;
+          # install if not already present on the runner.
+          if ! xcodebuild -showsdks | grep -q 'iphoneos'; then
+            echo "iOS SDK not found — downloading platform..."
+            xcodebuild -downloadPlatform iOS
+          fi
           echo "Available iOS SDKs:"
           xcodebuild -showsdks | grep -i ios || true
 
