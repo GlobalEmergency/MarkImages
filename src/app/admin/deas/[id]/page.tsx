@@ -36,6 +36,7 @@ import dynamic from "next/dynamic";
 import type { ImageProcessingResult } from "@/components/dea/DeaImageProcessor";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { getStatusLabel, getStatusColor, AED_STATUS_OPTIONS } from "@/lib/aed-status-config";
+import { compressImageDataUrl } from "@/utils/imageCompression";
 
 // Lazy-load to avoid SSR issues with canvas/leaflet
 const DeaImageProcessor = dynamic(() => import("@/components/dea/DeaImageProcessor"), {
@@ -501,8 +502,22 @@ export default function AdminDeaDetailPage() {
     if (!files) return;
     Array.from(files).forEach((file) => {
       const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result as string;
+      reader.onload = async () => {
+        const rawDataUrl = reader.result as string;
+
+        // Compress image client-side (1920x1920 max, JPEG 0.85, <2MB) to avoid 413 on Vercel
+        let dataUrl: string;
+        try {
+          dataUrl = await compressImageDataUrl(rawDataUrl, {
+            maxWidth: 1920,
+            maxHeight: 1920,
+            quality: 0.85,
+            maxSizeMB: 3,
+          });
+        } catch {
+          dataUrl = rawDataUrl; // Fallback to original if compression fails
+        }
+
         setNewImages((prev) => [
           ...prev,
           {
@@ -514,9 +529,16 @@ export default function AdminDeaDetailPage() {
           },
         ]);
 
-        // Upload to S3 in the background (avoids 413 on large base64 payloads)
+        // Upload compressed image to S3 in the background
+        // Convert data URL to Blob for FormData upload
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        const compressedFile = new File([blob], file.name.replace(/\.\w+$/, ".jpg"), {
+          type: "image/jpeg",
+        });
+
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", compressedFile);
         formData.append("prefix", `dea-upload-${params.id}`);
         fetch("/api/upload", { method: "POST", body: formData })
           .then((res) => res.json())
