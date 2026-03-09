@@ -197,6 +197,10 @@ interface NewImage {
   type: string;
   order: number;
   file?: File;
+  /** S3 URL after pre-upload (used for server-side processing to avoid 413) */
+  s3Url?: string;
+  /** Whether the file is still being uploaded to S3 */
+  uploading?: boolean;
   /** If image was processed via crop/blur/arrow pipeline */
   processingResult?: ImageProcessingResult;
   /** Preview URL after processing (from ArrowPlacer) */
@@ -498,15 +502,50 @@ export default function AdminDeaDetailPage() {
     Array.from(files).forEach((file) => {
       const reader = new FileReader();
       reader.onload = () => {
+        const dataUrl = reader.result as string;
         setNewImages((prev) => [
           ...prev,
           {
-            url: reader.result as string,
+            url: dataUrl,
             type: "FRONT",
             order: (data?.aed.images.length || 0) + prev.length + 1,
             file,
+            uploading: true,
           },
         ]);
+
+        // Upload to S3 in the background (avoids 413 on large base64 payloads)
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("prefix", `dea-upload-${params.id}`);
+        fetch("/api/upload", { method: "POST", body: formData })
+          .then((res) => res.json())
+          .then((result) => {
+            if (result.success && result.url) {
+              setNewImages((prev) =>
+                prev.map((img) =>
+                  img.url === dataUrl && img.uploading
+                    ? { ...img, s3Url: result.url, uploading: false }
+                    : img
+                )
+              );
+            } else {
+              setNewImages((prev) =>
+                prev.map((img) =>
+                  img.url === dataUrl && img.uploading ? { ...img, uploading: false } : img
+                )
+              );
+              setError("Error al subir imagen a S3");
+            }
+          })
+          .catch(() => {
+            setNewImages((prev) =>
+              prev.map((img) =>
+                img.url === dataUrl && img.uploading ? { ...img, uploading: false } : img
+              )
+            );
+            setError("Error al subir imagen a S3");
+          });
       };
       reader.readAsDataURL(file);
     });
@@ -686,11 +725,14 @@ export default function AdminDeaDetailPage() {
       // 2. Process new images that went through crop/blur/arrow pipeline
       for (const img of processedNewImages) {
         const procResult = img.processingResult!;
+        // Use S3 URL (pre-uploaded) to avoid 413 on large base64 payloads.
+        // Fall back to data URL only for very small images where S3 upload may not have completed.
+        const imagePayload = img.s3Url ? { newImageUrl: img.s3Url } : { newImageDataUrl: img.url };
         const procResponse = await fetch(`/api/admin/deas/${params.id}/process-image`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            newImageDataUrl: img.url,
+            ...imagePayload,
             imageType: img.type,
             cropData: procResult.cropData,
             blurAreas: procResult.blurAreas,
@@ -825,6 +867,7 @@ export default function AdminDeaDetailPage() {
     newImages.length > 0;
 
   const hasUnprocessedImages = newImages.some((img) => !img.processingResult);
+  const hasUploadingImages = newImages.some((img) => img.uploading);
 
   const tabs = [
     { id: "general", label: "General", icon: FileText },
@@ -949,12 +992,14 @@ export default function AdminDeaDetailPage() {
                   </button>
                   <button
                     onClick={handleSave}
-                    disabled={isSaving || !hasChanges || hasUnprocessedImages}
+                    disabled={isSaving || !hasChanges || hasUnprocessedImages || hasUploadingImages}
                     className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     title={
-                      hasUnprocessedImages
-                        ? "Todas las imágenes nuevas deben ser procesadas antes de guardar"
-                        : undefined
+                      hasUploadingImages
+                        ? "Esperando a que las imágenes terminen de subirse"
+                        : hasUnprocessedImages
+                          ? "Todas las imágenes nuevas deben ser procesadas antes de guardar"
+                          : undefined
                     }
                   >
                     <Save className="w-4 h-4" />
@@ -1825,6 +1870,15 @@ export default function AdminDeaDetailPage() {
                 {/* New images (pending upload) */}
                 {newImages.map((img, idx) => (
                   <div key={`new-${idx}`} className="relative group">
+                    {/* Upload overlay */}
+                    {img.uploading && (
+                      <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 rounded-lg">
+                        <div className="text-center">
+                          <Loader2 className="w-6 h-6 text-blue-600 animate-spin mx-auto" />
+                          <p className="text-xs text-gray-600 mt-1">Subiendo...</p>
+                        </div>
+                      </div>
+                    )}
                     <img
                       src={img.processedPreviewUrl || img.url}
                       alt="Nueva imagen"

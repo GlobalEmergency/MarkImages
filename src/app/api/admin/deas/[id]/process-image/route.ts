@@ -22,6 +22,8 @@ interface ProcessImageBody {
   imageId?: string;
   /** For new images: base64 data URL of the uploaded image */
   newImageDataUrl?: string;
+  /** For new images: S3 URL of the pre-uploaded original image (avoids 413 on large payloads) */
+  newImageUrl?: string;
   /** Image type (FRONT, LOCATION, ACCESS, SIGNAGE, CONTEXT, PLATE) */
   imageType?: string;
   /** Processing metadata from client-side components */
@@ -35,7 +37,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const { id: aedId } = await params;
     const { user } = await requireAdminOrAedPermission(request, aedId, "can_edit");
     const body: ProcessImageBody = await request.json();
-    const { imageId, newImageDataUrl, imageType, cropData, blurAreas, arrowData } = body;
+    const { imageId, newImageDataUrl, newImageUrl, imageType, cropData, blurAreas, arrowData } =
+      body;
 
     // Validate AED exists
     const aed = await prisma.aed.findUnique({
@@ -88,9 +91,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       isNewImage = true;
 
       console.log(`🔄 Admin processing new image upload for AED ${aedId}`);
+    } else if (newImageUrl) {
+      // Download pre-uploaded image from S3 URL
+      originalBuffer = await downloadImage(newImageUrl);
+      extension = extractExtension(newImageUrl) || "jpg";
+      newImageContentType = extension === "png" ? "image/png" : "image/jpeg";
+      isNewImage = true;
+
+      console.log(`🔄 Admin processing new image from URL for AED ${aedId}`);
     } else {
       return NextResponse.json(
-        { success: false, error: "Either imageId or newImageDataUrl is required" },
+        { success: false, error: "Either imageId, newImageDataUrl, or newImageUrl is required" },
         { status: 400 }
       );
     }
