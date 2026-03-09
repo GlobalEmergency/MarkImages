@@ -278,6 +278,19 @@ export class ExternalSyncService {
 
     const progress = await stateStore.getProgress(jobId);
 
+    // Fix inflated totalRecords from BatchEngine re-streaming.
+    // BatchEngine.streamRecords() starts recordIndex from ctx.totalRecords,
+    // so each resume adds the full source count again to the total. The actual
+    // processing is correct (completed batches are skipped), but totalRecords
+    // in the state store grows unbounded. Use sourceTotalRecords for accuracy.
+    if (sourceTotalRecords && sourceTotalRecords > 0) {
+      const completed = progress.processedRecords + progress.failedRecords;
+      progress.totalRecords = sourceTotalRecords;
+      progress.pendingRecords = Math.max(0, sourceTotalRecords - completed);
+      progress.percentage =
+        sourceTotalRecords > 0 ? Math.round((completed / sourceTotalRecords) * 100) : 0;
+    }
+
     // 4. Update registry (preserve sourceTotalRecords for accurate progress)
     await this.updateJobRegistry({
       jobId,
