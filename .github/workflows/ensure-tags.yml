@@ -57,6 +57,18 @@ jobs:
             echo "created=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Create mobile GitHub Release
+        if: steps.mobile-tag.outputs.created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="mobile@${{ steps.mobile-tag.outputs.version }}"
+          echo "📦 Creating GitHub Release for $TAG"
+          gh release create "$TAG" \
+            --title "Mobile v${{ steps.mobile-tag.outputs.version }}" \
+            --generate-notes
+          echo "✅ Release created"
+
       - name: Trigger mobile release workflow
         if: steps.mobile-tag.outputs.created == 'true'
         env:
