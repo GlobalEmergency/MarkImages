@@ -27,6 +27,7 @@ import {
   Clock,
   Upload,
   Eye,
+  EyeOff,
   Scissors,
   Loader2,
   RefreshCw,
@@ -217,6 +218,17 @@ interface ImageProcessorState {
   imageType: string;
 }
 
+// ── Constants ──────────────────────────────────────────────────────────
+
+const imageTypeOptions = [
+  { value: "FRONT", label: "Frontal" },
+  { value: "LOCATION", label: "Ubicación" },
+  { value: "ACCESS", label: "Acceso" },
+  { value: "SIGNAGE", label: "Señalización" },
+  { value: "CONTEXT", label: "Contexto" },
+  { value: "PLATE", label: "Placa" },
+];
+
 // ── Reusable UI Components ─────────────────────────────────────────────
 
 function EditableField({
@@ -368,7 +380,12 @@ export default function AdminDeaDetailPage() {
   const [newImages, setNewImages] = useState<NewImage[]>([]);
 
   // Lightbox
-  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [lightboxState, setLightboxState] = useState<{
+    url: string;
+    originalUrl?: string;
+    processedUrl?: string;
+    showingOriginal: boolean;
+  } | null>(null);
 
   // Image processor modal
   const [imageProcessor, setImageProcessor] = useState<ImageProcessorState>({
@@ -387,6 +404,30 @@ export default function AdminDeaDetailPage() {
 
   // Image upload ref
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-open processor for the next unprocessed new image
+  useEffect(() => {
+    if (imageProcessor.isOpen) return;
+    if (newImages.length === 0) return;
+
+    const firstUnprocessedIndex = newImages.findIndex((img) => !img.processingResult);
+    if (firstUnprocessedIndex === -1) return;
+
+    const timer = setTimeout(() => {
+      const img = newImages[firstUnprocessedIndex];
+      if (!img || img.processingResult) return;
+      setImageProcessor({
+        isOpen: true,
+        imageUrl: img.url,
+        imageId: null,
+        label: `Nueva imagen (${imageTypeOptions.find((o) => o.value === img.type)?.label || img.type})`,
+        newImageIndex: firstUnprocessedIndex,
+        imageType: img.type,
+      });
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [newImages, imageProcessor.isOpen]);
 
   // ── Data fetching ──
   const fetchData = useCallback(async () => {
@@ -564,6 +605,14 @@ export default function AdminDeaDetailPage() {
   };
 
   const handleProcessingCancel = () => {
+    // If cancelling a new image that hasn't been processed yet, remove it (processing is mandatory)
+    if (
+      imageProcessor.newImageIndex !== null &&
+      newImages[imageProcessor.newImageIndex] &&
+      !newImages[imageProcessor.newImageIndex].processingResult
+    ) {
+      setNewImages((prev) => prev.filter((_, i) => i !== imageProcessor.newImageIndex));
+    }
     setImageProcessor((prev) => ({ ...prev, isOpen: false }));
   };
 
@@ -613,16 +662,12 @@ export default function AdminDeaDetailPage() {
         payload.deleteImageIds = imagesToDelete;
       }
 
-      // New images: split into processed (go via process-image API) and unprocessed (go via PATCH)
+      // All new images must be processed (crop/blur/arrow)
       const processedNewImages = newImages.filter((img) => img.processingResult);
-      const unprocessedNewImages = newImages.filter((img) => !img.processingResult);
-
-      if (unprocessedNewImages.length > 0) {
-        payload.addImages = unprocessedNewImages.map((img) => ({
-          url: img.url,
-          type: img.type,
-          order: img.order,
-        }));
+      if (processedNewImages.length !== newImages.length) {
+        setError("Todas las imágenes nuevas deben ser procesadas antes de guardar.");
+        setIsSaving(false);
+        return;
       }
 
       // 1. Save general fields via PATCH
@@ -779,6 +824,8 @@ export default function AdminDeaDetailPage() {
     imagesToDelete.length > 0 ||
     newImages.length > 0;
 
+  const hasUnprocessedImages = newImages.some((img) => !img.processingResult);
+
   const tabs = [
     { id: "general", label: "General", icon: FileText },
     {
@@ -789,15 +836,6 @@ export default function AdminDeaDetailPage() {
     { id: "verifications", label: `Verificaciones (${counts.verifications})`, icon: CheckCircle },
     { id: "assignments", label: `Asignaciones (${counts.active_assignments})`, icon: Users },
     { id: "history", label: "Histórico", icon: Activity },
-  ];
-
-  const imageTypeOptions = [
-    { value: "FRONT", label: "Frontal" },
-    { value: "LOCATION", label: "Ubicación" },
-    { value: "ACCESS", label: "Acceso" },
-    { value: "SIGNAGE", label: "Señalización" },
-    { value: "CONTEXT", label: "Contexto" },
-    { value: "PLATE", label: "Placa" },
   ];
 
   return (
@@ -814,22 +852,50 @@ export default function AdminDeaDetailPage() {
       )}
 
       {/* Lightbox */}
-      {lightboxUrl && (
+      {lightboxState && (
         <div
           className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
-          onClick={() => setLightboxUrl(null)}
+          onClick={() => setLightboxState(null)}
         >
           <img
-            src={lightboxUrl}
+            src={lightboxState.url}
             alt="Preview"
             className="max-w-full max-h-full object-contain rounded-lg"
           />
           <button
-            onClick={() => setLightboxUrl(null)}
+            onClick={() => setLightboxState(null)}
             className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white rounded-full p-2"
           >
             <X className="w-6 h-6" />
           </button>
+          {/* Toggle between processed/original */}
+          {lightboxState.processedUrl && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxState((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        url: prev.showingOriginal ? prev.processedUrl! : prev.originalUrl!,
+                        showingOriginal: !prev.showingOriginal,
+                      }
+                    : null
+                );
+              }}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/20 hover:bg-white/40 text-white rounded-full px-4 py-2 flex items-center gap-2 text-sm backdrop-blur-sm"
+            >
+              {lightboxState.showingOriginal ? (
+                <>
+                  <Eye className="w-4 h-4" /> Ver procesada
+                </>
+              ) : (
+                <>
+                  <EyeOff className="w-4 h-4" /> Ver original
+                </>
+              )}
+            </button>
+          )}
         </div>
       )}
 
@@ -883,8 +949,13 @@ export default function AdminDeaDetailPage() {
                   </button>
                   <button
                     onClick={handleSave}
-                    disabled={isSaving || !hasChanges}
+                    disabled={isSaving || !hasChanges || hasUnprocessedImages}
                     className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={
+                      hasUnprocessedImages
+                        ? "Todas las imágenes nuevas deben ser procesadas antes de guardar"
+                        : undefined
+                    }
                   >
                     <Save className="w-4 h-4" />
                     {isSaving ? "Guardando..." : "Guardar"}
@@ -1611,7 +1682,12 @@ export default function AdminDeaDetailPage() {
                         onClick={() =>
                           !markedForDeletion &&
                           !isProcessing &&
-                          setLightboxUrl(image.processed_url || image.original_url)
+                          setLightboxState({
+                            url: image.processed_url || image.original_url,
+                            originalUrl: image.original_url,
+                            processedUrl: image.processed_url || undefined,
+                            showingOriginal: false,
+                          })
                         }
                       >
                         <img
@@ -1640,13 +1716,35 @@ export default function AdminDeaDetailPage() {
                         <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                           <button
                             onClick={() =>
-                              setLightboxUrl(image.processed_url || image.original_url)
+                              setLightboxState({
+                                url: image.processed_url || image.original_url,
+                                originalUrl: image.original_url,
+                                processedUrl: image.processed_url || undefined,
+                                showingOriginal: false,
+                              })
                             }
                             className="bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5"
                             title="Ver imagen"
                           >
                             <Eye className="w-3 h-3" />
                           </button>
+                          {image.processed_url && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setLightboxState({
+                                  url: image.original_url,
+                                  originalUrl: image.original_url,
+                                  processedUrl: image.processed_url || undefined,
+                                  showingOriginal: true,
+                                });
+                              }}
+                              className="bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5"
+                              title="Ver original"
+                            >
+                              <EyeOff className="w-3 h-3" />
+                            </button>
+                          )}
                         </div>
                       )}
 
@@ -1672,6 +1770,22 @@ export default function AdminDeaDetailPage() {
                               >
                                 <Scissors className="w-3 h-3" />
                               </button>
+                              {image.processed_url && (
+                                <button
+                                  onClick={() =>
+                                    setLightboxState({
+                                      url: image.original_url,
+                                      originalUrl: image.original_url,
+                                      processedUrl: image.processed_url || undefined,
+                                      showingOriginal: true,
+                                    })
+                                  }
+                                  className="bg-gray-600 hover:bg-gray-700 text-white rounded-full p-1.5 shadow-lg"
+                                  title="Ver original"
+                                >
+                                  <EyeOff className="w-3 h-3" />
+                                </button>
+                              )}
                               <button
                                 onClick={() => setImagesToDelete((prev) => [...prev, image.id])}
                                 className="bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg"
@@ -1715,7 +1829,7 @@ export default function AdminDeaDetailPage() {
                       src={img.processedPreviewUrl || img.url}
                       alt="Nueva imagen"
                       className={`w-full h-40 object-cover rounded-lg border-2 ${
-                        img.processingResult ? "border-green-400" : "border-blue-300"
+                        img.processingResult ? "border-green-400" : "border-amber-400"
                       }`}
                     />
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-blue-900/70 to-transparent rounded-b-lg p-2">
@@ -1737,8 +1851,8 @@ export default function AdminDeaDetailPage() {
                           <CheckCircle className="w-3 h-3" /> Procesada
                         </span>
                       ) : (
-                        <span className="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded">
-                          Nueva
+                        <span className="bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                          <AlertCircle className="w-3 h-3" /> Pendiente
                         </span>
                       )}
                     </div>
@@ -1779,6 +1893,17 @@ export default function AdminDeaDetailPage() {
                     <span className="text-sm text-gray-500 mt-1">Añadir imagen</span>
                   </button>
                 )}
+              </div>
+            )}
+
+            {/* Warning: unprocessed images */}
+            {hasUnprocessedImages && (
+              <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                <p className="text-sm text-amber-800">
+                  Todas las imágenes nuevas deben ser procesadas (recortar, difuminar, flecha) antes
+                  de poder guardar.
+                </p>
               </div>
             )}
           </div>
