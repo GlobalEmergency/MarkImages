@@ -107,6 +107,10 @@ export interface StartImportOptions {
   maxRecordsPerChunk?: number;
   /** Nombre del job para la UI */
   jobName?: string;
+  /** ID de la organizaciÃ³n que importa (para asignaciÃ³n automÃ¡tica de DEAs) */
+  organizationId?: string;
+  /** Tipo de asignaciÃ³n organizacional (OWNERSHIP, MAINTENANCE, etc.) */
+  assignmentType?: string;
 }
 
 export interface StartImportResult {
@@ -236,6 +240,8 @@ export class BulkImportService {
       maxDurationMs = VERCEL_API_MAX_DURATION_MS,
       maxRecordsPerChunk = DEFAULT_CHUNK_MAX_RECORDS,
       jobName,
+      organizationId,
+      assignmentType,
     } = options;
 
     const { stateStore, source, processor, duplicateChecker, hooks } =
@@ -247,6 +253,8 @@ export class BulkImportService {
         skipDuplicates,
         sharePointAuth,
         jobName: jobName || `Import ${fileName}`,
+        organizationId,
+        assignmentType,
       });
 
     // Crear instancia de BulkImport
@@ -467,18 +475,32 @@ export class BulkImportService {
     skipDuplicates: boolean;
     sharePointAuth?: SharePointAuthConfig;
     jobName?: string;
+    organizationId?: string;
+    assignmentType?: string;
   }) {
-    const { s3Url, fileName, userId, delimiter, skipDuplicates, sharePointAuth, jobName } = params;
+    const {
+      s3Url,
+      fileName,
+      userId,
+      delimiter,
+      skipDuplicates,
+      sharePointAuth,
+      jobName,
+      organizationId,
+      assignmentType,
+    } = params;
 
     const stateStore = new PrismaStateStore(this.prisma, {
       createdBy: userId,
       ...(jobName && { jobName }),
+      ...(organizationId && { organizationId }),
       importContext: {
         s3Url,
         fileName,
         delimiter,
         sharePointAuth,
         skipDuplicates,
+        assignmentType,
       },
     });
 
@@ -498,6 +520,9 @@ export class BulkImportService {
     const processor = createAedRecordProcessor({
       prisma: this.prisma,
       fileName,
+      organizationId,
+      assignmentType,
+      userId,
     });
 
     return { stateStore, source, processor, duplicateChecker, hooks };

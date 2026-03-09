@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 
 import type { JWTPayload } from "@/types";
 
+import { prisma } from "@/lib/db";
 import { getCurrentUserFromRequest } from "./jwt";
 import { getUserPermissionsForAed } from "@/lib/organization-permissions";
 
@@ -96,4 +97,59 @@ export async function requireAdminOrAedPermission(
   }
 
   return { user, isGlobalAdmin: false, permissions };
+}
+
+export interface ImportAuthResult {
+  user: JWTPayload;
+  isGlobalAdmin: boolean;
+  /** null for global admin imports without org context */
+  organizationId: string | null;
+}
+
+/**
+ * Require import permission: global ADMIN or org member with can_edit.
+ *
+ * - Global ADMINs pass immediately. organizationId is optional for them.
+ * - Non-admins MUST provide organizationId and belong to that org with can_edit=true.
+ * - Returns { user, isGlobalAdmin, organizationId } for downstream use.
+ */
+export async function requireImportPermission(
+  request: NextRequest,
+  organizationId?: string | null
+): Promise<ImportAuthResult> {
+  const user = await requireAuth(request);
+
+  if (user.role === UserRole.ADMIN) {
+    return {
+      user,
+      isGlobalAdmin: true,
+      organizationId: organizationId || null,
+    };
+  }
+
+  // Non-admin: organizationId is required
+  if (!organizationId) {
+    throw new AuthError("Debes seleccionar una organización para importar", 400);
+  }
+
+  // Verify user belongs to this org with can_edit permission
+  const membership = await prisma.organizationMember.findUnique({
+    where: {
+      organization_id_user_id: {
+        organization_id: organizationId,
+        user_id: user.userId,
+      },
+    },
+    select: { can_edit: true },
+  });
+
+  if (!membership || !membership.can_edit) {
+    throw new AuthError("No tienes permisos de edición en esta organización", 403);
+  }
+
+  return {
+    user,
+    isGlobalAdmin: false,
+    organizationId,
+  };
 }

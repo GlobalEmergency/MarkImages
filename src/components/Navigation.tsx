@@ -12,6 +12,7 @@ import {
   ClipboardCheck,
   Settings,
   Building2,
+  FileUp,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -68,6 +69,12 @@ export default function Navigation() {
   const allNavLinks = [
     { href: "/", label: "DEAs", icon: Home, visible: true },
     { href: "/dea/new-simple", label: "Agregar DEA", icon: PlusCircle, visible: true },
+    {
+      href: "/admin/imports",
+      label: "Importar",
+      icon: FileUp,
+      visible: user?.permissions?.canImportAeds || false,
+    },
     {
       href: selectedOrganization ? `/org/${selectedOrganization.id}` : "/org",
       label: "Mi Organización",
