@@ -61,6 +61,8 @@ export interface ImportContext {
   delimiter?: string;
   sharePointAuth?: { rtFa?: string; fedAuth?: string };
   skipDuplicates?: boolean;
+  /** Tipo de asignaciÃ³n org (OWNERSHIP, MAINTENANCE, etc.) */
+  assignmentType?: string;
 }
 
 export interface PrismaStateStoreOptions {
@@ -68,6 +70,8 @@ export interface PrismaStateStoreOptions {
   createdBy: string;
   /** Nombre del batch job */
   jobName?: string;
+  /** ID de la organizaciÃ³n que importa (para filtrado y asignaciÃ³n) */
+  organizationId?: string;
   /**
    * Contexto de importaciÃ³n que se persiste en metadata.import_context.
    * Necesario para que el CRON pueda reconstruir ResumeImportOptions.
@@ -143,6 +147,7 @@ export class PrismaStateStore implements StateStore {
       last_heartbeat: new Date(),
       last_checkpoint_index: processedRecords > 0 ? processedRecords - 1 : -1,
       created_by: this.options.createdBy,
+      organization_id: this.options.organizationId || null,
       metadata: metadata as object,
     };
 

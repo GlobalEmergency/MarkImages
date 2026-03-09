@@ -10,7 +10,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth, requireImportPermission } from "@/lib/auth";
+import { UserRole } from "@/generated/client/enums";
 import { JobType } from "@/batch/domain";
 import { getBulkImportService } from "@/import/infrastructure/factories/createBulkImportService";
 import { uploadToS3 } from "@/lib/s3";
@@ -31,7 +32,7 @@ import {
 export async function GET(request: NextRequest) {
   try {
     // Verify authentication
-    await requireAuth(request);
+    const user = await requireAuth(request);
 
     // Parse query parameters
     const searchParams = request.nextUrl.searchParams;
@@ -39,12 +40,36 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get("limit") ?? "20", 10), 100);
     const skip = (page - 1) * limit;
 
+    // Build org filter: admins see all, org editors see only their org's imports
+    const isAdmin = user.role === UserRole.ADMIN;
+    let orgFilter: { organization_id?: { in: string[] } } = {};
+
+    if (!isAdmin) {
+      const memberships = await prisma.organizationMember.findMany({
+        where: { user_id: user.userId, can_edit: true },
+        select: { organization_id: true },
+      });
+      const orgIds = memberships.map((m: { organization_id: string }) => m.organization_id);
+      if (orgIds.length === 0) {
+        // User has no orgs with edit permission — return empty
+        return NextResponse.json({
+          batches: [],
+          pagination: { page, limit, total: 0, totalPages: 0 },
+        });
+      }
+      orgFilter = { organization_id: { in: orgIds } };
+    }
+
     // Query batch jobs of type AED_CSV_IMPORT
+    const importType = JobType.AED_CSV_IMPORT;
+    const whereClause = {
+      type: importType,
+      ...orgFilter,
+    };
+
     const [jobs, total] = await Promise.all([
       prisma.batchJob.findMany({
-        where: {
-          type: JobType.AED_CSV_IMPORT,
-        },
+        where: whereClause,
         orderBy: {
           created_at: "desc",
         },
@@ -66,9 +91,7 @@ export async function GET(request: NextRequest) {
         },
       }),
       prisma.batchJob.count({
-        where: {
-          type: JobType.AED_CSV_IMPORT,
-        },
+        where: whereClause,
       }),
     ]);
 
@@ -127,16 +150,35 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication
-    const user = await requireAuth(request);
-
     // Parse request body
     const body = await request.json();
-    const { filePath, mappings, batchName, sharepointCookies } = body;
+    const { filePath, mappings, batchName, sharepointCookies, organizationId, assignmentType } =
+      body;
+
+    // Verify authentication and import permissions
+    const { user, organizationId: resolvedOrgId } = await requireImportPermission(
+      request,
+      organizationId
+    );
 
     if (!filePath || !mappings || !Array.isArray(mappings)) {
       return NextResponse.json(
         { error: "Faltan parÃ¡metros requeridos (filePath, mappings)" },
+        { status: 400 }
+      );
+    }
+
+    // Validate assignmentType if provided
+    const validAssignmentTypes = [
+      "CIVIL_PROTECTION",
+      "CERTIFIED_COMPANY",
+      "OWNERSHIP",
+      "MAINTENANCE",
+      "VERIFICATION",
+    ];
+    if (assignmentType && !validAssignmentTypes.includes(assignmentType)) {
+      return NextResponse.json(
+        { error: `Tipo de asignaciÃ³n no vÃ¡lido. Opciones: ${validAssignmentTypes.join(", ")}` },
         { status: 400 }
       );
     }
@@ -219,6 +261,8 @@ export async function POST(request: NextRequest) {
       sharePointAuth,
       maxDurationMs: VERCEL_API_MAX_DURATION_MS,
       jobName: batchName || `ImportaciÃ³n CSV ${new Date().toISOString()}`,
+      organizationId: resolvedOrgId || undefined,
+      assignmentType: assignmentType || undefined,
     });
 
     // Crear artifact para tracking del archivo CSV

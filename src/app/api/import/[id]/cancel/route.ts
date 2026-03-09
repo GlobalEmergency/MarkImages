@@ -23,11 +23,8 @@ interface RouteParams {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    // Verify authentication
+    // Verify authentication — requireAuth throws, never returns null
     const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "No autenticado" }, { status: 401 });
-    }
 
     const { id } = await params;
 
@@ -36,19 +33,34 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Leer metadata del job para determinar el motor
     const job = await prisma.batchJob.findUnique({
       where: { id },
-      select: { metadata: true, status: true, created_by: true },
+      select: { metadata: true, status: true, created_by: true, organization_id: true },
     });
 
     if (!job) {
       return NextResponse.json({ success: false, error: `Job ${id} not found` }, { status: 404 });
     }
 
-    // Verificar que el usuario es dueño del job o admin
+    // Verificar que el usuario es dueño del job, admin, o miembro de la org del job
     if (job.created_by !== user.userId && user.role !== UserRole.ADMIN) {
-      return NextResponse.json(
-        { success: false, error: "No autorizado para cancelar este job" },
-        { status: 403 }
-      );
+      let hasOrgAccess = false;
+      if (job.organization_id) {
+        const membership = await prisma.organizationMember.findUnique({
+          where: {
+            organization_id_user_id: {
+              organization_id: job.organization_id,
+              user_id: user.userId,
+            },
+          },
+          select: { can_edit: true },
+        });
+        hasOrgAccess = !!membership?.can_edit;
+      }
+      if (!hasOrgAccess) {
+        return NextResponse.json(
+          { success: false, error: "No autorizado para cancelar este job" },
+          { status: 403 }
+        );
+      }
     }
 
     const metadata = (job.metadata || {}) as Record<string, unknown>;

@@ -33,17 +33,24 @@ export default function AdminImportsPage() {
     refreshInterval: 5000,
   });
 
+  const canImport = user?.role === "ADMIN" || user?.permissions?.canImportAeds;
+
+  // Organizations where the user can edit (for org editors)
+  const editableOrgs =
+    user?.permissions?.organizations?.filter((o) => o.permissions.can_edit) ?? [];
+  const isGlobalAdmin = user?.role === "ADMIN";
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/login?redirect=/admin/imports");
       return;
     }
 
-    if (!authLoading && user && user.role !== "ADMIN") {
+    if (!authLoading && user && !canImport) {
       router.push("/");
       return;
     }
-  }, [authLoading, user, router]);
+  }, [authLoading, user, router, canImport]);
 
   const handleWizardComplete = (_batchId: string) => {
     refetch();
@@ -81,7 +88,7 @@ export default function AdminImportsPage() {
     );
   }
 
-  if (!user || user.role !== "ADMIN") {
+  if (!user || !canImport) {
     return null;
   }
 
@@ -105,6 +112,13 @@ export default function AdminImportsPage() {
               <h1 className="text-3xl font-bold text-gray-900">Importaciones</h1>
               <p className="mt-1 text-sm text-gray-600">
                 Importar DEAs masivamente desde archivos CSV
+                {!isGlobalAdmin && editableOrgs.length > 0 && (
+                  <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                    {editableOrgs.length === 1
+                      ? editableOrgs[0].name
+                      : `${editableOrgs.length} organizaciones`}
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -120,7 +134,11 @@ export default function AdminImportsPage() {
               <ArrowLeft className="w-5 h-5" />
               <span className="font-medium">Volver al historial</span>
             </button>
-            <ImportWizard onComplete={handleWizardComplete} />
+            <ImportWizard
+              onComplete={handleWizardComplete}
+              organizations={editableOrgs}
+              isGlobalAdmin={isGlobalAdmin}
+            />
           </div>
         ) : (
           <>
