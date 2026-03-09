@@ -121,5 +121,20 @@ else
   echo "  ⚠️  iOS project not found (run 'npx cap add ios' first)"
 fi
 
+# ── iOS: Verify GoogleService-Info.plist is in the Xcode project ──────
+IOS_PBXPROJ="$MOBILE_DIR/ios/App/App.xcodeproj/project.pbxproj"
+IOS_GOOGLE_PLIST="$MOBILE_DIR/ios/App/App/GoogleService-Info.plist"
+if [ -f "$IOS_GOOGLE_PLIST" ] && [ -f "$IOS_PBXPROJ" ]; then
+  if ! grep -q "GoogleService-Info.plist" "$IOS_PBXPROJ"; then
+    echo "  ⚠️  WARNING: GoogleService-Info.plist exists but is NOT in the Xcode project!"
+    echo "     The app will crash on launch (FirebaseApp.configure() fatal error)."
+    echo "     Add it to the Xcode project via: File → Add Files to 'App'..."
+  else
+    echo "  ⏭️  GoogleService-Info.plist is in the Xcode project"
+  fi
+elif [ -d "$MOBILE_DIR/ios" ] && [ ! -f "$IOS_GOOGLE_PLIST" ]; then
+  echo "  ⚠️  GoogleService-Info.plist not found — Firebase will crash on launch"
+fi
+
 echo ""
 echo "✅ Native platform setup complete!"
