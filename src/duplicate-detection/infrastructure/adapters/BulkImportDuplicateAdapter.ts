@@ -102,11 +102,11 @@ export class BulkImportDuplicateAdapter implements DuplicateChecker {
     return trimmed || undefined;
   }
 
-  /** Extract a number from fields, or undefined */
+  /** Extract a finite number from fields, or undefined (rejects NaN, Infinity, -Infinity) */
   private num(fields: Record<string, unknown>, key: string): number | undefined {
     const value = fields[key];
     if (value === null || value === undefined) return undefined;
     const num = typeof value === "number" ? value : parseFloat(String(value));
-    return isNaN(num) ? undefined : num;
+    return Number.isFinite(num) ? num : undefined;
   }
 }

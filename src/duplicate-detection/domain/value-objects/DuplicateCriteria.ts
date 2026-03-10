@@ -68,9 +68,14 @@ export class DuplicateCriteria {
     return !!(this.id || this.code || this.externalReference);
   }
 
-  /** Has coordinates for spatial/fuzzy scoring? */
+  /** Has valid finite coordinates for spatial/fuzzy scoring? */
   get hasSpatialFields(): boolean {
-    return this.latitude !== undefined && this.longitude !== undefined;
+    return (
+      this.latitude !== undefined &&
+      this.longitude !== undefined &&
+      Number.isFinite(this.latitude) &&
+      Number.isFinite(this.longitude)
+    );
   }
 
   /** Has postal code for fallback search? */

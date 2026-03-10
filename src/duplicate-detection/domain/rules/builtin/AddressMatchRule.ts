@@ -20,6 +20,7 @@ export class AddressMatchRule implements ScoringRule {
   toSqlCase(input: NormalizedInput, paramIndex: number): SqlFragment {
     return {
       sql: `(CASE WHEN l.normalized_address = $${paramIndex}::text
+               AND $${paramIndex}::text != ''
                THEN ${this.maxPoints} ELSE 0 END)`,
       params: [input.normalizedAddress],
       nextParamIndex: paramIndex + 1,

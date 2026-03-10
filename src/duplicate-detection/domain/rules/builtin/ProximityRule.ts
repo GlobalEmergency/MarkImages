@@ -23,13 +23,8 @@ export class ProximityRule implements ScoringRule {
   constructor(private readonly thresholdMeters: number = 5) {}
 
   toSqlCase(input: NormalizedInput, paramIndex: number): SqlFragment {
-    // Use explicit null/undefined checks — coordinate 0 is valid (equator/prime meridian)
-    if (
-      input.longitude === undefined ||
-      input.longitude === null ||
-      input.latitude === undefined ||
-      input.latitude === null
-    ) {
+    // Use explicit null/undefined/NaN/Infinity checks — coordinate 0 is valid (equator/prime meridian)
+    if (!Number.isFinite(input.longitude) || !Number.isFinite(input.latitude)) {
       return { sql: "0", params: [], nextParamIndex: paramIndex };
     }
     return {
@@ -45,19 +40,15 @@ export class ProximityRule implements ScoringRule {
 
   evaluate(input: NormalizedInput, candidate: CandidateRecord): number {
     const distance = candidate.distance_meters;
-    if (distance === undefined || distance === null) return 0;
-    return distance < this.thresholdMeters ? this.maxPoints : 0;
+    if (!Number.isFinite(distance) || distance! < 0) return 0;
+    return distance! < this.thresholdMeters ? this.maxPoints : 0;
   }
 
   explain(input: NormalizedInput, candidate: CandidateRecord): RuleExplanation {
     const distance = candidate.distance_meters;
-    const hasDistance = distance !== undefined && distance !== null;
-    const matched = hasDistance && distance < this.thresholdMeters;
-    const hasCoords =
-      input.latitude !== undefined &&
-      input.latitude !== null &&
-      input.longitude !== undefined &&
-      input.longitude !== null;
+    const hasDistance = Number.isFinite(distance) && distance! >= 0;
+    const matched = hasDistance && distance! < this.thresholdMeters;
+    const hasCoords = Number.isFinite(input.latitude) && Number.isFinite(input.longitude);
     return {
       ruleId: this.id,
       ruleName: this.name,
@@ -67,10 +58,10 @@ export class ProximityRule implements ScoringRule {
       reason: !hasDistance
         ? "No distance data available → 0pts"
         : matched
-          ? `Distance ${distance.toFixed(1)}m < ${this.thresholdMeters}m threshold → +${this.maxPoints}pts`
-          : `Distance ${distance.toFixed(1)}m >= ${this.thresholdMeters}m threshold → 0pts`,
+          ? `Distance ${distance!.toFixed(1)}m < ${this.thresholdMeters}m threshold → +${this.maxPoints}pts`
+          : `Distance ${distance!.toFixed(1)}m >= ${this.thresholdMeters}m threshold → 0pts`,
       inputValue: hasCoords ? `(${input.latitude}, ${input.longitude})` : "(no coords)",
-      candidateValue: hasDistance ? `${distance.toFixed(1)}m away` : "(no distance)",
+      candidateValue: hasDistance ? `${distance!.toFixed(1)}m away` : "(no distance)",
     };
   }
 }

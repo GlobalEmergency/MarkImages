@@ -35,7 +35,7 @@ export class DuplicateEventBus {
 
   /** Emit an event to all subscribers. Errors in handlers don't propagate. */
   async emit(event: DuplicateDetectedEvent): Promise<void> {
-    await Promise.allSettled(this.handlers.map((h) => Promise.resolve(h(event))));
+    await Promise.allSettled(this.handlers.map(async (h) => h(event)));
   }
 }
 
