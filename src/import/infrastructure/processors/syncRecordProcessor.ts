@@ -34,6 +34,20 @@ export interface SyncProcessorOptions {
   syncFrequency: string;
   /** Whether this is a dry run (no DB writes) */
   dryRun?: boolean;
+  /** Accumulator for tracking creates/updates/skips (shared across records) */
+  stats?: SyncStats;
+}
+
+/** Mutable accumulator for tracking sync operation results */
+export interface SyncStats {
+  created: number;
+  updated: number;
+  skipped: number;
+}
+
+/** Creates a fresh SyncStats accumulator */
+export function createSyncStats(): SyncStats {
+  return { created: 0, updated: 0, skipped: 0 };
 }
 
 /** Existing AED data pre-loaded by beforeProcess hook */
@@ -108,7 +122,7 @@ function combineLocationDetails(additionalInfo: unknown, specificLocation: unkno
 export function createSyncRecordProcessor(
   options: SyncProcessorOptions
 ): (record: ParsedRecord, context: ProcessingContext) => Promise<void> {
-  const { prisma, dataSourceId, sourceOrigin, syncFrequency, dryRun = false } = options;
+  const { prisma, dataSourceId, sourceOrigin, syncFrequency, dryRun = false, stats } = options;
 
   const isAutomaticSync = syncFrequency !== "MANUAL";
 
@@ -139,7 +153,10 @@ export function createSyncRecordProcessor(
     const existingAed = data._existingAed as ExistingAedData | undefined;
     const externalId = toStringOrNull(data.externalId);
 
-    if (dryRun) return;
+    if (dryRun) {
+      if (stats) stats.skipped++;
+      return;
+    }
 
     if (existingAed) {
       await updateAed(prisma, existingAed, data, {
@@ -148,6 +165,7 @@ export function createSyncRecordProcessor(
         isAutomaticSync,
         externalId,
       });
+      if (stats) stats.updated++;
     } else {
       await createAed(prisma, data, {
         dataSourceId,
@@ -155,6 +173,7 @@ export function createSyncRecordProcessor(
         externalId,
         getDefaults,
       });
+      if (stats) stats.created++;
     }
   };
 }

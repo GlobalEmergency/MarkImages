@@ -100,13 +100,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           currentChunk: job.current_chunk,
           totalChunks: job.total_chunks,
         },
-        result: {
-          recordsCreated: job.successful_records,
-          recordsUpdated: 0,
-          recordsSkipped: skippedRecords,
-          recordsDeactivated: 0,
-          errorCount: job.failed_records,
-        },
+        result: buildResultFromMetadata(
+          metadata,
+          job.successful_records,
+          skippedRecords,
+          job.failed_records
+        ),
         startedAt: job.started_at,
         completedAt: job.completed_at,
         lastHeartbeat: job.last_heartbeat,
@@ -131,4 +130,42 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       { status: 500 }
     );
   }
+}
+
+// ============================================================
+// Helpers
+// ============================================================
+
+/**
+ * Build result breakdown from job metadata (sync_stats).
+ * Falls back to legacy behavior (all successful = created) if no stats available.
+ */
+function buildResultFromMetadata(
+  metadata: Record<string, unknown> | null,
+  successfulRecords: number,
+  skippedRecords: number,
+  failedRecords: number
+) {
+  const syncStats = metadata?.sync_stats as
+    | { created?: number; updated?: number; skipped?: number }
+    | undefined;
+
+  if (syncStats) {
+    return {
+      recordsCreated: syncStats.created ?? 0,
+      recordsUpdated: syncStats.updated ?? 0,
+      recordsSkipped: syncStats.skipped ?? skippedRecords,
+      recordsDeactivated: 0,
+      errorCount: failedRecords,
+    };
+  }
+
+  // Legacy fallback: no breakdown available
+  return {
+    recordsCreated: successfulRecords,
+    recordsUpdated: 0,
+    recordsSkipped: skippedRecords,
+    recordsDeactivated: 0,
+    errorCount: failedRecords,
+  };
 }

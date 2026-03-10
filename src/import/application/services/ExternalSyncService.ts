@@ -30,7 +30,11 @@ import type {
 } from "@/import/domain/ports/IDataSourceAdapter";
 import type { IDataSourceRepository } from "@/import/domain/ports/IDataSourceRepository";
 import { DataSourceAdapterFactory } from "@/import/infrastructure/adapters/DataSourceAdapterFactory";
-import { createSyncRecordProcessor } from "@/import/infrastructure/processors/syncRecordProcessor";
+import {
+  createSyncRecordProcessor,
+  createSyncStats,
+} from "@/import/infrastructure/processors/syncRecordProcessor";
+import type { SyncStats } from "@/import/infrastructure/processors/syncRecordProcessor";
 import { createSyncHooks } from "@/import/infrastructure/hooks/syncHooks";
 import {
   VERCEL_CRON_MAX_DURATION_MS,
@@ -147,12 +151,14 @@ export class ExternalSyncService {
     // 3. Build infrastructure
     const stateStore = new PrismaStateStore(this.stateStorePrisma);
     const { hooks, clearCache } = createSyncHooks({ prisma: this.prisma, dataSourceId });
+    const stats = createSyncStats();
     const processor = createSyncRecordProcessor({
       prisma: this.prisma,
       dataSourceId,
       sourceOrigin: dataSource.sourceOrigin,
       syncFrequency: dataSource.syncFrequency,
       dryRun,
+      stats,
     });
 
     // 4. Create BatchEngine
@@ -200,11 +206,12 @@ export class ExternalSyncService {
       done: chunk.done,
       syncContext,
       sourceTotalRecords,
+      stats,
     });
 
-    // 8. Update last_sync_at if completed
+    // 8. Update data source stats if completed
     if (chunk.done) {
-      await this.finalizeSync(dataSourceId);
+      await this.finalizeSync(dataSourceId, stats, sourceTotalRecords);
     }
 
     return { jobId, chunk, progress, dataSourceName: dataSource.name };
@@ -240,12 +247,14 @@ export class ExternalSyncService {
       prisma: this.prisma,
       dataSourceId: syncContext.dataSourceId,
     });
+    const stats = createSyncStats();
     const processor = createSyncRecordProcessor({
       prisma: this.prisma,
       dataSourceId: syncContext.dataSourceId,
       sourceOrigin: syncContext.sourceOrigin,
       syncFrequency: syncContext.syncFrequency,
       dryRun: syncContext.dryRun,
+      stats,
     });
 
     // 3. Restore engine from state store
@@ -276,7 +285,7 @@ export class ExternalSyncService {
       maxRecords: maxRecordsPerChunk,
     });
 
-    const progress = await stateStore.getProgress(jobId);
+    let progress = await stateStore.getProgress(jobId);
 
     // Fix inflated totalRecords from BatchEngine re-streaming.
     // BatchEngine.streamRecords() starts recordIndex from ctx.totalRecords,
@@ -285,10 +294,12 @@ export class ExternalSyncService {
     // in the state store grows unbounded. Use sourceTotalRecords for accuracy.
     if (sourceTotalRecords && sourceTotalRecords > 0) {
       const completed = progress.processedRecords + progress.failedRecords;
-      progress.totalRecords = sourceTotalRecords;
-      progress.pendingRecords = Math.max(0, sourceTotalRecords - completed);
-      progress.percentage =
-        sourceTotalRecords > 0 ? Math.round((completed / sourceTotalRecords) * 100) : 0;
+      progress = {
+        ...progress,
+        totalRecords: sourceTotalRecords,
+        pendingRecords: Math.max(0, sourceTotalRecords - completed),
+        percentage: Math.round((completed / sourceTotalRecords) * 100),
+      };
     }
 
     // 4. Update registry (preserve sourceTotalRecords for accurate progress)
@@ -297,12 +308,13 @@ export class ExternalSyncService {
       progress,
       done: chunk.done,
       sourceTotalRecords,
+      stats,
     });
 
     // 5. Finalize if completed
     if (chunk.done) {
       clearCache();
-      await this.finalizeSync(syncContext.dataSourceId);
+      await this.finalizeSync(syncContext.dataSourceId, stats, sourceTotalRecords);
     }
 
     return { jobId, chunk, progress };
@@ -424,16 +436,31 @@ export class ExternalSyncService {
   }
 
   /**
-   * Update last_sync_at on the data source when sync completes.
+   * Update data source stats when sync completes.
+   * Accumulates the total records synced, created, updated from all sync runs.
    */
-  private async finalizeSync(dataSourceId: string): Promise<void> {
+  private async finalizeSync(
+    dataSourceId: string,
+    stats?: SyncStats,
+    sourceTotalRecords?: number
+  ): Promise<void> {
     try {
       await this.prisma.externalDataSource.update({
         where: { id: dataSourceId },
-        data: { last_sync_at: new Date() },
+        data: {
+          last_sync_at: new Date(),
+          ...(sourceTotalRecords != null ? { total_records_sync: sourceTotalRecords } : {}),
+          ...(stats
+            ? {
+                records_created: { increment: stats.created },
+                records_updated: { increment: stats.updated },
+                records_skipped: { increment: stats.skipped },
+              }
+            : {}),
+        },
       });
     } catch (error) {
-      console.error(`[Sync] Failed to update last_sync_at for ${dataSourceId}:`, error);
+      console.error(`[Sync] Failed to finalize data source ${dataSourceId}:`, error);
     }
   }
 
@@ -450,12 +477,20 @@ export class ExternalSyncService {
     syncContext: SyncContext;
     /** Total records from source (known at startSync, not from state store) */
     sourceTotalRecords?: number;
+    /** Operation breakdown from processor */
+    stats?: SyncStats;
   }): Promise<void> {
-    const { jobId, jobName, userId, progress, done, syncContext, sourceTotalRecords } = params;
+    const { jobId, jobName, userId, progress, done, syncContext, sourceTotalRecords, stats } =
+      params;
     const status = done ? "COMPLETED" : "WAITING";
     const failedRecords = progress.failedRecords ?? 0;
     // Use source total when available (accurate), fall back to state store count (partial)
     const totalRecords = sourceTotalRecords ?? progress.totalRecords;
+    const metadata = {
+      engine: "externalsync",
+      sync_context: syncContext,
+      ...(stats ? { sync_stats: stats } : {}),
+    } as object;
 
     try {
       await this.prisma.batchJob.upsert({
@@ -477,10 +512,7 @@ export class ExternalSyncService {
           completed_at: done ? new Date() : null,
           last_heartbeat: new Date(),
           created_by: userId,
-          metadata: {
-            engine: "externalsync",
-            sync_context: syncContext,
-          } as object,
+          metadata,
         },
         update: {
           status,
@@ -493,10 +525,7 @@ export class ExternalSyncService {
           total_chunks: progress.totalBatches,
           completed_at: done ? new Date() : null,
           last_heartbeat: new Date(),
-          metadata: {
-            engine: "externalsync",
-            sync_context: syncContext,
-          } as object,
+          metadata,
         },
       });
     } catch (error) {
@@ -512,26 +541,48 @@ export class ExternalSyncService {
     progress: JobProgress;
     done: boolean;
     sourceTotalRecords?: number;
+    /** Operation breakdown from this chunk's processor */
+    stats?: SyncStats;
   }): Promise<void> {
-    const { jobId, progress, done, sourceTotalRecords } = params;
+    const { jobId, progress, done, sourceTotalRecords, stats } = params;
     const status = done ? "COMPLETED" : "WAITING";
     const failedRecords = progress.failedRecords ?? 0;
     const totalRecords = sourceTotalRecords ?? progress.totalRecords;
 
     try {
+      const updateData: Record<string, unknown> = {
+        status,
+        total_records: totalRecords,
+        processed_records: progress.processedRecords,
+        successful_records: Math.max(0, progress.processedRecords - failedRecords),
+        failed_records: failedRecords,
+        current_chunk: progress.currentBatch,
+        total_chunks: progress.totalBatches,
+        completed_at: done ? new Date() : null,
+        last_heartbeat: new Date(),
+      };
+
+      // Merge sync_stats into existing metadata (accumulate across resumes)
+      if (stats) {
+        const existing = await this.prisma.batchJob.findUnique({
+          where: { id: jobId },
+          select: { metadata: true },
+        });
+        const existingMeta = (existing?.metadata as Record<string, unknown>) || {};
+        const prev = existingMeta.sync_stats as SyncStats | undefined;
+        const mergedStats = prev
+          ? {
+              created: prev.created + stats.created,
+              updated: prev.updated + stats.updated,
+              skipped: prev.skipped + stats.skipped,
+            }
+          : stats;
+        updateData.metadata = { ...existingMeta, sync_stats: mergedStats };
+      }
+
       await this.prisma.batchJob.update({
         where: { id: jobId },
-        data: {
-          status,
-          total_records: totalRecords,
-          processed_records: progress.processedRecords,
-          successful_records: Math.max(0, progress.processedRecords - failedRecords),
-          failed_records: failedRecords,
-          current_chunk: progress.currentBatch,
-          total_chunks: progress.totalBatches,
-          completed_at: done ? new Date() : null,
-          last_heartbeat: new Date(),
-        },
+        data: updateData,
       });
     } catch (error) {
       console.error(`[Sync] Failed to update job registry for ${jobId}:`, error);
