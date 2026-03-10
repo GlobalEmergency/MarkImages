@@ -53,9 +53,9 @@ describe("Rules Engine — extensibilidad", () => {
       expect(registry.getAllInteractions()).toHaveLength(2);
     });
 
-    it("maxPossibleScore es 105 (30+25+20+15+10+5)", () => {
+    it("maxPossibleScore es 115 (30+25+30+15+10+5)", () => {
       const registry = createDefaultRegistry();
-      expect(registry.getMaxPossibleScore()).toBe(105);
+      expect(registry.getMaxPossibleScore()).toBe(115);
     });
 
     it("las 9 reglas tienen ids únicos", () => {

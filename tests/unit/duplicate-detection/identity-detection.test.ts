@@ -154,7 +154,7 @@ describe("Detección por identidad — identity cascade", () => {
       // Set up scoring to return a match
       const explanation = ScoringExplanation.create({
         totalScore: 80,
-        maxPossibleScore: 105,
+        maxPossibleScore: 115,
         ruleResults: [],
         interactionResults: [],
         matchedAedId: "aed-scored",
@@ -198,7 +198,7 @@ describe("Detección por identidad — identity cascade", () => {
 
       const explanation = ScoringExplanation.create({
         totalScore: 65,
-        maxPossibleScore: 105,
+        maxPossibleScore: 115,
         ruleResults: [],
         interactionResults: [],
         matchedAedId: "aed-postal",

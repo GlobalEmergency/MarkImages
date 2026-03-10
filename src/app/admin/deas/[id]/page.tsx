@@ -142,6 +142,15 @@ interface AdminDeaData {
   responsible: ResponsibleData | null;
   batch_job: unknown;
   data_source: { id: string; name: string; description: string | null } | null;
+  external_identifiers: Array<{
+    id: string;
+    external_identifier: string;
+    is_current_in_source: boolean;
+    first_seen_at: string;
+    last_seen_at: string;
+    removed_from_source_at: string | null;
+    data_source: { id: string; name: string };
+  }>;
   images: Array<{
     id: string;
     type: string;
@@ -1640,6 +1649,75 @@ export default function AdminDeaDetailPage() {
                     </div>
                   )}
                 </div>
+
+                {/* External Identifiers — multi-source tracking */}
+                {aed.external_identifiers && aed.external_identifiers.length > 0 && (
+                  <div className="md:col-span-2 mt-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Identificadores Externos ({aed.external_identifiers.length})
+                    </label>
+                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                      <table className="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-3 py-2 text-left font-medium text-gray-600">
+                              Fuente
+                            </th>
+                            <th className="px-3 py-2 text-left font-medium text-gray-600">
+                              Identificador
+                            </th>
+                            <th className="px-3 py-2 text-left font-medium text-gray-600">
+                              Estado
+                            </th>
+                            <th className="px-3 py-2 text-left font-medium text-gray-600">
+                              Primera vez
+                            </th>
+                            <th className="px-3 py-2 text-left font-medium text-gray-600">
+                              Última vez
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {aed.external_identifiers.map((ei) => (
+                            <tr
+                              key={ei.id}
+                              className={ei.is_current_in_source ? "" : "bg-red-50 opacity-70"}
+                            >
+                              <td className="px-3 py-2 text-gray-900">{ei.data_source.name}</td>
+                              <td className="px-3 py-2 font-mono text-gray-900">
+                                {ei.external_identifier}
+                              </td>
+                              <td className="px-3 py-2">
+                                {ei.is_current_in_source ? (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Activo
+                                  </span>
+                                ) : (
+                                  <span
+                                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
+                                    title={
+                                      ei.removed_from_source_at
+                                        ? `Desaparecido: ${new Date(ei.removed_from_source_at).toLocaleDateString("es-ES")}`
+                                        : ""
+                                    }
+                                  >
+                                    Desaparecido
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-3 py-2 text-gray-600">
+                                {new Date(ei.first_seen_at).toLocaleDateString("es-ES")}
+                              </td>
+                              <td className="px-3 py-2 text-gray-600">
+                                {new Date(ei.last_seen_at).toLocaleDateString("es-ES")}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">

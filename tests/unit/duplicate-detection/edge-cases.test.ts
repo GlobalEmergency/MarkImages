@@ -17,7 +17,7 @@ describe("Edge cases y valores límite", () => {
       expect(criteria.longitude).toBe(0);
     });
 
-    it("coordenadas muy cercanas (4.99m) → proximity match", () => {
+    it("coordenadas muy cercanas (4.99m) → proximity tier más alto (30pts)", () => {
       const input = makeInput();
       const candidate = makeCandidate({ distance_meters: 4.99 });
 
@@ -25,12 +25,23 @@ describe("Edge cases y valores límite", () => {
       const proxRule = ruleResults.find((r) => r.ruleId === "proximity")!;
 
       expect(proxRule.matched).toBe(true);
-      expect(proxRule.points).toBe(20);
+      expect(proxRule.points).toBe(30);
     });
 
-    it("coordenadas justo en el límite (5.0m) → NO proximity match", () => {
+    it("coordenadas a 5.0m → segundo tier de proximity (25pts)", () => {
       const input = makeInput();
       const candidate = makeCandidate({ distance_meters: 5.0 });
+
+      const { ruleResults } = evaluateAllRules(input, candidate);
+      const proxRule = ruleResults.find((r) => r.ruleId === "proximity")!;
+
+      expect(proxRule.matched).toBe(true);
+      expect(proxRule.points).toBe(25); // 5-15m tier
+    });
+
+    it("coordenadas a 50.0m → fuera de todos los tiers (0pts)", () => {
+      const input = makeInput();
+      const candidate = makeCandidate({ distance_meters: 50.0 });
 
       const { ruleResults } = evaluateAllRules(input, candidate);
       const proxRule = ruleResults.find((r) => r.ruleId === "proximity")!;
@@ -60,49 +71,45 @@ describe("Edge cases y valores límite", () => {
 
     it(`score exactamente ${confirmed} → debe clasificar como confirmed`, () => {
       // Build a scenario that produces exactly 75
-      // name(30) + addr(25) + prox(20) = 75
+      // name(30) + addr(25) + prox(15, at 20m: 15-30m tier) + postal(5) = 75
       const input = makeInput({
-        postalCode: undefined, // remove postal match
         establishmentType: undefined, // remove type match
         provisionalNumber: null,
       });
       const candidate = makeCandidate({
-        postal_code: null,
         establishment_type: null,
         provisional_number: null,
-        distance_meters: 2,
+        distance_meters: 20, // 15-30m tier → 15pts
       });
 
       const { totalScore } = evaluateAllRules(input, candidate);
 
-      // Should be exactly name(30) + addr(25) + prox(20) = 75
+      // name(30) + addr(25) + prox(15) + postal(5) = 75
       expect(totalScore).toBe(confirmed);
     });
 
     it(`score exactamente ${possible} → debe clasificar como possible`, () => {
-      // name(30) + addr(25) + postal(5) = 60
+      // name(30) + type(10) + postal(5) = 45
       const input = makeInput({
-        establishmentType: undefined,
         provisionalNumber: null,
       });
       const candidate = makeCandidate({
-        establishment_type: null,
+        normalized_address: "different address",
         provisional_number: null,
         distance_meters: 100, // too far for proximity
       });
 
       const { totalScore } = evaluateAllRules(input, candidate);
 
-      // name(30) + addr(25) + prox(0, too far) + type(0) + postal(5) = 60
+      // name(30) + addr(0, different) + prox(0) + type(10) + postal(5) = 45
       expect(totalScore).toBe(possible);
     });
 
-    it("score 59 → debe ser none (no duplicate)", () => {
-      // We need exactly 59 which is tricky. Let's verify the threshold semantics instead:
-      // Any score below `possible` is "none"
-      expect(possible).toBe(60);
-      // A score of 59 is strictly less than 60
-      expect(59 < possible).toBe(true);
+    it("score 44 → debe ser none (no duplicate)", () => {
+      // Any score below `possible` (45) is "none"
+      expect(possible).toBe(45);
+      // A score of 44 is strictly less than 45
+      expect(44 < possible).toBe(true);
     });
   });
 

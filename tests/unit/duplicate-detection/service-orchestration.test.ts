@@ -43,7 +43,7 @@ class StubScoringEngine implements IScoringEngine {
 function makeExplanation(totalScore: number, aedId: string): ScoringExplanation {
   return ScoringExplanation.create({
     totalScore,
-    maxPossibleScore: 105,
+    maxPossibleScore: 115,
     ruleResults: [],
     interactionResults: [],
     matchedAedId: aedId,
@@ -97,7 +97,7 @@ describe("DuplicateDetectorService — orquestación", () => {
       // Scoring results for index 2 (confirmed) and 3 (possible)
       scoringEngine.results = new Map([
         [2, makeExplanation(80, "aed-scored-1")], // >= 75 → confirmed
-        [3, makeExplanation(65, "aed-scored-2")], // >= 60, < 75 → possible
+        [3, makeExplanation(65, "aed-scored-2")], // >= 45, < 75 → possible
       ]);
 
       const results = await service.checkBatch(criteria);

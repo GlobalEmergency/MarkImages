@@ -117,6 +117,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         // Batch job reference
         batch_job: true,
         data_source: true,
+
+        // External identifiers (multi-source tracking)
+        external_identifiers: {
+          include: {
+            data_source: {
+              select: { id: true, name: true },
+            },
+          },
+          orderBy: { last_seen_at: "desc" },
+        },
       },
     });
 

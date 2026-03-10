@@ -158,9 +158,10 @@ describe("Penalizaciones e interacciones entre reglas", () => {
   // ============================================================
 
   describe("Interacción: variante de dirección (AddressVariantSamePlace)", () => {
-    it("dirección diferente + coords cercanas + mismo tipo → +15pts", () => {
+    it("dirección diferente (no fuzzy match) + coords cercanas + mismo tipo → +15pts", () => {
+      // Use addresses different enough that fuzzy match (sim >= 0.7) doesn't trigger
       const input = makeInput({
-        normalizedAddress: "calle mayor 3", // slightly different number
+        normalizedAddress: "avenida de la constitucion 12", // very different street
         establishmentType: "farmacia",
       });
       const candidate = makeCandidate({
@@ -173,7 +174,7 @@ describe("Penalizaciones e interacciones entre reglas", () => {
 
       // Verify preconditions
       const addrRule = ruleResults.find((r) => r.ruleId === "address_match")!;
-      expect(addrRule.matched).toBe(false); // addresses differ
+      expect(addrRule.matched).toBe(false); // addresses too different even for fuzzy
 
       const proxRule = ruleResults.find((r) => r.ruleId === "proximity")!;
       expect(proxRule.matched).toBe(true); // close
@@ -185,6 +186,27 @@ describe("Penalizaciones e interacciones entre reglas", () => {
       const variant = interactionResults.find(
         (i) => i.interactionId === "address_variant_same_place"
       )!;
+      expect(variant.applied).toBe(true);
+      expect(variant.adjustment).toBe(15);
+    });
+
+    it("dirección diferente + coords cercanas + tipo desconocido → +15pts (typeUnknown)", () => {
+      // Cross-source case: one side has no establishment_type
+      const input = makeInput({
+        normalizedAddress: "avenida de la constitucion 12",
+        establishmentType: "farmacia",
+      });
+      const candidate = makeCandidate({
+        normalized_address: "calle mayor 5",
+        establishment_type: null, // unknown type → typeUnknown = true
+        distance_meters: 2,
+      });
+
+      const { interactionResults } = evaluateAllRules(input, candidate);
+      const variant = interactionResults.find(
+        (i) => i.interactionId === "address_variant_same_place"
+      )!;
+
       expect(variant.applied).toBe(true);
       expect(variant.adjustment).toBe(15);
     });

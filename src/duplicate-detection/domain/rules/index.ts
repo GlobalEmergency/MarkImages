@@ -45,25 +45,28 @@ import { RuleRegistry } from "./RuleRegistry";
 /**
  * Create a RuleRegistry with the 9 built-in rules + 2 interactions.
  * This is the default configuration for all duplicate detection flows.
+ *
+ * Max positive score: 30+25+30+15+10+5 = 115
+ * Thresholds: confirmed >= 75, possible >= 45
  */
 export function createDefaultRegistry(): RuleRegistry {
   return new RuleRegistry(
     // Individual rules
     [
-      new NameSimilarityRule(0.9), // +30
-      new AddressMatchRule(), // +25
-      new ProximityRule(5), // +20 (< 5 meters)
+      new NameSimilarityRule(0.9), // +30 (pg_trgm similarity)
+      new AddressMatchRule(), // +25 exact / +15 fuzzy (similarity >= 0.7)
+      new ProximityRule(), // +30 max (graduated: <5m=30, <15m=25, <30m=15, <50m=5)
       new ProvisionalNumberRule(), // +15
-      new EstablishmentTypeRule(), // +10
-      new PostalCodeRule(), // +5
+      new EstablishmentTypeRule(), // +10 (normalized match)
+      new PostalCodeRule(), // +5 (exact match)
       new FloorPenaltyRule(), // -20
       new LocationDetailsPenaltyRule(), // -20
       new AccessInstructionsPenaltyRule(), // -15
     ],
-    // Conditional interactions
+    // Conditional interactions (applied after individual rules)
     [
       new SameBuildingDifferentUnit(), // address✓ + floor≠ → -30
-      new AddressVariantSamePlace(), // address✗ + coords_close✓ + type✓ → +15
+      new AddressVariantSamePlace(), // address✗ + coords_close✓ + type_compatible → +15
     ]
   );
 }

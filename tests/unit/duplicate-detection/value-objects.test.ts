@@ -93,7 +93,7 @@ describe("DetectionResult", () => {
     it("confirmedByScoring: status=confirmed, matchedBy=scoring, explanation adjunta", () => {
       const explanation = ScoringExplanation.create({
         totalScore: 85,
-        maxPossibleScore: 105,
+        maxPossibleScore: 115,
         ruleResults: [],
         interactionResults: [],
         matchedAedId: "aed-2",
@@ -112,7 +112,7 @@ describe("DetectionResult", () => {
     it("possible: status=possible, isDuplicate=true", () => {
       const explanation = ScoringExplanation.create({
         totalScore: 65,
-        maxPossibleScore: 105,
+        maxPossibleScore: 115,
         ruleResults: [],
         interactionResults: [],
         matchedAedId: "aed-3",
@@ -198,7 +198,7 @@ describe("ScoringExplanation", () => {
   it("debe calcular rulesScore como suma de ruleResults.points", () => {
     const exp = ScoringExplanation.create({
       totalScore: 10,
-      maxPossibleScore: 105,
+      maxPossibleScore: 115,
       ruleResults: [ruleA, ruleB, ruleC],
       interactionResults: [],
       matchedAedId: "a1",
@@ -214,7 +214,7 @@ describe("ScoringExplanation", () => {
   it("contributingRules debe filtrar solo matched=true", () => {
     const exp = ScoringExplanation.create({
       totalScore: 10,
-      maxPossibleScore: 105,
+      maxPossibleScore: 115,
       ruleResults: [ruleA, ruleB, ruleC],
       interactionResults: [],
       matchedAedId: "a1",
@@ -230,7 +230,7 @@ describe("ScoringExplanation", () => {
   it("appliedPenalties debe filtrar points < 0", () => {
     const exp = ScoringExplanation.create({
       totalScore: 10,
-      maxPossibleScore: 105,
+      maxPossibleScore: 115,
       ruleResults: [ruleA, ruleB, ruleC],
       interactionResults: [],
       matchedAedId: "a1",
@@ -246,7 +246,7 @@ describe("ScoringExplanation", () => {
   it("appliedInteractions debe filtrar applied=true", () => {
     const exp = ScoringExplanation.create({
       totalScore: 10,
-      maxPossibleScore: 105,
+      maxPossibleScore: 115,
       ruleResults: [],
       interactionResults: [interactionApplied, interactionNotApplied],
       matchedAedId: "a1",
@@ -263,7 +263,7 @@ describe("ScoringExplanation", () => {
   it("toSummary() debe generar texto legible con breakdown de reglas", () => {
     const exp = ScoringExplanation.create({
       totalScore: 85,
-      maxPossibleScore: 105,
+      maxPossibleScore: 115,
       ruleResults: [ruleA],
       interactionResults: [interactionApplied],
       matchedAedId: "a1",
@@ -273,7 +273,7 @@ describe("ScoringExplanation", () => {
     });
 
     const summary = exp.toSummary();
-    expect(summary).toContain("Score: 85/105");
+    expect(summary).toContain("Score: 85/115");
     expect(summary).toContain("Test AED");
     expect(summary).toContain("Rules");
     expect(summary).toContain("Interactions");
@@ -282,7 +282,7 @@ describe("ScoringExplanation", () => {
   it("toJSON() debe ser serializable (para internal_notes)", () => {
     const exp = ScoringExplanation.create({
       totalScore: 75,
-      maxPossibleScore: 105,
+      maxPossibleScore: 115,
       ruleResults: [ruleA],
       interactionResults: [],
       matchedAedId: "a1",
@@ -296,7 +296,7 @@ describe("ScoringExplanation", () => {
     const parsed = JSON.parse(serialized);
 
     expect(parsed.totalScore).toBe(75);
-    expect(parsed.maxPossibleScore).toBe(105);
+    expect(parsed.maxPossibleScore).toBe(115);
     expect(parsed.rules).toHaveLength(1);
   });
 });
@@ -312,9 +312,9 @@ describe("DetectionConfig", () => {
     );
   });
 
-  it("debe tener confirmed=75 y possible=60", () => {
+  it("debe tener confirmed=75 y possible=45", () => {
     expect(DetectionConfig.thresholds.confirmed).toBe(75);
-    expect(DetectionConfig.thresholds.possible).toBe(60);
+    expect(DetectionConfig.thresholds.possible).toBe(45);
   });
 
   it("debe excluir status REJECTED e INACTIVE de la detección", () => {

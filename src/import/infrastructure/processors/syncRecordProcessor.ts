@@ -278,6 +278,16 @@ async function createAed(
       select: { id: true },
     });
 
+    // 5. Register external identifier for multi-source tracking
+    if (opts.externalId && isRealExternalRef(opts.externalId)) {
+      await tx.$executeRaw`
+        INSERT INTO aed_external_identifiers (aed_id, data_source_id, external_identifier, first_seen_at, last_seen_at, is_current_in_source)
+        VALUES (${createdAed.id}::uuid, ${opts.dataSourceId}::uuid, ${opts.externalId}, NOW(), NOW(), true)
+        ON CONFLICT (data_source_id, external_identifier)
+        DO UPDATE SET last_seen_at = NOW(), is_current_in_source = true, removed_from_source_at = NULL, aed_id = ${createdAed.id}::uuid
+      `;
+    }
+
     // Stash created ID so afterProcess hook can register it in the cache
     data._createdAedId = createdAed.id;
   });
@@ -311,9 +321,10 @@ async function updateAed(
     // VERIFIED AED PROTECTION (must come BEFORE merge logic)
     // ==============================
     if (aed.last_verified_at) {
-      // For verified AEDs: only update sync metadata, never business data
+      // For verified AEDs: only update sync metadata, never business data.
+      // Preserve foreign ownership: don't overwrite data_source_id from another source.
       const verifiedUpdate: Record<string, unknown> = {
-        data_source_id: dataSourceId,
+        data_source_id: aed.data_source_id ?? dataSourceId,
         last_synced_at: new Date(),
       };
       if (!isMergingBool) {
@@ -331,6 +342,16 @@ async function updateAed(
         verifiedUpdate.internal_notes = notes;
       }
       await tx.aed.update({ where: { id: aed.id }, data: verifiedUpdate });
+
+      // Register identifier even for verified AEDs (tracks that this source still sees it)
+      if (externalId && isRealExternalRef(externalId)) {
+        await tx.$executeRaw`
+          INSERT INTO aed_external_identifiers (aed_id, data_source_id, external_identifier, first_seen_at, last_seen_at, is_current_in_source)
+          VALUES (${aed.id}::uuid, ${dataSourceId}::uuid, ${externalId}, NOW(), NOW(), true)
+          ON CONFLICT (data_source_id, external_identifier)
+          DO UPDATE SET last_seen_at = NOW(), is_current_in_source = true, removed_from_source_at = NULL
+        `;
+      }
       return;
     }
 
@@ -465,12 +486,17 @@ async function updateAed(
       codeUpdate = externalId;
     }
 
-    // Build single AED update (merge metadata + business data combined)
+    // Build single AED update (merge metadata + business data combined).
+    // Preserve foreign ownership: only claim data_source_id if AED has none
+    // or already belongs to this data source. Cross-source matches should
+    // NOT steal ownership from the original source.
+    const preserveOwnership = aed.data_source_id && aed.data_source_id !== dataSourceId;
+
     const updateData: Record<string, unknown> = {
       schedule_id: scheduleIdUpdate,
       responsible_id: responsibleIdUpdate,
       last_synced_at: new Date(),
-      data_source_id: dataSourceId,
+      data_source_id: preserveOwnership ? aed.data_source_id : dataSourceId,
     };
 
     // Include merge notes if present
@@ -479,7 +505,9 @@ async function updateAed(
     }
 
     if (isMergingBool && isAutomaticSync) {
-      // CASE 1: Merge + automatic sync — update ALL fields (authoritative source)
+      // CASE 1: Merge + automatic sync — update ALL fields (authoritative source).
+      // Explicit takeover: this IS the intended ownership transfer.
+      updateData.data_source_id = dataSourceId;
       updateData.name = toStringOrNull(data.name) || undefined;
       updateData.code = codeUpdate;
       updateData.establishment_type = toStringOrNull(data.establishmentType);
@@ -531,5 +559,15 @@ async function updateAed(
     }
 
     await tx.aed.update({ where: { id: aed.id }, data: updateData });
+
+    // Register external identifier for multi-source tracking
+    if (externalId && isRealExternalRef(externalId)) {
+      await tx.$executeRaw`
+        INSERT INTO aed_external_identifiers (aed_id, data_source_id, external_identifier, first_seen_at, last_seen_at, is_current_in_source)
+        VALUES (${aed.id}::uuid, ${dataSourceId}::uuid, ${externalId}, NOW(), NOW(), true)
+        ON CONFLICT (data_source_id, external_identifier)
+        DO UPDATE SET last_seen_at = NOW(), is_current_in_source = true, removed_from_source_at = NULL
+      `;
+    }
   });
 }

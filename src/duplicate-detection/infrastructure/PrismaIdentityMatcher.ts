@@ -160,6 +160,7 @@ export class PrismaIdentityMatcher implements IIdentityMatcher {
     if (refs.length === 0) return map;
 
     try {
+      // Query 1: Search aeds.external_reference (primary field)
       const aeds = await this.prisma.aed.findMany({
         where: {
           external_reference: { in: refs, mode: "insensitive" },
@@ -176,6 +177,35 @@ export class PrismaIdentityMatcher implements IIdentityMatcher {
             matchedCode: aed.code,
             matchedExternalReference: aed.external_reference,
           });
+        }
+      }
+
+      // Query 2: Search aed_external_identifiers for refs not found in primary field.
+      // This catches AEDs known by different identifiers across multiple data sources.
+      const remainingRefs = refs.filter((r) => !map.has(r.toLowerCase()));
+      if (remainingRefs.length > 0) {
+        const identifierRows = await this.prisma.aedExternalIdentifier.findMany({
+          where: {
+            external_identifier: { in: remainingRefs, mode: "insensitive" },
+            is_current_in_source: true,
+            aed: { status: { notIn: excludeStatuses } },
+          },
+          select: {
+            external_identifier: true,
+            aed: { select: { id: true, code: true, external_reference: true } },
+          },
+        });
+
+        for (const row of identifierRows) {
+          const key = row.external_identifier.toLowerCase();
+          if (!map.has(key)) {
+            map.set(key, {
+              matchedAedId: row.aed.id,
+              matchedBy: "externalReference",
+              matchedCode: row.aed.code,
+              matchedExternalReference: row.aed.external_reference,
+            });
+          }
         }
       }
     } catch {

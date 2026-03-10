@@ -86,6 +86,7 @@ model Aed {
   change_proposals    AedChangeProposal[]
   ownership_claims    AedOwnershipClaim[]
   field_changes       AedFieldChange[]
+  external_identifiers AedExternalIdentifier[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -250,8 +251,9 @@ model ExternalDataSource {
   region_code   String // "MAD", "CAT", "AND", etc.
 
   // Relations
-  managed_aeds Aed[]      @relation("AedDataSource")
-  batch_jobs   BatchJob[] @relation("BatchJobDataSource")
+  managed_aeds         Aed[]                    @relation("AedDataSource")
+  batch_jobs           BatchJob[]               @relation("BatchJobDataSource")
+  external_identifiers AedExternalIdentifier[]  @relation("DataSourceIdentifiers")
 
   // Audit
   created_at DateTime @default(now())
@@ -263,6 +265,38 @@ model ExternalDataSource {
   @@index([next_scheduled_sync_at])
   @@index([region_code])
   @@map("external_data_sources")
+}
+
+// ============================================
+// EXTERNAL IDENTIFIERS - Multi-source AED tracking
+// ============================================
+
+/// Tracks external identifiers per AED per data source.
+/// Enables multi-source identity (same AED known by different codes in different sources)
+/// and disappearance detection (when a source stops reporting an AED).
+model AedExternalIdentifier {
+  id                     String   @id @default(uuid()) @db.Uuid
+  aed_id                 String   @db.Uuid
+  data_source_id         String   @db.Uuid
+  external_identifier    String
+
+  // Lifecycle tracking
+  first_seen_at          DateTime @default(now())
+  last_seen_at           DateTime @default(now())
+  is_current_in_source   Boolean  @default(true)
+  removed_from_source_at DateTime?
+
+  // Relations
+  aed         Aed                @relation(fields: [aed_id], references: [id], onDelete: Cascade)
+  data_source ExternalDataSource @relation("DataSourceIdentifiers", fields: [data_source_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([data_source_id, external_identifier])
+  @@index([aed_id])
+  @@index([data_source_id, is_current_in_source])
+  @@map("aed_external_identifiers")
 }
 
 enum DataSourceType {

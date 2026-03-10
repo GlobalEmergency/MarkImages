@@ -59,7 +59,7 @@ describe("🔴 DuplicateCriteria — NaN/Infinity en coordenadas", () => {
 // 🔴 BUG 2: ProximityRule otorga puntos con distancias inválidas
 // ============================================================
 describe("🔴 ProximityRule — distancias inválidas", () => {
-  const rule = new ProximityRule(5);
+  const rule = new ProximityRule();
   const input = makeInput();
 
   it("distance_meters negativa → NO debe otorgar puntos (físicamente imposible)", () => {
@@ -110,14 +110,14 @@ describe("🔴 ProximityRule — distancias inválidas", () => {
     expect(fragment.params).toHaveLength(0);
   });
 
-  it("🟡 distance_meters = 0 → SÍ debe otorgar puntos (distancia 0 es válida, misma ubicación)", () => {
+  it("🟡 distance_meters = 0 → SÍ debe otorgar puntos máximos (distancia 0, misma ubicación)", () => {
     const candidate = makeCandidate({ distance_meters: 0 });
-    expect(rule.evaluate(input, candidate)).toBe(20);
+    expect(rule.evaluate(input, candidate)).toBe(30); // top tier: < 5m → 30pts
   });
 
-  it("🟡 distance_meters = 4.999 → SÍ debe otorgar puntos (justo bajo umbral)", () => {
+  it("🟡 distance_meters = 4.999 → SÍ debe otorgar puntos del tier más alto", () => {
     const candidate = makeCandidate({ distance_meters: 4.999 });
-    expect(rule.evaluate(input, candidate)).toBe(20);
+    expect(rule.evaluate(input, candidate)).toBe(30); // top tier: < 5m → 30pts
   });
 });
 
@@ -380,7 +380,7 @@ describe("🟡 DuplicateCriteria — coordenada parcial", () => {
   });
 
   it("ProximityRule.toSqlCase() con lat pero sin lng → devuelve '0'", () => {
-    const rule = new ProximityRule(5);
+    const rule = new ProximityRule();
     const input = makeInput({ latitude: 40.4, longitude: undefined });
     const fragment = rule.toSqlCase(input, 1);
     expect(fragment.sql).toBe("0");

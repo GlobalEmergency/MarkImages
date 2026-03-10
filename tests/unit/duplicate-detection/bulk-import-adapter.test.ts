@@ -135,7 +135,7 @@ describe("BulkImportDuplicateAdapter — integración con pipeline CSV", () => {
     it("duplicado possible con scoring → metadata incluye explanation", async () => {
       const explanation = ScoringExplanation.create({
         totalScore: 65,
-        maxPossibleScore: 105,
+        maxPossibleScore: 115,
         ruleResults: [],
         interactionResults: [],
         matchedAedId: "aed-456",

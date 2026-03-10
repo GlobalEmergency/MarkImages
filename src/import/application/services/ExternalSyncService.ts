@@ -41,6 +41,8 @@ import {
   DEFAULT_BATCH_SIZE,
   DEFAULT_CHUNK_MAX_RECORDS,
 } from "@/import/constants";
+import { appendInternalNote, recordStatusChange } from "@/lib/audit";
+import { SYSTEM_USER_UUID } from "@/constants/system";
 
 // ============================================================
 // Types
@@ -54,6 +56,8 @@ export interface SyncContext {
   regionCode: string;
   dataSourceName: string;
   dryRun: boolean;
+  /** ISO string of when the sync job started (for disappearance detection) */
+  syncStartTime?: string;
 }
 
 export interface StartSyncOptions {
@@ -148,6 +152,9 @@ export class ExternalSyncService {
       `[Sync:${dataSource.name}] Fetched ${sourceTotalRecords} records, NDJSON size: ${(ndjson.length / 1024).toFixed(0)} KB`
     );
 
+    // Capture sync start time for disappearance detection
+    const syncStartTime = new Date();
+
     // 3. Build infrastructure
     const stateStore = new PrismaStateStore(this.stateStorePrisma);
     const { hooks, clearCache } = createSyncHooks({ prisma: this.prisma, dataSourceId });
@@ -196,6 +203,7 @@ export class ExternalSyncService {
       regionCode: dataSource.regionCode,
       dataSourceName: dataSource.name,
       dryRun,
+      syncStartTime: syncStartTime.toISOString(),
     };
 
     await this.upsertJobRegistry({
@@ -209,9 +217,9 @@ export class ExternalSyncService {
       stats,
     });
 
-    // 8. Update data source stats if completed
+    // 8. Update data source stats + disappearance detection if completed
     if (chunk.done) {
-      await this.finalizeSync(dataSourceId, stats, sourceTotalRecords);
+      await this.finalizeSync(dataSourceId, stats, sourceTotalRecords, syncStartTime, dryRun);
     }
 
     return { jobId, chunk, progress, dataSourceName: dataSource.name };
@@ -316,7 +324,16 @@ export class ExternalSyncService {
       clearCache();
       // Use accumulated stats from metadata (all chunks combined), not just this chunk's stats
       const accumulatedStats = await this.getAccumulatedStats(jobId, stats);
-      await this.finalizeSync(syncContext.dataSourceId, accumulatedStats, sourceTotalRecords);
+      const syncStartTime = syncContext.syncStartTime
+        ? new Date(syncContext.syncStartTime)
+        : undefined;
+      await this.finalizeSync(
+        syncContext.dataSourceId,
+        accumulatedStats,
+        sourceTotalRecords,
+        syncStartTime,
+        syncContext.dryRun
+      );
     }
 
     return { jobId, chunk, progress };
@@ -440,6 +457,12 @@ export class ExternalSyncService {
   /**
    * Read accumulated sync_stats from job metadata (all chunks combined)
    * and merge with the current chunk's stats.
+   *
+   * NOTE: Stats may over-count slightly due to BatchEngine retries
+   * (maxRetries > 0). If a record's processor succeeds but post-processing
+   * fails, the engine retries the processor, incrementing stats again.
+   * This is a cosmetic issue that doesn't affect data integrity.
+   * A robust fix would require DB-side counters inside transactions.
    */
   private async getAccumulatedStats(
     jobId: string,
@@ -448,12 +471,22 @@ export class ExternalSyncService {
     try {
       const job = await this.prisma.batchJob.findUnique({
         where: { id: jobId },
-        select: { metadata: true },
+        select: { metadata: true, successful_records: true },
       });
       const meta = (job?.metadata as Record<string, unknown>) || {};
       const stored = meta.sync_stats as SyncStats | undefined;
       if (stored) {
-        // metadata already has merged stats from updateJobRegistry
+        // Safety: clamp stats sum to not exceed actual processed records
+        const totalOps = stored.created + stored.updated + stored.skipped;
+        const processed = job?.successful_records ?? totalOps;
+        if (totalOps > processed && processed > 0) {
+          const ratio = processed / totalOps;
+          return {
+            created: Math.round(stored.created * ratio),
+            updated: Math.round(stored.updated * ratio),
+            skipped: stored.skipped,
+          };
+        }
         return stored;
       }
     } catch {
@@ -465,12 +498,16 @@ export class ExternalSyncService {
   /**
    * Update data source stats when sync completes.
    * Accumulates the total records synced, created, updated from all sync runs.
+   * If syncStartTime is provided, runs disappearance detection.
    */
   private async finalizeSync(
     dataSourceId: string,
     stats?: SyncStats,
-    sourceTotalRecords?: number
+    sourceTotalRecords?: number,
+    syncStartTime?: Date,
+    dryRun?: boolean
   ): Promise<void> {
+    // 1. Update data source stats
     try {
       await this.prisma.externalDataSource.update({
         where: { id: dataSourceId },
@@ -488,6 +525,151 @@ export class ExternalSyncService {
       });
     } catch (error) {
       console.error(`[Sync] Failed to finalize data source ${dataSourceId}:`, error);
+    }
+
+    // 2. Disappearance detection — skip for dry runs or if no syncStartTime
+    if (dryRun || !syncStartTime) return;
+
+    await this.detectDisappearedIdentifiers(dataSourceId, syncStartTime);
+  }
+
+  /**
+   * Detect identifiers that were previously current but NOT seen in this sync.
+   * Mark them as no longer current. If `auto_deactivate_missing` is enabled on the
+   * data source, deactivate AEDs that have NO remaining current identifiers from ANY source.
+   */
+  private async detectDisappearedIdentifiers(
+    dataSourceId: string,
+    syncStartTime: Date
+  ): Promise<void> {
+    try {
+      const dataSource = await this.prisma.externalDataSource.findUnique({
+        where: { id: dataSourceId },
+        select: { auto_deactivate_missing: true, name: true },
+      });
+
+      if (!dataSource) return;
+
+      // Find identifiers that were current but NOT touched by this sync
+      // (last_seen_at < syncStartTime means they were not updated during any chunk)
+      const disappeared = await this.prisma.$queryRaw<
+        Array<{ id: string; aed_id: string; external_identifier: string }>
+      >`
+        SELECT id, aed_id, external_identifier
+        FROM aed_external_identifiers
+        WHERE data_source_id = ${dataSourceId}::uuid
+          AND is_current_in_source = true
+          AND last_seen_at < ${syncStartTime}
+      `;
+
+      if (disappeared.length === 0) return;
+
+      console.log(
+        `[Sync:${dataSource.name}] Disappearance detection: ${disappeared.length} identifiers not seen in this sync`
+      );
+
+      // Mark all disappeared identifiers as no longer current
+      await this.prisma.$executeRaw`
+        UPDATE aed_external_identifiers
+        SET is_current_in_source = false,
+            removed_from_source_at = NOW(),
+            updated_at = NOW()
+        WHERE data_source_id = ${dataSourceId}::uuid
+          AND is_current_in_source = true
+          AND last_seen_at < ${syncStartTime}
+      `;
+
+      // If auto_deactivate_missing is NOT enabled, stop here (identifiers are marked but AEDs stay active)
+      if (!dataSource.auto_deactivate_missing) {
+        console.log(
+          `[Sync:${dataSource.name}] auto_deactivate_missing=false — identifiers marked as disappeared but AEDs not deactivated`
+        );
+        return;
+      }
+
+      // Find AEDs from disappeared identifiers that have NO other current identifiers from ANY source
+      const disappearedAedIds = [...new Set(disappeared.map((d) => d.aed_id))];
+
+      const aedsWithOtherSources = await this.prisma.$queryRaw<Array<{ aed_id: string }>>`
+        SELECT DISTINCT aed_id
+        FROM aed_external_identifiers
+        WHERE aed_id = ANY(${disappearedAedIds}::uuid[])
+          AND is_current_in_source = true
+      `;
+      const aedsWithOtherSourcesSet = new Set(aedsWithOtherSources.map((a) => a.aed_id));
+
+      // AEDs to potentially deactivate: no remaining current identifiers from any source
+      const aedsToDeactivate = disappearedAedIds.filter((id) => !aedsWithOtherSourcesSet.has(id));
+
+      if (aedsToDeactivate.length === 0) {
+        console.log(
+          `[Sync:${dataSource.name}] All disappeared AEDs have other active sources — no deactivations`
+        );
+        return;
+      }
+
+      // Only deactivate PUBLISHED AEDs (PUBLISHED → INACTIVE is a valid transition)
+      const publishedAeds = await this.prisma.aed.findMany({
+        where: {
+          id: { in: aedsToDeactivate },
+          status: "PUBLISHED",
+        },
+        select: { id: true, status: true, internal_notes: true },
+      });
+
+      let deactivatedCount = 0;
+      for (const aed of publishedAeds) {
+        try {
+          const notes = appendInternalNote(
+            aed.internal_notes,
+            `DEA desaparecido de la fuente "${dataSource.name}". ` +
+              `No se encontró en la última sincronización y no tiene identificadores activos en otras fuentes. ` +
+              `Marcado como INACTIVE automáticamente.`,
+            "auto_deactivation_disappeared",
+            "ExternalSyncService"
+          );
+
+          await this.prisma.$transaction(async (tx) => {
+            await tx.aed.update({
+              where: { id: aed.id },
+              data: {
+                status: "INACTIVE",
+                internal_notes: notes,
+                updated_by: SYSTEM_USER_UUID,
+              },
+            });
+            await recordStatusChange(tx, {
+              aedId: aed.id,
+              previousStatus: aed.status,
+              newStatus: "INACTIVE",
+              modifiedBy: SYSTEM_USER_UUID,
+              reason: `Desaparecido de fuente "${dataSource.name}" — desactivación automática`,
+            });
+          });
+          deactivatedCount++;
+        } catch (error) {
+          console.error(
+            `[Sync] Failed to deactivate AED ${aed.id}:`,
+            error instanceof Error ? error.message : error
+          );
+        }
+      }
+
+      // Update records_deactivated counter
+      if (deactivatedCount > 0) {
+        await this.prisma.externalDataSource.update({
+          where: { id: dataSourceId },
+          data: { records_deactivated: { increment: deactivatedCount } },
+        });
+      }
+
+      console.log(
+        `[Sync:${dataSource.name}] Auto-deactivated ${deactivatedCount} AEDs ` +
+          `(${aedsToDeactivate.length} had no other sources, ${publishedAeds.length} were PUBLISHED)`
+      );
+    } catch (error) {
+      // Non-critical: sync itself succeeded, don't propagate
+      console.error(`[Sync] Disappearance detection failed for ${dataSourceId}:`, error);
     }
   }
 

@@ -61,6 +61,7 @@ const AED_SELECT = {
  */
 class AedLookupCache {
   private byExternalRef = new Map<string, ExistingAedRow>();
+  private byIdentifier = new Map<string, ExistingAedRow>();
   private allAeds: ExistingAedRow[] = [];
   private loaded = false;
 
@@ -88,16 +89,68 @@ class AedLookupCache {
       }
     }
     this.allAeds = owned;
+
+    // Also load external identifiers registered for this data source.
+    // This catches identifiers where the AED's primary data_source_id may differ
+    // (cross-source matches that were previously linked via aed_external_identifiers).
+    try {
+      const identifiers = await this.prisma.$queryRaw<
+        Array<{ external_identifier: string; aed_id: string }>
+      >`
+        SELECT ei.external_identifier, ei.aed_id
+        FROM aed_external_identifiers ei
+        WHERE ei.data_source_id = ${this.dataSourceId}::uuid
+          AND ei.is_current_in_source = true
+      `;
+
+      // Load AEDs not already in cache
+      const cachedIds = new Set(this.allAeds.map((a) => a.id));
+      const missingAedIds = [
+        ...new Set(identifiers.filter((ei) => !cachedIds.has(ei.aed_id)).map((ei) => ei.aed_id)),
+      ];
+
+      if (missingAedIds.length > 0) {
+        const additionalAeds = await this.prisma.aed.findMany({
+          where: {
+            id: { in: missingAedIds },
+            status: { notIn: ["REJECTED", "INACTIVE"] },
+          },
+          select: AED_SELECT,
+        });
+        for (const aed of additionalAeds) {
+          this.allAeds.push(aed);
+          cachedIds.add(aed.id);
+        }
+      }
+
+      // Build identifier lookup map
+      for (const ei of identifiers) {
+        const aed = this.allAeds.find((a) => a.id === ei.aed_id);
+        if (aed) {
+          this.byIdentifier.set(ei.external_identifier, aed);
+        }
+      }
+    } catch (error) {
+      console.warn(
+        `[SyncHooks] Failed to load external identifiers (non-critical):`,
+        error instanceof Error ? error.message : error
+      );
+    }
+
     this.loaded = true;
 
     console.log(
       `[SyncHooks] Pre-loaded ${owned.length} existing AEDs for data source ${this.dataSourceId} ` +
-        `(${this.byExternalRef.size} with external_reference)`
+        `(${this.byExternalRef.size} with external_reference, ${this.byIdentifier.size} from identifiers table)`
     );
   }
 
   findByExternalRef(ref: string): ExistingAedRow | undefined {
-    return this.byExternalRef.get(ref);
+    // Check primary external_reference on AEDs owned by this source
+    const primary = this.byExternalRef.get(ref);
+    if (primary) return primary;
+    // Fall back to aed_external_identifiers for this data source
+    return this.byIdentifier.get(ref);
   }
 
   findByCoordinates(lat: number, lng: number): ExistingAedRow | undefined {
@@ -124,16 +177,20 @@ class AedLookupCache {
   ): Promise<ExistingAedRow | undefined> {
     try {
       const detector = getDuplicateDetector();
-      const result = await detector.check(
-        DuplicateCriteria.create({
-          name: record.name as string | undefined,
-          latitude: lat,
-          longitude: lng,
-          externalReference: record.externalId as string | undefined,
-          postalCode: record.postalCode as string | undefined,
-          establishmentType: record.establishmentType as string | undefined,
-        })
-      );
+      const criteria = DuplicateCriteria.create({
+        name: record.name as string | undefined,
+        latitude: lat,
+        longitude: lng,
+        externalReference: record.externalId as string | undefined,
+        postalCode: record.postalCode as string | undefined,
+        establishmentType: record.establishmentType as string | undefined,
+        streetType: record.streetType as string | undefined,
+        streetName: record.streetName as string | undefined,
+        streetNumber: record.streetNumber as string | undefined,
+        floor: record.floor as string | undefined,
+        locationDetails: record.specificLocation as string | undefined,
+      });
+      const result = await detector.check(criteria);
 
       if (!result.isDuplicate || !result.matchedAedId) return undefined;
 
@@ -143,7 +200,11 @@ class AedLookupCache {
         select: AED_SELECT,
       });
       return match ?? undefined;
-    } catch {
+    } catch (error) {
+      console.error(
+        `[SyncHooks] Cross-source duplicate detection failed for "${record.name}":`,
+        error instanceof Error ? error.message : error
+      );
       return undefined;
     }
   }
@@ -155,6 +216,7 @@ class AedLookupCache {
   registerCreated(aed: ExistingAedRow): void {
     if (aed.external_reference) {
       this.byExternalRef.set(aed.external_reference, aed);
+      this.byIdentifier.set(aed.external_reference, aed);
     }
     this.allAeds.push(aed);
   }
@@ -162,6 +224,7 @@ class AedLookupCache {
   /** Release cached data to free memory after job completes */
   clear(): void {
     this.byExternalRef.clear();
+    this.byIdentifier.clear();
     this.allAeds = [];
     this.loaded = false;
   }
@@ -240,6 +303,24 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
             }
           }
         }
+      }
+
+      // Guard: if BOTH the incoming record and the matched AED have
+      // external_reference values but they DIFFER, AND they belong to the
+      // SAME data source, they are distinct registered devices
+      // (e.g., two AEDs in the same building from the same registry).
+      // Cross-source matches naturally have different identifiers
+      // (SAMUR ref "55" vs CM ref "2021-526") so the guard does NOT apply.
+      // Only applies to Strategy 2/3 matches — Strategy 1 already matched
+      // by the same external_reference.
+      if (
+        existingAed &&
+        externalId &&
+        existingAed.external_reference &&
+        existingAed.external_reference !== externalId &&
+        existingAed.data_source_id === dataSourceId
+      ) {
+        existingAed = undefined;
       }
 
       // Attach to record for processor

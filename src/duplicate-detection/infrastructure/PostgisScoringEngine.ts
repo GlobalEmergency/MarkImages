@@ -24,9 +24,17 @@ import { DetectionConfig } from "../domain/value-objects/DetectionConfig";
 /**
  * SQL pre-filter margin: how many points below the JS threshold
  * the SQL WHERE should use, to avoid false negatives from JS/SQL divergence.
- * Interactions can subtract up to ~30pts from the SQL score.
+ *
+ * Set to 50 because:
+ * - Interactions can add up to +15 (addressVariant) that SQL doesn't compute
+ * - JS trigram similarity may differ from pg_trgm by ~0.05
+ * - Graduated proximity tiers assign different points than SQL might
+ * - Cross-source data often has sparse fields, so SQL scoring underestimates
+ *
+ * With possible=45 and margin=50: sqlThreshold = max(0, 45-50) = 0
+ * This means all candidates within the spatial search radius are evaluated.
  */
-const SQL_THRESHOLD_MARGIN = 30;
+const SQL_THRESHOLD_MARGIN = 50;
 
 /** Raw row from the scoring SQL query */
 interface ScoredCandidate {

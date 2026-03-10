@@ -51,7 +51,7 @@ describe("Escenarios de scoring — detección de duplicados", () => {
 
       const { totalScore, ruleResults } = evaluateAllRules(input, candidate);
 
-      // Name won't match (0.75 < 0.9), but addr(25) + prox(20) + type(10) + postal(5) = 60
+      // Name won't match (0.75 < 0.9), but addr(25) + prox(30) + type(10) + postal(5) = 70
       const nameRule = ruleResults.find((r) => r.ruleId === "name_similarity");
       expect(nameRule?.matched).toBe(false);
       // Still >= possible threshold
@@ -60,7 +60,7 @@ describe("Escenarios de scoring — detección de duplicados", () => {
   });
 
   // ============================================================
-  // Duplicados posibles — score 60-74
+  // Duplicados posibles — score 45-74
   // ============================================================
 
   describe("Duplicados posibles — score entre possible y confirmed", () => {
@@ -104,7 +104,7 @@ describe("Escenarios de scoring — detección de duplicados", () => {
   });
 
   // ============================================================
-  // No duplicados — score < 60
+  // No duplicados — score < 45
   // ============================================================
 
   describe("No duplicados — score < possible", () => {
@@ -135,7 +135,7 @@ describe("Escenarios de scoring — detección de duplicados", () => {
       expect(totalScore).toBeLessThan(possible);
     });
 
-    it("misma ubicación pero nombre y tipo completamente diferentes", () => {
+    it("misma dirección pero nombre y tipo completamente diferentes + coords lejanas", () => {
       const input = makeInput({
         normalizedName: "polideportivo municipal",
         establishmentType: "polideportivo",
@@ -143,13 +143,13 @@ describe("Escenarios de scoring — detección de duplicados", () => {
       const candidate = makeCandidate({
         normalized_name: "farmacia central",
         establishment_type: "farmacia",
-        distance_meters: 0, // same coords
+        distance_meters: 200, // beyond proximity tiers
         name_similarity: 0.1, // completely different name
       });
 
       const { totalScore } = evaluateAllRules(input, candidate);
 
-      // name NO(0) + addr YES(25) + prox YES(20) + type NO(0) + postal YES(5) = 50 < 60
+      // name NO(0) + addr YES(25) + prox NO(0, >50m) + type NO(0) + postal YES(5) = 30 < 45
       expect(totalScore).toBeLessThan(possible);
     });
 
@@ -205,7 +205,7 @@ describe("Escenarios de scoring — detección de duplicados", () => {
       expect(rule.points).toBe(25);
     });
 
-    it("proximity: debe aportar 20pts con distancia < 5m", () => {
+    it("proximity: debe aportar 30pts con distancia < 5m (tier más alto)", () => {
       const input = makeInput();
       const candidate = makeCandidate({ distance_meters: 3.5 });
 
@@ -213,7 +213,7 @@ describe("Escenarios de scoring — detección de duplicados", () => {
       const rule = ruleResults.find((r) => r.ruleId === "proximity")!;
 
       expect(rule.matched).toBe(true);
-      expect(rule.points).toBe(20);
+      expect(rule.points).toBe(30);
     });
 
     it("provisional_number: debe aportar 15pts con número idéntico > 0", () => {
