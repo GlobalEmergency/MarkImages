@@ -5,7 +5,7 @@
 
 "use client";
 
-import { ArrowLeft, CheckCircle, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, Loader2, AlertCircle, Building2 } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
@@ -14,16 +14,44 @@ import SharePointCookiesModal from "./SharePointCookiesModal";
 import ValidationErrorsTable from "./ValidationErrorsTable";
 import ImportPreviewTable from "./ImportPreviewTable";
 
+import type { UserOrganization } from "@/types";
+
 type Step = "upload" | "preview" | "mapping" | "validation";
+
+const ASSIGNMENT_TYPE_LABELS: Record<string, string> = {
+  OWNERSHIP: "Propiedad",
+  MAINTENANCE: "Mantenimiento",
+  CIVIL_PROTECTION: "Protección Civil",
+  CERTIFIED_COMPANY: "Empresa Certificada",
+  VERIFICATION: "Verificación",
+};
 
 interface ImportWizardProps {
   onComplete?: (batchId: string) => void;
+  /** Organizations where the user has can_edit permission */
+  organizations?: UserOrganization[];
+  /** Whether the current user is a global admin */
+  isGlobalAdmin?: boolean;
 }
 
-export default function ImportWizard({ onComplete: _onComplete }: ImportWizardProps) {
+export default function ImportWizard({
+  onComplete: _onComplete,
+  organizations = [],
+  isGlobalAdmin = false,
+}: ImportWizardProps) {
   const [currentStep, setCurrentStep] = useState<Step>("upload");
   const [sessionData, setSessionData] = useState<any>(null);
   const [isImporting, setIsImporting] = useState(false);
+
+  // Organization context for import
+  const [selectedOrgId, setSelectedOrgId] = useState<string | null>(
+    // Auto-select if non-admin with exactly one org
+    !isGlobalAdmin && organizations.length === 1 ? organizations[0].id : null
+  );
+  const [assignmentType, setAssignmentType] = useState<string>("OWNERSHIP");
+
+  // Non-admin users MUST select an organization
+  const needsOrgSelection = !isGlobalAdmin && organizations.length > 0;
 
   const steps = [
     { id: "upload", label: "Subir CSV", icon: "📤" },
@@ -108,8 +136,11 @@ export default function ImportWizard({ onComplete: _onComplete }: ImportWizardPr
         body: JSON.stringify({
           filePath: sessionData.filePath,
           mappings: sessionData.mappings,
-          sharepointCookies: sessionData.sharepointCookies, // ← Enviar cookies de SharePoint si existen
+          sharepointCookies: sessionData.sharepointCookies,
           batchName: `Importación ${new Date().toLocaleString()}`,
+          organizationId: selectedOrgId || undefined,
+          // Only admin sends assignmentType override; org editors auto-derive on backend
+          assignmentType: selectedOrgId && isGlobalAdmin ? assignmentType : undefined,
         }),
       });
 
@@ -190,7 +221,80 @@ export default function ImportWizard({ onComplete: _onComplete }: ImportWizardPr
               Selecciona el archivo CSV que deseas importar. El sistema analizará automáticamente
               las columnas y sugerirá mapeos.
             </p>
-            <FileUploadZone onFileSelect={handleFileUpload} />
+
+            {/* Organization & Assignment Type Selection */}
+            {(needsOrgSelection || (isGlobalAdmin && organizations.length > 0)) && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <Building2 className="w-5 h-5 text-blue-600" />
+                  <h3 className="font-medium text-blue-900">Contexto de importación</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Organization selector */}
+                  <div>
+                    <label
+                      htmlFor="org-select"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Organización {!isGlobalAdmin && <span className="text-red-500">*</span>}
+                    </label>
+                    <select
+                      id="org-select"
+                      value={selectedOrgId ?? ""}
+                      onChange={(e) => setSelectedOrgId(e.target.value || null)}
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    >
+                      {isGlobalAdmin && (
+                        <option value="">Sin organización (importación global)</option>
+                      )}
+                      {organizations.map((org) => (
+                        <option key={org.id} value={org.id}>
+                          {org.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Assignment type: admin can override, org editors see auto-derived */}
+                  {selectedOrgId && isGlobalAdmin && (
+                    <div>
+                      <label
+                        htmlFor="assignment-type"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Tipo de asignación
+                      </label>
+                      <select
+                        id="assignment-type"
+                        value={assignmentType}
+                        onChange={(e) => setAssignmentType(e.target.value)}
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      >
+                        {Object.entries(ASSIGNMENT_TYPE_LABELS).map(([value, label]) => (
+                          <option key={value} value={value}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+                {!isGlobalAdmin && !selectedOrgId && (
+                  <p className="mt-2 text-sm text-red-600">
+                    Debes seleccionar una organización para importar
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Only show upload zone when org is selected (for non-admins) or always for admins */}
+            {isGlobalAdmin || selectedOrgId ? (
+              <FileUploadZone onFileSelect={handleFileUpload} />
+            ) : (
+              <div className="border-2 border-dashed border-gray-200 rounded-xl p-12 text-center text-gray-400">
+                Selecciona una organización para continuar
+              </div>
+            )}
           </div>
         )}
 

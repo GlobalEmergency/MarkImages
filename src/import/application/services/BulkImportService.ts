@@ -49,6 +49,8 @@ export interface ImportContext {
   sharePointAuth?: { rtFa?: string; fedAuth?: string };
   skipDuplicates?: boolean;
   mappings?: Array<{ csvColumn: string; systemField: string }>;
+  /** Tipo de asignación org (OWNERSHIP, MAINTENANCE, etc.) */
+  assignmentType?: string;
 }
 
 // ============================================================
@@ -126,6 +128,10 @@ export interface StartImportOptions {
   maxRecordsPerChunk?: number;
   /** Nombre del job para la UI */
   jobName?: string;
+  /** ID de la organización que importa (para asignación automática de DEAs) */
+  organizationId?: string;
+  /** Tipo de asignación organizacional (OWNERSHIP, MAINTENANCE, etc.) */
+  assignmentType?: string;
 }
 
 export interface StartImportResult {
@@ -267,6 +273,8 @@ export class BulkImportService {
       maxDurationMs = VERCEL_API_MAX_DURATION_MS,
       maxRecordsPerChunk = DEFAULT_CHUNK_MAX_RECORDS,
       jobName,
+      organizationId,
+      assignmentType,
     } = options;
 
     const { stateStore, source, processor, duplicateChecker, hooks } =
@@ -279,6 +287,8 @@ export class BulkImportService {
         sharePointAuth,
         mappings,
         jobName: jobName || `Import ${fileName}`,
+        organizationId,
+        assignmentType,
       });
 
     // Crear instancia de BulkImport
@@ -317,7 +327,16 @@ export class BulkImportService {
         elapsedMs: 0,
       },
       done: false,
-      importContext: { s3Url, fileName, delimiter, sharePointAuth, skipDuplicates, mappings },
+      organizationId,
+      importContext: {
+        s3Url,
+        fileName,
+        delimiter,
+        sharePointAuth,
+        skipDuplicates,
+        mappings,
+        assignmentType,
+      },
     });
 
     try {
@@ -335,7 +354,16 @@ export class BulkImportService {
         userId,
         progress,
         done: chunk.done,
-        importContext: { s3Url, fileName, delimiter, sharePointAuth, skipDuplicates, mappings },
+        organizationId,
+        importContext: {
+          s3Url,
+          fileName,
+          delimiter,
+          sharePointAuth,
+          skipDuplicates,
+          mappings,
+          assignmentType,
+        },
       });
 
       return { jobId, chunk, progress };
@@ -543,8 +571,18 @@ export class BulkImportService {
     sharePointAuth?: SharePointAuthConfig;
     mappings?: ColumnMapping[];
     jobName?: string;
+    organizationId?: string;
+    assignmentType?: string;
   }) {
-    const { s3Url, fileName, skipDuplicates, sharePointAuth, mappings } = params;
+    const {
+      s3Url,
+      fileName,
+      skipDuplicates,
+      sharePointAuth,
+      mappings,
+      organizationId,
+      assignmentType,
+    } = params;
 
     // Official @batchactions/state-prisma — persists state in batchactions_* tables
     const stateStore = new PrismaStateStore(this.stateStorePrisma);
@@ -566,6 +604,9 @@ export class BulkImportService {
     const processor = createAedRecordProcessor({
       prisma: this.prisma,
       fileName,
+      organizationId,
+      assignmentType,
+      userId: params.userId,
     });
 
     return { stateStore, source, processor, duplicateChecker, hooks };
@@ -582,9 +623,10 @@ export class BulkImportService {
     userId: string;
     progress: JobProgress;
     done: boolean;
+    organizationId?: string;
     importContext: ImportContext;
   }): Promise<void> {
-    const { jobId, jobName, userId, progress, done, importContext } = params;
+    const { jobId, jobName, userId, progress, done, organizationId, importContext } = params;
 
     const status = done ? "COMPLETED" : "WAITING";
     const failedRecords = progress.failedRecords ?? 0;
@@ -608,6 +650,7 @@ export class BulkImportService {
           completed_at: done ? new Date() : null,
           last_heartbeat: new Date(),
           created_by: userId,
+          organization_id: organizationId || null,
           metadata: {
             engine: "bulkimport",
             import_context: importContext,

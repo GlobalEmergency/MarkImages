@@ -26,6 +26,12 @@ export interface AedRecordProcessorOptions {
   prisma: PrismaClient;
   /** Nombre/path del archivo CSV para source_details */
   fileName?: string;
+  /** ID de la organización que importa (para asignación automática) */
+  organizationId?: string;
+  /** Tipo de asignación organizacional (default: OWNERSHIP) */
+  assignmentType?: string;
+  /** ID del usuario que importa (para assigned_by en la asignación) */
+  userId?: string;
 }
 
 // ============================================================
@@ -118,7 +124,7 @@ function hasResponsibleData(data: Record<string, unknown>): boolean {
 export function createAedRecordProcessor(
   options: AedRecordProcessorOptions
 ): (record: ParsedRecord, context: ProcessingContext) => Promise<void> {
-  const { prisma, fileName } = options;
+  const { prisma, fileName, organizationId, assignmentType, userId } = options;
 
   return async (record: ParsedRecord, context: ProcessingContext): Promise<void> => {
     const data = record as Record<string, unknown>;
@@ -237,6 +243,27 @@ export function createAedRecordProcessor(
           status: "DRAFT",
         },
       });
+
+      // ========================================
+      // 5. CREATE ORG ASSIGNMENT (conditional)
+      // ========================================
+      if (organizationId) {
+        await tx.aedOrganizationAssignment.create({
+          data: {
+            aed_id: aedId,
+            organization_id: organizationId,
+            assignment_type:
+              (assignmentType as
+                | "OWNERSHIP"
+                | "MAINTENANCE"
+                | "CIVIL_PROTECTION"
+                | "CERTIFIED_COMPANY"
+                | "VERIFICATION") || "OWNERSHIP",
+            status: "ACTIVE",
+            assigned_by: userId || null,
+          },
+        });
+      }
     });
 
     // Nota: Las imágenes se descargan/suben en el hook afterProcess

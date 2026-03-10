@@ -70,6 +70,7 @@ export async function GET() {
 
     // Calculate aggregated permissions from organizations
     const canVerifyFromOrg = orgMemberships.some((m) => m.can_verify);
+    const canEditFromOrg = orgMemberships.some((m) => m.can_edit);
     const canApproveFromOrg = orgMemberships.some((m) => m.can_approve);
 
     // Check ownership of DEAs
@@ -95,7 +96,7 @@ export async function GET() {
       canApprovePublications: isAdmin || canApproveFromOrg,
 
       // Import/Export permissions
-      canImportAeds: isAdmin || isModerator,
+      canImportAeds: isAdmin || isModerator || canEditFromOrg,
       canExportAeds: isAdmin || isModerator || canVerifyFromOrg,
 
       // Owner permissions

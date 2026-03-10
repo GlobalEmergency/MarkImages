@@ -320,7 +320,37 @@ async function createTestUsers() {
     });
   }
 
-  console.log(`✅ Created ${userCount + 1} test users (including admin@deamap.es)`);
+  // Create org editor user with working password (same as admin: "123456")
+  await prisma.user.upsert({
+    where: { email: "editor@deamap.es" },
+    update: {},
+    create: {
+      email: "editor@deamap.es",
+      password_hash: "$2a$12$4K2OfmPm3siMhBLTfKrQved1KQ2kVutUh4dFwQuU1NXyWHP1eb/2C", // bcrypt hash for "123456"
+      name: "Editor Organización",
+      role: "USER",
+      is_active: true,
+      is_verified: true,
+    },
+  });
+
+  // Create verifier user with working password
+  await prisma.user.upsert({
+    where: { email: "verificador@deamap.es" },
+    update: {},
+    create: {
+      email: "verificador@deamap.es",
+      password_hash: "$2a$12$4K2OfmPm3siMhBLTfKrQved1KQ2kVutUh4dFwQuU1NXyWHP1eb/2C", // bcrypt hash for "123456"
+      name: "Verificador Organización",
+      role: "USER",
+      is_active: true,
+      is_verified: true,
+    },
+  });
+
+  console.log(
+    `✅ Created ${userCount + 3} test users (including admin, editor, verificador @deamap.es)`
+  );
 }
 
 // Generate a single AED with all related data
@@ -530,6 +560,69 @@ async function createAed(index: number, districtSequences: Map<number, number>) 
   return aed;
 }
 
+// Create org memberships for test users
+// Links editor and verificador to SAMUR - Protección Civil (CIVIL_PROTECTION)
+async function createOrgMemberships(_orgIds: string[]) {
+  console.log("🔗 Creating organization memberships...");
+
+  // Find SAMUR - Protección Civil org by code
+  const samurCode = generateOrgCode("SAMUR - Protección Civil");
+  const samurOrg = await prisma.organization.findUnique({ where: { code: samurCode } });
+
+  if (!samurOrg) {
+    console.log("   ⚠️ SAMUR org not found, skipping memberships");
+    return;
+  }
+
+  // Assign editor@deamap.es to SAMUR with can_edit
+  const editor = await prisma.user.findUnique({ where: { email: "editor@deamap.es" } });
+  if (editor) {
+    await prisma.organizationMember.upsert({
+      where: {
+        organization_id_user_id: {
+          organization_id: samurOrg.id,
+          user_id: editor.id,
+        },
+      },
+      update: {},
+      create: {
+        organization_id: samurOrg.id,
+        user_id: editor.id,
+        can_edit: true,
+        can_verify: false,
+        can_approve: false,
+        can_manage_members: false,
+      },
+    });
+  }
+
+  // Assign verificador@deamap.es to SAMUR with can_verify + can_edit
+  const verificador = await prisma.user.findUnique({
+    where: { email: "verificador@deamap.es" },
+  });
+  if (verificador) {
+    await prisma.organizationMember.upsert({
+      where: {
+        organization_id_user_id: {
+          organization_id: samurOrg.id,
+          user_id: verificador.id,
+        },
+      },
+      update: {},
+      create: {
+        organization_id: samurOrg.id,
+        user_id: verificador.id,
+        can_edit: true,
+        can_verify: true,
+        can_approve: false,
+        can_manage_members: false,
+      },
+    });
+  }
+
+  console.log(`✅ Created org memberships for editor and verificador → ${samurOrg.name}`);
+}
+
 function getStatusChangeReason(from: AedStatus | null, to: AedStatus): string {
   const reasons: Record<string, string[]> = {
     DRAFT_PENDING_REVIEW: [
@@ -560,8 +653,9 @@ async function main() {
 
   // Load reference data and create base data
   await loadDistrictsReference();
-  await createOrganizations();
+  const orgIds = await createOrganizations();
   await createTestUsers();
+  await createOrgMemberships(orgIds);
 
   // Track sequences per district for code generation
   const districtSequences = new Map<number, number>();
@@ -589,7 +683,7 @@ async function main() {
   console.log(`\n📊 Summary:`);
   console.log(`   - Districts (reference): ${madridData.districts.length}`);
   console.log(`   - Organizations: ${madridData.organizations.length}`);
-  console.log(`   - Test users: 20`);
+  console.log(`   - Test users: 23 (including admin, editor, verificador)`);
   console.log(`   - DEAs: ${CONFIG.totalAeds}`);
   console.log(`   - Time: ${totalTime}s`);
 

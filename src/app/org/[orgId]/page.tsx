@@ -8,6 +8,7 @@ import {
   Clock,
   TrendingUp,
   ArrowRight,
+  FileUp,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, use } from "react";
@@ -26,7 +27,7 @@ interface OrgStats {
 }
 
 export default function OrgDashboard({ params }: { params: Promise<{ orgId: string }> }) {
-  const { selectedOrganization, canManageMembers } = useOrganization();
+  const { selectedOrganization, canManageMembers, canEdit } = useOrganization();
   const [stats, setStats] = useState<OrgStats | null>(null);
   const [loading, setLoading] = useState(true);
   const resolvedParams = use(params);
@@ -186,6 +187,27 @@ export default function OrgDashboard({ params }: { params: Promise<{ orgId: stri
             <ArrowRight className="w-5 h-5 text-gray-400" />
           </div>
         </Link>
+
+        {/* Import DEAs */}
+        {canEdit && (
+          <Link
+            href="/admin/imports"
+            className="block bg-white rounded-xl p-4 border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all active:scale-98"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                  <FileUp className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">Importar DEAs</p>
+                  <p className="text-sm text-gray-600">Importar DEAs masivamente desde CSV</p>
+                </div>
+              </div>
+              <ArrowRight className="w-5 h-5 text-gray-400" />
+            </div>
+          </Link>
+        )}
 
         {/* Manage team */}
         {canManageMembers && (
