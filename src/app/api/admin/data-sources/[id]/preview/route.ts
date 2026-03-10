@@ -125,7 +125,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json(
       {
         error: "Error al obtener preview",
-        details: error instanceof Error ? error.message : "Error desconocido",
+        ...(process.env.NODE_ENV !== "production" && {
+          details: error instanceof Error ? error.message : "Error desconocido",
+        }),
       },
       { status: 500 }
     );
@@ -178,7 +180,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json(
       {
         error: "Error al probar la conexión",
-        details: error instanceof Error ? error.message : "Error desconocido",
+        ...(process.env.NODE_ENV !== "production" && {
+          details: error instanceof Error ? error.message : "Error desconocido",
+        }),
       },
       { status: 500 }
     );

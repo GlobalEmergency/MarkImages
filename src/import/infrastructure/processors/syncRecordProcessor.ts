@@ -126,26 +126,31 @@ export function createSyncRecordProcessor(
 
   const isAutomaticSync = syncFrequency !== "MANUAL";
 
-  // Cache data source defaults (loaded on first call)
-  let dataSourceDefaults: DataSourceDefaults | null = null;
+  // Cache data source defaults (loaded on first call).
+  // Cache the Promise to prevent concurrent calls from issuing multiple queries.
+  let defaultsPromise: Promise<DataSourceDefaults> | null = null;
 
-  async function getDefaults(): Promise<DataSourceDefaults> {
-    if (!dataSourceDefaults) {
-      const ds = await prisma.externalDataSource.findUnique({
-        where: { id: dataSourceId },
-        select: {
-          default_status: true,
-          default_requires_attention: true,
-          default_publication_mode: true,
-        },
-      });
-      dataSourceDefaults = ds || {
-        default_status: null,
-        default_requires_attention: null,
-        default_publication_mode: null,
-      };
+  function getDefaults(): Promise<DataSourceDefaults> {
+    if (!defaultsPromise) {
+      defaultsPromise = prisma.externalDataSource
+        .findUnique({
+          where: { id: dataSourceId },
+          select: {
+            default_status: true,
+            default_requires_attention: true,
+            default_publication_mode: true,
+          },
+        })
+        .then(
+          (ds) =>
+            ds || {
+              default_status: null,
+              default_requires_attention: null,
+              default_publication_mode: null,
+            }
+        );
     }
-    return dataSourceDefaults;
+    return defaultsPromise;
   }
 
   return async (record: ParsedRecord, _context: ProcessingContext): Promise<void> => {
@@ -294,11 +299,41 @@ async function updateAed(
   // Is this a merge (different external_reference)?
   const isMerging = aed.external_reference && externalId && aed.external_reference !== externalId;
 
+  // Coerce isMerging to boolean (external_reference comparison may yield string)
+  const isMergingBool = Boolean(isMerging);
+
   await prisma.$transaction(async (tx) => {
+    // ==============================
+    // VERIFIED AED PROTECTION (must come BEFORE merge logic)
+    // ==============================
+    if (aed.last_verified_at) {
+      // For verified AEDs: only update sync metadata, never business data
+      const verifiedUpdate: Record<string, unknown> = {
+        data_source_id: dataSourceId,
+        last_synced_at: new Date(),
+      };
+      if (!isMergingBool) {
+        verifiedUpdate.external_reference = externalId;
+      }
+      // If merging, record the transition in notes but don't change source fields
+      if (isMergingBool) {
+        const notes = appendInternalNote(
+          aed.internal_notes,
+          `Merge detectado en DEA verificado (sin modificar datos). ` +
+            `external_reference anterior="${aed.external_reference}", nueva="${externalId}".`,
+          "verified_merge_skip",
+          "ExternalSyncService"
+        );
+        verifiedUpdate.internal_notes = notes;
+      }
+      await tx.aed.update({ where: { id: aed.id }, data: verifiedUpdate });
+      return;
+    }
+
     // ==============================
     // MERGE LOGIC (internal_notes + source transition)
     // ==============================
-    if (isMerging) {
+    if (isMergingBool) {
       if (isAutomaticSync) {
         // CASE 1: Automatic sync takeover
         const notes = appendInternalNote(
@@ -366,21 +401,6 @@ async function updateAed(
           },
         });
       }
-    }
-
-    // ==============================
-    // VERIFIED AED PROTECTION
-    // ==============================
-    if (aed.last_verified_at) {
-      const verifiedUpdate: Record<string, unknown> = {
-        data_source_id: dataSourceId,
-        last_synced_at: new Date(),
-      };
-      if (!isMerging) {
-        verifiedUpdate.external_reference = externalId;
-      }
-      await tx.aed.update({ where: { id: aed.id }, data: verifiedUpdate });
-      return;
     }
 
     // ==============================
@@ -467,7 +487,7 @@ async function updateAed(
       data_source_id: dataSourceId,
     };
 
-    if (isMerging && isAutomaticSync) {
+    if (isMergingBool && isAutomaticSync) {
       // CASE 1: Merge + automatic sync — update ALL fields (authoritative source)
       updateData.name = toStringOrNull(data.name) || undefined;
       updateData.code = codeUpdate;
@@ -485,7 +505,7 @@ async function updateAed(
         },
         raw_data: data._rawData || data,
       });
-    } else if (isMerging && !isAutomaticSync) {
+    } else if (isMergingBool && !isAutomaticSync) {
       // CASE 2: Merge + manual import — only complementary fields
       if (!aed.code && codeUpdate) updateData.code = codeUpdate;
       if (latitude && longitude) {

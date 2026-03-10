@@ -56,7 +56,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         syncContext: extracted.syncContext,
         sourceTotalRecords: extracted.totalRecords,
       });
-      return buildSyncResponse(result, id, true);
+      return await buildSyncResponse(result, id, true);
     }
 
     // Check for existing active job for this data source
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           syncContext,
           sourceTotalRecords: existingActiveJob.total_records,
         });
-        return buildSyncResponse(result, id, true);
+        return await buildSyncResponse(result, id, true);
       }
     }
 
@@ -97,6 +97,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const hasMore = !result.chunk.done;
 
+    // Read actual sync_stats from job metadata if available
+    const jobMeta = await prisma.batchJob.findUnique({
+      where: { id: result.jobId },
+      select: { metadata: true },
+    });
+    const syncStats = (jobMeta?.metadata as Record<string, unknown>)?.sync_stats as
+      | { created?: number; updated?: number; skipped?: number }
+      | undefined;
+
     return NextResponse.json({
       success: true,
       data: {
@@ -106,8 +115,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         stats: {
           total: result.progress.totalRecords,
           processed: result.progress.processedRecords,
-          created: Math.max(0, result.progress.processedRecords - result.progress.failedRecords),
-          skipped: 0,
+          created:
+            syncStats?.created ??
+            Math.max(0, result.progress.processedRecords - result.progress.failedRecords),
+          updated: syncStats?.updated ?? 0,
+          skipped: syncStats?.skipped ?? 0,
           failed: result.progress.failedRecords,
         },
         progress: {
@@ -280,7 +292,7 @@ function extractSyncContextFromMetadata(
   return null;
 }
 
-function buildSyncResponse(
+async function buildSyncResponse(
   result: {
     jobId: string;
     chunk: { done: boolean };
@@ -294,6 +306,15 @@ function buildSyncResponse(
   dataSourceId: string,
   continued: boolean
 ) {
+  // Read actual sync_stats from job metadata if available
+  const jobMeta = await prisma.batchJob.findUnique({
+    where: { id: result.jobId },
+    select: { metadata: true },
+  });
+  const syncStats = (jobMeta?.metadata as Record<string, unknown>)?.sync_stats as
+    | { created?: number; updated?: number; skipped?: number }
+    | undefined;
+
   const hasMore = !result.chunk.done;
   return NextResponse.json({
     success: true,
@@ -304,8 +325,11 @@ function buildSyncResponse(
       stats: {
         total: result.progress.totalRecords,
         processed: result.progress.processedRecords,
-        created: Math.max(0, result.progress.processedRecords - result.progress.failedRecords),
-        skipped: 0,
+        created:
+          syncStats?.created ??
+          Math.max(0, result.progress.processedRecords - result.progress.failedRecords),
+        updated: syncStats?.updated ?? 0,
+        skipped: syncStats?.skipped ?? 0,
         failed: result.progress.failedRecords,
       },
       progress: {

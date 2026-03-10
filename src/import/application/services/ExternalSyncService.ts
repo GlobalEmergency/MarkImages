@@ -314,7 +314,9 @@ export class ExternalSyncService {
     // 5. Finalize if completed
     if (chunk.done) {
       clearCache();
-      await this.finalizeSync(syncContext.dataSourceId, stats, sourceTotalRecords);
+      // Use accumulated stats from metadata (all chunks combined), not just this chunk's stats
+      const accumulatedStats = await this.getAccumulatedStats(jobId, stats);
+      await this.finalizeSync(syncContext.dataSourceId, accumulatedStats, sourceTotalRecords);
     }
 
     return { jobId, chunk, progress };
@@ -436,6 +438,31 @@ export class ExternalSyncService {
   }
 
   /**
+   * Read accumulated sync_stats from job metadata (all chunks combined)
+   * and merge with the current chunk's stats.
+   */
+  private async getAccumulatedStats(
+    jobId: string,
+    currentChunkStats: SyncStats
+  ): Promise<SyncStats> {
+    try {
+      const job = await this.prisma.batchJob.findUnique({
+        where: { id: jobId },
+        select: { metadata: true },
+      });
+      const meta = (job?.metadata as Record<string, unknown>) || {};
+      const stored = meta.sync_stats as SyncStats | undefined;
+      if (stored) {
+        // metadata already has merged stats from updateJobRegistry
+        return stored;
+      }
+    } catch {
+      // Fall back to current chunk stats
+    }
+    return currentChunkStats;
+  }
+
+  /**
    * Update data source stats when sync completes.
    * Accumulates the total records synced, created, updated from all sync runs.
    */
@@ -482,7 +509,8 @@ export class ExternalSyncService {
   }): Promise<void> {
     const { jobId, jobName, userId, progress, done, syncContext, sourceTotalRecords, stats } =
       params;
-    const status = done ? "COMPLETED" : "WAITING";
+    // Dry run jobs should never be left in WAITING state (CRON would resume them)
+    const status = done || syncContext.dryRun ? "COMPLETED" : "WAITING";
     const failedRecords = progress.failedRecords ?? 0;
     // Use source total when available (accurate), fall back to state store count (partial)
     const totalRecords = sourceTotalRecords ?? progress.totalRecords;
@@ -562,22 +590,28 @@ export class ExternalSyncService {
         last_heartbeat: new Date(),
       };
 
-      // Merge sync_stats into existing metadata (accumulate across resumes)
-      if (stats) {
+      // Merge sync_stats and increment resume_count in metadata
+      {
         const existing = await this.prisma.batchJob.findUnique({
           where: { id: jobId },
           select: { metadata: true },
         });
         const existingMeta = (existing?.metadata as Record<string, unknown>) || {};
-        const prev = existingMeta.sync_stats as SyncStats | undefined;
-        const mergedStats = prev
-          ? {
-              created: prev.created + stats.created,
-              updated: prev.updated + stats.updated,
-              skipped: prev.skipped + stats.skipped,
-            }
-          : stats;
-        updateData.metadata = { ...existingMeta, sync_stats: mergedStats };
+        const resumeCount = ((existingMeta.resume_count as number) || 0) + 1;
+        const newMeta: Record<string, unknown> = { ...existingMeta, resume_count: resumeCount };
+
+        if (stats) {
+          const prev = existingMeta.sync_stats as SyncStats | undefined;
+          newMeta.sync_stats = prev
+            ? {
+                created: prev.created + stats.created,
+                updated: prev.updated + stats.updated,
+                skipped: prev.skipped + stats.skipped,
+              }
+            : stats;
+        }
+
+        updateData.metadata = newMeta;
       }
 
       await this.prisma.batchJob.update({

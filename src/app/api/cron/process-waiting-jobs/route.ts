@@ -177,11 +177,11 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
         const wasPending = job.status === "PENDING" || job.status === "QUEUED";
         const wasInterrupted = job.status === "INTERRUPTED" || job.status === "PAUSED";
 
-        // 1. For WAITING jobs, try to acquire lock atomically
-        //    For PENDING/INTERRUPTED jobs, start/continue them directly
+        // 1. For all non-PENDING jobs, try to acquire lock atomically
+        //    This prevents concurrent processing of the same job by multiple cron instances
         let lockAcquired = true;
 
-        if (!wasPending && !wasInterrupted) {
+        if (!wasPending) {
           lockAcquired = await repository.tryAcquireJobLock(job.id);
 
           if (!lockAcquired) {

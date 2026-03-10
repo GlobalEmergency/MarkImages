@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 
@@ -57,14 +57,23 @@ interface PreviewRecord {
 }
 
 interface SyncResult {
-  batchId: string;
-  status: string;
+  jobId: string;
+  dataSourceId: string;
+  dryRun?: boolean;
+  continued?: boolean;
   stats: {
+    total: number;
+    processed: number;
     created: number;
-    updated: number;
     skipped: number;
-    deactivated: number;
-    errors: number;
+    failed: number;
+  };
+  progress: {
+    total: number;
+    processed: number;
+    percentage: number;
+    hasMore: boolean;
+    status: string;
   };
 }
 
@@ -198,20 +207,21 @@ export default function DataSourceDetailPage() {
     fetchCurrentJob();
   }, [fetchCurrentJob]);
 
-  // Auto-refresh job status when there's an active job
+  // Auto-refresh job status when there's an active job.
+  // Uses a ref to avoid resetting the interval every time currentJob changes.
+  const currentJobRef = useRef(currentJob);
+  currentJobRef.current = currentJob;
+
   useEffect(() => {
     const interval = setInterval(() => {
-      // Check if we should poll based on latest currentJob state
-      if (
-        currentJob &&
-        ["IN_PROGRESS", "RESUMING", "WAITING", "QUEUED", "PENDING"].includes(currentJob.status)
-      ) {
+      const job = currentJobRef.current;
+      if (job && ["IN_PROGRESS", "RESUMING", "WAITING", "QUEUED", "PENDING"].includes(job.status)) {
         fetchCurrentJob();
       }
-    }, 5000); // Poll every 5 seconds
+    }, 5000);
 
     return () => clearInterval(interval);
-  }, [currentJob, fetchCurrentJob]);
+  }, [fetchCurrentJob]);
 
   const forceResetJob = async () => {
     if (!currentJob) return;
@@ -254,22 +264,27 @@ export default function DataSourceDetailPage() {
   const continueCurrentJob = async () => {
     if (!currentJob) return;
 
-    // Note: The cron job will automatically process jobs in WAITING/INTERRUPTED/PAUSED state
-    // This button is now informational - the job will continue automatically in the background
     try {
       setRecovering(true);
 
-      // Simply refresh to show current status
-      // The cron job handles actual execution every minute
+      // Call the sync API with continueJobId to resume the existing job
+      const response = await fetch(`/api/admin/data-sources/${id}/sync`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ continueJobId: currentJob.id }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || "Error al continuar sincronización");
+      }
+
+      // Refresh state
       await fetchCurrentJob();
       await fetchDataSource();
-
-      // Show success message
-      alert(
-        "El job continuará automáticamente en segundo plano. El cron job lo procesará en el próximo ciclo (cada minuto)."
-      );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al actualizar estado del job");
+      setError(err instanceof Error ? err.message : "Error al continuar sincronización");
     } finally {
       setRecovering(false);
     }
@@ -366,7 +381,8 @@ export default function DataSourceDetailPage() {
         throw new Error(data.error || "Error al actualizar");
       }
 
-      setDataSource(data.data);
+      // Re-fetch full data source state (PUT returns thin response)
+      await fetchDataSource();
       setEditing(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al actualizar");
@@ -1394,33 +1410,31 @@ export default function DataSourceDetailPage() {
                   </h3>
                   <dl className="grid grid-cols-2 gap-2 text-sm">
                     <div>
-                      <dt className="text-gray-500">Batch ID</dt>
-                      <dd className="font-mono text-xs">{syncResult.batchId}</dd>
+                      <dt className="text-gray-500">Job ID</dt>
+                      <dd className="font-mono text-xs">{syncResult.jobId}</dd>
                     </div>
                     <div>
                       <dt className="text-gray-500">Estado</dt>
-                      <dd>{getStatusBadge(syncResult.status)}</dd>
+                      <dd>{getStatusBadge(syncResult.progress.status)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-gray-500">Procesados</dt>
+                      <dd className="font-semibold">
+                        {syncResult.stats.processed} / {syncResult.stats.total}
+                      </dd>
                     </div>
                     <div>
                       <dt className="text-gray-500">Creados</dt>
                       <dd className="text-green-600 font-semibold">{syncResult.stats.created}</dd>
                     </div>
                     <div>
-                      <dt className="text-gray-500">Actualizados</dt>
-                      <dd className="text-blue-600 font-semibold">{syncResult.stats.updated}</dd>
-                    </div>
-                    <div>
                       <dt className="text-gray-500">Omitidos</dt>
                       <dd className="text-gray-600 font-semibold">{syncResult.stats.skipped}</dd>
                     </div>
-                    <div>
-                      <dt className="text-gray-500">Desactivados</dt>
-                      <dd className="text-red-600 font-semibold">{syncResult.stats.deactivated}</dd>
-                    </div>
-                    {syncResult.stats.errors > 0 && (
+                    {syncResult.stats.failed > 0 && (
                       <div className="col-span-2">
                         <dt className="text-gray-500">Errores</dt>
-                        <dd className="text-red-600 font-semibold">{syncResult.stats.errors}</dd>
+                        <dd className="text-red-600 font-semibold">{syncResult.stats.failed}</dd>
                       </div>
                     )}
                   </dl>

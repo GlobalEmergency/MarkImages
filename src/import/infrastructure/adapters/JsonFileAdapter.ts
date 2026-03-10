@@ -21,6 +21,7 @@ export class JsonFileAdapter implements IDataSourceAdapter {
 
   private readonly maxRetries = 3;
   private readonly retryDelayMs = 1000;
+  private readonly fetchTimeoutMs = 30_000; // 30 seconds
 
   // Cache para evitar descargas múltiples del mismo archivo
   private dataCache: Map<string, { data: unknown; timestamp: number }> = new Map();
@@ -274,6 +275,7 @@ export class JsonFileAdapter implements IDataSourceAdapter {
         headers: {
           Accept: "application/json",
         },
+        signal: AbortSignal.timeout(this.fetchTimeoutMs),
       });
 
       if (!response.ok) {
@@ -328,17 +330,5 @@ export class JsonFileAdapter implements IDataSourceAdapter {
   clearCache(): void {
     this.dataCache.clear();
     console.log(`🧹 Caché limpiada`);
-  }
-
-  /**
-   * Limpia entradas expiradas de la caché
-   */
-  private cleanExpiredCache(): void {
-    const now = Date.now();
-    for (const [url, cached] of this.dataCache) {
-      if (now - cached.timestamp >= this.cacheTtlMs) {
-        this.dataCache.delete(url);
-      }
-    }
   }
 }

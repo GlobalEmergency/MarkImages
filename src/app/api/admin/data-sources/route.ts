@@ -58,6 +58,10 @@ export async function GET(request: NextRequest) {
       sourceOrigin: ds.source_origin,
       regionCode: ds.region_code,
       config: ds.config,
+      totalRecordsSync: ds.total_records_sync,
+      recordsCreated: ds.records_created,
+      recordsUpdated: ds.records_updated,
+      recordsDeactivated: ds.records_deactivated,
       stats: {
         batchJobs: ds._count.batch_jobs,
         managedAeds: ds._count.managed_aeds,

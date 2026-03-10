@@ -106,6 +106,38 @@ class AedLookupCache {
     });
   }
 
+  /**
+   * Cross-source coordinate dedup: query DB globally for AEDs near the given coordinates.
+   * Only called when cache (same data source) finds no match.
+   * Uses a bounded query to avoid full table scan.
+   */
+  async findByCoordinatesGlobal(lat: number, lng: number): Promise<ExistingAedRow | undefined> {
+    const TOLERANCE = 0.0001;
+    try {
+      const match = await this.prisma.aed.findFirst({
+        where: {
+          latitude: { gte: lat - TOLERANCE, lte: lat + TOLERANCE },
+          longitude: { gte: lng - TOLERANCE, lte: lng + TOLERANCE },
+        },
+        select: AED_SELECT,
+      });
+      return match ?? undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * Register a newly created AED in the cache so subsequent records
+   * in the same chunk won't create duplicates.
+   */
+  registerCreated(aed: ExistingAedRow): void {
+    if (aed.external_reference) {
+      this.byExternalRef.set(aed.external_reference, aed);
+    }
+    this.allAeds.push(aed);
+  }
+
   /** Release cached data to free memory after job completes */
   clear(): void {
     this.byExternalRef.clear();
@@ -171,7 +203,7 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
         existingAed = cache.findByExternalRef(externalId);
       }
 
-      // Strategy 2: by coordinates (fallback)
+      // Strategy 2: by coordinates — check cache first (same data source)
       if (!existingAed) {
         const latStr = record.latitude as string | null;
         const lngStr = record.longitude as string | null;
@@ -180,6 +212,11 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
           const lng = parseFloat(String(lngStr).replace(",", "."));
           if (!isNaN(lat) && !isNaN(lng)) {
             existingAed = cache.findByCoordinates(lat, lng);
+
+            // Strategy 3: cross-source coordinate dedup — query DB globally
+            if (!existingAed) {
+              existingAed = await cache.findByCoordinatesGlobal(lat, lng);
+            }
           }
         }
       }
@@ -192,8 +229,32 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
       return record;
     },
 
-    afterProcess: async (_record: ProcessedRecord, _context: HookContext): Promise<void> => {
-      // Future: geocoding enrichment, metrics collection
+    afterProcess: async (record: ProcessedRecord, _context: HookContext): Promise<void> => {
+      // Register newly created AEDs in the cache to prevent intra-chunk duplicates.
+      // If the record didn't have _existingAed, it was a create — register it.
+      const data = record as unknown as Record<string, unknown>;
+      if (!data._existingAed && data.externalId) {
+        const externalId = String(data.externalId);
+        const lat = data.latitude ? parseFloat(String(data.latitude).replace(",", ".")) : null;
+        const lng = data.longitude ? parseFloat(String(data.longitude).replace(",", ".")) : null;
+        // Minimal stub to prevent duplicate creation in same chunk
+        cache.registerCreated({
+          id: "", // Unknown (created in transaction), but not needed for dedup
+          location_id: "",
+          schedule_id: null,
+          responsible_id: null,
+          last_verified_at: null,
+          name: String(data.name || ""),
+          code: null,
+          establishment_type: null,
+          external_reference: externalId,
+          data_source_id: dataSourceId,
+          source_origin: "",
+          internal_notes: null,
+          latitude: lat,
+          longitude: lng,
+        });
+      }
     },
   };
 

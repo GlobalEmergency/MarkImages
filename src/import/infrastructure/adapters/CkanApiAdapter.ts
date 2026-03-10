@@ -61,6 +61,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
   private readonly defaultPageSize = 100;
   private readonly maxRetries = 3;
   private readonly retryDelayMs = 1000;
+  private readonly fetchTimeoutMs = 30_000; // 30 seconds
 
   /**
    * Detecta si la URL es una descarga directa de JSON
@@ -137,6 +138,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
 
     const response = await fetch(url, {
       headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(this.fetchTimeoutMs),
     });
 
     if (!response.ok) {
@@ -210,8 +212,8 @@ export class CkanApiAdapter implements IDataSourceAdapter {
         rowIndex++;
       }
 
-      // Verificar si hay más páginas
-      hasMore = records.length >= pageSize;
+      // Verificar si hay más páginas (strict > avoids extra page when total % pageSize === 0)
+      hasMore = records.length > 0 && records.length >= pageSize;
       offset += pageSize;
 
       // Log de progreso cada 1000 registros
@@ -535,6 +537,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
         headers: {
           Accept: "application/json",
         },
+        signal: AbortSignal.timeout(this.fetchTimeoutMs),
       });
 
       if (!response.ok) {

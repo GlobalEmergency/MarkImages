@@ -110,7 +110,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         completedAt: job.completed_at,
         lastHeartbeat: job.last_heartbeat,
         durationMs,
-        resumeCount: 0,
+        resumeCount: (metadata?.resume_count as number) ?? 0,
         metadata: metadata ?? undefined,
         createdAt: job.created_at,
         updatedAt: job.updated_at,

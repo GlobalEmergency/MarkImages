@@ -66,8 +66,21 @@ export class DataSourceAdapterFactory implements IDataSourceAdapterFactory {
         return new CkanApiAdapter();
       case "JSON_FILE":
         return new JsonFileAdapter();
+      case "CSV_FILE":
+        throw new Error(
+          `El tipo "${type}" requiere importación CSV, no sincronización API. ` +
+            `Usa el módulo de importación CSV en su lugar.`
+        );
+      case "REST_API":
+        throw new Error(
+          `El tipo "${type}" aún no tiene adapter implementado. ` +
+            `Tipos soportados para sync: CKAN_API, JSON_FILE.`
+        );
       default:
-        throw new Error(`API adapter not available for type: ${type}`);
+        throw new Error(
+          `Tipo de fuente de datos no soportado: ${type}. ` +
+            `Tipos soportados: CKAN_API, JSON_FILE.`
+        );
     }
   }
 

@@ -235,14 +235,14 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Eliminar batch jobs asociados (en cascada por FK)
-    await prisma.batchJob.deleteMany({
-      where: { data_source_id: id },
-    });
-
-    // Eliminar la fuente de datos
-    await prisma.externalDataSource.delete({
-      where: { id },
+    // Delete batch jobs and data source atomically
+    await prisma.$transaction(async (tx) => {
+      await tx.batchJob.deleteMany({
+        where: { data_source_id: id },
+      });
+      await tx.externalDataSource.delete({
+        where: { id },
+      });
     });
 
     return NextResponse.json({
