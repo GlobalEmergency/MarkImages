@@ -385,7 +385,7 @@ export const aedImportSchema: SchemaDefinition = {
   strict: false, // Permitir columnas desconocidas (CSV puede tener columnas extra)
   skipEmptyRows: true,
   // Campos que deben ser únicos dentro del mismo CSV (intra-import dedup).
-  // La dedup contra la base de datos la hace AedDuplicateChecker (external dedup).
+  // La dedup contra la base de datos la hace BulkImportDuplicateAdapter (external dedup).
   uniqueFields: ["code", "externalReference"],
 };
 

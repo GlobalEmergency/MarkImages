@@ -14,6 +14,7 @@ import { requireAuth } from "@/lib/auth";
 import { UserRole } from "@/generated/client/enums";
 import { getBulkImportService } from "@/import/infrastructure/factories/createBulkImportService";
 import type { ImportContext } from "@/import/application/services/BulkImportService";
+import { VERCEL_API_MAX_DURATION_MS } from "@/import/constants";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -87,8 +88,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         delimiter: importContext.delimiter,
         mappings: importContext.mappings,
         sharePointAuth: importContext.sharePointAuth,
-        maxDurationMs: 80_000,
+        maxDurationMs: VERCEL_API_MAX_DURATION_MS,
         skipDuplicates: importContext.skipDuplicates,
+        assignmentType: importContext.assignmentType,
+        organizationId: job.organization_id ?? undefined,
       });
 
       const hasMore = !result.chunk.done;

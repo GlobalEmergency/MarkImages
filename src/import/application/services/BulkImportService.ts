@@ -31,7 +31,8 @@ import type { IAedRepository } from "../../domain/ports/IAedRepository";
 
 import { aedImportSchema } from "../../domain/schemas/aedImportSchema";
 import { S3DataSource } from "../../infrastructure/sources/S3DataSource";
-import { AedDuplicateChecker } from "../../infrastructure/checkers/AedDuplicateChecker";
+import { BulkImportDuplicateAdapter } from "@/duplicate-detection/infrastructure/adapters/BulkImportDuplicateAdapter";
+import { getDuplicateDetector } from "@/duplicate-detection/infrastructure/factory";
 import { createAedImportHooks } from "../../infrastructure/hooks/aedImportHooks";
 import { createAedRecordProcessor } from "../../infrastructure/processors/aedRecordProcessor";
 import {
@@ -156,14 +157,18 @@ export interface ResumeImportOptions {
   delimiter?: string;
   /** Column mappings from UI wizard (persisted in ImportContext) */
   mappings?: ColumnMapping[];
-  /** AutenticaciÃ³n SharePoint */
+  /** Autenticación SharePoint */
   sharePointAuth?: SharePointAuthConfig;
-  /** Tiempo mÃ¡ximo por chunk en ms */
+  /** Tiempo máximo por chunk en ms */
   maxDurationMs?: number;
-  /** MÃ¡ximo de registros por chunk (safety cap) */
+  /** Máximo de registros por chunk (safety cap) */
   maxRecordsPerChunk?: number;
   /** Si true, los duplicados se reportan como warning */
   skipDuplicates?: boolean;
+  /** Organization ID (from ImportContext, for org-scoped imports) */
+  organizationId?: string;
+  /** Assignment type: OWNERSHIP, MAINTENANCE, etc. (from ImportContext) */
+  assignmentType?: string;
 }
 
 export interface ResumeImportResult {
@@ -389,6 +394,8 @@ export class BulkImportService {
       maxDurationMs = VERCEL_API_MAX_DURATION_MS,
       maxRecordsPerChunk = DEFAULT_CHUNK_MAX_RECORDS,
       skipDuplicates = true,
+      organizationId,
+      assignmentType,
     } = options;
 
     const { stateStore, source, processor, duplicateChecker, hooks } =
@@ -400,6 +407,8 @@ export class BulkImportService {
         skipDuplicates,
         sharePointAuth,
         mappings,
+        organizationId,
+        assignmentType,
       });
 
     // Restaurar instancia desde el state store
@@ -438,6 +447,7 @@ export class BulkImportService {
         userId,
         progress,
         done: chunk.done,
+        organizationId,
         importContext: {
           s3Url,
           fileName: fileName || "",
@@ -445,6 +455,7 @@ export class BulkImportService {
           sharePointAuth,
           skipDuplicates,
           mappings,
+          assignmentType,
         },
       });
 
@@ -587,7 +598,8 @@ export class BulkImportService {
     // Official @batchactions/state-prisma — persists state in batchactions_* tables
     const stateStore = new PrismaStateStore(this.stateStorePrisma);
 
-    const duplicateChecker = new AedDuplicateChecker(this.aedRepository, {
+    const detector = getDuplicateDetector();
+    const duplicateChecker = new BulkImportDuplicateAdapter(detector, {
       skipDuplicates,
     });
 

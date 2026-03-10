@@ -19,6 +19,8 @@
 
 import type { ParsedRecord, ProcessedRecord, JobHooks, HookContext } from "@batchactions/core";
 import type { PrismaClient } from "@/generated/client/client";
+import { getDuplicateDetector } from "@/duplicate-detection/infrastructure/factory";
+import { DuplicateCriteria } from "@/duplicate-detection/domain/value-objects/DuplicateCriteria";
 
 // ============================================================
 // Types
@@ -70,9 +72,13 @@ class AedLookupCache {
   async ensureLoaded(): Promise<void> {
     if (this.loaded) return;
 
-    // Load all AEDs owned by this data source (by external_reference index)
+    // Load all AEDs owned by this data source (by external_reference index).
+    // Exclude REJECTED/INACTIVE — these should not block new entries.
     const owned = await this.prisma.aed.findMany({
-      where: { data_source_id: this.dataSourceId },
+      where: {
+        data_source_id: this.dataSourceId,
+        status: { notIn: ["REJECTED", "INACTIVE"] },
+      },
       select: AED_SELECT,
     });
 
@@ -107,18 +113,33 @@ class AedLookupCache {
   }
 
   /**
-   * Cross-source coordinate dedup: query DB globally for AEDs near the given coordinates.
+   * Cross-source duplicate detection via the full scoring engine.
    * Only called when cache (same data source) finds no match.
-   * Uses a bounded query to avoid full table scan.
+   * Uses the rules engine (PostGIS + pg_trgm + scoring) for accurate dedup.
    */
-  async findByCoordinatesGlobal(lat: number, lng: number): Promise<ExistingAedRow | undefined> {
-    const TOLERANCE = 0.0001;
+  async findByGlobalDuplicateDetector(
+    record: ParsedRecord,
+    lat: number,
+    lng: number
+  ): Promise<ExistingAedRow | undefined> {
     try {
-      const match = await this.prisma.aed.findFirst({
-        where: {
-          latitude: { gte: lat - TOLERANCE, lte: lat + TOLERANCE },
-          longitude: { gte: lng - TOLERANCE, lte: lng + TOLERANCE },
-        },
+      const detector = getDuplicateDetector();
+      const result = await detector.check(
+        DuplicateCriteria.create({
+          name: record.name as string | undefined,
+          latitude: lat,
+          longitude: lng,
+          externalReference: record.externalId as string | undefined,
+          postalCode: record.postalCode as string | undefined,
+          establishmentType: record.establishmentType as string | undefined,
+        })
+      );
+
+      if (!result.isDuplicate || !result.matchedAedId) return undefined;
+
+      // Fetch the matched AED to return as ExistingAedRow
+      const match = await this.prisma.aed.findUnique({
+        where: { id: result.matchedAedId },
         select: AED_SELECT,
       });
       return match ?? undefined;
@@ -213,9 +234,9 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
           if (!isNaN(lat) && !isNaN(lng)) {
             existingAed = cache.findByCoordinates(lat, lng);
 
-            // Strategy 3: cross-source coordinate dedup — query DB globally
+            // Strategy 3: cross-source dedup via scoring engine (PostGIS + pg_trgm)
             if (!existingAed) {
-              existingAed = await cache.findByCoordinatesGlobal(lat, lng);
+              existingAed = await cache.findByGlobalDuplicateDetector(record, lat, lng);
             }
           }
         }
@@ -235,11 +256,12 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
       const data = record as unknown as Record<string, unknown>;
       if (!data._existingAed && data.externalId) {
         const externalId = String(data.externalId);
+        const createdId = data._createdAedId ? String(data._createdAedId) : "";
         const lat = data.latitude ? parseFloat(String(data.latitude).replace(",", ".")) : null;
         const lng = data.longitude ? parseFloat(String(data.longitude).replace(",", ".")) : null;
-        // Minimal stub to prevent duplicate creation in same chunk
+        // Register with actual created ID (stashed by processor) for cache integrity
         cache.registerCreated({
-          id: "", // Unknown (created in transaction), but not needed for dedup
+          id: createdId,
           location_id: "",
           schedule_id: null,
           responsible_id: null,

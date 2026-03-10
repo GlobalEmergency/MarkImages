@@ -215,6 +215,7 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
             job.id,
             job.metadata,
             job.createdBy,
+            job.organizationId,
             wasPending,
             wasInterrupted
           );
@@ -347,6 +348,7 @@ async function processBulkImportJob(
   jobId: string,
   metadata: Record<string, unknown>,
   createdBy: string,
+  organizationId: string | undefined,
   wasPending: boolean,
   wasInterrupted: boolean
 ): Promise<{
@@ -378,6 +380,8 @@ async function processBulkImportJob(
     sharePointAuth: importContext.sharePointAuth,
     maxDurationMs: VERCEL_CRON_MAX_DURATION_MS,
     skipDuplicates: importContext.skipDuplicates,
+    assignmentType: importContext.assignmentType,
+    organizationId,
   });
 
   const hasMore = !result.chunk.done;

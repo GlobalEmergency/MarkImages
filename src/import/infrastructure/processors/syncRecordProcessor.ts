@@ -255,7 +255,7 @@ async function createAed(
     }
 
     // 4. AED
-    await tx.aed.create({
+    const createdAed = await tx.aed.create({
       data: {
         name: toStringOrNull(data.name) || "Sin nombre",
         code,
@@ -275,7 +275,11 @@ async function createAed(
         last_synced_at: new Date(),
         created_by: SYSTEM_USER_UUID,
       },
+      select: { id: true },
     });
+
+    // Stash created ID so afterProcess hook can register it in the cache
+    data._createdAedId = createdAed.id;
   });
 }
 
@@ -331,12 +335,14 @@ async function updateAed(
     }
 
     // ==============================
-    // MERGE LOGIC (internal_notes + source transition)
+    // MERGE LOGIC: build merge notes + record audit (no AED update yet)
     // ==============================
+    let mergeNotes: unknown = undefined;
+
     if (isMergingBool) {
       if (isAutomaticSync) {
-        // CASE 1: Automatic sync takeover
-        const notes = appendInternalNote(
+        // CASE 1: Automatic sync takeover — record transition
+        mergeNotes = appendInternalNote(
           aed.internal_notes,
           `DEA asumido por sincronización automática. ` +
             `Datos previos: external_reference="${aed.external_reference}", source_origin="${aed.source_origin}". ` +
@@ -357,20 +363,9 @@ async function updateAed(
         } catch {
           /* non-critical */
         }
-
-        await tx.aed.update({
-          where: { id: aed.id },
-          data: {
-            internal_notes: notes,
-            external_reference: externalId,
-            source_origin: sourceOrigin as SourceOrigin,
-            data_source_id: dataSourceId,
-            last_synced_at: new Date(),
-          },
-        });
       } else {
         // CASE 2: Manual import merge — keep original source
-        const notes = appendInternalNote(
+        mergeNotes = appendInternalNote(
           aed.internal_notes,
           `Actualizado por importación puntual. ` +
             `Se mantiene: external_reference="${aed.external_reference}", source_origin="${aed.source_origin}". ` +
@@ -391,20 +386,11 @@ async function updateAed(
         } catch {
           /* non-critical */
         }
-
-        await tx.aed.update({
-          where: { id: aed.id },
-          data: {
-            internal_notes: notes,
-            last_synced_at: new Date(),
-            data_source_id: dataSourceId,
-          },
-        });
       }
     }
 
     // ==============================
-    // UNVERIFIED AED: Update business data
+    // UNVERIFIED AED: Update business data (single AED update)
     // ==============================
     const latitude = parseCoordinate(data.latitude);
     const longitude = parseCoordinate(data.longitude);
@@ -479,13 +465,18 @@ async function updateAed(
       codeUpdate = externalId;
     }
 
-    // Build AED update based on merge scenario
+    // Build single AED update (merge metadata + business data combined)
     const updateData: Record<string, unknown> = {
       schedule_id: scheduleIdUpdate,
       responsible_id: responsibleIdUpdate,
       last_synced_at: new Date(),
       data_source_id: dataSourceId,
     };
+
+    // Include merge notes if present
+    if (mergeNotes !== undefined) {
+      updateData.internal_notes = mergeNotes;
+    }
 
     if (isMergingBool && isAutomaticSync) {
       // CASE 1: Merge + automatic sync — update ALL fields (authoritative source)
