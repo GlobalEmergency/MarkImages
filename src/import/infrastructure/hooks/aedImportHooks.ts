@@ -69,47 +69,66 @@ export interface AedImportHooksOptions {
   sharePointAuth?: SharePointAuthConfig;
   /** Si true, los registros duplicados se procesan como warning en vez de error */
   skipDuplicates?: boolean;
+  /** Column mappings from UI wizard: CSV column â†’ schema field */
+  mappings?: Array<{ csvColumn: string; systemField: string }>;
 }
 
 // ============================================================
-// beforeValidate: NormalizaciÃ³n de datos raw
+// beforeValidate: Column mapping + normalization
 // ============================================================
 
 /**
- * Normaliza los datos crudos antes de que se apliquen transforms y validaciÃ³n.
+ * Creates a beforeValidate hook that:
+ * 1. Applies user column mappings (CSV column â†’ schema field)
+ * 2. Normalizes raw data (trim, clean empty strings)
  *
- * Operaciones:
- * - Trim de todos los valores string
- * - Normaliza coordenadas: coma â†’ punto decimal
- * - Normaliza booleans en espaÃ±ol a formato reconocido
- * - Limpia campos vacÃ­os (strings solo con espacios â†’ undefined)
+ * The mapping step is critical: @batchactions/import’s alias resolution
+ * matches common names, but user-confirmed mappings from the UI wizard
+ * are the authoritative source. This hook remaps any CSV column key
+ * that matches a user mapping to its target schema field.
  */
-async function beforeValidate(record: RawRecord, _context: HookContext): Promise<RawRecord> {
-  const normalized: Record<string, unknown> = {};
-
-  for (const [key, value] of Object.entries(record)) {
-    if (value === null || value === undefined) {
-      normalized[key] = value;
-      continue;
+function createBeforeValidate(
+  mappings?: Array<{ csvColumn: string; systemField: string }>
+): (record: RawRecord, context: HookContext) => Promise<RawRecord> {
+  // Build lookup map once (CSV column name â†’ schema field name)
+  const mappingMap = new Map<string, string>();
+  if (mappings && mappings.length > 0) {
+    for (const m of mappings) {
+      if (m.csvColumn && m.systemField) {
+        mappingMap.set(m.csvColumn, m.systemField);
+      }
     }
-
-    if (typeof value !== "string") {
-      normalized[key] = value;
-      continue;
-    }
-
-    const str = value.trim();
-
-    // Limpiar strings vacÃ­os
-    if (str === "") {
-      normalized[key] = undefined;
-      continue;
-    }
-
-    normalized[key] = str;
   }
 
-  return normalized;
+  return async (record: RawRecord, _context: HookContext): Promise<RawRecord> => {
+    const normalized: Record<string, unknown> = {};
+
+    for (const [key, value] of Object.entries(record)) {
+      // Apply column mapping: rename CSV column to schema field
+      const mappedKey = mappingMap.get(key) || key;
+
+      if (value === null || value === undefined) {
+        normalized[mappedKey] = value;
+        continue;
+      }
+
+      if (typeof value !== "string") {
+        normalized[mappedKey] = value;
+        continue;
+      }
+
+      const str = value.trim();
+
+      if (str === "") {
+        normalized[mappedKey] = undefined;
+        continue;
+      }
+
+      normalized[mappedKey] = str;
+    }
+
+    return normalized;
+  };
 }
 
 // ============================================================
@@ -338,6 +357,7 @@ function createAfterProcess(
  * ```
  */
 export function createAedImportHooks(options: AedImportHooksOptions): JobHooks {
+  const beforeValidate = createBeforeValidate(options.mappings);
   const afterValidate = createAfterValidate(options.skipDuplicates ?? true);
   const afterProcess = createAfterProcess(options);
 

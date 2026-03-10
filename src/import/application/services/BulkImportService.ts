@@ -48,6 +48,7 @@ export interface ImportContext {
   delimiter?: string;
   sharePointAuth?: { rtFa?: string; fedAuth?: string };
   skipDuplicates?: boolean;
+  mappings?: Array<{ csvColumn: string; systemField: string }>;
 }
 
 // ============================================================
@@ -94,6 +95,12 @@ export interface ImportPreviewResult {
   }>;
 }
 
+/** Column mapping from UI wizard: CSV column → schema field */
+export interface ColumnMapping {
+  csvColumn: string;
+  systemField: string;
+}
+
 export interface StartImportOptions {
   /** URL del CSV en S3 */
   s3Url: string;
@@ -101,6 +108,8 @@ export interface StartImportOptions {
   fileName: string;
   /** ID del usuario que inicia la importaciÃ³n */
   userId: string;
+  /** Column mappings confirmed by the user in the UI wizard */
+  mappings?: ColumnMapping[];
   /** Delimitador CSV (default: ";") */
   delimiter?: string;
   /** TamaÃ±o del batch (default: 50) */
@@ -139,6 +148,8 @@ export interface ResumeImportOptions {
   fileName?: string;
   /** Delimitador CSV */
   delimiter?: string;
+  /** Column mappings from UI wizard (persisted in ImportContext) */
+  mappings?: ColumnMapping[];
   /** AutenticaciÃ³n SharePoint */
   sharePointAuth?: SharePointAuthConfig;
   /** Tiempo mÃ¡ximo por chunk en ms */
@@ -247,6 +258,7 @@ export class BulkImportService {
       s3Url,
       fileName,
       userId,
+      mappings,
       delimiter = DEFAULT_CSV_DELIMITER,
       batchSize = DEFAULT_BATCH_SIZE,
       continueOnError = true,
@@ -265,6 +277,7 @@ export class BulkImportService {
         delimiter,
         skipDuplicates,
         sharePointAuth,
+        mappings,
         jobName: jobName || `Import ${fileName}`,
       });
 
@@ -285,6 +298,28 @@ export class BulkImportService {
     // Suscribir eventos para logging estructurado
     this.subscribeImportEvents(importer, fileName);
 
+    // Pre-create batch_jobs registry BEFORE processing.
+    // The AED processor sets batch_job_id = context.jobId which has a FK to batch_jobs.
+    // Without this, the FK constraint fails because batch_jobs row doesn't exist yet.
+    const jobId = importer.getJobId();
+    await this.upsertJobRegistry({
+      jobId,
+      jobName: jobName || `Import ${fileName}`,
+      userId,
+      progress: {
+        totalRecords: 0,
+        processedRecords: 0,
+        failedRecords: 0,
+        pendingRecords: 0,
+        currentBatch: 0,
+        totalBatches: 0,
+        percentage: 0,
+        elapsedMs: 0,
+      },
+      done: false,
+      importContext: { s3Url, fileName, delimiter, sharePointAuth, skipDuplicates, mappings },
+    });
+
     try {
       // Procesar primer chunk (limitar por tiempo Y por registros)
       const chunk = await importer.processChunk(processor, {
@@ -292,18 +327,15 @@ export class BulkImportService {
         maxRecords: maxRecordsPerChunk,
       });
 
-      // Obtener progreso
-      const jobId = importer.getJobId();
+      // Update registry with real progress
       const progress = await stateStore.getProgress(jobId);
-
-      // Create batch_jobs registry entry for UI/CRON compatibility
       await this.upsertJobRegistry({
         jobId,
         jobName: jobName || `Import ${fileName}`,
         userId,
         progress,
         done: chunk.done,
-        importContext: { s3Url, fileName, delimiter, sharePointAuth, skipDuplicates },
+        importContext: { s3Url, fileName, delimiter, sharePointAuth, skipDuplicates, mappings },
       });
 
       return { jobId, chunk, progress };
@@ -324,6 +356,7 @@ export class BulkImportService {
       userId,
       fileName,
       delimiter = DEFAULT_CSV_DELIMITER,
+      mappings,
       sharePointAuth,
       maxDurationMs = VERCEL_API_MAX_DURATION_MS,
       maxRecordsPerChunk = DEFAULT_CHUNK_MAX_RECORDS,
@@ -338,6 +371,7 @@ export class BulkImportService {
         delimiter,
         skipDuplicates,
         sharePointAuth,
+        mappings,
       });
 
     // Restaurar instancia desde el state store
@@ -382,6 +416,7 @@ export class BulkImportService {
           delimiter,
           sharePointAuth,
           skipDuplicates,
+          mappings,
         },
       });
 
@@ -506,9 +541,10 @@ export class BulkImportService {
     delimiter: string;
     skipDuplicates: boolean;
     sharePointAuth?: SharePointAuthConfig;
+    mappings?: ColumnMapping[];
     jobName?: string;
   }) {
-    const { s3Url, fileName, skipDuplicates, sharePointAuth } = params;
+    const { s3Url, fileName, skipDuplicates, sharePointAuth, mappings } = params;
 
     // Official @batchactions/state-prisma — persists state in batchactions_* tables
     const stateStore = new PrismaStateStore(this.stateStorePrisma);
@@ -522,6 +558,7 @@ export class BulkImportService {
       downloadAndUploadImageUseCase: this.downloadAndUploadImageUseCase,
       sharePointAuth,
       skipDuplicates,
+      mappings,
     });
 
     const source = new S3DataSource(s3Url, fileName);

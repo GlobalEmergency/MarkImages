@@ -70,6 +70,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         userId: job.created_by,
         fileName: importContext.fileName,
         delimiter: importContext.delimiter,
+        mappings: importContext.mappings,
         sharePointAuth: importContext.sharePointAuth,
         maxDurationMs: 80_000,
         skipDuplicates: importContext.skipDuplicates,

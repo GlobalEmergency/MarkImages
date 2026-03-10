@@ -212,6 +212,7 @@ export async function POST(request: NextRequest) {
       s3Url,
       fileName,
       userId: user.userId,
+      mappings,
       delimiter: DEFAULT_CSV_DELIMITER,
       batchSize: DEFAULT_BATCH_SIZE,
       continueOnError: true,

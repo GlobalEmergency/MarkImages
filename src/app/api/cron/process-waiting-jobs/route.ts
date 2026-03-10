@@ -374,6 +374,7 @@ async function processBulkImportJob(
     userId: createdBy,
     fileName: importContext.fileName,
     delimiter: importContext.delimiter,
+    mappings: importContext.mappings,
     sharePointAuth: importContext.sharePointAuth,
     maxDurationMs: VERCEL_CRON_MAX_DURATION_MS,
     skipDuplicates: importContext.skipDuplicates,
