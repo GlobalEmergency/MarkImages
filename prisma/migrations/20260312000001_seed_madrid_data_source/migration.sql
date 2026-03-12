@@ -1,0 +1,69 @@
+-- Seed: Comunidad de Madrid data source configuration
+-- UPSERT: creates if not exists, updates config if already exists
+
+INSERT INTO external_data_sources (
+  id,
+  name,
+  description,
+  type,
+  config,
+  matching_strategy,
+  matching_threshold,
+  is_active,
+  sync_frequency,
+  auto_deactivate_missing,
+  auto_update_fields,
+  default_publication_mode,
+  default_status,
+  default_requires_attention,
+  source_origin,
+  country_code,
+  region_code,
+  created_at,
+  updated_at
+) VALUES (
+  gen_random_uuid(),
+  'DEAs Comunidad de Madrid',
+  'Desfibriladores externos fuera del ámbito sanitario - Datos abiertos Comunidad de Madrid',
+  'JSON_FILE',
+  '{
+    "fileUrl": "https://datos.comunidad.madrid/catalogo/dataset/d2478503-a4ae-4753-9540-9200071803c4/resource/42d08814-3361-4c2a-93fe-36664abc7953/download/desfibriladores_externos_fuera_ambito_sanitario.json",
+    "jsonPath": "data",
+    "fieldMappings": {
+      "codigo_dea": "externalId",
+      "direccion_via_codigo": "streetType",
+      "direccion_via_nombre": "streetName",
+      "direccion_portal_numero": "streetNumber",
+      "direccion_piso": "floor",
+      "direccion_puerta": "additionalInfo",
+      "direccion_ubicacion": "specificLocation",
+      "direccion_codigo_postal": "postalCode",
+      "direccion_latitud": "latitude",
+      "direccion_longitud": "longitude",
+      "municipio_codigo": "cityCode",
+      "municipio_nombre": "city",
+      "tipo_establecimiento": "establishmentType",
+      "tipo_titularidad": "ownershipType",
+      "horario_acceso": "accessSchedule"
+    }
+  }'::jsonb,
+  'HYBRID',
+  75,
+  true,
+  'WEEKLY',
+  false,
+  ARRAY[]::text[],
+  'LOCATION_ONLY',
+  'PUBLISHED',
+  true,
+  'HEALTH_API',
+  'ES',
+  'MAD',
+  NOW(),
+  NOW()
+) ON CONFLICT (name) DO UPDATE SET
+  config = EXCLUDED.config,
+  type = EXCLUDED.type,
+  country_code = EXCLUDED.country_code,
+  description = EXCLUDED.description,
+  updated_at = NOW();

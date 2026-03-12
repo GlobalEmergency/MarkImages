@@ -56,6 +56,7 @@ export async function GET(request: NextRequest) {
       autoDeactivateMissing: ds.auto_deactivate_missing,
       autoUpdateFields: ds.auto_update_fields,
       sourceOrigin: ds.source_origin,
+      countryCode: (ds as Record<string, unknown>).country_code || "ES",
       regionCode: ds.region_code,
       config: ds.config,
       totalRecordsSync: ds.total_records_sync,
@@ -137,6 +138,7 @@ export async function POST(request: NextRequest) {
         auto_deactivate_missing: body.autoDeactivateMissing || false,
         auto_update_fields: body.autoUpdateFields || [],
         source_origin: body.sourceOrigin,
+        country_code: body.countryCode || "ES",
         region_code: body.regionCode,
       },
     });

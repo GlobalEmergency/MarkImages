@@ -11,6 +11,7 @@ import type {
 import { CsvDataSourceAdapter } from "./CsvDataSourceAdapter";
 import { CkanApiAdapter } from "./CkanApiAdapter";
 import { JsonFileAdapter } from "./JsonFileAdapter";
+import { RestApiAdapter } from "./RestApiAdapter";
 import type { CsvParserAdapter } from "../parsers/CsvParserAdapter";
 
 export class DataSourceAdapterFactory implements IDataSourceAdapterFactory {
@@ -20,7 +21,7 @@ export class DataSourceAdapterFactory implements IDataSourceAdapterFactory {
     this.adapters = new Map<DataSourceType, IDataSourceAdapter>([
       ["CKAN_API", new CkanApiAdapter()],
       ["JSON_FILE", new JsonFileAdapter()],
-      // ["REST_API", new RestApiAdapter()],
+      ["REST_API", new RestApiAdapter()],
     ]);
 
     // CSV adapter requiere un parser
@@ -72,10 +73,7 @@ export class DataSourceAdapterFactory implements IDataSourceAdapterFactory {
             `Usa el módulo de importación CSV en su lugar.`
         );
       case "REST_API":
-        throw new Error(
-          `El tipo "${type}" aún no tiene adapter implementado. ` +
-            `Tipos soportados para sync: CKAN_API, JSON_FILE.`
-        );
+        return new RestApiAdapter();
       default:
         throw new Error(
           `Tipo de fuente de datos no soportado: ${type}. ` +

@@ -118,6 +118,84 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
       }
     }
 
+    // 1.5 CHECK SCHEDULED SYNCS (data sources with next_scheduled_sync_at <= now)
+    let scheduledSyncsStarted = 0;
+    try {
+      const dueSyncs = await prisma.externalDataSource.findMany({
+        where: {
+          is_active: true,
+          sync_frequency: { not: "MANUAL" },
+          next_scheduled_sync_at: { lte: new Date() },
+        },
+        select: {
+          id: true,
+          name: true,
+          sync_frequency: true,
+        },
+      });
+
+      if (dueSyncs.length > 0) {
+        console.log(`[SYNC] [Cron] Found ${dueSyncs.length} data sources due for scheduled sync`);
+      }
+
+      for (const ds of dueSyncs) {
+        // Check no active job already exists for this data source
+        const activeJob = await prisma.batchJob.findFirst({
+          where: {
+            metadata: {
+              path: ["sync_context", "dataSourceId"],
+              equals: ds.id,
+            },
+            status: {
+              in: ["PENDING", "QUEUED", "IN_PROGRESS", "WAITING"],
+            },
+          },
+        });
+
+        if (activeJob) {
+          console.log(
+            `[SKIP] [Cron] Data source '${ds.name}' already has active job ${activeJob.id}, skipping scheduled sync`
+          );
+          continue;
+        }
+
+        console.log(
+          `[SYNC] [Cron] Starting scheduled sync for '${ds.name}' (${ds.sync_frequency})`
+        );
+
+        try {
+          const service = getExternalSyncService();
+          await service.startSync({
+            dataSourceId: ds.id,
+            userId: "system",
+            maxDurationMs: VERCEL_CRON_MAX_DURATION_MS,
+          });
+
+          // Calculate next scheduled sync
+          await updateNextScheduledSync(ds.id, ds.sync_frequency as string);
+          scheduledSyncsStarted++;
+
+          console.log(`[OK] [Cron] Scheduled sync started for '${ds.name}'`);
+        } catch (syncError) {
+          console.error(
+            `[ERROR] [Cron] Failed to start scheduled sync for '${ds.name}':`,
+            syncError
+          );
+        }
+
+        // Check if we're running out of time
+        const elapsed = Date.now() - startTime;
+        if (elapsed > CRON_SAFETY_TIMEOUT_MS) {
+          console.warn(
+            `[TIME] [Cron] Approaching timeout after scheduled syncs, skipping remaining`
+          );
+          break;
+        }
+      }
+    } catch (scheduleError) {
+      console.error("[ERROR] [Cron] Error checking scheduled syncs:", scheduleError);
+    }
+
     // 2. FIND RESUMABLE JOBS (PENDING, INTERRUPTED, PAUSED)
     const resumableJobs = await repository.findResumableJobs({ types: undefined });
     const pendingJobs = resumableJobs.filter(
@@ -304,13 +382,14 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(
       {
         success: true,
-        message: `Processed ${results.length} jobs (${successCount} successful, ${startedCount} started, ${resumedCount} resumed, ${skippedCount} skipped, ${orphanedJobs.length} recovered)`,
+        message: `Processed ${results.length} jobs (${successCount} successful, ${startedCount} started, ${resumedCount} resumed, ${skippedCount} skipped, ${orphanedJobs.length} recovered, ${scheduledSyncsStarted} scheduled syncs)`,
         processed: results.length,
         successful: successCount,
         started: startedCount,
         resumed: resumedCount,
         skipped: skippedCount,
         recovered: orphanedJobs.length,
+        scheduledSyncsStarted,
         failed: results.length - successCount - skippedCount,
         duration: totalDuration,
         results,
@@ -454,6 +533,40 @@ async function processExternalSyncJob(
     wasPending,
     wasInterrupted,
   };
+}
+
+// ============================================================
+// Scheduled sync helpers
+// ============================================================
+
+/**
+ * Calcula y actualiza la próxima fecha de sincronización programada
+ */
+async function updateNextScheduledSync(dataSourceId: string, syncFrequency: string): Promise<void> {
+  const now = new Date();
+  let nextSync: Date;
+
+  switch (syncFrequency) {
+    case "DAILY":
+      nextSync = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      break;
+    case "WEEKLY":
+      nextSync = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      break;
+    case "MONTHLY":
+      nextSync = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      break;
+    default:
+      return; // MANUAL — no next sync
+  }
+
+  await prisma.externalDataSource.update({
+    where: { id: dataSourceId },
+    data: {
+      last_sync_at: now,
+      next_scheduled_sync_at: nextSync,
+    },
+  });
 }
 
 /**

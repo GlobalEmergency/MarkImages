@@ -250,6 +250,10 @@ export class PrismaDataSourceRepository implements IDataSourceRepository {
       // Para REST_API
       authToken: rawConfig.authToken,
       headers: rawConfig.headers,
+      method: rawConfig.method,
+      requestBody: rawConfig.requestBody,
+      pagination: rawConfig.pagination,
+      responseDataPath: rawConfig.responseDataPath,
       // Para CSV_FILE
       filePath: rawConfig.filePath,
       columnMappings: rawConfig.columnMappings,
@@ -262,6 +266,7 @@ export class PrismaDataSourceRepository implements IDataSourceRepository {
       type: ds.type,
       config,
       sourceOrigin: ds.source_origin,
+      countryCode: ((ds as Record<string, unknown>).country_code as string) || "ES",
       regionCode: ds.region_code,
       matchingStrategy: ds.matching_strategy,
       matchingThreshold: ds.matching_threshold,

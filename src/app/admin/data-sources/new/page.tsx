@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -8,46 +8,15 @@ interface FieldMapping {
   [key: string]: string;
 }
 
-// Mapeo genérico para APIs CKAN
-// Formato: campo_fuente → campo_sistema
-const DEFAULT_CKAN_FIELD_MAPPING: FieldMapping = {
-  id_dea: "externalId",
-  nombre_dea: "name",
-  direccion: "address",
-  municipio: "locality",
-  provincia: "province",
-  codigo_postal: "postalCode",
-  latitud: "latitude",
-  longitud: "longitude",
-  ubicacion: "locationDescription",
-  accesibilidad_horaria: "accessibility",
-  horario_atencion: "schedule",
-  telefono_contacto: "contactPhone",
-  entidad_responsable: "responsibleEntity",
-  fecha_alta: "installationDate",
-  estado: "status",
-};
-
-// Mapeo para el formato JSON de la Comunidad de Madrid
-// Formato: campo_fuente → campo_sistema
-const MADRID_JSON_FIELD_MAPPING: FieldMapping = {
-  codigo_dea: "externalId",
-  nombre_establecimiento: "name", // Nombre del establecimiento (si existe en datos)
-  direccion_via_codigo: "streetType",
-  direccion_via_nombre: "streetName",
-  direccion_portal_numero: "streetNumber",
-  direccion_piso: "floor",
-  direccion_puerta: "additionalInfo",
-  direccion_ubicacion: "specificLocation",
-  direccion_codigo_postal: "postalCode",
-  direccion_latitud: "latitude",
-  direccion_longitud: "longitude",
-  municipio_codigo: "cityCode",
-  municipio_nombre: "city",
-  tipo_establecimiento: "establishmentType",
-  tipo_titularidad: "ownershipType",
-  horario_acceso: "accessSchedule",
-};
+interface ExistingDataSource {
+  id: string;
+  name: string;
+  type: string;
+  config: Record<string, unknown>;
+  sourceOrigin: string;
+  countryCode: string;
+  regionCode: string;
+}
 
 const SOURCE_ORIGINS = [
   { value: "EXTERNAL_API", label: "API Externa" },
@@ -56,20 +25,79 @@ const SOURCE_ORIGINS = [
   { value: "FIRE_DEPARTMENT_API", label: "API Bomberos" },
 ];
 
-const REGION_CODES = [
-  { value: "MAD", label: "Madrid" },
-  { value: "CAT", label: "Cataluña" },
-  { value: "AND", label: "Andalucía" },
-  { value: "VAL", label: "Valencia" },
-  { value: "GAL", label: "Galicia" },
-  { value: "PVA", label: "País Vasco" },
-  { value: "ESP", label: "Nacional (España)" },
+const COUNTRY_CODES = [
+  { value: "ES", label: "España" },
+  { value: "FR", label: "Francia" },
+  { value: "IT", label: "Italia" },
+  { value: "DE", label: "Alemania" },
+  { value: "PT", label: "Portugal" },
+  { value: "CH", label: "Suiza" },
+  { value: "AT", label: "Austria" },
+  { value: "BE", label: "Bélgica" },
+  { value: "SI", label: "Eslovenia" },
+  { value: "GB", label: "Reino Unido" },
+  { value: "NL", label: "Países Bajos" },
+  { value: "DK", label: "Dinamarca" },
+  { value: "SE", label: "Suecia" },
+  { value: "NO", label: "Noruega" },
 ];
+
+const REGION_CODES_BY_COUNTRY: Record<string, Array<{ value: string; label: string }>> = {
+  ES: [
+    { value: "ESP", label: "Nacional" },
+    { value: "AND", label: "Andalucía" },
+    { value: "ARA", label: "Aragón" },
+    { value: "AST", label: "Asturias" },
+    { value: "BAL", label: "Baleares" },
+    { value: "CAN", label: "Canarias" },
+    { value: "CNT", label: "Cantabria" },
+    { value: "CLM", label: "Castilla-La Mancha" },
+    { value: "CYL", label: "Castilla y León" },
+    { value: "CAT", label: "Cataluña" },
+    { value: "CEU", label: "Ceuta" },
+    { value: "EXT", label: "Extremadura" },
+    { value: "GAL", label: "Galicia" },
+    { value: "MAD", label: "Madrid" },
+    { value: "MEL", label: "Melilla" },
+    { value: "MUR", label: "Murcia" },
+    { value: "NAV", label: "Navarra" },
+    { value: "PVA", label: "País Vasco" },
+    { value: "RIO", label: "La Rioja" },
+    { value: "VAL", label: "Valencia" },
+  ],
+  FR: [
+    { value: "FRA", label: "Nacional" },
+    { value: "IDF", label: "Île-de-France" },
+    { value: "ARA", label: "Auvergne-Rhône-Alpes" },
+    { value: "OCC", label: "Occitanie" },
+  ],
+  IT: [
+    { value: "ITA", label: "Nacional" },
+    { value: "EMR", label: "Emilia-Romaña" },
+    { value: "LOM", label: "Lombardía" },
+  ],
+  CH: [{ value: "CHE", label: "Nacional" }],
+  SI: [{ value: "SVN", label: "Nacional" }],
+  GB: [
+    { value: "GBR", label: "Nacional" },
+    { value: "ENG", label: "England" },
+  ],
+};
+
+const PAGINATION_STRATEGIES = [
+  { value: "none", label: "Sin paginación" },
+  { value: "offset", label: "Offset (offset + limit)" },
+  { value: "page", label: "Página (page + per_page)" },
+  { value: "cursor", label: "Cursor (cursor + limit)" },
+];
+
+const EMPTY_FIELD_MAPPING: FieldMapping = {};
 
 export default function NewDataSourcePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [templates, setTemplates] = useState<ExistingDataSource[]>([]);
   const [form, setForm] = useState({
     name: "",
     type: "JSON_FILE",
@@ -79,15 +107,71 @@ export default function NewDataSourcePage() {
     resourceId: "",
     // Para JSON_FILE
     fileUrl: "",
-    jsonPath: "data",
+    jsonPath: "",
+    // Para REST_API
+    method: "GET" as "GET" | "POST",
+    requestBody: "",
+    responseDataPath: "",
+    paginationStrategy: "none",
+    paginationLimitParam: "limit",
+    paginationLimitValue: "100",
+    paginationOffsetParam: "offset",
+    paginationPageParam: "page",
+    paginationCursorParam: "cursor",
+    paginationCursorResponsePath: "",
+    paginationTotalCountPath: "",
+    paginationHasMorePath: "",
     // Común
     syncFrequency: "MANUAL",
     defaultPublicationMode: "LOCATION_ONLY",
     isActive: true,
     sourceOrigin: "EXTERNAL_API",
+    countryCode: "ES",
     regionCode: "MAD",
-    fieldMapping: MADRID_JSON_FIELD_MAPPING,
+    fieldMapping: EMPTY_FIELD_MAPPING as FieldMapping,
   });
+
+  // Load existing data sources as templates
+  useEffect(() => {
+    fetch("/api/admin/data-sources?asTemplates=true")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.data) {
+          setTemplates(data.data);
+        }
+      })
+      .catch(() => {
+        // Silently fail — templates are optional
+      });
+  }, []);
+
+  const availableRegions = useMemo(() => {
+    const regions = REGION_CODES_BY_COUNTRY[form.countryCode];
+    if (regions && regions.length > 0) return regions;
+    // Fallback: show a generic "Nacional" option using country code
+    const country = COUNTRY_CODES.find((c) => c.value === form.countryCode);
+    return [{ value: form.countryCode, label: country?.label || form.countryCode }];
+  }, [form.countryCode]);
+
+  const loadFromTemplate = (templateId: string) => {
+    const template = templates.find((t) => t.id === templateId);
+    if (!template) return;
+
+    const config = template.config as Record<string, unknown>;
+    setForm({
+      ...form,
+      type: template.type,
+      sourceOrigin: template.sourceOrigin,
+      countryCode: template.countryCode || "ES",
+      regionCode: template.regionCode,
+      apiEndpoint: (config.apiEndpoint as string) || "",
+      resourceId: (config.resourceId as string) || "",
+      fileUrl: (config.fileUrl as string) || "",
+      jsonPath: (config.jsonPath as string) || "",
+      responseDataPath: (config.responseDataPath as string) || "",
+      fieldMapping: (config.fieldMapping || config.fieldMappings || {}) as FieldMapping,
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,6 +200,13 @@ export default function NewDataSourcePage() {
       }
     }
 
+    if (form.type === "REST_API") {
+      if (!form.apiEndpoint.trim()) {
+        setError("El endpoint de la API es obligatorio");
+        return;
+      }
+    }
+
     try {
       setLoading(true);
 
@@ -136,6 +227,50 @@ export default function NewDataSourcePage() {
           fileUrl: form.fileUrl || null,
           jsonPath: form.jsonPath || null,
         };
+      } else if (form.type === "REST_API") {
+        config = {
+          ...config,
+          apiEndpoint: form.apiEndpoint || null,
+          method: form.method,
+          responseDataPath: form.responseDataPath || null,
+        };
+
+        if (form.method === "POST" && form.requestBody.trim()) {
+          try {
+            config.requestBody = JSON.parse(form.requestBody);
+          } catch {
+            setError("El cuerpo de la petición debe ser JSON válido");
+            return;
+          }
+        }
+
+        if (form.paginationStrategy !== "none") {
+          const pagination: Record<string, unknown> = {
+            strategy: form.paginationStrategy,
+            limitParam: form.paginationLimitParam || "limit",
+            limitValue: parseInt(form.paginationLimitValue, 10) || 100,
+          };
+
+          if (form.paginationStrategy === "offset") {
+            pagination.offsetParam = form.paginationOffsetParam || "offset";
+          } else if (form.paginationStrategy === "page") {
+            pagination.pageParam = form.paginationPageParam || "page";
+          } else if (form.paginationStrategy === "cursor") {
+            pagination.cursorParam = form.paginationCursorParam || "cursor";
+            if (form.paginationCursorResponsePath) {
+              pagination.cursorResponsePath = form.paginationCursorResponsePath;
+            }
+          }
+
+          if (form.paginationTotalCountPath) {
+            pagination.totalCountPath = form.paginationTotalCountPath;
+          }
+          if (form.paginationHasMorePath) {
+            pagination.hasMorePath = form.paginationHasMorePath;
+          }
+
+          config.pagination = pagination;
+        }
       }
 
       const response = await fetch("/api/admin/data-sources", {
@@ -149,6 +284,7 @@ export default function NewDataSourcePage() {
           defaultPublicationMode: form.defaultPublicationMode,
           isActive: form.isActive,
           sourceOrigin: form.sourceOrigin,
+          countryCode: form.countryCode,
           regionCode: form.regionCode,
           config,
         }),
@@ -178,28 +314,29 @@ export default function NewDataSourcePage() {
     });
   };
 
-  const loadDefaultCkanMapping = () => {
+  const addFieldMapping = () => {
     setForm({
       ...form,
-      apiEndpoint:
-        "https://datos.comunidad.madrid/catalogo/dataset/7265fe82-f01b-41e7-b252-b8bae92daa5e/resource/fba1b963-3aa3-42d2-8316-1228d2be69c9/download/desfibriladores_acceso_publico.json",
-      resourceId: "fba1b963-3aa3-42d2-8316-1228d2be69c9",
-      fieldMapping: DEFAULT_CKAN_FIELD_MAPPING,
+      fieldMapping: {
+        ...form.fieldMapping,
+        "": "",
+      },
     });
   };
 
-  const loadMadridJsonConfig = () => {
-    setForm({
-      ...form,
-      name: "DEAs Comunidad de Madrid",
-      type: "JSON_FILE",
-      fileUrl:
-        "https://datos.comunidad.madrid/catalogo/dataset/d2478503-a4ae-4753-9540-9200071803c4/resource/42d08814-3361-4c2a-93fe-36664abc7953/download/desfibriladores_externos_fuera_ambito_sanitario.json",
-      jsonPath: "data",
-      sourceOrigin: "EXTERNAL_API",
-      regionCode: "MAD",
-      fieldMapping: MADRID_JSON_FIELD_MAPPING,
-    });
+  const removeFieldMapping = (field: string) => {
+    const updated = { ...form.fieldMapping };
+    delete updated[field];
+    setForm({ ...form, fieldMapping: updated });
+  };
+
+  const renameFieldMapping = (oldKey: string, newKey: string) => {
+    if (oldKey === newKey) return;
+    const updated: FieldMapping = {};
+    for (const [k, v] of Object.entries(form.fieldMapping)) {
+      updated[k === oldKey ? newKey : k] = v;
+    }
+    setForm({ ...form, fieldMapping: updated });
   };
 
   return (
@@ -211,13 +348,37 @@ export default function NewDataSourcePage() {
             href="/admin/data-sources"
             className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-block"
           >
-            ← Volver a fuentes de datos
+            &larr; Volver a fuentes de datos
           </Link>
           <h1 className="text-3xl font-bold text-gray-900">Nueva Fuente de Datos</h1>
           <p className="mt-2 text-sm text-gray-600">
             Configura una nueva fuente de datos externa para importar DEAs automáticamente
           </p>
         </div>
+
+        {/* Template loader */}
+        {templates.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <label htmlFor="template" className="block text-sm font-medium text-blue-800 mb-2">
+              Copiar configuración de una fuente existente
+            </label>
+            <select
+              id="template"
+              onChange={(e) => {
+                if (e.target.value) loadFromTemplate(e.target.value);
+              }}
+              className="block w-full border-blue-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              defaultValue=""
+            >
+              <option value="">-- Seleccionar plantilla --</option>
+              {templates.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name} ({t.type})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Error */}
         {error && (
@@ -270,10 +431,10 @@ export default function NewDataSourcePage() {
                   onChange={(e) => setForm({ ...form, type: e.target.value })}
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 >
-                  <option value="CKAN_API">API CKAN</option>
-                  <option value="REST_API">API REST</option>
-                  <option value="CSV_FILE">Archivo CSV</option>
                   <option value="JSON_FILE">Archivo JSON</option>
+                  <option value="REST_API">API REST</option>
+                  <option value="CKAN_API">API CKAN</option>
+                  <option value="CSV_FILE">Archivo CSV</option>
                 </select>
               </div>
 
@@ -291,7 +452,7 @@ export default function NewDataSourcePage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                   <label htmlFor="sourceOrigin" className="block text-sm font-medium text-gray-700">
                     Origen *
@@ -311,6 +472,29 @@ export default function NewDataSourcePage() {
                 </div>
 
                 <div>
+                  <label htmlFor="countryCode" className="block text-sm font-medium text-gray-700">
+                    País *
+                  </label>
+                  <select
+                    id="countryCode"
+                    value={form.countryCode}
+                    onChange={(e) => {
+                      const newCountry = e.target.value;
+                      const regions = REGION_CODES_BY_COUNTRY[newCountry];
+                      const defaultRegion = regions?.[0]?.value || newCountry;
+                      setForm({ ...form, countryCode: newCountry, regionCode: defaultRegion });
+                    }}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  >
+                    {COUNTRY_CODES.map((country) => (
+                      <option key={country.value} value={country.value}>
+                        {country.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
                   <label htmlFor="regionCode" className="block text-sm font-medium text-gray-700">
                     Región *
                   </label>
@@ -320,7 +504,7 @@ export default function NewDataSourcePage() {
                     onChange={(e) => setForm({ ...form, regionCode: e.target.value })}
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   >
-                    {REGION_CODES.map((region) => (
+                    {availableRegions.map((region) => (
                       <option key={region.value} value={region.value}>
                         {region.label}
                       </option>
@@ -329,45 +513,46 @@ export default function NewDataSourcePage() {
                 </div>
               </div>
 
-              <div>
-                <label htmlFor="syncFrequency" className="block text-sm font-medium text-gray-700">
-                  Frecuencia de Sincronización
-                </label>
-                <select
-                  id="syncFrequency"
-                  value={form.syncFrequency}
-                  onChange={(e) => setForm({ ...form, syncFrequency: e.target.value })}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                >
-                  <option value="MANUAL">Manual</option>
-                  <option value="DAILY">Diaria</option>
-                  <option value="WEEKLY">Semanal</option>
-                  <option value="MONTHLY">Mensual</option>
-                </select>
-              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label
+                    htmlFor="syncFrequency"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Frecuencia de Sincronización
+                  </label>
+                  <select
+                    id="syncFrequency"
+                    value={form.syncFrequency}
+                    onChange={(e) => setForm({ ...form, syncFrequency: e.target.value })}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  >
+                    <option value="MANUAL">Manual</option>
+                    <option value="DAILY">Diaria</option>
+                    <option value="WEEKLY">Semanal</option>
+                    <option value="MONTHLY">Mensual</option>
+                  </select>
+                </div>
 
-              <div>
-                <label
-                  htmlFor="defaultPublicationMode"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Modo de Publicación por Defecto
-                </label>
-                <select
-                  id="defaultPublicationMode"
-                  value={form.defaultPublicationMode}
-                  onChange={(e) => setForm({ ...form, defaultPublicationMode: e.target.value })}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                >
-                  <option value="NONE">Ninguno - No publicar</option>
-                  <option value="LOCATION_ONLY">Solo ubicación</option>
-                  <option value="BASIC_INFO">Info básica (ubicación + horario + tipo)</option>
-                  <option value="FULL">Información completa</option>
-                </select>
-                <p className="mt-1 text-xs text-gray-500">
-                  Nivel de información que se publicará automáticamente al importar desde esta
-                  fuente
-                </p>
+                <div>
+                  <label
+                    htmlFor="defaultPublicationMode"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Modo de Publicación por Defecto
+                  </label>
+                  <select
+                    id="defaultPublicationMode"
+                    value={form.defaultPublicationMode}
+                    onChange={(e) => setForm({ ...form, defaultPublicationMode: e.target.value })}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  >
+                    <option value="NONE">Ninguno - No publicar</option>
+                    <option value="LOCATION_ONLY">Solo ubicación</option>
+                    <option value="BASIC_INFO">Info básica (ubicación + horario + tipo)</option>
+                    <option value="FULL">Información completa</option>
+                  </select>
+                </div>
               </div>
 
               <div className="flex items-center">
@@ -388,16 +573,9 @@ export default function NewDataSourcePage() {
           {/* JSON File Configuration */}
           {form.type === "JSON_FILE" && (
             <div className="bg-white shadow rounded-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-medium text-gray-900">Configuración de Archivo JSON</h2>
-                <button
-                  type="button"
-                  onClick={loadMadridJsonConfig}
-                  className="text-sm text-blue-600 hover:text-blue-800"
-                >
-                  Cargar configuración de Madrid
-                </button>
-              </div>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">
+                Configuración de Archivo JSON
+              </h2>
 
               <div className="space-y-4">
                 <div>
@@ -410,7 +588,7 @@ export default function NewDataSourcePage() {
                     value={form.fileUrl}
                     onChange={(e) => setForm({ ...form, fileUrl: e.target.value })}
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="https://datos.comunidad.madrid/.../archivo.json"
+                    placeholder="https://ejemplo.com/datos/deas.json"
                   />
                 </div>
 
@@ -428,7 +606,7 @@ export default function NewDataSourcePage() {
                   />
                   <p className="mt-1 text-xs text-gray-500">
                     Propiedad del JSON que contiene el array de registros. Ej: &quot;data&quot;,
-                    &quot;records&quot;, &quot;result.items&quot;
+                    &quot;records&quot;, &quot;result.items&quot;. Dejar vacío para auto-detectar.
                   </p>
                 </div>
               </div>
@@ -436,20 +614,9 @@ export default function NewDataSourcePage() {
           )}
 
           {/* CKAN API Configuration */}
-          {(form.type === "CKAN_API" || form.type === "REST_API") && (
+          {form.type === "CKAN_API" && (
             <div className="bg-white shadow rounded-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-medium text-gray-900">Configuración de API CKAN</h2>
-                {form.type === "CKAN_API" && (
-                  <button
-                    type="button"
-                    onClick={loadDefaultCkanMapping}
-                    className="text-sm text-blue-600 hover:text-blue-800"
-                  >
-                    Cargar configuración de Madrid
-                  </button>
-                )}
-              </div>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Configuración de API CKAN</h2>
 
               <div className="space-y-4">
                 <div>
@@ -462,7 +629,7 @@ export default function NewDataSourcePage() {
                     value={form.apiEndpoint}
                     onChange={(e) => setForm({ ...form, apiEndpoint: e.target.value })}
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="https://datos.comunidad.madrid/..."
+                    placeholder="https://datos.ejemplo.com"
                   />
                 </div>
 
@@ -486,33 +653,282 @@ export default function NewDataSourcePage() {
             </div>
           )}
 
-          {/* Field Mapping */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Mapeo de Campos</h2>
-            <p className="text-sm text-gray-500 mb-4">
-              Configura cómo los campos de la fuente externa se mapean a los campos internos del
-              sistema
-            </p>
+          {/* REST API Configuration */}
+          {form.type === "REST_API" && (
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Configuración de API REST</h2>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {Object.entries(form.fieldMapping).map(([internal, external]) => (
-                <div key={internal}>
+              <div className="space-y-4">
+                <div>
                   <label
-                    htmlFor={`field-${internal}`}
+                    htmlFor="restApiEndpoint"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    {internal}
+                    Endpoint de la API *
                   </label>
                   <input
-                    type="text"
-                    id={`field-${internal}`}
-                    value={external}
-                    onChange={(e) => updateFieldMapping(internal, e.target.value)}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono text-xs"
+                    type="url"
+                    id="restApiEndpoint"
+                    value={form.apiEndpoint}
+                    onChange={(e) => setForm({ ...form, apiEndpoint: e.target.value })}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="https://api.ejemplo.com/v1/defibrillators"
                   />
                 </div>
-              ))}
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="method" className="block text-sm font-medium text-gray-700">
+                      Método HTTP
+                    </label>
+                    <select
+                      id="method"
+                      value={form.method}
+                      onChange={(e) =>
+                        setForm({ ...form, method: e.target.value as "GET" | "POST" })
+                      }
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    >
+                      <option value="GET">GET</option>
+                      <option value="POST">POST</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="responseDataPath"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Ruta de datos en respuesta
+                    </label>
+                    <input
+                      type="text"
+                      id="responseDataPath"
+                      value={form.responseDataPath}
+                      onChange={(e) => setForm({ ...form, responseDataPath: e.target.value })}
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
+                      placeholder="results, data.records, elements"
+                    />
+                  </div>
+                </div>
+
+                {form.method === "POST" && (
+                  <div>
+                    <label
+                      htmlFor="requestBody"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Cuerpo de la petición (JSON)
+                    </label>
+                    <textarea
+                      id="requestBody"
+                      value={form.requestBody}
+                      onChange={(e) => setForm({ ...form, requestBody: e.target.value })}
+                      rows={4}
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono text-xs"
+                      placeholder='{"query": "..."}'
+                    />
+                  </div>
+                )}
+
+                {/* Pagination */}
+                <div className="border-t pt-4">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Paginación</h3>
+
+                  <div>
+                    <label
+                      htmlFor="paginationStrategy"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Estrategia
+                    </label>
+                    <select
+                      id="paginationStrategy"
+                      value={form.paginationStrategy}
+                      onChange={(e) => setForm({ ...form, paginationStrategy: e.target.value })}
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    >
+                      {PAGINATION_STRATEGIES.map((s) => (
+                        <option key={s.value} value={s.value}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {form.paginationStrategy !== "none" && (
+                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600">
+                          Parámetro de límite
+                        </label>
+                        <input
+                          type="text"
+                          value={form.paginationLimitParam}
+                          onChange={(e) =>
+                            setForm({ ...form, paginationLimitParam: e.target.value })
+                          }
+                          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono"
+                          placeholder="limit"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600">
+                          Registros por página
+                        </label>
+                        <input
+                          type="number"
+                          value={form.paginationLimitValue}
+                          onChange={(e) =>
+                            setForm({ ...form, paginationLimitValue: e.target.value })
+                          }
+                          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm"
+                          placeholder="100"
+                        />
+                      </div>
+
+                      {form.paginationStrategy === "offset" && (
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600">
+                            Parámetro de offset
+                          </label>
+                          <input
+                            type="text"
+                            value={form.paginationOffsetParam}
+                            onChange={(e) =>
+                              setForm({ ...form, paginationOffsetParam: e.target.value })
+                            }
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono"
+                            placeholder="offset"
+                          />
+                        </div>
+                      )}
+
+                      {form.paginationStrategy === "page" && (
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600">
+                            Parámetro de página
+                          </label>
+                          <input
+                            type="text"
+                            value={form.paginationPageParam}
+                            onChange={(e) =>
+                              setForm({ ...form, paginationPageParam: e.target.value })
+                            }
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono"
+                            placeholder="page"
+                          />
+                        </div>
+                      )}
+
+                      {form.paginationStrategy === "cursor" && (
+                        <>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600">
+                              Parámetro de cursor
+                            </label>
+                            <input
+                              type="text"
+                              value={form.paginationCursorParam}
+                              onChange={(e) =>
+                                setForm({ ...form, paginationCursorParam: e.target.value })
+                              }
+                              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono"
+                              placeholder="cursor"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600">
+                              Ruta del cursor en respuesta
+                            </label>
+                            <input
+                              type="text"
+                              value={form.paginationCursorResponsePath}
+                              onChange={(e) =>
+                                setForm({ ...form, paginationCursorResponsePath: e.target.value })
+                              }
+                              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono"
+                              placeholder="meta.next_cursor"
+                            />
+                          </div>
+                        </>
+                      )}
+
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600">
+                          Ruta del total de registros
+                        </label>
+                        <input
+                          type="text"
+                          value={form.paginationTotalCountPath}
+                          onChange={(e) =>
+                            setForm({ ...form, paginationTotalCountPath: e.target.value })
+                          }
+                          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono"
+                          placeholder="meta.total_count"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
+          )}
+
+          {/* Field Mapping */}
+          <div className="bg-white shadow rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-medium text-gray-900">Mapeo de Campos</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Campo fuente &rarr; Campo del sistema. Deja vacío si no aplica.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={addFieldMapping}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                + Añadir campo
+              </button>
+            </div>
+
+            {Object.keys(form.fieldMapping).length === 0 ? (
+              <p className="text-sm text-gray-400 italic">
+                Sin mapeo de campos configurado. Pulsa &quot;Añadir campo&quot; para empezar o copia
+                desde una fuente existente.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {Object.entries(form.fieldMapping).map(([sourceField, systemField], index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={sourceField}
+                      onChange={(e) => renameFieldMapping(sourceField, e.target.value)}
+                      className="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono text-xs"
+                      placeholder="campo_fuente"
+                    />
+                    <span className="text-gray-400 text-xs">&rarr;</span>
+                    <input
+                      type="text"
+                      value={systemField}
+                      onChange={(e) => updateFieldMapping(sourceField, e.target.value)}
+                      className="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono text-xs"
+                      placeholder="campo_sistema"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeFieldMapping(sourceField)}
+                      className="text-red-400 hover:text-red-600 text-sm"
+                      title="Eliminar"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Actions */}

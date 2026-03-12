@@ -53,6 +53,27 @@ export interface DataSourceConfig {
   apiEndpoint?: string;
   authToken?: string;
   headers?: Record<string, string>;
+  method?: "GET" | "POST"; // default GET
+  requestBody?: unknown; // Para POST APIs (ej: Overpass)
+
+  // Paginación configurable (REST_API)
+  pagination?: {
+    strategy: "offset" | "page" | "cursor" | "none";
+    // Nombres de parámetros configurables
+    limitParam?: string; // default: 'limit'
+    limitValue?: number; // default: 100
+    offsetParam?: string; // default: 'offset' (strategy=offset)
+    pageParam?: string; // default: 'page' (strategy=page)
+    cursorParam?: string; // default: 'cursor' (strategy=cursor)
+    // Dónde encontrar el cursor del siguiente resultado
+    cursorResponsePath?: string; // ej: 'next_cursor', 'meta.next'
+    // Cómo saber si hay más páginas
+    totalCountPath?: string; // ej: 'total', 'meta.total_count'
+    hasMorePath?: string; // ej: 'has_more', 'meta.has_next'
+  };
+
+  // Dónde están los registros en la respuesta JSON
+  responseDataPath?: string; // ej: 'results', 'data.records', 'elements'
 
   // ============================================
   // Común para APIs y JSON
@@ -72,6 +93,7 @@ export interface ExternalDataSourceConfig {
 
   // Scope regional
   sourceOrigin: string; // EXTERNAL_API, HEALTH_API, etc.
+  countryCode: string; // ISO 3166-1 alpha-2: "ES", "FR", "IT", etc.
   regionCode: string; // "MAD", "CAT", "AND", etc.
 
   // Matching

@@ -32,29 +32,6 @@ interface CkanResponse {
   };
 }
 
-/**
- * Mapeo predefinido de campos para la API de Madrid
- */
-export const MADRID_FIELD_MAPPINGS: Record<string, string> = {
-  codigo_dea: "id",
-  direccion_via_codigo: "streetType",
-  direccion_via_nombre: "streetName",
-  direccion_portal_numero: "streetNumber",
-  direccion_piso: "floor",
-  direccion_puerta: "additionalInfo",
-  direccion_ubicacion: "specificLocation",
-  direccion_codigo_postal: "postalCode",
-  direccion_latitud: "latitude",
-  direccion_longitud: "longitude",
-  direccion_coordenada_x: "utmX",
-  direccion_coordenada_y: "utmY",
-  municipio_codigo: "cityCode",
-  municipio_nombre: "city",
-  tipo_establecimiento: "establishmentType",
-  tipo_titularidad: "ownershipType",
-  horario_acceso: "accessSchedule",
-};
-
 export class CkanApiAdapter implements IDataSourceAdapter {
   readonly type = "CKAN_API" as const;
 
@@ -115,7 +92,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
   }
 
   async *fetchRecords(config: DataSourceConfig): AsyncGenerator<ImportRecord> {
-    const fieldMappings = config.fieldMappings || MADRID_FIELD_MAPPINGS;
+    const fieldMappings = config.fieldMappings || {};
     const { url, isDirect } = this.getEffectiveUrl(config);
 
     if (isDirect) {
@@ -201,14 +178,10 @@ export class CkanApiAdapter implements IDataSourceAdapter {
       }
 
       const records = response.result.records;
+      const externalIdField = this.detectExternalIdField(records);
 
       for (const record of records) {
-        yield ImportRecord.fromApiRecord(
-          record,
-          fieldMappings,
-          rowIndex,
-          "codigo_dea" // Campo de ID externo para Madrid
-        );
+        yield ImportRecord.fromApiRecord(record, fieldMappings, rowIndex, externalIdField);
         rowIndex++;
       }
 
@@ -402,7 +375,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
 
   async getPreview(config: DataSourceConfig, limit: number = 5): Promise<ImportRecord[]> {
     const { url, isDirect } = this.getEffectiveUrl(config);
-    const fieldMappings = config.fieldMappings || MADRID_FIELD_MAPPINGS;
+    const fieldMappings = config.fieldMappings || {};
 
     if (isDirect) {
       // Descarga directa de JSON
@@ -431,8 +404,9 @@ export class CkanApiAdapter implements IDataSourceAdapter {
       throw new Error(`CKAN API error: ${response.error?.message || "Unknown error"}`);
     }
 
+    const externalIdField = this.detectExternalIdField(response.result.records);
     return response.result.records.map((record, index) =>
-      ImportRecord.fromApiRecord(record, fieldMappings, index, "codigo_dea")
+      ImportRecord.fromApiRecord(record, fieldMappings, index, externalIdField)
     );
   }
 
@@ -564,21 +538,3 @@ export class CkanApiAdapter implements IDataSourceAdapter {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
-
-/**
- * Configuración predefinida para la API de la Comunidad de Madrid
- */
-export function createMadridConfig(resourceId: string): DataSourceConfig {
-  return {
-    type: "CKAN_API",
-    baseUrl: "https://datos.comunidad.madrid",
-    resourceId,
-    pageSize: 100,
-    fieldMappings: MADRID_FIELD_MAPPINGS,
-  };
-}
-
-/**
- * Resource ID conocido para DEAs de Madrid
- */
-export const MADRID_DEA_RESOURCE_ID = "42d08814-3361-4c2a-93fe-36664abc7953";
