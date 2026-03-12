@@ -174,6 +174,10 @@ Para las siguientes comunidades autónomas NO se han encontrado datasets públic
 - **Real Decreto 365/2009** - Condiciones y requisitos mínimos para DEA/DESA fuera del ámbito sanitario (ámbito estatal)
 - Cada CCAA tiene su propia normativa que complementa el RD estatal
 
+## Documento relacionado
+
+- **[Fuentes de datos abiertos de DEA en Europa](./open-data-sources-aed-europe.md)** - Investigación ampliada con fuentes de toda Europa
+
 ## Enlaces útiles
 
 - Portal nacional datos abiertos: https://datos.gob.es
