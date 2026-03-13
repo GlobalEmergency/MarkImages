@@ -34,6 +34,7 @@ A continuación se listan las fuentes confirmadas con datos descargables, y las 
 - **Frecuencia de actualización**: Diaria
 
 #### 2a. DESA en espacios físicos
+
 - **URL Explorar**: https://analisis.datosabiertos.jcyl.es/explore/dataset/registro-de-desfibriladores-externos-semiautomaticos-desa-en-espacios-fisicos/
 - **URL API (JSON)**: https://analisis.datosabiertos.jcyl.es/api/explore/v2.1/catalog/datasets/registro-de-desfibriladores-externos-semiautomaticos-desa-en-espacios-fisicos/records?limit=100
 - **URL Export CSV**: https://analisis.datosabiertos.jcyl.es/explore/dataset/registro-de-desfibriladores-externos-semiautomaticos-desa-en-espacios-fisicos/export/
@@ -42,6 +43,7 @@ A continuación se listan las fuentes confirmadas con datos descargables, y las 
 - **Prioridad**: ALTA - API REST con JSON, actualización diaria
 
 #### 2b. DESA en vehículos de transporte no sanitario
+
 - **URL Explorar**: https://analisis.datosabiertos.jcyl.es/explore/dataset/registro-de-desfibriladores-externos-semiautomaticos-desa-en-vehiculos-de-transp/
 - **URL API (JSON)**: https://analisis.datosabiertos.jcyl.es/api/explore/v2.1/catalog/datasets/registro-de-desfibriladores-externos-semiautomaticos-desa-en-vehiculos-de-transp/records?limit=100
 - **Campos**: número de serie, empresa, provincia, localidad
@@ -114,21 +116,21 @@ out skel qt;
 
 Para las siguientes comunidades autónomas NO se han encontrado datasets públicos de DEAs en portales de datos abiertos. Esto no significa que no existan registros internos (la mayoría tienen registros obligatorios por ley), sino que no los publican como open data:
 
-| Comunidad Autónoma | Portal datos abiertos | Registro DEA obligatorio | Normativa |
-|---|---|---|---|
-| Andalucía | datos.juntadeandalucia.es | Sí | Decreto 22/2012 |
-| Aragón | opendata.aragon.es | Sí | Decreto 30/2019 |
-| Asturias | - | Sí | - |
-| Baleares | - | Sí | Decreto 137/2008 |
-| Canarias | datos.canarias.es | Sí | - |
-| Cantabria | - | Sí | - |
-| Castilla-La Mancha | - | Sí | - |
-| Comunidad Valenciana | dadesobertes.gva.es | Sí (con geolocalización) | Decreto 159/2017 |
-| Extremadura | - | Sí | - |
-| Galicia | abertos.xunta.gal | Sí | - |
-| La Rioja | - | Sí | Decreto 8/2019 |
-| Murcia | - | Sí | - |
-| Navarra | gobiernoabierto.navarra.es | Sí | - |
+| Comunidad Autónoma   | Portal datos abiertos      | Registro DEA obligatorio | Normativa        |
+| -------------------- | -------------------------- | ------------------------ | ---------------- |
+| Andalucía            | datos.juntadeandalucia.es  | Sí                       | Decreto 22/2012  |
+| Aragón               | opendata.aragon.es         | Sí                       | Decreto 30/2019  |
+| Asturias             | -                          | Sí                       | -                |
+| Baleares             | -                          | Sí                       | Decreto 137/2008 |
+| Canarias             | datos.canarias.es          | Sí                       | -                |
+| Cantabria            | -                          | Sí                       | -                |
+| Castilla-La Mancha   | -                          | Sí                       | -                |
+| Comunidad Valenciana | dadesobertes.gva.es        | Sí (con geolocalización) | Decreto 159/2017 |
+| Extremadura          | -                          | Sí                       | -                |
+| Galicia              | abertos.xunta.gal          | Sí                       | -                |
+| La Rioja             | -                          | Sí                       | Decreto 8/2019   |
+| Murcia               | -                          | Sí                       | -                |
+| Navarra              | gobiernoabierto.navarra.es | Sí                       | -                |
 
 **Nota sobre Comunidad Valenciana**: El Decreto 159/2017 obliga a registrar DEAs incluyendo coordenadas de geolocalización. El registro existe en la GVA pero no se ha localizado como dataset público descargable. Podría ser interesante solicitarlo vía petición de datos abiertos.
 
@@ -137,35 +139,38 @@ Para las siguientes comunidades autónomas NO se han encontrado datasets públic
 ## Estrategia de importación recomendada
 
 ### Fase 1 - Fuentes directas (CSV/JSON descargables)
+
 1. **Comunidad de Madrid** - CSV directo
 2. **Castilla y León** - API REST JSON (OpenDataSoft)
 3. **Cataluña** - Múltiples formatos vía Dades Obertes
 4. **Euskadi** - Open Data Euskadi
 
 ### Fase 2 - Complementar con OpenStreetMap
+
 5. **OpenStreetMap vía Overpass API** - Cubrir el resto de España y cruzar datos con registros oficiales
 
 ### Fase 3 - Fuentes adicionales
+
 6. **Castellón** - Dataset provincial
 7. **Solicitar datos abiertos** a CCAA con registros obligatorios pero sin publicación (especialmente Comunidad Valenciana y Andalucía)
 
 ### Campos mínimos para importación
 
-| Campo | Descripción | Obligatorio |
-|---|---|---|
-| latitude | Latitud GPS | Sí |
-| longitude | Longitud GPS | Sí |
-| address | Dirección completa | Sí |
-| city | Municipio | Sí |
-| province | Provincia | No |
-| region | Comunidad autónoma | Sí |
-| location_name | Nombre del lugar/edificio | No |
-| location_type | Tipo de espacio (público, privado, etc.) | No |
-| access | Accesibilidad (24h, horario limitado, etc.) | No |
-| source | Fuente de datos original | Sí |
-| source_url | URL de la fuente | Sí |
-| source_id | ID en la fuente original | No |
-| last_verified | Fecha de última verificación | No |
+| Campo         | Descripción                                 | Obligatorio |
+| ------------- | ------------------------------------------- | ----------- |
+| latitude      | Latitud GPS                                 | Sí          |
+| longitude     | Longitud GPS                                | Sí          |
+| address       | Dirección completa                          | Sí          |
+| city          | Municipio                                   | Sí          |
+| province      | Provincia                                   | No          |
+| region        | Comunidad autónoma                          | Sí          |
+| location_name | Nombre del lugar/edificio                   | No          |
+| location_type | Tipo de espacio (público, privado, etc.)    | No          |
+| access        | Accesibilidad (24h, horario limitado, etc.) | No          |
+| source        | Fuente de datos original                    | Sí          |
+| source_url    | URL de la fuente                            | Sí          |
+| source_id     | ID en la fuente original                    | No          |
+| last_verified | Fecha de última verificación                | No          |
 
 ---
 

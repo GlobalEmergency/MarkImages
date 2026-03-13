@@ -36,6 +36,7 @@ El estándar de datos más completo es el **schema-dae** francés, publicado en 
 - **Prioridad**: ALTA - única fuente paneuropea abierta y consistente
 
 **Consulta Overpass genérica por país** (cambiar código ISO):
+
 ```
 [out:json][timeout:300];
 area["ISO3166-1"="ES"]->.searchArea;
@@ -290,6 +291,7 @@ out center;
 Documentado en detalle en [open-data-sources-aed-spain.md](./open-data-sources-aed-spain.md).
 
 **Resumen**: Sin dataset nacional unificado. Datos fragmentados por CCAA y municipio:
+
 - **Con datos abiertos**: Comunidad de Madrid (CSV), Castilla y León (API REST), Cataluña (multi-formato), Euskadi, Castellón, Sant Boi
 - **Portal nacional**: https://datos.gob.es (categoría salud)
 - **13 CCAA** con registros obligatorios pero sin datos abiertos publicados
@@ -326,33 +328,34 @@ Documentado en detalle en [open-data-sources-aed-spain.md](./open-data-sources-a
 
 ## 4. Tabla resumen de accesibilidad por país
 
-| País | Fuente | Descarga abierta | API | Geoloc. | Licencia | Prioridad |
-|------|--------|:-:|:-:|:-:|---------|:-:|
-| **Francia** | Géo'DAE | SI | SI | SI | Open Licence v2.0 | MUY ALTA |
-| **Suiza** | Defikarte.ch/OSM | SI | SI (GitHub) | SI | ODbL | ALTA |
-| **Eslovenia** | Gov API | SI | SI | SI | Gov open data | ALTA |
-| **Reino Unido** | The Circuit/BHF | SI | No | SI | Custom BHF | ALTA |
-| **Italia (Emilia-Romaña)** | Registro regional | SI | SI | SI | CC BY 4.0 | ALTA |
-| **Austria (Viena)** | data.gv.at | SI | Probable | SI | CC BY | MEDIA |
-| **Bélgica (Bruselas)** | opendata.brussels | SI | SI | SI | Open data | MEDIA |
-| **España (CCAA)** | datos.gob.es + regionales | SI | Parcial | SI | Open data | ALTA |
-| **Dinamarca** | Hjertestarter.dk | No | No | SI | Propietaria | BAJA |
-| **Suecia** | SAEDREG | No | No | SI | Propietaria | BAJA |
-| **Países Bajos** | HartslagNu | No | No (interno) | SI | Propietaria | BAJA |
-| **Alemania** | Definetz Defikataster | Parcial | Parcial | SI | Restringida | BAJA |
-| **Irlanda** | NAS AED Network | No | No | SI | N/A | BAJA |
-| **Portugal** | INEM PNDAE | No | No | SI | N/A | BAJA |
-| **Rep. Checa** | Záchranká | No | No | SI | N/A | BAJA |
-| **Polonia** | - | No | No | - | N/A | BAJA |
-| **Noruega** | - | No | No | - | N/A | BAJA |
-| **Finlandia** | - | No | No | - | N/A | BAJA |
-| **Toda Europa** | **OpenStreetMap** | **SI** | **SI (Overpass)** | **SI** | **ODbL** | **MUY ALTA** |
+| País                       | Fuente                    | Descarga abierta |        API        | Geoloc. | Licencia          |  Prioridad   |
+| -------------------------- | ------------------------- | :--------------: | :---------------: | :-----: | ----------------- | :----------: |
+| **Francia**                | Géo'DAE                   |        SI        |        SI         |   SI    | Open Licence v2.0 |   MUY ALTA   |
+| **Suiza**                  | Defikarte.ch/OSM          |        SI        |    SI (GitHub)    |   SI    | ODbL              |     ALTA     |
+| **Eslovenia**              | Gov API                   |        SI        |        SI         |   SI    | Gov open data     |     ALTA     |
+| **Reino Unido**            | The Circuit/BHF           |        SI        |        No         |   SI    | Custom BHF        |     ALTA     |
+| **Italia (Emilia-Romaña)** | Registro regional         |        SI        |        SI         |   SI    | CC BY 4.0         |     ALTA     |
+| **Austria (Viena)**        | data.gv.at                |        SI        |     Probable      |   SI    | CC BY             |    MEDIA     |
+| **Bélgica (Bruselas)**     | opendata.brussels         |        SI        |        SI         |   SI    | Open data         |    MEDIA     |
+| **España (CCAA)**          | datos.gob.es + regionales |        SI        |      Parcial      |   SI    | Open data         |     ALTA     |
+| **Dinamarca**              | Hjertestarter.dk          |        No        |        No         |   SI    | Propietaria       |     BAJA     |
+| **Suecia**                 | SAEDREG                   |        No        |        No         |   SI    | Propietaria       |     BAJA     |
+| **Países Bajos**           | HartslagNu                |        No        |   No (interno)    |   SI    | Propietaria       |     BAJA     |
+| **Alemania**               | Definetz Defikataster     |     Parcial      |      Parcial      |   SI    | Restringida       |     BAJA     |
+| **Irlanda**                | NAS AED Network           |        No        |        No         |   SI    | N/A               |     BAJA     |
+| **Portugal**               | INEM PNDAE                |        No        |        No         |   SI    | N/A               |     BAJA     |
+| **Rep. Checa**             | Záchranká                 |        No        |        No         |   SI    | N/A               |     BAJA     |
+| **Polonia**                | -                         |        No        |        No         |    -    | N/A               |     BAJA     |
+| **Noruega**                | -                         |        No        |        No         |    -    | N/A               |     BAJA     |
+| **Finlandia**              | -                         |        No        |        No         |    -    | N/A               |     BAJA     |
+| **Toda Europa**            | **OpenStreetMap**         |      **SI**      | **SI (Overpass)** | **SI**  | **ODbL**          | **MUY ALTA** |
 
 ---
 
 ## 5. Estrategia de importación recomendada (Europa)
 
 ### Fase 1 - Fuentes nacionales con datos abiertos directos
+
 1. **España** - CCAA con datos abiertos (ver documento específico)
 2. **Francia** - Géo'DAE (CSV, mejor esquema de referencia)
 3. **Italia** - Emilia-Romaña (CC BY 4.0, multi-formato)
@@ -361,41 +364,44 @@ Documentado en detalle en [open-data-sources-aed-spain.md](./open-data-sources-a
 6. **Austria (Viena)** - data.gv.at
 
 ### Fase 2 - OpenStreetMap para cobertura continental
+
 7. **OSM vía Overpass API** - Consultas por país/región para cubrir toda Europa
    - Pipeline de referencia: Defikarte.ch (GitHub Actions + Overpass -> GeoJSON -> CSV)
    - Deduplicación contra fuentes oficiales ya importadas
 
 ### Fase 3 - Fuentes con licencia restrictiva
+
 8. **Reino Unido** - The Circuit (evaluar compatibilidad de licencia BHF)
 9. **Bélgica** - Brussels open data (cobertura municipal)
 
 ### Fase 4 - Solicitudes de datos y acuerdos
+
 10. **Países Bajos** - Solicitar acceso a HartslagNu
 11. **Dinamarca** - Solicitar acceso a Hjertestarter
 12. **Alemania** - Contactar Definetz e.V. para acceso al Defikataster
 
 ### Campos mínimos para importación (Europa)
 
-| Campo | Descripción | Obligatorio |
-|---|---|---|
-| latitude | Latitud GPS | Sí |
-| longitude | Longitud GPS | Sí |
-| address | Dirección completa | Sí |
-| city | Municipio | Sí |
-| postal_code | Código postal | No |
-| province | Provincia/estado/departamento | No |
-| region | Comunidad autónoma / región | No |
-| country | País (código ISO 3166-1 alpha-2) | Sí |
-| location_name | Nombre del lugar/edificio | No |
-| location_type | Tipo de espacio (público, privado, etc.) | No |
-| access | Accesibilidad (24h, horario limitado, etc.) | No |
-| indoor | Interior/exterior | No |
-| opening_hours | Horario de acceso (formato OSM) | No |
-| operator | Entidad gestora | No |
-| source | Fuente de datos original | Sí |
-| source_url | URL de la fuente | Sí |
-| source_id | ID en la fuente original | No |
-| last_verified | Fecha de última verificación | No |
+| Campo         | Descripción                                 | Obligatorio |
+| ------------- | ------------------------------------------- | ----------- |
+| latitude      | Latitud GPS                                 | Sí          |
+| longitude     | Longitud GPS                                | Sí          |
+| address       | Dirección completa                          | Sí          |
+| city          | Municipio                                   | Sí          |
+| postal_code   | Código postal                               | No          |
+| province      | Provincia/estado/departamento               | No          |
+| region        | Comunidad autónoma / región                 | No          |
+| country       | País (código ISO 3166-1 alpha-2)            | Sí          |
+| location_name | Nombre del lugar/edificio                   | No          |
+| location_type | Tipo de espacio (público, privado, etc.)    | No          |
+| access        | Accesibilidad (24h, horario limitado, etc.) | No          |
+| indoor        | Interior/exterior                           | No          |
+| opening_hours | Horario de acceso (formato OSM)             | No          |
+| operator      | Entidad gestora                             | No          |
+| source        | Fuente de datos original                    | Sí          |
+| source_url    | URL de la fuente                            | Sí          |
+| source_id     | ID en la fuente original                    | No          |
+| last_verified | Fecha de última verificación                | No          |
 
 **Nota**: Respecto al documento de España, se añaden `country`, `postal_code`, `indoor`, `opening_hours` y `operator` como campos relevantes a nivel europeo.
 
@@ -404,6 +410,7 @@ Documentado en detalle en [open-data-sources-aed-spain.md](./open-data-sources-a
 ## 6. Referencias
 
 ### Estudios e informes
+
 - **ENSURE Study** (heterogeneidad legislativa europea): https://www.mdpi.com/2077-0383/10/21/5018
 - **Hinterzarten Reporting Standard**: https://www.resuscitationjournal.com/article/S0300-9572(23)00823-7/fulltext
 - **ERC Guidelines 2025**: https://www.resuscitationjournal.com/article/S0300-9572(25)00333-8/fulltext
@@ -412,16 +419,19 @@ Documentado en detalle en [open-data-sources-aed-spain.md](./open-data-sources-a
 - **Sweden SAEDREG publication**: https://pubmed.ncbi.nlm.nih.gov/30017862/
 
 ### Herramientas y APIs
+
 - OpenAEDMap: https://openaedmap.org/
 - Overpass Turbo: https://overpass-turbo.eu/
 - OSM Taginfo: https://taginfo.openstreetmap.org/tags/emergency=defibrillator
 - UK OSM Defibrillator Comparison: https://osm.mathmos.net/defib/
 
 ### Esquemas de datos
+
 - French Schema-DAE: https://github.com/Alkante/schema-dae
 - EENA AED Mapping: https://eena.org/our-work/eena-special-focus/aed-mapping/
 
 ### Portales de datos por país
+
 - Francia: https://www.data.gouv.fr/datasets/geodae-base-nationale-des-defibrillateurs
 - Italia (Emilia-Romaña): https://www.dati.emilia-romagna.it/dataset/registro-regionale-unico-dei-defibrillatori-dae
 - Austria (Viena): https://www.data.gv.at/katalog/en/dataset/stadt-wien_defibrillatorenstandortewien

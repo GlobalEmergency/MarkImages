@@ -249,10 +249,10 @@ model ExternalDataSource {
   default_status             AedStatus @default(PUBLISHED)
   default_requires_attention Boolean   @default(true)
 
-  // Scope
+  // Scope (nullable = wider scope: null country = global, null region = entire country)
   source_origin SourceOrigin
-  country_code  String       @default("ES") @db.VarChar(2)
-  region_code   String // ISO 3166-2: "ES-MD", "ES-CT", "FR-IDF", etc.
+  country_code  String?  @db.VarChar(2) // ISO 3166-1 alpha-2: "ES", "FR". Null = global/multi-country
+  region_code   String? // ISO 3166-2: "ES-MD", "ES-CT". Null = entire country or global
 
   // Relations
   managed_aeds         Aed[]                    @relation("AedDataSource")
@@ -282,7 +282,7 @@ model ExternalDataSource {
 model AedExternalIdentifier {
   id                     String   @id @default(uuid()) @db.Uuid
   aed_id                 String   @db.Uuid
-  data_source_id         String   @db.Uuid
+  data_source_id         String?  @db.Uuid
   external_identifier    String
 
   // Lifecycle tracking
@@ -293,7 +293,7 @@ model AedExternalIdentifier {
 
   // Relations
   aed         Aed                @relation(fields: [aed_id], references: [id], onDelete: Cascade)
-  data_source ExternalDataSource @relation("DataSourceIdentifiers", fields: [data_source_id], references: [id], onDelete: Cascade)
+  data_source ExternalDataSource? @relation("DataSourceIdentifiers", fields: [data_source_id], references: [id], onDelete: SetNull)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
