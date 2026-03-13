@@ -3,11 +3,12 @@
  * Capa de Infraestructura - Utilidad compartida
  *
  * Esta función normaliza la configuración almacenada en la BD para que sea
- * compatible con los adaptadores (CkanApiAdapter, JsonFileAdapter, etc.)
+ * compatible con los adaptadores (CkanApiAdapter, JsonFileAdapter, RestApiAdapter, etc.)
  *
  * Soporta:
  * - JSON_FILE: URLs directas de archivos JSON (fileUrl + jsonPath)
  * - CKAN_API: URLs directas de JSON (apiEndpoint) o APIs tradicionales (baseUrl + resourceId)
+ * - REST_API: APIs REST genéricas con paginación configurable (apiEndpoint + pagination)
  */
 
 import type { DataSourceConfig, DataSourceType } from "@/import/domain/ports/IDataSourceAdapter";
@@ -63,6 +64,19 @@ export function buildDataSourceConfig(
     };
   }
 
-  // Para otros tipos, devolver la configuración base
+  if (type === "REST_API") {
+    return {
+      ...baseConfig,
+      apiEndpoint: (configData as any).apiEndpoint as string | undefined,
+      headers: (configData as any).headers as Record<string, string> | undefined,
+      authToken: (configData as any).authToken as string | undefined,
+      method: (configData as any).method as "GET" | "POST" | undefined,
+      requestBody: (configData as any).requestBody,
+      responseDataPath: (configData as any).responseDataPath as string | undefined,
+      pagination: (configData as any).pagination as DataSourceConfig["pagination"] | undefined,
+    };
+  }
+
+  // Para CSV_FILE u otros tipos, devolver la configuración base
   return baseConfig;
 }
