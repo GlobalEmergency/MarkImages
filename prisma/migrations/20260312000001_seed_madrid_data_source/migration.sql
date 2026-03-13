@@ -58,12 +58,13 @@ INSERT INTO external_data_sources (
   true,
   'HEALTH_API',
   'ES',
-  'MAD',
+  'ES-MD',
   NOW(),
   NOW()
 ) ON CONFLICT (name) DO UPDATE SET
   config = EXCLUDED.config,
   type = EXCLUDED.type,
   country_code = EXCLUDED.country_code,
+  region_code = EXCLUDED.region_code,
   description = EXCLUDED.description,
   updated_at = NOW();

@@ -252,7 +252,7 @@ model ExternalDataSource {
   // Scope
   source_origin SourceOrigin
   country_code  String       @default("ES") @db.VarChar(2)
-  region_code   String // "MAD", "CAT", "AND", etc.
+  region_code   String // ISO 3166-2: "ES-MD", "ES-CT", "FR-IDF", etc.
 
   // Relations
   managed_aeds         Aed[]                    @relation("AedDataSource")

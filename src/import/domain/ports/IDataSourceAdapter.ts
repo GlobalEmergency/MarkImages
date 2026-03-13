@@ -94,7 +94,7 @@ export interface ExternalDataSourceConfig {
   // Scope regional
   sourceOrigin: string; // EXTERNAL_API, HEALTH_API, etc.
   countryCode: string; // ISO 3166-1 alpha-2: "ES", "FR", "IT", etc.
-  regionCode: string; // "MAD", "CAT", "AND", etc.
+  regionCode: string; // ISO 3166-2: "ES-MD", "ES-CT", "FR-IDF", etc.
 
   // Matching
   matchingStrategy: MatchingStrategy;
