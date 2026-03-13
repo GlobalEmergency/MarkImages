@@ -153,13 +153,13 @@ The CI pipeline has a `migration-safety` job that automatically flags destructiv
 
 ## Project structure at a glance
 
-| Component | Tech | Description |
-|-----------|------|-------------|
-| Web app | Next.js 15, React 19, Tailwind | Main platform — map, admin panel, import |
-| Mobile app | Ionic React, Capacitor | iOS/Android app with offline support |
-| Database | PostgreSQL + PostGIS, Prisma | Geospatial AED data, users, organizations |
-| Maps | Leaflet + MarkerCluster | Interactive AED visualization |
-| CI/CD | GitHub Actions, Vercel | Automated testing, building, deployment |
+| Component  | Tech                           | Description                               |
+| ---------- | ------------------------------ | ----------------------------------------- |
+| Web app    | Next.js 15, React 19, Tailwind | Main platform — map, admin panel, import  |
+| Mobile app | Ionic React, Capacitor         | iOS/Android app with offline support      |
+| Database   | PostgreSQL + PostGIS, Prisma   | Geospatial AED data, users, organizations |
+| Maps       | Leaflet + MarkerCluster        | Interactive AED visualization             |
+| CI/CD      | GitHub Actions, Vercel         | Automated testing, building, deployment   |
 
 ## Questions?
 

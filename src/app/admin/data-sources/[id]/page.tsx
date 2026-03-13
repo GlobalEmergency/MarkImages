@@ -9,6 +9,8 @@ interface DataSource {
   name: string;
   type: string;
   description: string | null;
+  // Config JSON blob completo
+  config: Record<string, unknown> | null;
   // Campos específicos de CKAN_API
   apiEndpoint: string | null;
   resourceId: string | null;
@@ -21,8 +23,14 @@ interface DataSource {
   fieldMapping: Record<string, string> | null;
   filterConfig: Record<string, unknown> | null;
   isActive: boolean;
+  matchingStrategy: string;
+  matchingThreshold: number;
   syncFrequency: string;
   defaultPublicationMode: string;
+  autoDeactivateMissing: boolean;
+  autoUpdateFields: string[];
+  sourceOrigin: string | null;
+  regionCode: string | null;
   lastSyncAt: string | null;
   lastSyncStatus: string | null;
   totalRecordsSync: number;
@@ -125,12 +133,44 @@ export default function DataSourceDetailPage() {
   const [preview, setPreview] = useState<PreviewRecord[]>([]);
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [editActiveTab, setEditActiveTab] = useState<
+    "general" | "connection" | "mapping" | "advanced"
+  >("general");
   const [editForm, setEditForm] = useState({
+    // General
     name: "",
     description: "",
     isActive: true,
     syncFrequency: "MANUAL",
     defaultPublicationMode: "LOCATION_ONLY",
+    // Connection config (type-specific)
+    apiEndpoint: "",
+    fileUrl: "",
+    jsonPath: "",
+    baseUrl: "",
+    resourceId: "",
+    pageSize: 100,
+    method: "GET" as "GET" | "POST",
+    authToken: "",
+    responseDataPath: "",
+    // REST_API pagination
+    paginationStrategy: "none" as "offset" | "page" | "cursor" | "none",
+    paginationLimitParam: "limit",
+    paginationLimitValue: 100,
+    paginationOffsetParam: "offset",
+    paginationPageParam: "page",
+    paginationCursorParam: "cursor",
+    paginationCursorResponsePath: "",
+    paginationTotalCountPath: "",
+    paginationHasMorePath: "",
+    // Field mappings
+    fieldMappings: {} as Record<string, string>,
+    // Matching
+    matchingStrategy: "BY_EXTERNAL_CODE",
+    matchingThreshold: 80,
+    // Advanced
+    autoDeactivateMissing: false,
+    autoUpdateFields: [] as string[],
   });
   const [currentJob, setCurrentJob] = useState<CurrentJob | null>(null);
   const [loadingJob, setLoadingJob] = useState(false);
@@ -159,12 +199,47 @@ export default function DataSourceDetailPage() {
       }
 
       setDataSource(data.data);
+      const cfg = (data.data.config || {}) as Record<string, unknown>;
+      const pagination = (cfg.pagination || {}) as Record<string, unknown>;
       setEditForm({
+        // General
         name: data.data.name,
         description: data.data.description || "",
         isActive: data.data.isActive,
         syncFrequency: data.data.syncFrequency,
         defaultPublicationMode: data.data.defaultPublicationMode || "LOCATION_ONLY",
+        // Connection
+        apiEndpoint: (cfg.apiEndpoint as string) || "",
+        fileUrl: (cfg.fileUrl as string) || "",
+        jsonPath: (cfg.jsonPath as string) || "",
+        baseUrl: (cfg.baseUrl as string) || "",
+        resourceId: (cfg.resourceId as string) || "",
+        pageSize: (cfg.pageSize as number) || 100,
+        method: ((cfg.method as string) || "GET") as "GET" | "POST",
+        authToken: (cfg.authToken as string) || "",
+        responseDataPath: (cfg.responseDataPath as string) || "",
+        // Pagination
+        paginationStrategy: ((pagination.strategy as string) || "none") as
+          | "offset"
+          | "page"
+          | "cursor"
+          | "none",
+        paginationLimitParam: (pagination.limitParam as string) || "limit",
+        paginationLimitValue: (pagination.limitValue as number) || 100,
+        paginationOffsetParam: (pagination.offsetParam as string) || "offset",
+        paginationPageParam: (pagination.pageParam as string) || "page",
+        paginationCursorParam: (pagination.cursorParam as string) || "cursor",
+        paginationCursorResponsePath: (pagination.cursorResponsePath as string) || "",
+        paginationTotalCountPath: (pagination.totalCountPath as string) || "",
+        paginationHasMorePath: (pagination.hasMorePath as string) || "",
+        // Field mappings
+        fieldMappings: (cfg.fieldMappings || cfg.fieldMapping || {}) as Record<string, string>,
+        // Matching
+        matchingStrategy: data.data.matchingStrategy || "BY_EXTERNAL_CODE",
+        matchingThreshold: data.data.matchingThreshold ?? 80,
+        // Advanced
+        autoDeactivateMissing: data.data.autoDeactivateMissing ?? false,
+        autoUpdateFields: data.data.autoUpdateFields || [],
       });
       setError(null);
     } catch (err) {
@@ -369,10 +444,72 @@ export default function DataSourceDetailPage() {
 
   const updateDataSource = async () => {
     try {
+      // Build the config object based on data source type
+      const dsType = dataSource?.type;
+      const config: Record<string, unknown> = {
+        type: dsType,
+        fieldMappings:
+          Object.keys(editForm.fieldMappings).length > 0 ? editForm.fieldMappings : undefined,
+      };
+
+      if (dsType === "JSON_FILE") {
+        if (editForm.fileUrl) config.fileUrl = editForm.fileUrl;
+        if (editForm.jsonPath) config.jsonPath = editForm.jsonPath;
+        if (editForm.apiEndpoint) config.apiEndpoint = editForm.apiEndpoint;
+      } else if (dsType === "CKAN_API") {
+        if (editForm.apiEndpoint) config.apiEndpoint = editForm.apiEndpoint;
+        if (editForm.baseUrl) config.baseUrl = editForm.baseUrl;
+        if (editForm.resourceId) config.resourceId = editForm.resourceId;
+        if (editForm.pageSize) config.pageSize = editForm.pageSize;
+      } else if (dsType === "REST_API") {
+        if (editForm.apiEndpoint) config.apiEndpoint = editForm.apiEndpoint;
+        if (editForm.method) config.method = editForm.method;
+        if (editForm.authToken) config.authToken = editForm.authToken;
+        if (editForm.responseDataPath) config.responseDataPath = editForm.responseDataPath;
+        if (editForm.paginationStrategy !== "none") {
+          config.pagination = {
+            strategy: editForm.paginationStrategy,
+            limitParam: editForm.paginationLimitParam || undefined,
+            limitValue: editForm.paginationLimitValue || undefined,
+            offsetParam:
+              editForm.paginationStrategy === "offset"
+                ? editForm.paginationOffsetParam || undefined
+                : undefined,
+            pageParam:
+              editForm.paginationStrategy === "page"
+                ? editForm.paginationPageParam || undefined
+                : undefined,
+            cursorParam:
+              editForm.paginationStrategy === "cursor"
+                ? editForm.paginationCursorParam || undefined
+                : undefined,
+            cursorResponsePath:
+              editForm.paginationStrategy === "cursor"
+                ? editForm.paginationCursorResponsePath || undefined
+                : undefined,
+            totalCountPath: editForm.paginationTotalCountPath || undefined,
+            hasMorePath: editForm.paginationHasMorePath || undefined,
+          };
+        }
+      }
+
+      const payload = {
+        name: editForm.name,
+        description: editForm.description,
+        isActive: editForm.isActive,
+        syncFrequency: editForm.syncFrequency,
+        defaultPublicationMode: editForm.defaultPublicationMode,
+        config,
+        matchingStrategy: editForm.matchingStrategy,
+        matchingThreshold: editForm.matchingThreshold,
+        autoDeactivateMissing: editForm.autoDeactivateMissing,
+        autoUpdateFields: editForm.autoUpdateFields,
+      };
+
       const response = await fetch(`/api/admin/data-sources/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -384,6 +521,7 @@ export default function DataSourceDetailPage() {
       // Re-fetch full data source state (PUT returns thin response)
       await fetchDataSource();
       setEditing(false);
+      setEditActiveTab("general");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al actualizar");
     }
@@ -672,82 +810,764 @@ export default function DataSourceDetailPage() {
           </div>
         )}
 
-        {/* Edit Modal */}
+        {/* Edit Panel */}
         {editing && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <h2 className="text-lg font-semibold mb-4">Editar Fuente de Datos</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Nombre</label>
-                  <input
-                    type="text"
-                    value={editForm.name}
-                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Descripción</label>
-                  <textarea
-                    value={editForm.description}
-                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                    rows={3}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Frecuencia de Sincronización
-                  </label>
-                  <select
-                    value={editForm.syncFrequency}
-                    onChange={(e) => setEditForm({ ...editForm, syncFrequency: e.target.value })}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-auto max-h-[90vh] flex flex-col">
+              {/* Header */}
+              <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">Editar Fuente de Datos</h2>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeBadgeColor(dataSource.type)}`}
                   >
-                    <option value="MANUAL">Manual</option>
-                    <option value="DAILY">Diaria</option>
-                    <option value="WEEKLY">Semanal</option>
-                    <option value="MONTHLY">Mensual</option>
-                  </select>
+                    {getTypeLabel(dataSource.type)}
+                  </span>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Modo de Publicación por Defecto
-                  </label>
-                  <select
-                    value={editForm.defaultPublicationMode}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, defaultPublicationMode: e.target.value })
-                    }
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  >
-                    <option value="NONE">Ninguno - No publicar</option>
-                    <option value="LOCATION_ONLY">Solo ubicación</option>
-                    <option value="BASIC_INFO">Info básica (ubicación + horario + tipo)</option>
-                    <option value="FULL">Información completa</option>
-                  </select>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Nivel de información que se publicará automáticamente al importar desde esta
-                    fuente
-                  </p>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="isActive"
-                    checked={editForm.isActive}
-                    onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700">
-                    Activa
-                  </label>
+                {/* Tabs */}
+                <div className="mt-3 flex gap-1 border-b border-gray-200 -mb-px">
+                  {[
+                    { key: "general" as const, label: "General" },
+                    { key: "connection" as const, label: "Conexión" },
+                    { key: "mapping" as const, label: "Mapeo de Campos" },
+                    { key: "advanced" as const, label: "Avanzado" },
+                  ].map((tab) => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setEditActiveTab(tab.key)}
+                      className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                        editActiveTab === tab.key
+                          ? "border-blue-500 text-blue-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
                 </div>
               </div>
-              <div className="mt-6 flex justify-end gap-2">
+
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto px-6 py-4">
+                {/* Tab: General */}
+                {editActiveTab === "general" && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Nombre</label>
+                      <input
+                        type="text"
+                        value={editForm.name}
+                        onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Descripción</label>
+                      <textarea
+                        value={editForm.description}
+                        onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                        rows={3}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Frecuencia de Sincronización
+                        </label>
+                        <select
+                          value={editForm.syncFrequency}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, syncFrequency: e.target.value })
+                          }
+                          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        >
+                          <option value="MANUAL">Manual</option>
+                          <option value="DAILY">Diaria</option>
+                          <option value="WEEKLY">Semanal</option>
+                          <option value="MONTHLY">Mensual</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Modo de Publicación
+                        </label>
+                        <select
+                          value={editForm.defaultPublicationMode}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, defaultPublicationMode: e.target.value })
+                          }
+                          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        >
+                          <option value="NONE">Ninguno - No publicar</option>
+                          <option value="LOCATION_ONLY">Solo ubicación</option>
+                          <option value="BASIC_INFO">Info básica</option>
+                          <option value="FULL">Información completa</option>
+                        </select>
+                        <p className="mt-1 text-xs text-gray-500">
+                          Nivel de información publicado automáticamente al importar
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="edit-isActive"
+                        checked={editForm.isActive}
+                        onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="edit-isActive" className="ml-2 block text-sm text-gray-700">
+                        Fuente activa
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab: Connection */}
+                {editActiveTab === "connection" && (
+                  <div className="space-y-4">
+                    {/* JSON_FILE fields */}
+                    {dataSource.type === "JSON_FILE" && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            URL del Archivo JSON
+                          </label>
+                          <input
+                            type="url"
+                            value={editForm.fileUrl}
+                            onChange={(e) => setEditForm({ ...editForm, fileUrl: e.target.value })}
+                            placeholder="https://ejemplo.com/datos.json"
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          />
+                          <p className="mt-1 text-xs text-gray-500">
+                            URL directa al archivo JSON o GeoJSON
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            JSON Path
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.jsonPath}
+                            onChange={(e) => setEditForm({ ...editForm, jsonPath: e.target.value })}
+                            placeholder="ej: data.records (dejar vacío para GeoJSON auto-detect)"
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono text-sm"
+                          />
+                          <p className="mt-1 text-xs text-gray-500">
+                            Ruta al array de registros. Dejar vacío para archivos GeoJSON
+                            (auto-detección de features y coordenadas).
+                          </p>
+                        </div>
+                      </>
+                    )}
+
+                    {/* CKAN_API fields */}
+                    {dataSource.type === "CKAN_API" && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Endpoint API
+                          </label>
+                          <input
+                            type="url"
+                            value={editForm.apiEndpoint}
+                            onChange={(e) =>
+                              setEditForm({ ...editForm, apiEndpoint: e.target.value })
+                            }
+                            placeholder="https://datos.comunidad.madrid/catalogo/dataset/..."
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Base URL
+                            </label>
+                            <input
+                              type="url"
+                              value={editForm.baseUrl}
+                              onChange={(e) =>
+                                setEditForm({ ...editForm, baseUrl: e.target.value })
+                              }
+                              placeholder="https://datos.comunidad.madrid"
+                              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            />
+                            <p className="mt-1 text-xs text-gray-500">
+                              Se auto-detecta desde el endpoint si se deja vacío
+                            </p>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Resource ID
+                            </label>
+                            <input
+                              type="text"
+                              value={editForm.resourceId}
+                              onChange={(e) =>
+                                setEditForm({ ...editForm, resourceId: e.target.value })
+                              }
+                              placeholder="UUID del recurso"
+                              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Tamaño de Página
+                          </label>
+                          <input
+                            type="number"
+                            value={editForm.pageSize}
+                            onChange={(e) =>
+                              setEditForm({
+                                ...editForm,
+                                pageSize: parseInt(e.target.value) || 100,
+                              })
+                            }
+                            min={1}
+                            max={10000}
+                            className="mt-1 block w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {/* REST_API fields */}
+                    {dataSource.type === "REST_API" && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Endpoint API
+                          </label>
+                          <input
+                            type="url"
+                            value={editForm.apiEndpoint}
+                            onChange={(e) =>
+                              setEditForm({ ...editForm, apiEndpoint: e.target.value })
+                            }
+                            placeholder="https://api.ejemplo.com/datos"
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Método HTTP
+                            </label>
+                            <select
+                              value={editForm.method}
+                              onChange={(e) =>
+                                setEditForm({
+                                  ...editForm,
+                                  method: e.target.value as "GET" | "POST",
+                                })
+                              }
+                              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            >
+                              <option value="GET">GET</option>
+                              <option value="POST">POST</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Token de Autenticación
+                            </label>
+                            <input
+                              type="password"
+                              value={editForm.authToken}
+                              onChange={(e) =>
+                                setEditForm({ ...editForm, authToken: e.target.value })
+                              }
+                              placeholder="Bearer token (opcional)"
+                              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Ruta de datos en respuesta
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.responseDataPath}
+                            onChange={(e) =>
+                              setEditForm({ ...editForm, responseDataPath: e.target.value })
+                            }
+                            placeholder="ej: results, data.records, elements"
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono text-sm"
+                          />
+                          <p className="mt-1 text-xs text-gray-500">
+                            Ruta al array de registros dentro de la respuesta JSON. Dejar vacío si
+                            la respuesta es directamente un array.
+                          </p>
+                        </div>
+
+                        {/* Pagination config */}
+                        <div className="border-t border-gray-200 pt-4 mt-4">
+                          <h3 className="text-sm font-semibold text-gray-800 mb-3">Paginación</h3>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Estrategia
+                            </label>
+                            <select
+                              value={editForm.paginationStrategy}
+                              onChange={(e) =>
+                                setEditForm({
+                                  ...editForm,
+                                  paginationStrategy: e.target.value as
+                                    | "offset"
+                                    | "page"
+                                    | "cursor"
+                                    | "none",
+                                })
+                              }
+                              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            >
+                              <option value="none">Sin paginación</option>
+                              <option value="offset">Offset (limit/offset)</option>
+                              <option value="page">Página (page/limit)</option>
+                              <option value="cursor">Cursor</option>
+                            </select>
+                          </div>
+
+                          {editForm.paginationStrategy !== "none" && (
+                            <div className="mt-3 space-y-3 pl-3 border-l-2 border-blue-200">
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600">
+                                    Parámetro limit
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={editForm.paginationLimitParam}
+                                    onChange={(e) =>
+                                      setEditForm({
+                                        ...editForm,
+                                        paginationLimitParam: e.target.value,
+                                      })
+                                    }
+                                    placeholder="limit"
+                                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-xs font-mono"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600">
+                                    Valor de limit
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={editForm.paginationLimitValue}
+                                    onChange={(e) =>
+                                      setEditForm({
+                                        ...editForm,
+                                        paginationLimitValue: parseInt(e.target.value) || 100,
+                                      })
+                                    }
+                                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-xs"
+                                  />
+                                </div>
+                              </div>
+                              {editForm.paginationStrategy === "offset" && (
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600">
+                                    Parámetro offset
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={editForm.paginationOffsetParam}
+                                    onChange={(e) =>
+                                      setEditForm({
+                                        ...editForm,
+                                        paginationOffsetParam: e.target.value,
+                                      })
+                                    }
+                                    placeholder="offset"
+                                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-xs font-mono"
+                                  />
+                                </div>
+                              )}
+                              {editForm.paginationStrategy === "page" && (
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600">
+                                    Parámetro de página
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={editForm.paginationPageParam}
+                                    onChange={(e) =>
+                                      setEditForm({
+                                        ...editForm,
+                                        paginationPageParam: e.target.value,
+                                      })
+                                    }
+                                    placeholder="page"
+                                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-xs font-mono"
+                                  />
+                                </div>
+                              )}
+                              {editForm.paginationStrategy === "cursor" && (
+                                <>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-600">
+                                      Parámetro cursor
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={editForm.paginationCursorParam}
+                                      onChange={(e) =>
+                                        setEditForm({
+                                          ...editForm,
+                                          paginationCursorParam: e.target.value,
+                                        })
+                                      }
+                                      placeholder="cursor"
+                                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-xs font-mono"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-600">
+                                      Ruta del cursor en respuesta
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={editForm.paginationCursorResponsePath}
+                                      onChange={(e) =>
+                                        setEditForm({
+                                          ...editForm,
+                                          paginationCursorResponsePath: e.target.value,
+                                        })
+                                      }
+                                      placeholder="ej: meta.next_cursor"
+                                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-xs font-mono"
+                                    />
+                                  </div>
+                                </>
+                              )}
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600">
+                                    Ruta total count
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={editForm.paginationTotalCountPath}
+                                    onChange={(e) =>
+                                      setEditForm({
+                                        ...editForm,
+                                        paginationTotalCountPath: e.target.value,
+                                      })
+                                    }
+                                    placeholder="ej: total_count"
+                                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-xs font-mono"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600">
+                                    Ruta has more
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={editForm.paginationHasMorePath}
+                                    onChange={(e) =>
+                                      setEditForm({
+                                        ...editForm,
+                                        paginationHasMorePath: e.target.value,
+                                      })
+                                    }
+                                    placeholder="ej: has_more"
+                                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-xs font-mono"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+
+                    {/* CSV_FILE fields */}
+                    {dataSource.type === "CSV_FILE" && (
+                      <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+                        <p className="text-sm text-gray-600">
+                          La configuración de archivos CSV se gestiona a través del proceso de
+                          importación.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Tab: Field Mappings */}
+                {editActiveTab === "mapping" && (
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-600">
+                      Mapeo entre los campos de la fuente externa y los campos internos del sistema.
+                      El campo externo indica el nombre del campo en la API/archivo. El campo
+                      interno es el campo del sistema donde se almacenará.
+                    </p>
+                    <div className="space-y-2">
+                      {/* Header */}
+                      <div className="grid grid-cols-12 gap-2 text-xs font-medium text-gray-500 uppercase">
+                        <div className="col-span-5">Campo Interno</div>
+                        <div className="col-span-5">Campo Externo (fuente)</div>
+                        <div className="col-span-2"></div>
+                      </div>
+                      {/* Existing mappings */}
+                      {Object.entries(editForm.fieldMappings).map(
+                        ([internalField, externalField]) => (
+                          <div key={internalField} className="grid grid-cols-12 gap-2 items-center">
+                            <div className="col-span-5">
+                              <select
+                                value={internalField}
+                                onChange={(e) => {
+                                  const newMappings = { ...editForm.fieldMappings };
+                                  const val = newMappings[internalField];
+                                  delete newMappings[internalField];
+                                  if (e.target.value) newMappings[e.target.value] = val;
+                                  setEditForm({ ...editForm, fieldMappings: newMappings });
+                                }}
+                                className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
+                              >
+                                <option value="">-- Seleccionar --</option>
+                                {[
+                                  "externalId",
+                                  "name",
+                                  "establishmentType",
+                                  "streetType",
+                                  "streetName",
+                                  "streetNumber",
+                                  "postalCode",
+                                  "city",
+                                  "district",
+                                  "latitude",
+                                  "longitude",
+                                  "accessDescription",
+                                  "accessSchedule",
+                                ].map((f) => (
+                                  <option key={f} value={f}>
+                                    {f}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="col-span-5">
+                              <input
+                                type="text"
+                                value={externalField}
+                                onChange={(e) => {
+                                  setEditForm({
+                                    ...editForm,
+                                    fieldMappings: {
+                                      ...editForm.fieldMappings,
+                                      [internalField]: e.target.value,
+                                    },
+                                  });
+                                }}
+                                className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm font-mono"
+                                placeholder="nombre_campo_api"
+                              />
+                            </div>
+                            <div className="col-span-2 text-right">
+                              <button
+                                onClick={() => {
+                                  const newMappings = { ...editForm.fieldMappings };
+                                  delete newMappings[internalField];
+                                  setEditForm({ ...editForm, fieldMappings: newMappings });
+                                }}
+                                className="text-red-500 hover:text-red-700 text-sm px-2 py-1"
+                                title="Eliminar mapeo"
+                              >
+                                &times;
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      )}
+                      {/* Add new mapping */}
+                      <button
+                        onClick={() => {
+                          const usedFields = Object.keys(editForm.fieldMappings);
+                          const availableFields = [
+                            "externalId",
+                            "name",
+                            "establishmentType",
+                            "streetType",
+                            "streetName",
+                            "streetNumber",
+                            "postalCode",
+                            "city",
+                            "district",
+                            "latitude",
+                            "longitude",
+                            "accessDescription",
+                            "accessSchedule",
+                          ].filter((f) => !usedFields.includes(f));
+                          const nextField = availableFields[0];
+                          if (nextField) {
+                            setEditForm({
+                              ...editForm,
+                              fieldMappings: { ...editForm.fieldMappings, [nextField]: "" },
+                            });
+                          }
+                        }}
+                        className="mt-2 inline-flex items-center px-3 py-1.5 border border-dashed border-gray-400 rounded-md text-sm text-gray-600 hover:bg-gray-50 hover:border-gray-500"
+                      >
+                        <svg
+                          className="h-4 w-4 mr-1"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
+                        </svg>
+                        Añadir mapeo
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab: Advanced */}
+                {editActiveTab === "advanced" && (
+                  <div className="space-y-6">
+                    {/* Matching Strategy */}
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-800 mb-3">
+                        Estrategia de Matching
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Estrategia
+                          </label>
+                          <select
+                            value={editForm.matchingStrategy}
+                            onChange={(e) =>
+                              setEditForm({ ...editForm, matchingStrategy: e.target.value })
+                            }
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          >
+                            <option value="BY_EXTERNAL_CODE">Por código externo</option>
+                            <option value="BY_COORDINATES">Por coordenadas</option>
+                            <option value="BY_ADDRESS">Por dirección</option>
+                            <option value="HYBRID">Híbrido</option>
+                          </select>
+                          <p className="mt-1 text-xs text-gray-500">
+                            Cómo se detectan duplicados entre registros externos y DEAs existentes
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Umbral de coincidencia ({editForm.matchingThreshold}%)
+                          </label>
+                          <input
+                            type="range"
+                            min={0}
+                            max={100}
+                            value={editForm.matchingThreshold}
+                            onChange={(e) =>
+                              setEditForm({
+                                ...editForm,
+                                matchingThreshold: parseInt(e.target.value),
+                              })
+                            }
+                            className="mt-2 block w-full"
+                          />
+                          <div className="flex justify-between text-xs text-gray-400 mt-1">
+                            <span>0% (más flexible)</span>
+                            <span>100% (exacto)</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Behavior */}
+                    <div className="border-t border-gray-200 pt-4">
+                      <h3 className="text-sm font-semibold text-gray-800 mb-3">
+                        Comportamiento de Sincronización
+                      </h3>
+                      <div className="space-y-3">
+                        <div className="flex items-start">
+                          <input
+                            type="checkbox"
+                            id="edit-autoDeactivate"
+                            checked={editForm.autoDeactivateMissing}
+                            onChange={(e) =>
+                              setEditForm({ ...editForm, autoDeactivateMissing: e.target.checked })
+                            }
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5"
+                          />
+                          <label htmlFor="edit-autoDeactivate" className="ml-2 block">
+                            <span className="text-sm text-gray-700">
+                              Desactivar registros ausentes
+                            </span>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              Si un DEA que existía en la fuente ya no aparece en la sincronización,
+                              se marcará como inactivo automáticamente.
+                            </p>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Auto-update fields */}
+                    <div className="border-t border-gray-200 pt-4">
+                      <h3 className="text-sm font-semibold text-gray-800 mb-3">
+                        Campos a Actualizar Automáticamente
+                      </h3>
+                      <p className="text-xs text-gray-500 mb-3">
+                        Campos que se actualizarán automáticamente cuando cambien en la fuente
+                        externa, sin requerir revisión manual.
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {[
+                          { value: "name", label: "Nombre" },
+                          { value: "establishmentType", label: "Tipo establecimiento" },
+                          { value: "streetName", label: "Calle" },
+                          { value: "streetNumber", label: "Número" },
+                          { value: "postalCode", label: "Código postal" },
+                          { value: "city", label: "Ciudad" },
+                          { value: "district", label: "Distrito" },
+                          { value: "latitude", label: "Latitud" },
+                          { value: "longitude", label: "Longitud" },
+                          { value: "accessDescription", label: "Descripción acceso" },
+                          { value: "accessSchedule", label: "Horario" },
+                        ].map((field) => (
+                          <label key={field.value} className="flex items-center text-sm">
+                            <input
+                              type="checkbox"
+                              checked={editForm.autoUpdateFields.includes(field.value)}
+                              onChange={(e) => {
+                                const newFields = e.target.checked
+                                  ? [...editForm.autoUpdateFields, field.value]
+                                  : editForm.autoUpdateFields.filter((f) => f !== field.value);
+                                setEditForm({ ...editForm, autoUpdateFields: newFields });
+                              }}
+                              className="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-1.5 text-gray-700">{field.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 border-t border-gray-200 flex-shrink-0 flex justify-end gap-2">
                 <button
-                  onClick={() => setEditing(false)}
+                  onClick={() => {
+                    setEditing(false);
+                    setEditActiveTab("general");
+                  }}
                   className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                 >
                   Cancelar
@@ -756,7 +1576,7 @@ export default function DataSourceDetailPage() {
                   onClick={updateDataSource}
                   className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
                 >
-                  Guardar
+                  Guardar Cambios
                 </button>
               </div>
             </div>
@@ -1178,17 +1998,68 @@ export default function DataSourceDetailPage() {
                     <div>
                       <dt className="text-sm font-medium text-gray-500">Endpoint API</dt>
                       <dd className="mt-1 text-sm text-gray-900 break-all">
-                        {dataSource.apiEndpoint || "N/A"}
+                        {dataSource.apiEndpoint ||
+                          ((dataSource.config as Record<string, unknown>)?.apiEndpoint as string) ||
+                          "N/A"}
                       </dd>
                     </div>
                     <div>
                       <dt className="text-sm font-medium text-gray-500">Resource ID</dt>
                       <dd className="mt-1 text-sm text-gray-900 font-mono">
-                        {dataSource.resourceId || "N/A"}
+                        {dataSource.resourceId ||
+                          ((dataSource.config as Record<string, unknown>)?.resourceId as string) ||
+                          "N/A"}
                       </dd>
                     </div>
                   </>
                 )}
+
+                {/* Campos específicos de REST_API */}
+                {dataSource.type === "REST_API" &&
+                  (() => {
+                    const cfg = (dataSource.config || {}) as Record<string, unknown>;
+                    const pagination = (cfg.pagination || {}) as Record<string, unknown>;
+                    return (
+                      <>
+                        <div>
+                          <dt className="text-sm font-medium text-gray-500">Endpoint API</dt>
+                          <dd className="mt-1 text-sm text-gray-900 break-all">
+                            {(cfg.apiEndpoint as string) || "N/A"}
+                          </dd>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <dt className="text-sm font-medium text-gray-500">Método</dt>
+                            <dd className="mt-1 text-sm text-gray-900">
+                              {(cfg.method as string) || "GET"}
+                            </dd>
+                          </div>
+                          {typeof cfg.responseDataPath === "string" && cfg.responseDataPath && (
+                            <div>
+                              <dt className="text-sm font-medium text-gray-500">Ruta de Datos</dt>
+                              <dd className="mt-1 text-sm text-gray-900 font-mono">
+                                {cfg.responseDataPath}
+                              </dd>
+                            </div>
+                          )}
+                        </div>
+                        {typeof pagination.strategy === "string" &&
+                          pagination.strategy !== "none" && (
+                            <div>
+                              <dt className="text-sm font-medium text-gray-500">Paginación</dt>
+                              <dd className="mt-1 text-sm text-gray-900">
+                                <span className="capitalize">{pagination.strategy}</span>
+                                {typeof pagination.limitParam === "string" && (
+                                  <span className="text-gray-500 ml-1">
+                                    ({pagination.limitParam}={String(pagination.limitValue || 100)})
+                                  </span>
+                                )}
+                              </dd>
+                            </div>
+                          )}
+                      </>
+                    );
+                  })()}
 
                 {/* Campos específicos de JSON_FILE */}
                 {dataSource.type === "JSON_FILE" && (
@@ -1196,7 +2067,9 @@ export default function DataSourceDetailPage() {
                     <div>
                       <dt className="text-sm font-medium text-gray-500">URL del Archivo</dt>
                       <dd className="mt-1 text-sm text-gray-900 break-all">
-                        {dataSource.fileUrl || "N/A"}
+                        {dataSource.fileUrl ||
+                          ((dataSource.config as Record<string, unknown>)?.fileUrl as string) ||
+                          "N/A"}
                       </dd>
                     </div>
                     <div>
@@ -1219,6 +2092,25 @@ export default function DataSourceDetailPage() {
                 )}
 
                 {/* Campos comunes a todos los tipos */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500">Estrategia de Matching</dt>
+                    <dd className="mt-1 text-sm text-gray-900">
+                      {(
+                        {
+                          BY_EXTERNAL_CODE: "Por código externo",
+                          BY_COORDINATES: "Por coordenadas",
+                          BY_ADDRESS: "Por dirección",
+                          HYBRID: "Híbrido",
+                        } as Record<string, string>
+                      )[dataSource.matchingStrategy] || dataSource.matchingStrategy}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500">Umbral</dt>
+                    <dd className="mt-1 text-sm text-gray-900">{dataSource.matchingThreshold}%</dd>
+                  </div>
+                </div>
                 <div>
                   <dt className="text-sm font-medium text-gray-500">
                     Frecuencia de Sincronización
@@ -1227,6 +2119,24 @@ export default function DataSourceDetailPage() {
                     {getSyncFrequencyLabel(dataSource.syncFrequency)}
                   </dd>
                 </div>
+                {(dataSource.sourceOrigin || dataSource.regionCode) && (
+                  <div className="grid grid-cols-2 gap-4">
+                    {dataSource.sourceOrigin && (
+                      <div>
+                        <dt className="text-sm font-medium text-gray-500">Origen</dt>
+                        <dd className="mt-1 text-sm text-gray-900">{dataSource.sourceOrigin}</dd>
+                      </div>
+                    )}
+                    {dataSource.regionCode && (
+                      <div>
+                        <dt className="text-sm font-medium text-gray-500">Región</dt>
+                        <dd className="mt-1 text-sm text-gray-900 font-mono">
+                          {dataSource.regionCode}
+                        </dd>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Última Sincronización</dt>
                   <dd className="mt-1 text-sm text-gray-900 flex items-center gap-2">
@@ -1527,41 +2437,49 @@ export default function DataSourceDetailPage() {
         </div>
 
         {/* Field Mapping */}
-        {dataSource.fieldMapping && (
-          <div className="mt-8 bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Mapeo de Campos</h2>
-            </div>
-            <div className="px-6 py-4">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Campo Interno
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Campo Externo
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {Object.entries(dataSource.fieldMapping).map(([internal, external]) => (
-                      <tr key={internal}>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {internal}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 font-mono">
-                          {external}
-                        </td>
+        {(() => {
+          const cfg = (dataSource.config || {}) as Record<string, unknown>;
+          const mappings =
+            dataSource.fieldMapping ||
+            (cfg.fieldMappings as Record<string, string>) ||
+            (cfg.fieldMapping as Record<string, string>);
+          if (!mappings || Object.keys(mappings).length === 0) return null;
+          return (
+            <div className="mt-8 bg-white shadow rounded-lg">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-medium text-gray-900">Mapeo de Campos</h2>
+              </div>
+              <div className="px-6 py-4">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Campo Interno
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Campo Externo
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {Object.entries(mappings).map(([internal, external]) => (
+                        <tr key={internal}>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {internal}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 font-mono">
+                            {external}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );
