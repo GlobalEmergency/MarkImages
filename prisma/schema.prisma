@@ -1297,6 +1297,39 @@ enum ArtifactType {
 // @batchactions/state-prisma — State Store Tables
 // ============================================
 
+// ============================================
+// AED CLUSTER CACHE - Pre-computed clusters for map rendering
+// ============================================
+model AedClusterCache {
+  id            Int    @id @default(autoincrement())
+  zoom_level    Int
+  center_lat    Float
+  center_lng    Float
+  count         Int
+  bounds_min_lat Float
+  bounds_max_lat Float
+  bounds_min_lng Float
+  bounds_max_lng Float
+  geom          Unsupported("geometry(Point, 4326)")?
+
+  created_at DateTime @default(now())
+
+  @@index([zoom_level, center_lat, center_lng], map: "idx_aed_cluster_cache_zoom_coords")
+  @@index([zoom_level], map: "idx_aed_cluster_cache_zoom")
+  @@map("aed_cluster_cache")
+}
+
+model AedClusterCacheMetadata {
+  id               Int      @id @default(autoincrement())
+  last_regenerated DateTime @default(now())
+  total_aeds       Int      @default(0)
+  total_clusters   Int      @default(0)
+  duration_ms      Int      @default(0)
+  zoom_levels      Int[]    @default([])
+
+  @@map("aed_cluster_cache_metadata")
+}
+
 model BatchactionsJob {
   id           String  @id @db.VarChar(36)
   status       String  @db.VarChar(20)

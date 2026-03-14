@@ -36,6 +36,7 @@ import {
   ORPHANED_JOB_TIMEOUT_MS,
   CRON_MAX_JOBS_PER_INVOCATION,
 } from "@/import/constants";
+import { regenerateClusterCache } from "@/clustering/infrastructure/services/ClusterCacheService";
 
 // Lazy initialization para evitar side effects en cold starts de serverless.
 // Se inicializa solo cuando se necesita procesar un job legacy.
@@ -261,6 +262,19 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
 
         if (!lastResult.hasMore) {
           console.log(`[DONE] [Cron] Job ${job.id} completed!`);
+
+          // Regenerate cluster cache after import/sync jobs complete
+          if (engine === "bulkimport" || engine === "externalsync") {
+            try {
+              console.log(`[CACHE] [Cron] Regenerating cluster cache after job ${job.id}...`);
+              const cacheResult = await regenerateClusterCache();
+              console.log(
+                `[CACHE] [Cron] Cluster cache regenerated: ${cacheResult.totalClusters} clusters in ${cacheResult.durationMs}ms`
+              );
+            } catch (cacheError) {
+              console.error(`[CACHE] [Cron] Error regenerating cluster cache:`, cacheError);
+            }
+          }
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
