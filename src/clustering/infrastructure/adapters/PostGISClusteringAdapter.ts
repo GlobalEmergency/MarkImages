@@ -28,31 +28,47 @@ export class PostGISClusteringAdapter implements IClusteringService {
     // Determine the zoom level from the grid size for cache lookup
     const zoomLevel = this.gridSizeToZoom(gridSize);
 
-    // Run both queries in parallel to avoid paying connection overhead twice
-    // (each Prisma $queryRawUnsafe has ~80ms connection acquisition overhead)
-    const clusterStart = Date.now();
-    const [cachedClusters, cachedMarkers] = await Promise.all([
-      this.getCachedClusters(zoomLevel, bounds, limit),
-      this.getIndividualMarkersFromCache(zoomLevel, bounds, gridSize, limit),
-    ]);
-    const parallelMs = Date.now() - clusterStart;
+    // Single combined query: clusters + markers in one DB roundtrip.
+    // This eliminates the ~80ms connection acquisition overhead of a second query.
+    const queryStart = Date.now();
+    const combined = await this.getCombinedClustersAndMarkers(zoomLevel, bounds, gridSize, limit);
+    const queryMs = Date.now() - queryStart;
 
-    const cacheUsed = cachedClusters.length > 0;
+    const cacheUsed = combined.clusters.length > 0;
 
     let clusters: AedCluster[];
     let markers: AedMapMarker[];
 
     if (cacheUsed) {
-      clusters = cachedClusters;
-      markers = cachedMarkers;
+      clusters = combined.clusters;
+      markers = combined.markers;
     } else {
       // Fallback: compute everything in real-time (cache not populated yet)
+      const rtStart = Date.now();
       const [rtClusters, rtMarkers] = await Promise.all([
         this.computeClustersRealTime(bounds, gridSize, minClusterSize, limit),
         this.getIndividualMarkersRealTime(bounds, gridSize, minClusterSize, limit),
       ]);
       clusters = rtClusters;
       markers = rtMarkers;
+      const rtMs = Date.now() - rtStart;
+
+      const totalClustered = clusters.reduce((sum, c) => sum + c.count, 0);
+      return {
+        clusters,
+        markers,
+        stats: {
+          total_in_view: totalClustered + markers.length,
+          clustered: totalClustered,
+          individual: markers.length,
+        },
+        timing: {
+          clusters_ms: rtMs,
+          markers_ms: rtMs,
+          total_ms: Date.now() - totalStart,
+          cache_used: false,
+        },
+      };
     }
 
     const totalClustered = clusters.reduce((sum, c) => sum + c.count, 0);
@@ -66,66 +82,125 @@ export class PostGISClusteringAdapter implements IClusteringService {
         individual: markers.length,
       },
       timing: {
-        clusters_ms: parallelMs,
-        markers_ms: parallelMs,
+        clusters_ms: queryMs,
+        markers_ms: queryMs,
         total_ms: Date.now() - totalStart,
-        cache_used: cacheUsed,
+        cache_used: true,
       },
     };
   }
 
   /**
-   * Get clusters from the pre-computed cache table.
-   * Uses ST_Within for GiST index on the cache table.
+   * Combined query: fetch cached clusters AND individual markers in a single DB roundtrip.
+   * Uses CTEs to run both sub-queries on one connection, eliminating the ~80ms overhead
+   * of acquiring a second connection from the Prisma pool.
    */
-  private async getCachedClusters(
+  private async getCombinedClustersAndMarkers(
     zoomLevel: number,
     bounds: BoundingBox,
+    gridSize: number,
     limit: number
-  ): Promise<AedCluster[]> {
+  ): Promise<{ clusters: AedCluster[]; markers: AedMapMarker[] }> {
     const results = await prisma.$queryRawUnsafe<
       Array<{
-        center_lat: number;
-        center_lng: number;
-        count: number;
-        bounds_min_lat: number;
-        bounds_max_lat: number;
-        bounds_min_lng: number;
-        bounds_max_lng: number;
+        row_type: string;
+        // Cluster fields (null for markers)
+        center_lat: number | null;
+        center_lng: number | null;
+        count: number | null;
+        bounds_min_lat: number | null;
+        bounds_max_lat: number | null;
+        bounds_min_lng: number | null;
+        bounds_max_lng: number | null;
+        // Marker fields (null for clusters)
+        id: string | null;
+        code: string | null;
+        name: string | null;
+        latitude: number | null;
+        longitude: number | null;
+        establishment_type: string | null;
+        publication_mode: string | null;
       }>
     >(
       `
-      SELECT center_lat, center_lng, count,
-             bounds_min_lat, bounds_max_lat, bounds_min_lng, bounds_max_lng
-      FROM aed_cluster_cache
-      WHERE zoom_level = $1
-        AND geom IS NOT NULL
-        AND ST_Within(
-          geom,
-          ST_MakeEnvelope($3, $2, $4, $5, 4326)
-        )
-      ORDER BY count DESC
-      LIMIT $6
+      WITH cached_clusters AS (
+        SELECT center_lat, center_lng, count,
+               bounds_min_lat, bounds_max_lat, bounds_min_lng, bounds_max_lng
+        FROM aed_cluster_cache
+        WHERE zoom_level = $1
+          AND geom IS NOT NULL
+          AND ST_Within(geom, ST_MakeEnvelope($4, $2, $5, $3, 4326))
+        ORDER BY count DESC
+        LIMIT $6
+      ),
+      individual_markers AS (
+        SELECT a.id, a.code, a.name, a.latitude, a.longitude,
+               a.establishment_type, a.publication_mode
+        FROM aeds a
+        WHERE a.status = 'PUBLISHED'
+          AND a.publication_mode != 'NONE'
+          AND a.geom IS NOT NULL
+          AND ST_Within(a.geom, ST_MakeEnvelope($4, $2, $5, $3, 4326))
+          AND NOT EXISTS (
+            SELECT 1 FROM aed_cluster_cache c
+            WHERE c.zoom_level = $1
+              AND c.geom = ST_SnapToGrid(a.geom, $7)
+          )
+        LIMIT $6
+      )
+      SELECT 'cluster' AS row_type,
+             center_lat, center_lng, count,
+             bounds_min_lat, bounds_max_lat, bounds_min_lng, bounds_max_lng,
+             NULL::text AS id, NULL::text AS code, NULL::text AS name,
+             NULL::float8 AS latitude, NULL::float8 AS longitude,
+             NULL::text AS establishment_type, NULL::text AS publication_mode
+      FROM cached_clusters
+      UNION ALL
+      SELECT 'marker' AS row_type,
+             NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+             id::text, code, name, latitude, longitude,
+             establishment_type, publication_mode
+      FROM individual_markers
       `,
       zoomLevel,
       bounds.minLat,
+      bounds.maxLat,
       bounds.minLng,
       bounds.maxLng,
-      bounds.maxLat,
-      limit
+      limit,
+      gridSize
     );
 
-    return results.map((row) => ({
-      id: `cluster_${row.center_lat.toFixed(4)}_${row.center_lng.toFixed(4)}`,
-      center: { lat: row.center_lat, lng: row.center_lng },
-      count: row.count,
-      bounds: {
-        minLat: row.bounds_min_lat,
-        maxLat: row.bounds_max_lat,
-        minLng: row.bounds_min_lng,
-        maxLng: row.bounds_max_lng,
-      },
-    }));
+    const clusters: AedCluster[] = [];
+    const markers: AedMapMarker[] = [];
+
+    for (const row of results) {
+      if (row.row_type === "cluster" && row.center_lat !== null && row.center_lng !== null) {
+        clusters.push({
+          id: `cluster_${row.center_lat.toFixed(4)}_${row.center_lng.toFixed(4)}`,
+          center: { lat: row.center_lat, lng: row.center_lng },
+          count: row.count!,
+          bounds: {
+            minLat: row.bounds_min_lat!,
+            maxLat: row.bounds_max_lat!,
+            minLng: row.bounds_min_lng!,
+            maxLng: row.bounds_max_lng!,
+          },
+        });
+      } else if (row.row_type === "marker" && row.id !== null) {
+        markers.push({
+          id: row.id,
+          code: row.code!,
+          name: row.name!,
+          latitude: row.latitude!,
+          longitude: row.longitude!,
+          establishment_type: row.establishment_type!,
+          publication_mode: row.publication_mode!,
+        } as AedMapMarker);
+      }
+    }
+
+    return { clusters, markers };
   }
 
   /**
@@ -194,45 +269,6 @@ export class PostGISClusteringAdapter implements IClusteringService {
         maxLng: row.max_lng,
       },
     }));
-  }
-
-  /**
-   * Get individual markers using the cache table for exclusion.
-   * Instead of recomputing ST_SnapToGrid + GROUP BY on all aeds (expensive),
-   * we anti-join against the small cache table: exclude AEDs whose grid cell
-   * matches a cached cluster. This turns an 800ms query into ~10-20ms.
-   */
-  private async getIndividualMarkersFromCache(
-    zoomLevel: number,
-    bounds: BoundingBox,
-    gridSize: number,
-    limit: number
-  ): Promise<AedMapMarker[]> {
-    return await prisma.$queryRawUnsafe<AedMapMarker[]>(
-      `
-      SELECT a.id, a.code, a.name, a.latitude, a.longitude,
-             a.establishment_type, a.publication_mode
-      FROM aeds a
-      WHERE
-        a.status = 'PUBLISHED'
-        AND a.publication_mode != 'NONE'
-        AND a.geom IS NOT NULL
-        AND ST_Within(a.geom, ST_MakeEnvelope($3, $1, $4, $2, 4326))
-        AND NOT EXISTS (
-          SELECT 1 FROM aed_cluster_cache c
-          WHERE c.zoom_level = $5
-            AND c.geom = ST_SnapToGrid(a.geom, $6)
-        )
-      LIMIT $7
-      `,
-      bounds.minLat,
-      bounds.maxLat,
-      bounds.minLng,
-      bounds.maxLng,
-      zoomLevel,
-      gridSize,
-      limit
-    );
   }
 
   /**
