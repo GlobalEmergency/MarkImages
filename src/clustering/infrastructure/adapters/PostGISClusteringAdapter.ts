@@ -159,7 +159,7 @@ export class PostGISClusteringAdapter implements IClusteringService {
       SELECT 'marker' AS row_type,
              NULL, NULL, NULL, NULL, NULL, NULL, NULL,
              id::text, code, name, latitude, longitude,
-             establishment_type, publication_mode
+             establishment_type::text, publication_mode::text
       FROM individual_markers
       `,
       zoomLevel,
