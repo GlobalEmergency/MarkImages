@@ -7,6 +7,7 @@ import { AedMapMarker } from "../../../domain/models/Aed";
 interface DeaMarkerProps {
   aed: AedMapMarker;
   onSelect: (aed: AedMapMarker) => void;
+  isSelected?: boolean;
 }
 
 const deaIcon = L.divIcon({
@@ -30,20 +31,22 @@ const deaIcon = L.divIcon({
   iconAnchor: [16, 16],
 });
 
-const DeaMarker: React.FC<DeaMarkerProps> = React.memo(({ aed, onSelect }) => {
+const DeaMarker: React.FC<DeaMarkerProps> = React.memo(({ aed, onSelect, isSelected }) => {
   const eventHandlers = useMemo(() => ({ click: () => onSelect(aed) }), [aed, onSelect]);
 
   return (
     <Marker position={[aed.latitude, aed.longitude]} icon={deaIcon} eventHandlers={eventHandlers}>
-      <Popup>
-        <strong>{aed.name}</strong>
-        {aed.establishment_type && (
-          <>
-            <br />
-            <small>{aed.establishment_type}</small>
-          </>
-        )}
-      </Popup>
+      {isSelected && (
+        <Popup>
+          <strong>{aed.name}</strong>
+          {aed.establishment_type && (
+            <>
+              <br />
+              <small>{aed.establishment_type}</small>
+            </>
+          )}
+        </Popup>
+      )}
     </Marker>
   );
 });

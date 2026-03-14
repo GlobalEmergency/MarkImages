@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Marker, Popup } from "react-leaflet";
+import { Marker } from "react-leaflet";
 import L from "leaflet";
 
 import { AedCluster } from "../../../domain/models/Aed";
@@ -58,11 +58,7 @@ const ClusterMarker: React.FC<ClusterMarkerProps> = React.memo(({ cluster, onZoo
       eventHandlers={{
         click: () => onZoomToCluster(cluster),
       }}
-    >
-      <Popup>
-        <strong>{cluster.count} DEAs</strong> en esta zona
-      </Popup>
-    </Marker>
+    />
   );
 });
 
