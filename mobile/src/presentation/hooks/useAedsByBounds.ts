@@ -12,6 +12,31 @@ interface UseAedsByBoundsResult {
   stats: { total_in_view: number; clustered: number; individual: number } | null;
 }
 
+/**
+ * Check if bounds have changed significantly enough to warrant a re-fetch.
+ * Avoids refetching on sub-pixel map movements.
+ */
+function boundsChangedSignificantly(
+  prev: BoundingBox | null,
+  next: BoundingBox,
+  prevZoom: number,
+  nextZoom: number
+): boolean {
+  if (!prev) return true;
+  if (prevZoom !== nextZoom) return true;
+
+  const latSpan = next.maxLat - next.minLat;
+  const lngSpan = next.maxLng - next.minLng;
+  const threshold = Math.min(latSpan, lngSpan) * 0.01;
+
+  return (
+    Math.abs(prev.minLat - next.minLat) > threshold ||
+    Math.abs(prev.maxLat - next.maxLat) > threshold ||
+    Math.abs(prev.minLng - next.minLng) > threshold ||
+    Math.abs(prev.maxLng - next.maxLng) > threshold
+  );
+}
+
 export function useAedsByBounds(
   bounds: BoundingBox | null,
   zoom: number,
@@ -26,9 +51,16 @@ export function useAedsByBounds(
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(false);
   const requestIdRef = useRef(0);
+  const lastFetchedBoundsRef = useRef<BoundingBox | null>(null);
+  const lastFetchedZoomRef = useRef(0);
 
   const fetchData = useCallback(async (b: BoundingBox, z: number) => {
-    // Track request id so only the latest response updates state
+    if (
+      !boundsChangedSignificantly(lastFetchedBoundsRef.current, b, lastFetchedZoomRef.current, z)
+    ) {
+      return;
+    }
+
     const currentRequestId = ++requestIdRef.current;
 
     setLoading(true);
@@ -40,6 +72,8 @@ export function useAedsByBounds(
         setMarkers(response.markers);
         setClusters(response.clusters);
         setStats(response.stats);
+        lastFetchedBoundsRef.current = b;
+        lastFetchedZoomRef.current = z;
       }
     } catch (err) {
       if (mountedRef.current && currentRequestId === requestIdRef.current) {

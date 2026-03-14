@@ -1,6 +1,7 @@
 /**
- * Hook to fetch AEDs by geographic bounding box with server-side clustering
- * Optimized for map visualization with debouncing and caching
+ * Hook to fetch AEDs by geographic bounding box with server-side clustering.
+ * Optimized: skips fetches when bounds haven't changed significantly,
+ * uses AbortController for request cancellation, debounced.
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -22,13 +23,31 @@ interface UseAedsByBoundsResult {
 }
 
 /**
- * Custom hook to fetch AEDs within a bounding box
- * Features:
- * - Debouncing to avoid excessive API calls
- * - Automatic abort of previous requests
- * - Loading and error states
- * - Truncation detection
+ * Check if bounds have changed significantly enough to warrant a re-fetch.
+ * Avoids refetching on sub-pixel map movements.
  */
+function boundsChangedSignificantly(
+  prev: BoundingBox | null,
+  next: BoundingBox,
+  prevZoom: number,
+  nextZoom: number
+): boolean {
+  if (!prev) return true;
+  if (prevZoom !== nextZoom) return true;
+
+  // Threshold: ~1% of the viewport size
+  const latSpan = next.maxLat - next.minLat;
+  const lngSpan = next.maxLng - next.minLng;
+  const threshold = Math.min(latSpan, lngSpan) * 0.01;
+
+  return (
+    Math.abs(prev.minLat - next.minLat) > threshold ||
+    Math.abs(prev.maxLat - next.maxLat) > threshold ||
+    Math.abs(prev.minLng - next.minLng) > threshold ||
+    Math.abs(prev.maxLng - next.maxLng) > threshold
+  );
+}
+
 export function useAedsByBounds(
   bounds: BoundingBox | null,
   zoom: number,
@@ -45,33 +64,42 @@ export function useAedsByBounds(
   });
   const [strategy, setStrategy] = useState<string>("full");
 
-  // Ref to store the abort controller for cancellation
   // eslint-disable-next-line no-undef
   const abortControllerRef = useRef<AbortController | null>(null);
-
-  // Ref to store the debounce timeout
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastFetchedBoundsRef = useRef<BoundingBox | null>(null);
+  const lastFetchedZoomRef = useRef<number>(0);
 
   const fetchAeds = useCallback(async (boundingBox: BoundingBox, zoomLevel: number) => {
+    // Skip if bounds haven't changed significantly
+    if (
+      !boundsChangedSignificantly(
+        lastFetchedBoundsRef.current,
+        boundingBox,
+        lastFetchedZoomRef.current,
+        zoomLevel
+      )
+    ) {
+      return;
+    }
+
     try {
       // Cancel any ongoing request
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
 
-      // Create new abort controller
       // eslint-disable-next-line no-undef
       abortControllerRef.current = new AbortController();
 
       setLoading(true);
       setError(null);
 
-      // Build query params
       const params = new URLSearchParams({
-        minLat: boundingBox.minLat.toString(),
-        maxLat: boundingBox.maxLat.toString(),
-        minLng: boundingBox.minLng.toString(),
-        maxLng: boundingBox.maxLng.toString(),
+        minLat: boundingBox.minLat.toFixed(6),
+        maxLat: boundingBox.maxLat.toFixed(6),
+        minLng: boundingBox.minLng.toFixed(6),
+        maxLng: boundingBox.maxLng.toFixed(6),
         zoom: zoomLevel.toString(),
       });
 
@@ -90,15 +118,15 @@ export function useAedsByBounds(
         setClusters(data.data.clusters);
         setStats(data.stats);
         setStrategy(data.strategy);
+        lastFetchedBoundsRef.current = boundingBox;
+        lastFetchedZoomRef.current = zoomLevel;
       } else {
         throw new Error("Invalid response from server");
       }
     } catch (err) {
-      // Ignore abort errors
       if (err instanceof Error && err.name === "AbortError") {
         return;
       }
-
       setError(err instanceof Error ? err.message : "Unknown error");
       console.error("Error fetching AEDs by bounds:", err);
     } finally {
@@ -108,12 +136,10 @@ export function useAedsByBounds(
 
   const debouncedFetch = useCallback(
     (boundingBox: BoundingBox, zoomLevel: number) => {
-      // Clear existing timeout
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
       }
 
-      // Set new timeout
       debounceTimeoutRef.current = setTimeout(() => {
         fetchAeds(boundingBox, zoomLevel);
       }, debounceMs);
@@ -121,15 +147,11 @@ export function useAedsByBounds(
     [fetchAeds, debounceMs]
   );
 
-  // Effect to fetch AEDs when bounds or zoom changes
   useEffect(() => {
-    if (!bounds) {
-      return;
-    }
+    if (!bounds) return;
 
     debouncedFetch(bounds, zoom);
 
-    // Cleanup function
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
@@ -142,6 +164,8 @@ export function useAedsByBounds(
 
   const refetch = useCallback(() => {
     if (bounds) {
+      // Force refetch by clearing last fetched bounds
+      lastFetchedBoundsRef.current = null;
       fetchAeds(bounds, zoom);
     }
   }, [bounds, zoom, fetchAeds]);

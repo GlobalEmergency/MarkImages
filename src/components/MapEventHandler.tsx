@@ -1,8 +1,7 @@
 /**
- * MapEventHandler - Component to handle Leaflet map events
- *
- * This component listens to map movement and zoom events
- * and calls the provided callback with the current map instance
+ * MapEventHandler - Listens to Leaflet map movement events.
+ * Only listens to moveend (which fires on zoom changes too),
+ * avoiding duplicate event handling.
  */
 
 "use client";
@@ -19,17 +18,13 @@ interface MapEventHandlerProps {
 export function MapEventHandler({ onMove, initialLoad = true }: MapEventHandlerProps) {
   const map = useMap();
 
-  // Listen to map events
   useMapEvents({
     moveend: () => {
       onMove(map);
     },
-    zoomend: () => {
-      onMove(map);
-    },
+    // zoomend removed - moveend fires after zoom changes too
   });
 
-  // Call onMove on initial load
   useEffect(() => {
     if (initialLoad) {
       onMove(map);

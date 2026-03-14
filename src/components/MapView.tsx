@@ -1,14 +1,13 @@
 /**
  * MapView - Dynamic map component with server-side clustering
- * Optimized for large datasets with hybrid rendering (clusters + individual markers)
- * Includes spiderfy for overlapping markers
+ * Optimized for 3M+ points with hybrid rendering (clusters + individual markers)
  */
 
 "use client";
 
 import L from "leaflet";
 import { AlertCircle, Loader2, MapPin } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 
@@ -28,115 +27,97 @@ interface MapViewProps {
   onAddressChange?: (address: string) => void;
 }
 
-// Custom marker icon for DEAs
-const createCustomIcon = () => {
-  return L.divIcon({
-    className: "custom-marker",
-    html: `
+// ============================================
+// CACHED ICONS - Created once, reused forever
+// ============================================
+
+const aedIcon = L.divIcon({
+  className: "custom-marker",
+  html: `
+    <div style="
+      background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+      width: 32px;
+      height: 32px;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      border: 3px solid white;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    ">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(45deg);">
+        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+      </svg>
+    </div>
+  `,
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
+});
+
+const searchLocationIcon = L.divIcon({
+  className: "search-location-marker",
+  html: `
+    <div style="position: relative; width: 48px; height: 48px;">
       <div style="
-        background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
-        width: 32px;
-        height: 32px;
+        position: absolute; top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 48px; height: 48px;
+        background: rgba(220, 38, 38, 0.3);
+        border-radius: 50%;
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      "></div>
+      <div style="
+        position: absolute; top: 50%; left: 50%;
+        background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);
+        width: 40px; height: 40px;
         border-radius: 50% 50% 50% 0;
-        transform: rotate(-45deg);
-        border: 3px solid white;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        transform: translate(-50%, -50%) rotate(-45deg);
+        border: 4px solid white;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        display: flex; align-items: center; justify-content: center;
       ">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="white"
-          stroke-width="3"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          style="transform: rotate(45deg);"
-        >
-          <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white" style="transform: rotate(45deg);">
+          <circle cx="12" cy="12" r="10" />
+          <circle cx="12" cy="12" r="3" fill="#DC2626" />
         </svg>
       </div>
-    `,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
-  });
-};
+    </div>
+    <style>
+      @keyframes pulse {
+        0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        50% { opacity: 0.5; transform: translate(-50%, -50%) scale(1.5); }
+      }
+    </style>
+  `,
+  iconSize: [48, 48],
+  iconAnchor: [24, 24],
+  popupAnchor: [0, -24],
+});
 
-// Search location marker icon - Large red pulsing marker
-const createSearchLocationIcon = () => {
+// Client-side spiderfy cluster icon (for overlapping markers at same location)
+const spiderfyIconCreateFunction = (cluster: { getChildCount: () => number }) => {
+  const count = cluster.getChildCount();
   return L.divIcon({
-    className: "search-location-marker",
-    html: `
-      <div style="position: relative; width: 48px; height: 48px;">
-        <!-- Pulsing circle animation -->
-        <div style="
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 48px;
-          height: 48px;
-          background: rgba(220, 38, 38, 0.3);
-          border-radius: 50%;
-          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        "></div>
-        <!-- Main marker -->
-        <div style="
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);
-          width: 40px;
-          height: 40px;
-          border-radius: 50% 50% 50% 0;
-          transform: translate(-50%, -50%) rotate(-45deg);
-          border: 4px solid white;
-          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="white"
-            style="transform: rotate(45deg);"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <circle cx="12" cy="12" r="3" fill="#DC2626" />
-          </svg>
-        </div>
-      </div>
-      <style>
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-          }
-          50% {
-            opacity: 0.5;
-            transform: translate(-50%, -50%) scale(1.5);
-          }
-        }
-      </style>
-    `,
-    iconSize: [48, 48],
-    iconAnchor: [24, 24],
-    popupAnchor: [0, -24],
+    html: `<div style="
+      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      border: 3px solid white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: bold; font-size: 13px;
+    ">${count}</div>`,
+    className: "client-marker-cluster",
+    iconSize: L.point(34, 34, true),
   });
 };
 
-/**
- * Component helper to fit map bounds when cluster is clicked
- */
+// ============================================
+// MAP CONTROLLER COMPONENTS
+// ============================================
+
 function MapController({ targetBounds }: { targetBounds: L.LatLngBounds | null }) {
   const map = useMap();
 
@@ -154,9 +135,6 @@ function MapController({ targetBounds }: { targetBounds: L.LatLngBounds | null }
   return null;
 }
 
-/**
- * Component to center map on search location
- */
 function SearchLocationController({ location }: { location: { lat: number; lng: number } | null }) {
   const map = useMap();
 
@@ -172,6 +150,10 @@ function SearchLocationController({ location }: { location: { lat: number; lng: 
   return null;
 }
 
+// ============================================
+// MAIN COMPONENT
+// ============================================
+
 export default function MapView({
   onAedClick,
   searchLocation,
@@ -181,29 +163,16 @@ export default function MapView({
   const [bounds, setBounds] = useState<BoundingBox | null>(null);
   const [zoom, setZoom] = useState(12);
   const [targetBounds, setTargetBounds] = useState<L.LatLngBounds | null>(null);
+  const [selectedAedId, setSelectedAedId] = useState<string | null>(null);
 
-  // Fetch AEDs within bounds with clustering
+  // Ref to close previous popup before opening a new one
+  const mapRef = useRef<L.Map | null>(null);
+
   const { aeds, clusters, loading, error } = useAedsByBounds(bounds, zoom);
 
-  useEffect(() => {
-    // Ensure Leaflet styles are loaded
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-    link.integrity = "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
-    link.crossOrigin = "";
-    document.head.appendChild(link);
-
-    return () => {
-      try {
-        document.head.removeChild(link);
-      } catch {
-        // Ignore errors during cleanup
-      }
-    };
-  }, []);
-
+  // Store map ref on first event
   const handleMapMove = useCallback((map: L.Map) => {
+    mapRef.current = map;
     const mapBounds = map.getBounds();
     setBounds({
       minLat: mapBounds.getSouth(),
@@ -216,15 +185,22 @@ export default function MapView({
 
   const handleMarkerClick = useCallback(
     (aed: AedMapMarker) => {
-      if (onAedClick) {
-        onAedClick({ id: aed.id, code: aed.code, name: aed.name });
+      // Close any open popup first to prevent stuck popups
+      if (mapRef.current) {
+        mapRef.current.closePopup();
       }
+      setSelectedAedId(aed.id);
+      onAedClick?.({ id: aed.id, code: aed.code, name: aed.name });
     },
     [onAedClick]
   );
 
   const handleClusterClick = useCallback((cluster: AedCluster) => {
-    // Create Leaflet bounds from cluster bounds
+    // Close any open popup
+    if (mapRef.current) {
+      mapRef.current.closePopup();
+    }
+    setSelectedAedId(null);
     const clusterBounds = L.latLngBounds(
       [cluster.bounds.minLat, cluster.bounds.minLng],
       [cluster.bounds.maxLat, cluster.bounds.maxLng]
@@ -232,14 +208,30 @@ export default function MapView({
     setTargetBounds(clusterBounds);
   }, []);
 
+  // Find selected AED for popup rendering (only render popup for the selected one)
+  const selectedAed = useMemo(
+    () => (selectedAedId ? aeds.find((a) => a.id === selectedAedId) : null),
+    [selectedAedId, aeds]
+  );
+
+  // Memoize cluster markers to prevent re-renders when aeds change
+  const clusterMarkers = useMemo(
+    () =>
+      clusters.map((cluster) => (
+        <ClusterMarker key={cluster.id} cluster={cluster} onClusterClick={handleClusterClick} />
+      )),
+    [clusters, handleClusterClick]
+  );
+
   return (
     <div className="relative w-full h-full rounded-xl overflow-hidden shadow-xl">
       <MapContainer
-        center={[40.4168, -3.7038]} // Madrid center
+        center={[40.4168, -3.7038]}
         zoom={12}
         scrollWheelZoom={true}
         className="w-full h-full"
         style={{ zIndex: 0 }}
+        preferCanvas={true}
       >
         {/* Base map layer */}
         <TileLayer
@@ -248,7 +240,7 @@ export default function MapView({
           maxZoom={20}
         />
 
-        {/* Labels overlay for street names and house numbers */}
+        {/* Labels overlay */}
         <TileLayer
           attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
@@ -257,7 +249,7 @@ export default function MapView({
           pane="overlayPane"
         />
 
-        {/* Map event handler */}
+        {/* Map event handler - moveend only (zoomend is redundant) */}
         <MapEventHandler onMove={handleMapMove} />
 
         {/* Map controller for zoom animations */}
@@ -266,11 +258,11 @@ export default function MapView({
         {/* Search location controller */}
         <SearchLocationController location={searchLocation ?? null} />
 
-        {/* Search location marker - Draggable */}
+        {/* Search location marker */}
         {searchLocation && (
           <Marker
             position={[searchLocation.lat, searchLocation.lng]}
-            icon={createSearchLocationIcon()}
+            icon={searchLocationIcon}
             zIndexOffset={1000}
             draggable={true}
             eventHandlers={{
@@ -278,13 +270,11 @@ export default function MapView({
                 const marker = e.target;
                 const position = marker.getLatLng();
 
-                // Update location
                 onSearchLocationChange?.({
                   lat: position.lat,
                   lng: position.lng,
                 });
 
-                // Reverse geocode to get address
                 if (onAddressChange) {
                   try {
                     const response = await fetch(
@@ -309,10 +299,10 @@ export default function MapView({
           >
             <Popup>
               <div className="min-w-[200px]">
-                <h3 className="font-bold text-red-600 mb-2">📍 Tu ubicación</h3>
+                <h3 className="font-bold text-red-600 mb-2">Tu ubicación</h3>
                 <p className="text-sm text-gray-600 mb-2">Buscando DEAs cercanos desde aquí</p>
                 <p className="text-xs text-gray-500 italic mb-2">
-                  💡 Arrastra este marcador para ajustar la búsqueda
+                  Arrastra este marcador para ajustar la búsqueda
                 </p>
                 <div className="mt-2 text-xs text-gray-500">
                   <p>Lat: {searchLocation.lat.toFixed(6)}</p>
@@ -323,12 +313,10 @@ export default function MapView({
           </Marker>
         )}
 
-        {/* Render server-side clusters */}
-        {clusters.map((cluster) => (
-          <ClusterMarker key={cluster.id} cluster={cluster} onClusterClick={handleClusterClick} />
-        ))}
+        {/* Server-side clusters - no popup, just zoom on click */}
+        {clusterMarkers}
 
-        {/* Render individual AED markers with client-side spiderfy ONLY for overlapping markers */}
+        {/* Individual AED markers with client-side spiderfy for overlapping */}
         <MarkerClusterGroup
           showCoverageOnHover={false}
           spiderfyOnMaxZoom={true}
@@ -336,60 +324,46 @@ export default function MapView({
           maxClusterRadius={15}
           spiderfyDistanceMultiplier={1.5}
           zoomToBoundsOnClick={false}
-          iconCreateFunction={(cluster: any) => {
-            const count = cluster.getChildCount();
-            // Cluster ultra pequeño solo para marcadores LITERALMENTE superpuestos
-            return L.divIcon({
-              html: `<div style="
-                background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-                width: 34px;
-                height: 34px;
-                border-radius: 50%;
-                border: 3px solid white;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: white;
-                font-weight: bold;
-                font-size: 13px;
-              ">${count}</div>`,
-              className: "client-marker-cluster",
-              iconSize: L.point(34, 34, true),
-            });
-          }}
+          animate={false}
+          chunkedLoading={true}
+          chunkInterval={100}
+          chunkDelay={10}
+          removeOutsideVisibleBounds={true}
+          iconCreateFunction={spiderfyIconCreateFunction}
         >
           {aeds.map((aed) => (
             <Marker
               key={aed.id}
               position={[aed.latitude, aed.longitude]}
-              icon={createCustomIcon()}
+              icon={aedIcon}
               eventHandlers={{
                 click: () => handleMarkerClick(aed),
               }}
             >
-              <Popup>
-                <div className="min-w-[200px]">
-                  <h3 className="font-bold text-gray-900 mb-2">{aed.name}</h3>
-                  <p className="text-sm text-gray-600 mb-2">{aed.code}</p>
+              {selectedAed && selectedAed.id === aed.id && (
+                <Popup>
+                  <div className="min-w-[200px]">
+                    <h3 className="font-bold text-gray-900 mb-2">{aed.name}</h3>
+                    <p className="text-sm text-gray-600 mb-2">{aed.code}</p>
 
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-start gap-2">
-                      <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-gray-700">{aed.establishment_type}</p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-start gap-2">
+                        <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-gray-700">{aed.establishment_type}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <button
-                    onClick={() => handleMarkerClick(aed)}
-                    className="w-full mt-3 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all"
-                  >
-                    Ver detalles
-                  </button>
-                </div>
-              </Popup>
+                    <button
+                      onClick={() => handleMarkerClick(aed)}
+                      className="w-full mt-3 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all"
+                    >
+                      Ver detalles
+                    </button>
+                  </div>
+                </Popup>
+              )}
             </Marker>
           ))}
         </MarkerClusterGroup>
@@ -410,39 +384,6 @@ export default function MapView({
           <span className="text-sm font-medium text-red-700">{error}</span>
         </div>
       )}
-
-      {/* Info indicator - Disabled for public users */}
-      {/* {!loading && !error && (aeds.length > 0 || clusters.length > 0) && (
-        <div className="absolute bottom-4 left-4 z-[1000] bg-white rounded-lg shadow-lg px-4 py-2 flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-medium text-gray-700">
-              {stats.total_in_view} DEA{stats.total_in_view !== 1 ? "s" : ""} en vista
-            </span>
-          </div>
-          {clusters.length > 0 && (
-            <div className="text-xs text-gray-600 space-y-0.5">
-              <p>
-                • {clusters.length} cluster{clusters.length !== 1 ? "s" : ""} ({stats.clustered}{" "}
-                DEAs)
-              </p>
-              <p>
-                • {aeds.length} individual{aeds.length !== 1 ? "es" : ""}
-              </p>
-            </div>
-          )}
-          <span className="text-xs text-gray-500">Estrategia: {strategy}</span>
-        </div>
-      )} */}
-
-      {/* No results indicator - Disabled for public users */}
-      {/* {!loading && !error && aeds.length === 0 && clusters.length === 0 && bounds && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[1000] bg-white rounded-lg shadow-lg px-6 py-4 text-center">
-          <MapPin className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-sm font-medium text-gray-700">No hay DEAs en esta área</p>
-          <p className="text-xs text-gray-500 mt-1">Mueve o reduce el zoom del mapa</p>
-        </div>
-      )} */}
     </div>
   );
 }

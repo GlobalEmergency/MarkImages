@@ -24,6 +24,12 @@ export interface ClusteringResult {
     clustered: number;
     individual: number;
   };
+  timing: {
+    clusters_ms: number;
+    markers_ms: number;
+    total_ms: number;
+    cache_used: boolean;
+  };
 }
 
 /**

@@ -1,17 +1,14 @@
 /**
  * ClusterMarker Component
  *
- * Componente para renderizar un cluster de DEAs en el mapa.
- * Siguiendo SOLID:
- * - Single Responsibility: Solo renderiza un cluster
- * - Open/Closed: Extensible mediante props sin modificar el componente
+ * Renders a server-side cluster on the map.
+ * Clicking a cluster zooms into its bounds - no popup.
  */
 
 "use client";
 
 import L from "leaflet";
-import { Marker, Popup } from "react-leaflet";
-import { MapPin } from "lucide-react";
+import { Marker } from "react-leaflet";
 import type { AedCluster } from "@/types/aed";
 
 interface ClusterMarkerProps {
@@ -19,46 +16,57 @@ interface ClusterMarkerProps {
   onClusterClick?: (cluster: AedCluster) => void;
 }
 
+// Icon cache keyed by count bracket to avoid recreating icons
+const iconCache = new Map<string, L.DivIcon>();
+
 /**
- * Crea un icono personalizado para clusters
- * El tamaño y color dependen del número de DEAs en el cluster
+ * Creates (or returns cached) cluster icon.
+ * Size and color depend on DEA count.
  */
-function createClusterIcon(count: number): L.DivIcon {
-  // Calcular tamaño basado en el conteo (mínimo 40px, máximo 70px)
+function getClusterIcon(count: number): L.DivIcon {
+  // Bucket counts to maximize cache hits
+  let bucket: string;
+  if (count < 10) bucket = String(count);
+  else if (count < 100) bucket = `${Math.floor(count / 5) * 5}`;
+  else if (count < 1000) bucket = `${Math.floor(count / 50) * 50}`;
+  else bucket = `${Math.floor(count / 500) * 500}`;
+
+  const cached = iconCache.get(bucket);
+  if (cached) return cached;
+
   const baseSize = 40;
   const maxSize = 70;
   const size = Math.min(maxSize, baseSize + Math.log10(count) * 15);
 
-  // Color según cantidad
-  let colorStart = "#3B82F6"; // blue-500
-  let colorEnd = "#8B5CF6"; // purple-600
+  let colorStart = "#3B82F6";
+  let colorEnd = "#8B5CF6";
 
   if (count > 100) {
-    colorStart = "#DC2626"; // red-600
-    colorEnd = "#F59E0B"; // amber-500
+    colorStart = "#DC2626";
+    colorEnd = "#F59E0B";
   } else if (count > 50) {
-    colorStart = "#F59E0B"; // amber-500
-    colorEnd = "#EAB308"; // yellow-500
+    colorStart = "#F59E0B";
+    colorEnd = "#EAB308";
   } else if (count > 20) {
-    colorStart = "#8B5CF6"; // purple-600
-    colorEnd = "#EC4899"; // pink-500
+    colorStart = "#8B5CF6";
+    colorEnd = "#EC4899";
   }
 
-  return L.divIcon({
+  // Format display count
+  const displayCount =
+    count >= 1000 ? `${(count / 1000).toFixed(count >= 10000 ? 0 : 1)}k` : String(count);
+
+  const icon = L.divIcon({
     className: "custom-cluster-marker",
     html: `
       <div style="
-        position: relative;
         width: ${size}px;
         height: ${size}px;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: transform 0.2s ease;
-      " 
-      onmouseover="this.style.transform='scale(1.1)'"
-      onmouseout="this.style.transform='scale(1)'">
+      ">
         <div style="
           position: absolute;
           width: 100%;
@@ -76,60 +84,28 @@ function createClusterIcon(count: number): L.DivIcon {
           font-weight: bold;
           font-size: ${Math.max(12, size / 3)}px;
           text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-        ">${count}</div>
+        ">${displayCount}</div>
       </div>
     `,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
-    popupAnchor: [0, -size / 2],
   });
+
+  iconCache.set(bucket, icon);
+  return icon;
 }
 
 /**
- * Componente que renderiza un marcador de cluster
+ * Cluster marker - click to zoom, no popup
  */
 export function ClusterMarker({ cluster, onClusterClick }: ClusterMarkerProps) {
-  const handleClick = () => {
-    if (onClusterClick) {
-      onClusterClick(cluster);
-    }
-  };
-
   return (
     <Marker
       position={[cluster.center.lat, cluster.center.lng]}
-      icon={createClusterIcon(cluster.count)}
+      icon={getClusterIcon(cluster.count)}
       eventHandlers={{
-        click: handleClick,
+        click: () => onClusterClick?.(cluster),
       }}
-    >
-      <Popup>
-        <div className="min-w-[200px]">
-          <div className="flex items-center gap-2 mb-3">
-            <MapPin className="w-5 h-5 text-blue-600" />
-            <h3 className="font-bold text-gray-900">Cluster de DEAs</h3>
-          </div>
-
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between items-center py-2 border-b border-gray-200">
-              <span className="text-gray-600">DEAs en esta área:</span>
-              <span className="font-bold text-lg text-blue-600">{cluster.count}</span>
-            </div>
-
-            <div className="text-xs text-gray-500 space-y-1">
-              <p>Latitud: {cluster.center.lat.toFixed(4)}</p>
-              <p>Longitud: {cluster.center.lng.toFixed(4)}</p>
-            </div>
-          </div>
-
-          <button
-            onClick={handleClick}
-            className="w-full mt-3 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all"
-          >
-            Aumentar zoom para ver DEAs
-          </button>
-        </div>
-      </Popup>
-    </Marker>
+    />
   );
 }

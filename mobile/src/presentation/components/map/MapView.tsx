@@ -23,6 +23,7 @@ const MapView: React.FC<MapViewProps> = ({ onMarkerSelect, userPosition, flyToCo
   const hasCentered = useRef(false);
   const [bounds, setBounds] = useState<BoundingBox | null>(null);
   const [zoom, setZoom] = useState(DEFAULT_MAP_ZOOM);
+  const [selectedAedId, setSelectedAedId] = useState<string | null>(null);
 
   const { markers, clusters, loading } = useAedsByBounds(bounds, zoom);
 
@@ -33,12 +34,25 @@ const MapView: React.FC<MapViewProps> = ({ onMarkerSelect, userPosition, flyToCo
 
   const handleZoomToCluster = useCallback((cluster: AedCluster) => {
     if (mapRef.current) {
+      mapRef.current.closePopup();
+      setSelectedAedId(null);
       mapRef.current.fitBounds([
         [cluster.bounds.minLat, cluster.bounds.minLng],
         [cluster.bounds.maxLat, cluster.bounds.maxLng],
       ]);
     }
   }, []);
+
+  const handleMarkerSelect = useCallback(
+    (aed: AedMapMarker) => {
+      if (mapRef.current) {
+        mapRef.current.closePopup();
+      }
+      setSelectedAedId(aed.id);
+      onMarkerSelect(aed);
+    },
+    [onMarkerSelect]
+  );
 
   // Auto-center on user position the first time
   useEffect(() => {
@@ -86,7 +100,12 @@ const MapView: React.FC<MapViewProps> = ({ onMarkerSelect, userPosition, flyToCo
         ))}
 
         {markers.map((aed) => (
-          <DeaMarker key={aed.id} aed={aed} onSelect={onMarkerSelect} />
+          <DeaMarker
+            key={aed.id}
+            aed={aed}
+            onSelect={handleMarkerSelect}
+            isSelected={aed.id === selectedAedId}
+          />
         ))}
       </MapContainer>
 
