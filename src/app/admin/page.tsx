@@ -221,6 +221,36 @@ export default function AdminDashboard() {
             </div>
           </Link>
 
+          {/* Cache de Clusters */}
+          <Link
+            href="/admin/clusters"
+            className="block p-6 bg-white rounded-lg shadow hover:shadow-lg transition-shadow"
+          >
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-8 w-8 text-teal-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                  />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <h2 className="text-lg font-semibold text-gray-900">Cache del Mapa</h2>
+                <p className="mt-1 text-sm text-gray-600">
+                  Gestionar clusters pre-computados para rendimiento del mapa
+                </p>
+              </div>
+            </div>
+          </Link>
+
           {/* Tabla de DEAs */}
           <Link
             href="/admin/deas"
