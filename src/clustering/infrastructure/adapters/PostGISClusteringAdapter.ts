@@ -2,10 +2,7 @@
  * Infrastructure Adapter: PostGISClusteringAdapter
  *
  * Implementación concreta del puerto IClusteringService usando PostGIS.
- * Siguiendo SOLID:
- * - Single Responsibility: Solo se encarga de clustering con PostGIS
- * - Dependency Inversion: Implementa la interfaz del dominio
- * - Open/Closed: Extensible sin modificar el dominio
+ * Optimizado para datasets de millones de puntos usando índice espacial GiST.
  */
 
 import { prisma } from "@/lib/db";
@@ -18,62 +15,126 @@ import type {
 
 export class PostGISClusteringAdapter implements IClusteringService {
   /**
-   * Calcula clusters usando ST_SnapToGrid de PostGIS
-   * Agrupa DEAs en una cuadrícula geográfica
+   * Calcula clusters usando ST_SnapToGrid de PostGIS.
+   * Optimizado: usa ST_Within + ST_MakeEnvelope para aprovechar el índice GiST,
+   * y ejecuta una sola query combinada para clusters + individuales.
    */
   async calculateClusters(params: ClusteringParams): Promise<ClusteringResult> {
     const { bounds, gridSize, minClusterSize, limit } = params;
 
-    // Query para calcular clusters usando PostGIS
-    const clustersQuery = `
-      WITH grid_clusters AS (
+    // Query combinada: calcula clusters y marcadores individuales en una sola pasada.
+    // Usa ST_Within + ST_MakeEnvelope para aprovechar el índice GiST en la columna geom.
+    const combinedQuery = `
+      WITH filtered AS (
         SELECT
-          ST_SnapToGrid(
-            ST_SetSRID(ST_MakePoint(a.longitude, a.latitude), 4326),
-            $5
-          ) as cluster_point,
-          COUNT(*) as count,
-          MIN(a.latitude) as min_lat,
-          MAX(a.latitude) as max_lat,
-          MIN(a.longitude) as min_lng,
-          MAX(a.longitude) as max_lng,
-          array_agg(a.id) as aed_ids
+          a.id,
+          a.code,
+          a.name,
+          a.latitude,
+          a.longitude,
+          a.establishment_type,
+          a.publication_mode,
+          ST_SnapToGrid(a.geom, $5) AS grid_point
         FROM aeds a
         WHERE
           a.status = 'PUBLISHED'
           AND a.publication_mode != 'NONE'
-          AND a.latitude IS NOT NULL
-          AND a.longitude IS NOT NULL
-          AND a.latitude BETWEEN $1 AND $2
-          AND a.longitude BETWEEN $3 AND $4
-        GROUP BY cluster_point
-        HAVING COUNT(*) >= $6
+          AND a.geom IS NOT NULL
+          AND ST_Within(
+            a.geom,
+            ST_MakeEnvelope($3, $1, $4, $2, 4326)
+          )
+      ),
+      grid_counts AS (
+        SELECT
+          grid_point,
+          COUNT(*) AS cnt
+        FROM filtered
+        GROUP BY grid_point
+      ),
+      cluster_data AS (
+        SELECT
+          ST_Y(gc.grid_point) AS center_lat,
+          ST_X(gc.grid_point) AS center_lng,
+          gc.cnt AS count,
+          MIN(f.latitude) AS min_lat,
+          MAX(f.latitude) AS max_lat,
+          MIN(f.longitude) AS min_lng,
+          MAX(f.longitude) AS max_lng
+        FROM grid_counts gc
+        JOIN filtered f ON f.grid_point = gc.grid_point
+        WHERE gc.cnt >= $6
+        GROUP BY gc.grid_point, gc.cnt
+        ORDER BY gc.cnt DESC
+        LIMIT $7
+      ),
+      individual_data AS (
+        SELECT
+          f.id,
+          f.code,
+          f.name,
+          f.latitude,
+          f.longitude,
+          f.establishment_type,
+          f.publication_mode
+        FROM filtered f
+        JOIN grid_counts gc ON f.grid_point = gc.grid_point
+        WHERE gc.cnt < $6
+        LIMIT $7
       )
       SELECT
-        ST_Y(cluster_point) as center_lat,
-        ST_X(cluster_point) as center_lng,
-        count,
-        min_lat,
-        max_lat,
-        min_lng,
-        max_lng
-      FROM grid_clusters
-      ORDER BY count DESC
-      LIMIT $7
+        'cluster' AS row_type,
+        NULL AS id,
+        NULL AS code,
+        NULL AS name,
+        center_lat AS latitude,
+        center_lng AS longitude,
+        NULL AS establishment_type,
+        NULL AS publication_mode,
+        count::int AS cluster_count,
+        min_lat AS bounds_min_lat,
+        max_lat AS bounds_max_lat,
+        min_lng AS bounds_min_lng,
+        max_lng AS bounds_max_lng
+      FROM cluster_data
+
+      UNION ALL
+
+      SELECT
+        'marker' AS row_type,
+        id,
+        code,
+        name,
+        latitude,
+        longitude,
+        establishment_type,
+        publication_mode,
+        NULL AS cluster_count,
+        NULL AS bounds_min_lat,
+        NULL AS bounds_max_lat,
+        NULL AS bounds_min_lng,
+        NULL AS bounds_max_lng
+      FROM individual_data
     `;
 
-    const clusterResults = await prisma.$queryRawUnsafe<
-      Array<{
-        center_lat: number;
-        center_lng: number;
-        count: bigint;
-        min_lat: number;
-        max_lat: number;
-        min_lng: number;
-        max_lng: number;
-      }>
-    >(
-      clustersQuery,
+    interface CombinedRow {
+      row_type: string;
+      id: string | null;
+      code: string | null;
+      name: string | null;
+      latitude: number;
+      longitude: number;
+      establishment_type: string | null;
+      publication_mode: string | null;
+      cluster_count: number | null;
+      bounds_min_lat: number | null;
+      bounds_max_lat: number | null;
+      bounds_min_lng: number | null;
+      bounds_max_lng: number | null;
+    }
+
+    const results = await prisma.$queryRawUnsafe<CombinedRow[]>(
+      combinedQuery,
       bounds.minLat,
       bounds.maxLat,
       bounds.minLng,
@@ -83,99 +144,51 @@ export class PostGISClusteringAdapter implements IClusteringService {
       limit
     );
 
-    // Transformar resultados a clusters
-    const clusters: AedCluster[] = clusterResults.map((row) => ({
-      id: `cluster_${row.center_lat.toFixed(4)}_${row.center_lng.toFixed(4)}`,
-      center: {
-        lat: row.center_lat,
-        lng: row.center_lng,
-      },
-      count: Number(row.count),
-      bounds: {
-        minLat: row.min_lat,
-        maxLat: row.max_lat,
-        minLng: row.min_lng,
-        maxLng: row.max_lng,
-      },
-    }));
+    const clusters: AedCluster[] = [];
+    const markers: AedMapMarker[] = [];
 
-    // Obtener DEAs individuales (los que no están en clusters)
-    const individualQuery = `
-      WITH grid_clusters AS (
-        SELECT
-          ST_SnapToGrid(
-            ST_SetSRID(ST_MakePoint(a.longitude, a.latitude), 4326),
-            $5
-          ) as cluster_point,
-          COUNT(*) as count
-        FROM aeds a
-        WHERE
-          a.status = 'PUBLISHED'
-          AND a.publication_mode != 'NONE'
-          AND a.latitude IS NOT NULL
-          AND a.longitude IS NOT NULL
-          AND a.latitude BETWEEN $1 AND $2
-          AND a.longitude BETWEEN $3 AND $4
-        GROUP BY cluster_point
-      )
-      SELECT
-        a.id,
-        a.code,
-        a.name,
-        a.latitude,
-        a.longitude,
-        a.establishment_type,
-        a.publication_mode
-      FROM aeds a
-      WHERE
-        a.status = 'PUBLISHED'
-        AND a.publication_mode != 'NONE'
-        AND a.latitude IS NOT NULL
-        AND a.longitude IS NOT NULL
-        AND a.latitude BETWEEN $1 AND $2
-        AND a.longitude BETWEEN $3 AND $4
-        AND ST_SnapToGrid(
-          ST_SetSRID(ST_MakePoint(a.longitude, a.latitude), 4326),
-          $5
-        ) IN (
-          SELECT cluster_point
-          FROM grid_clusters
-          WHERE count < $6
-        )
-      ORDER BY a.created_at DESC
-      LIMIT $7
-    `;
+    for (const row of results) {
+      if (row.row_type === "cluster") {
+        clusters.push({
+          id: `cluster_${row.latitude.toFixed(4)}_${row.longitude.toFixed(4)}`,
+          center: { lat: row.latitude, lng: row.longitude },
+          count: row.cluster_count!,
+          bounds: {
+            minLat: row.bounds_min_lat!,
+            maxLat: row.bounds_max_lat!,
+            minLng: row.bounds_min_lng!,
+            maxLng: row.bounds_max_lng!,
+          },
+        });
+      } else {
+        markers.push({
+          id: row.id!,
+          code: row.code!,
+          name: row.name!,
+          latitude: row.latitude,
+          longitude: row.longitude,
+          establishment_type: row.establishment_type!,
+          publication_mode: row.publication_mode as AedMapMarker["publication_mode"],
+        });
+      }
+    }
 
-    const individualResults = await prisma.$queryRawUnsafe<AedMapMarker[]>(
-      individualQuery,
-      bounds.minLat,
-      bounds.maxLat,
-      bounds.minLng,
-      bounds.maxLng,
-      gridSize,
-      minClusterSize,
-      limit
-    );
-
-    // Calcular estadísticas
-    const totalClustered = clusters.reduce((sum, cluster) => sum + cluster.count, 0);
-    const totalIndividual = individualResults.length;
-    const totalInView = totalClustered + totalIndividual;
+    const totalClustered = clusters.reduce((sum, c) => sum + c.count, 0);
 
     return {
       clusters,
-      markers: individualResults,
+      markers,
       stats: {
-        total_in_view: totalInView,
+        total_in_view: totalClustered + markers.length,
         clustered: totalClustered,
-        individual: totalIndividual,
+        individual: markers.length,
       },
     };
   }
 
   /**
-   * Obtiene todos los DEAs individuales sin clustering
-   * Para zooms altos donde no se requiere agrupación
+   * Obtiene todos los DEAs individuales sin clustering.
+   * Usa ST_Within + ST_MakeEnvelope para aprovechar el índice GiST.
    */
   async getIndividualMarkers(bounds: BoundingBox, limit: number): Promise<AedMapMarker[]> {
     const query = `
@@ -191,11 +204,11 @@ export class PostGISClusteringAdapter implements IClusteringService {
       WHERE
         a.status = 'PUBLISHED'
         AND a.publication_mode != 'NONE'
-        AND a.latitude IS NOT NULL
-        AND a.longitude IS NOT NULL
-        AND a.latitude BETWEEN $1 AND $2
-        AND a.longitude BETWEEN $3 AND $4
-      ORDER BY a.created_at DESC
+        AND a.geom IS NOT NULL
+        AND ST_Within(
+          a.geom,
+          ST_MakeEnvelope($3, $1, $4, $2, 4326)
+        )
       LIMIT $5
     `;
 
