@@ -131,4 +131,10 @@ export interface ClusteredAedsResponse {
   };
   zoom_level: number;
   strategy: string;
+  timing?: {
+    clusters_ms: number;
+    markers_ms: number;
+    total_ms: number;
+    cache_used: boolean;
+  };
 }

@@ -23,37 +23,72 @@ export class PostGISClusteringAdapter implements IClusteringService {
    */
   async calculateClusters(params: ClusteringParams): Promise<ClusteringResult> {
     const { bounds, gridSize, minClusterSize, limit } = params;
+    const totalStart = Date.now();
 
     // Determine the zoom level from the grid size for cache lookup
     const zoomLevel = this.gridSizeToZoom(gridSize);
 
     // 1. Try to get clusters from pre-computed cache
+    const clusterStart = Date.now();
     const cachedClusters = await this.getCachedClusters(zoomLevel, bounds, limit);
 
     let clusters: AedCluster[];
     let markers: AedMapMarker[];
+    let cacheUsed: boolean;
 
     if (cachedClusters.length > 0) {
       clusters = cachedClusters;
+      cacheUsed = true;
+      const clusterMs = Date.now() - clusterStart;
+
       // 2. Get individual markers excluding cached clusters via anti-join (~10ms)
+      const markerStart = Date.now();
       markers = await this.getIndividualMarkersFromCache(zoomLevel, bounds, gridSize, limit);
+      const markerMs = Date.now() - markerStart;
+
+      const totalClustered = clusters.reduce((sum, c) => sum + c.count, 0);
+      return {
+        clusters,
+        markers,
+        stats: {
+          total_in_view: totalClustered + markers.length,
+          clustered: totalClustered,
+          individual: markers.length,
+        },
+        timing: {
+          clusters_ms: clusterMs,
+          markers_ms: markerMs,
+          total_ms: Date.now() - totalStart,
+          cache_used: true,
+        },
+      };
     } else {
       // Fallback: compute everything in real-time (cache not populated yet)
       clusters = await this.computeClustersRealTime(bounds, gridSize, minClusterSize, limit);
+      cacheUsed = false;
+      const clusterMs = Date.now() - clusterStart;
+
+      const markerStart = Date.now();
       markers = await this.getIndividualMarkersRealTime(bounds, gridSize, minClusterSize, limit);
+      const markerMs = Date.now() - markerStart;
+
+      const totalClustered = clusters.reduce((sum, c) => sum + c.count, 0);
+      return {
+        clusters,
+        markers,
+        stats: {
+          total_in_view: totalClustered + markers.length,
+          clustered: totalClustered,
+          individual: markers.length,
+        },
+        timing: {
+          clusters_ms: clusterMs,
+          markers_ms: markerMs,
+          total_ms: Date.now() - totalStart,
+          cache_used: cacheUsed,
+        },
+      };
     }
-
-    const totalClustered = clusters.reduce((sum, c) => sum + c.count, 0);
-
-    return {
-      clusters,
-      markers,
-      stats: {
-        total_in_view: totalClustered + markers.length,
-        clustered: totalClustered,
-        individual: markers.length,
-      },
-    };
   }
 
   /**

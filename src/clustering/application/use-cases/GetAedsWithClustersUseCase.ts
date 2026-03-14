@@ -50,6 +50,7 @@ export class GetAedsWithClustersUseCase {
         stats: result.stats,
         zoom_level: zoom,
         strategy: this.getStrategyDescription(strategy),
+        timing: result.timing,
       };
     } else {
       // Solo marcadores individuales (sin clustering)
