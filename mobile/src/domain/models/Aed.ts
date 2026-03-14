@@ -36,6 +36,45 @@ export interface AedCluster {
   };
 }
 
+// ── Access Points ──────────────────────────────────────────────────
+
+export type AccessPointType = "PEDESTRIAN" | "VEHICLE" | "EMERGENCY" | "WHEELCHAIR" | "UNIVERSAL";
+
+export type AccessRestrictionType =
+  | "NONE"
+  | "CODE"
+  | "KEY"
+  | "CARD"
+  | "INTERCOM"
+  | "SECURITY_GUARD"
+  | "LOCKED_HOURS";
+
+export interface AedAccessPoint {
+  id: string;
+  aed_id: string;
+  latitude: number;
+  longitude: number;
+  type: AccessPointType;
+  label: string | null;
+  is_primary: boolean;
+  restriction_type: AccessRestrictionType;
+  unlock_code: string | null;
+  contact_phone: string | null;
+  contact_name: string | null;
+  available_24h: boolean;
+  schedule_notes: string | null;
+  floor_difference: number | null;
+  has_elevator: boolean | null;
+  estimated_minutes: number | null;
+  indoor_steps: string[] | null;
+  emergency_phone: string | null;
+  can_deliver_to_entrance: boolean;
+  verified: boolean;
+  images?: AedImage[];
+}
+
+// ── AED ────────────────────────────────────────────────────────────
+
 export interface Aed {
   id: string;
   code: string;
@@ -66,6 +105,7 @@ export interface Aed {
     phone: string | null;
   } | null;
   images?: AedImage[];
+  access_points?: AedAccessPoint[];
 }
 
 /** An AED with its distance from a reference point (km) */

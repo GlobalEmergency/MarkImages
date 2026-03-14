@@ -1,6 +1,13 @@
 import React from "react";
 import { IonText, IonButton, IonIcon, IonSpinner, IonChip, IonLabel } from "@ionic/react";
-import { navigate as navigateIcon, time, call, location } from "ionicons/icons";
+import {
+  navigate as navigateIcon,
+  time,
+  call,
+  location,
+  lockClosedOutline,
+  lockOpenOutline,
+} from "ionicons/icons";
 
 import { useAedDetail } from "../hooks/useAedDetail";
 import { buildNavigationUrl } from "../utils/navigation";
@@ -19,10 +26,15 @@ interface AedDetailSheetProps {
 const AedDetailSheet: React.FC<AedDetailSheetProps> = ({ aedId, name }) => {
   const { aed, loading, error } = useAedDetail(aedId);
 
+  const primaryAccess = aed?.access_points?.find((ap) => ap.is_primary) ?? aed?.access_points?.[0];
+
   const handleNavigate = () => {
-    if (aed) {
-      window.open(buildNavigationUrl(aed.latitude, aed.longitude, aed.name), "_system");
-    }
+    if (!aed) return;
+    // Navigate to primary access point if available
+    const lat = primaryAccess?.latitude ?? aed.latitude;
+    const lng = primaryAccess?.longitude ?? aed.longitude;
+    const label = primaryAccess?.label ? `${aed.name} - ${primaryAccess.label}` : aed.name;
+    window.open(buildNavigationUrl(lat, lng, label), "_system");
   };
 
   if (loading) {
@@ -112,9 +124,57 @@ const AedDetailSheet: React.FC<AedDetailSheetProps> = ({ aedId, name }) => {
         </div>
       )}
 
+      {/* Access point summary (compact) */}
+      {primaryAccess && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "8px 12px",
+            borderRadius: 8,
+            background:
+              primaryAccess.restriction_type === "NONE"
+                ? "var(--ion-color-success-tint)"
+                : "var(--ion-color-warning-tint)",
+            marginTop: 8,
+            fontSize: 13,
+          }}
+        >
+          <IonIcon
+            icon={primaryAccess.restriction_type === "NONE" ? lockOpenOutline : lockClosedOutline}
+            style={{
+              fontSize: 16,
+              color:
+                primaryAccess.restriction_type === "NONE"
+                  ? "var(--ion-color-success)"
+                  : "var(--ion-color-warning)",
+            }}
+          />
+          <span style={{ flex: 1 }}>
+            <strong>{primaryAccess.label || "Acceso"}</strong>
+            {primaryAccess.restriction_type !== "NONE" && (
+              <span>
+                {" "}
+                · {primaryAccess.restriction_type === "CODE" ? "Código" : "Restringido"}
+                {primaryAccess.unlock_code && (
+                  <span style={{ fontFamily: "monospace", fontWeight: 700 }}>
+                    {" "}
+                    {primaryAccess.unlock_code}
+                  </span>
+                )}
+              </span>
+            )}
+          </span>
+          {primaryAccess.estimated_minutes != null && (
+            <span style={{ color: "#666" }}>~{primaryAccess.estimated_minutes} min</span>
+          )}
+        </div>
+      )}
+
       <IonButton expand="block" onClick={handleNavigate} style={{ marginTop: 8 }}>
         <IonIcon icon={navigateIcon} slot="start" />
-        Cómo llegar
+        {primaryAccess ? "Ir al acceso" : "Cómo llegar"}
       </IonButton>
     </div>
   );

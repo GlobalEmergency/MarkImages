@@ -118,6 +118,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         batch_job: true,
         data_source: true,
 
+        // Devices (physical defibrillator history)
+        devices: {
+          orderBy: {
+            created_at: "desc",
+          },
+        },
+
         // External identifiers (multi-source tracking)
         external_identifiers: {
           include: {
@@ -126,6 +133,23 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             },
           },
           orderBy: { last_seen_at: "desc" },
+        },
+
+        // Access points (curator-managed)
+        access_points: {
+          include: {
+            images: {
+              select: {
+                id: true,
+                type: true,
+                original_url: true,
+                thumbnail_url: true,
+                order: true,
+              },
+              orderBy: { order: "asc" },
+            },
+          },
+          orderBy: [{ is_primary: "desc" }, { created_at: "asc" }],
         },
       },
     });
@@ -319,6 +343,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         schedule: true,
         responsible: true,
         images: true,
+        devices: {
+          where: { is_current: true },
+          take: 1,
+        },
       },
     });
 
@@ -598,6 +626,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           location: true,
           schedule: true,
           responsible: true,
+          devices: {
+            where: { is_current: true },
+            take: 1,
+          },
           images: {
             orderBy: { order: "asc" },
           },

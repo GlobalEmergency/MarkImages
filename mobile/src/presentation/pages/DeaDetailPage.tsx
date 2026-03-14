@@ -25,6 +25,14 @@ import {
   locationOutline,
   businessOutline,
   personOutline,
+  lockClosedOutline,
+  lockOpenOutline,
+  footstepsOutline,
+  carOutline,
+  accessibilityOutline,
+  alertCircleOutline,
+  arrowUpOutline,
+  arrowDownOutline,
 } from "ionicons/icons";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
@@ -33,6 +41,180 @@ import { useAedDetail } from "../hooks/useAedDetail";
 import ImageGallery from "../components/ImageGallery";
 import ScheduleBadge from "../components/ScheduleBadge";
 import { buildNavigationUrl, buildTelUrl } from "../utils/navigation";
+import type { AedAccessPoint } from "../../domain/models/Aed";
+
+const ACCESS_TYPE_ICONS: Record<string, string> = {
+  PEDESTRIAN: footstepsOutline,
+  VEHICLE: carOutline,
+  EMERGENCY: alertCircleOutline,
+  WHEELCHAIR: accessibilityOutline,
+  UNIVERSAL: navigateOutline,
+};
+
+const ACCESS_TYPE_LABELS: Record<string, string> = {
+  PEDESTRIAN: "Peatonal",
+  VEHICLE: "Vehículo",
+  EMERGENCY: "Emergencias",
+  WHEELCHAIR: "Accesible",
+  UNIVERSAL: "Universal",
+};
+
+const RESTRICTION_LABELS: Record<string, string> = {
+  NONE: "Acceso libre",
+  CODE: "Requiere código",
+  KEY: "Requiere llave",
+  CARD: "Requiere tarjeta",
+  INTERCOM: "Portero automático",
+  SECURITY_GUARD: "Vigilante",
+  LOCKED_HOURS: "Cerrado fuera de horario",
+};
+
+function AccessPointCard({ ap }: { ap: AedAccessPoint }) {
+  const handleNavigateToAccess = () => {
+    window.open(
+      buildNavigationUrl(ap.latitude, ap.longitude, ap.label || "Punto de acceso"),
+      "_system"
+    );
+  };
+
+  const isRestricted = ap.restriction_type !== "NONE";
+
+  return (
+    <IonCard style={{ margin: "0 0 8px 0" }}>
+      <div style={{ padding: 12 }}>
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <IonIcon
+            icon={ACCESS_TYPE_ICONS[ap.type] || navigateOutline}
+            style={{ fontSize: 20, color: "var(--ion-color-primary)" }}
+          />
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              <strong style={{ fontSize: 15 }}>
+                {ap.label || ACCESS_TYPE_LABELS[ap.type] || "Acceso"}
+              </strong>
+              {ap.is_primary && (
+                <IonBadge color="primary" style={{ fontSize: 10 }}>
+                  Principal
+                </IonBadge>
+              )}
+            </div>
+          </div>
+          <IonIcon
+            icon={isRestricted ? lockClosedOutline : lockOpenOutline}
+            style={{
+              fontSize: 18,
+              color: isRestricted ? "var(--ion-color-warning)" : "var(--ion-color-success)",
+            }}
+          />
+        </div>
+
+        {/* Restriction info */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "6px 10px",
+            borderRadius: 8,
+            background: isRestricted
+              ? "var(--ion-color-warning-tint)"
+              : "var(--ion-color-success-tint)",
+            marginBottom: 8,
+            fontSize: 13,
+          }}
+        >
+          <span style={{ fontWeight: 600 }}>
+            {RESTRICTION_LABELS[ap.restriction_type] || ap.restriction_type}
+          </span>
+          {ap.unlock_code && (
+            <span style={{ marginLeft: "auto", fontFamily: "monospace", fontWeight: 700 }}>
+              {ap.unlock_code}
+            </span>
+          )}
+        </div>
+
+        {/* Route info */}
+        {(ap.estimated_minutes != null || ap.floor_difference != null) && (
+          <div style={{ display: "flex", gap: 12, marginBottom: 8, fontSize: 13, color: "#555" }}>
+            {ap.estimated_minutes != null && <span>~{ap.estimated_minutes} min</span>}
+            {ap.floor_difference != null && ap.floor_difference !== 0 && (
+              <span style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <IonIcon
+                  icon={ap.floor_difference > 0 ? arrowUpOutline : arrowDownOutline}
+                  style={{ fontSize: 14 }}
+                />
+                {Math.abs(ap.floor_difference)} planta
+                {Math.abs(ap.floor_difference) !== 1 ? "s" : ""}
+                {ap.has_elevator ? " · ascensor" : ""}
+              </span>
+            )}
+            {!ap.available_24h && (
+              <span style={{ color: "var(--ion-color-warning)" }}>
+                {ap.schedule_notes || "Horario limitado"}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Indoor steps */}
+        {ap.indoor_steps && ap.indoor_steps.length > 0 && (
+          <ol
+            style={{
+              margin: "0 0 8px 0",
+              paddingLeft: 20,
+              fontSize: 13,
+              color: "#333",
+              lineHeight: 1.6,
+            }}
+          >
+            {ap.indoor_steps.map((step, i) => (
+              <li key={i}>{step}</li>
+            ))}
+          </ol>
+        )}
+
+        {/* Contact & emergency */}
+        {(ap.contact_phone || ap.emergency_phone) && (
+          <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+            {ap.contact_phone && (
+              <IonButton
+                size="small"
+                fill="outline"
+                onClick={() => window.open(buildTelUrl(ap.contact_phone!), "_system")}
+              >
+                <IonIcon icon={callOutline} slot="start" />
+                {ap.contact_name || "Contacto"}
+              </IonButton>
+            )}
+            {ap.emergency_phone && (
+              <IonButton
+                size="small"
+                color="danger"
+                onClick={() => window.open(buildTelUrl(ap.emergency_phone!), "_system")}
+              >
+                <IonIcon icon={callOutline} slot="start" />
+                Emergencia
+              </IonButton>
+            )}
+          </div>
+        )}
+
+        {ap.can_deliver_to_entrance && (
+          <p style={{ fontSize: 12, color: "var(--ion-color-success)", margin: "0 0 8px 0" }}>
+            ✓ El personal puede traer el DEA a esta entrada
+          </p>
+        )}
+
+        {/* Navigate button */}
+        <IonButton expand="block" size="small" onClick={handleNavigateToAccess}>
+          <IonIcon icon={navigateOutline} slot="start" />
+          Ir a este acceso
+        </IonButton>
+      </div>
+    </IonCard>
+  );
+}
 
 /** Forces Leaflet to recalculate container size after the card finishes layout */
 const InvalidateSize: React.FC = () => {
@@ -61,7 +243,12 @@ const DeaDetailPage: React.FC = () => {
 
   const handleNavigate = () => {
     if (!aed) return;
-    window.open(buildNavigationUrl(aed.latitude, aed.longitude, aed.name), "_system");
+    // Use primary access point coordinates if available, otherwise installation coords
+    const primary = aed.access_points?.find((ap) => ap.is_primary);
+    const lat = primary?.latitude ?? aed.latitude;
+    const lng = primary?.longitude ?? aed.longitude;
+    const label = primary?.label ? `${aed.name} - ${primary.label}` : aed.name;
+    window.open(buildNavigationUrl(lat, lng, label), "_system");
   };
 
   const handleCall = () => {
@@ -206,7 +393,21 @@ const DeaDetailPage: React.FC = () => {
               </IonLabel>
             </IonItem>
           )}
+        </IonList>
 
+        {/* Access Points */}
+        {aed.access_points && aed.access_points.length > 0 && (
+          <div style={{ padding: "8px 16px" }}>
+            <h3 style={{ fontSize: 16, fontWeight: 600, margin: "0 0 8px 0" }}>
+              Puntos de acceso ({aed.access_points.length})
+            </h3>
+            {aed.access_points.map((ap) => (
+              <AccessPointCard key={ap.id} ap={ap} />
+            ))}
+          </div>
+        )}
+
+        <IonList>
           {/* Schedule */}
           {aed.schedule && (
             <IonItem>

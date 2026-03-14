@@ -88,6 +88,8 @@ model Aed {
   ownership_claims    AedOwnershipClaim[]
   field_changes       AedFieldChange[]
   external_identifiers AedExternalIdentifier[]
+  devices              AedDevice[]
+  access_points        AedAccessPoint[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -430,6 +432,118 @@ model AedResponsible {
 }
 
 // ============================================
+// DEVICE - Physical defibrillator device information
+// A location (Aed) can have different devices over time.
+// Only one device per Aed should have is_current = true.
+// ============================================
+model AedDevice {
+  id     String @id @default(uuid()) @db.Uuid
+  aed_id String @db.Uuid
+
+  // Device identification
+  brand         String? // "HEARTSINE", "PHILIPS", "ZOLL"
+  model         String? // "SAMARITAN PAD 300P", "HeartStart FRx"
+  serial_number String? // Unique serial number
+
+  // Dates
+  manufacturing_date DateTime? // When the device was manufactured
+  installation_date  DateTime? // When installed at this location
+  expiration_date    DateTime? // Pad/battery expiry or device end-of-life
+  warranty_end_date  DateTime? // Warranty expiration
+
+  // Status
+  is_current Boolean @default(true) // Only one device per Aed should be is_current=true
+  notes      String?                // Free-text notes about this device
+
+  // Relation
+  aed Aed @relation(fields: [aed_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([aed_id, is_current])
+  @@index([serial_number])
+  @@map("aed_devices")
+}
+
+// ============================================
+// ACCESS POINTS - How to reach each AED
+// Curator-managed data, NOT from external imports.
+// Each AED can have 0..N access points with structured
+// emergency-oriented information (restrictions, routes, contacts).
+// ============================================
+model AedAccessPoint {
+  id     String @id @default(uuid()) @db.Uuid
+  aed_id String @db.Uuid
+
+  // --- Location of the access point ---
+  latitude  Float
+  longitude Float
+
+  // --- Classification ---
+  type       AccessPointType // PEDESTRIAN, VEHICLE, EMERGENCY, WHEELCHAIR, UNIVERSAL
+  label      String?         // "Recepción planta 12", "Parking subterráneo"
+  is_primary Boolean         @default(false)
+
+  // --- Access restrictions (structured for emergency use) ---
+  restriction_type AccessRestrictionType @default(NONE)
+  unlock_code      String?    // Public/emergency access code (e.g., "1234")
+  contact_phone    String?    // Direct phone to request access
+  contact_name     String?    // "Vigilante de seguridad", "Recepción"
+
+  // --- Availability ---
+  available_24h  Boolean @default(true)
+  schedule_notes String?  // "L-V 8:00-20:00" (free text until schedule model is linked)
+
+  // --- Indoor route from access point to the AED ---
+  floor_difference  Int?     // Floors to go up(+) or down(-) from this access
+  has_elevator      Boolean?
+  estimated_minutes Int?     // Walking minutes from access point to the AED
+  indoor_steps      Json?    // Ordered steps: ["Enter main door", "Turn left", "Red cabinet"]
+
+  // --- Emergency ---
+  emergency_phone         String?
+  can_deliver_to_entrance Boolean @default(false) // Staff can bring the AED to this entrance
+
+  // --- Traceability ---
+  created_by  String   @db.Uuid
+  verified    Boolean  @default(false)
+  verified_by String?  @db.Uuid
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // --- Relations ---
+  aed    Aed        @relation(fields: [aed_id], references: [id], onDelete: Cascade)
+  images AedImage[]
+
+  @@index([aed_id])
+  @@index([latitude, longitude])
+  @@map("aed_access_points")
+}
+
+enum AccessPointType {
+  PEDESTRIAN // On foot
+  VEHICLE    // By car/motorcycle
+  EMERGENCY  // Emergency services access (ambulance, fire truck)
+  WHEELCHAIR // Wheelchair / reduced mobility accessible
+  UNIVERSAL  // Any mode of access
+
+  @@map("access_point_type")
+}
+
+enum AccessRestrictionType {
+  NONE           // Free access
+  CODE           // Numeric/alphanumeric code
+  KEY            // Physical key
+  CARD           // Access card/badge
+  INTERCOM       // Door intercom/buzzer
+  SECURITY_GUARD // Security guard must open
+  LOCKED_HOURS   // Locked outside business hours
+
+  @@map("access_restriction_type")
+}
+
+// ============================================
 // IMAGES - Image management
 // ============================================
 model AedImage {
@@ -456,6 +570,10 @@ model AedImage {
   verified_by      String?
   rejection_reason String?
 
+  // Optional link to a specific access point (for ACCESS/LOCATION type images)
+  access_point_id String?         @db.Uuid
+  access_point    AedAccessPoint? @relation(fields: [access_point_id], references: [id], onDelete: SetNull)
+
   aed     Aed           @relation(fields: [aed_id], references: [id], onDelete: Cascade)
   markers ImageMarker[]
 
@@ -464,6 +582,7 @@ model AedImage {
   @@index([aed_id, type, order])
   @@index([is_verified])
   @@index([file_hash])
+  @@index([access_point_id])
   @@map("aed_images")
 }
 

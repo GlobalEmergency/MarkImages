@@ -25,6 +25,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         location: true,
         responsible: true,
         schedule: true,
+        devices: {
+          where: { is_current: true },
+          take: 1,
+        },
         images: {
           where: {
             is_verified: true,
@@ -32,6 +36,22 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           orderBy: {
             order: "asc",
           },
+        },
+        access_points: {
+          include: {
+            images: {
+              where: { is_verified: true },
+              select: {
+                id: true,
+                type: true,
+                original_url: true,
+                thumbnail_url: true,
+                order: true,
+              },
+              orderBy: { order: "asc" },
+            },
+          },
+          orderBy: [{ is_primary: "desc" }, { created_at: "asc" }],
         },
       },
     });

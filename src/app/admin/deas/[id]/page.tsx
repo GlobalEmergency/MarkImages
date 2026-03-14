@@ -42,6 +42,9 @@ import { compressImageDataUrl } from "@/utils/imageCompression";
 const DeaImageProcessor = dynamic(() => import("@/components/dea/DeaImageProcessor"), {
   ssr: false,
 });
+const AccessPointsPanel = dynamic(() => import("@/components/dea/AccessPointsPanel"), {
+  ssr: false,
+});
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -200,6 +203,37 @@ interface AdminDeaData {
   }>;
   change_proposals: unknown[];
   ownership_claims: unknown[];
+  access_points?: Array<{
+    id: string;
+    aed_id: string;
+    latitude: number;
+    longitude: number;
+    type: string;
+    label: string | null;
+    is_primary: boolean;
+    restriction_type: string;
+    unlock_code: string | null;
+    contact_phone: string | null;
+    contact_name: string | null;
+    available_24h: boolean;
+    schedule_notes: string | null;
+    floor_difference: number | null;
+    has_elevator: boolean | null;
+    estimated_minutes: number | null;
+    indoor_steps: string[] | null;
+    emergency_phone: string | null;
+    can_deliver_to_entrance: boolean;
+    verified: boolean;
+    created_at: string;
+    updated_at: string;
+    images?: Array<{
+      id: string;
+      type: string;
+      original_url: string;
+      thumbnail_url: string | null;
+      order: number;
+    }>;
+  }>;
 }
 
 interface NewImage {
@@ -906,6 +940,11 @@ export default function AdminDeaDetailPage() {
       id: "images",
       label: `Imágenes (${aed.images.length - imagesToDelete.length + newImages.length})`,
       icon: ImageIcon,
+    },
+    {
+      id: "access-points",
+      label: `Accesos (${aed.access_points?.length || 0})`,
+      icon: MapPin,
     },
     { id: "verifications", label: `Verificaciones (${counts.verifications})`, icon: CheckCircle },
     { id: "assignments", label: `Asignaciones (${counts.active_assignments})`, icon: Users },
@@ -2061,6 +2100,17 @@ export default function AdminDeaDetailPage() {
               </div>
             )}
           </div>
+        )}
+
+        {/* ════════════════════ ACCESS POINTS TAB ════════════════════ */}
+        {activeTab === "access-points" && (
+          <AccessPointsPanel
+            aedId={aed.id}
+            accessPoints={aed.access_points || []}
+            aedLatitude={aed.latitude}
+            aedLongitude={aed.longitude}
+            onRefresh={() => fetchData()}
+          />
         )}
 
         {/* ════════════════════ VERIFICATIONS TAB ════════════════════ */}

@@ -9,6 +9,60 @@ export interface AedImage {
   processed_url: string | null;
   thumbnail_url: string | null;
   order: number;
+  access_point_id?: string | null;
+}
+
+// ============================================
+// ACCESS POINTS - How to reach each AED
+// ============================================
+
+export type AccessPointType = "PEDESTRIAN" | "VEHICLE" | "EMERGENCY" | "WHEELCHAIR" | "UNIVERSAL";
+
+export type AccessRestrictionType =
+  | "NONE"
+  | "CODE"
+  | "KEY"
+  | "CARD"
+  | "INTERCOM"
+  | "SECURITY_GUARD"
+  | "LOCKED_HOURS";
+
+export interface AedAccessPoint {
+  id: string;
+  aed_id: string;
+  latitude: number;
+  longitude: number;
+  type: AccessPointType;
+  label: string | null;
+  is_primary: boolean;
+
+  // Access restrictions
+  restriction_type: AccessRestrictionType;
+  unlock_code: string | null;
+  contact_phone: string | null;
+  contact_name: string | null;
+
+  // Availability
+  available_24h: boolean;
+  schedule_notes: string | null;
+
+  // Indoor route
+  floor_difference: number | null;
+  has_elevator: boolean | null;
+  estimated_minutes: number | null;
+  indoor_steps: string[] | null;
+
+  // Emergency
+  emergency_phone: string | null;
+  can_deliver_to_entrance: boolean;
+
+  // Traceability
+  verified: boolean;
+  created_at: string;
+  updated_at: string;
+
+  // Nested images (when included)
+  images?: AedImage[];
 }
 
 export interface Aed {
@@ -41,6 +95,7 @@ export interface Aed {
     phone: string | null;
   } | null;
   images?: AedImage[];
+  access_points?: AedAccessPoint[];
 }
 
 export interface AedsResponse {
