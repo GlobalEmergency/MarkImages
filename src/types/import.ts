@@ -45,7 +45,7 @@ export interface ImportError {
   original_value: string | null;
   error_message: string;
   severity: ErrorSeverity;
-  row_data: Record<string, any> | null;
+  row_data: Record<string, unknown> | null;
   created_at: string;
 }
 

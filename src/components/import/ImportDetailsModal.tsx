@@ -20,7 +20,7 @@ import toast from "react-hot-toast";
 
 import { useCancelImport } from "@/hooks/useCancelImport";
 import { useImportDetails } from "@/hooks/useImportDetails";
-import type { ErrorSeverity } from "@/types/import";
+import type { ErrorSeverity, ImportStatus } from "@/types/import";
 
 import ImportProgressBar from "./ImportProgressBar";
 import ImportStatusBadge from "./ImportStatusBadge";
@@ -179,7 +179,7 @@ export default function ImportDetailsModal({ batchId, isOpen, onClose }: ImportD
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-gray-50 rounded-xl p-4">
                     <h3 className="text-sm font-medium text-gray-500 mb-2">Estado</h3>
-                    <ImportStatusBadge status={batch.batch.status as any} />
+                    <ImportStatusBadge status={batch.batch.status as ImportStatus} />
                   </div>
 
                   <div className="bg-gray-50 rounded-xl p-4">
@@ -188,7 +188,7 @@ export default function ImportDetailsModal({ batchId, isOpen, onClose }: ImportD
                       total={batch.progress.total}
                       successful={batch.progress.successful}
                       failed={batch.progress.failed}
-                      status={batch.batch.status as any}
+                      status={batch.batch.status as ImportStatus}
                     />
                   </div>
                 </div>

@@ -10,6 +10,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin, AuthError } from "@/lib/auth";
 import { getExternalSyncService } from "@/import/infrastructure/factories/createBulkImportService";
 import type { SyncContext } from "@/import/application/services/ExternalSyncService";
+import { DEFAULT_BATCH_SIZE } from "@/import/constants";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -39,8 +40,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     const service = getExternalSyncService();
-    const parsedBatchSize = body.batchSize ? parseInt(body.batchSize, 10) : 30;
-    const batchSize = isNaN(parsedBatchSize) || parsedBatchSize < 1 ? 30 : parsedBatchSize;
+    const parsedBatchSize = body.batchSize ? parseInt(body.batchSize, 10) : DEFAULT_BATCH_SIZE;
+    const batchSize =
+      isNaN(parsedBatchSize) || parsedBatchSize < 1 ? DEFAULT_BATCH_SIZE : parsedBatchSize;
 
     // Check if we should continue an existing job
     const continueJobId = body.continueJobId as string | undefined;

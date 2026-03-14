@@ -177,11 +177,14 @@ class AedLookupCache {
   ): Promise<ExistingAedRow | undefined> {
     try {
       const detector = getDuplicateDetector();
+      // Cross-source detection: do NOT pass externalReference because
+      // external IDs are scoped to each data source and collide across
+      // registries (e.g. codigo_dea "1000" in Euskadi vs external_reference
+      // "1000" in Madrid). Only spatial + name + address matching is reliable.
       const criteria = DuplicateCriteria.create({
         name: record.name as string | undefined,
         latitude: lat,
         longitude: lng,
-        externalReference: record.externalId as string | undefined,
         postalCode: record.postalCode as string | undefined,
         establishmentType: record.establishmentType as string | undefined,
         streetType: record.streetType as string | undefined,

@@ -79,6 +79,16 @@ export interface DataSourceConfig {
   // Común para APIs y JSON
   // ============================================
   fieldMappings?: Record<string, string>; // Campo API → Campo sistema
+
+  // Campo de la fuente que identifica de forma única cada registro.
+  // Se usa como externalId para deduplicación y como código del AED.
+  // Si no se especifica, se auto-detecta buscando campos comunes (id, codigo_dea, etc.).
+  externalIdField?: string;
+
+  // ============================================
+  // Transformadores de campos (opcional)
+  // ============================================
+  fieldTransformers?: Record<string, string | string[]>; // Campo fuente → transformer(s) a aplicar
 }
 
 /**

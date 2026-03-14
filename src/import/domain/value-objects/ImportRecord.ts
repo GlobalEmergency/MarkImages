@@ -70,6 +70,14 @@ export interface NormalizedRecordData {
   // Observaciones
   observations?: string | null;
 
+  // Dispositivo (desfibrilador físico)
+  deviceBrand?: string | null;
+  deviceModel?: string | null;
+  deviceSerialNumber?: string | null;
+  deviceManufacturingDate?: string | null;
+  deviceInstallationDate?: string | null;
+  deviceExpirationDate?: string | null;
+
   // Campos adicionales dinámicos
   [key: string]: string | null | undefined;
 }
@@ -413,6 +421,31 @@ export class ImportRecord {
   // Observaciones
   get observations(): string | null {
     return this.normalizedData.observations ?? null;
+  }
+
+  // Dispositivo
+  get deviceBrand(): string | null {
+    return this.normalizedData.deviceBrand ?? null;
+  }
+
+  get deviceModel(): string | null {
+    return this.normalizedData.deviceModel ?? null;
+  }
+
+  get deviceSerialNumber(): string | null {
+    return this.normalizedData.deviceSerialNumber ?? null;
+  }
+
+  get deviceManufacturingDate(): string | null {
+    return this.normalizedData.deviceManufacturingDate ?? null;
+  }
+
+  get deviceInstallationDate(): string | null {
+    return this.normalizedData.deviceInstallationDate ?? null;
+  }
+
+  get deviceExpirationDate(): string | null {
+    return this.normalizedData.deviceExpirationDate ?? null;
   }
 
   // Detalles de ubicación (combinación de additionalInfo y specificLocation)

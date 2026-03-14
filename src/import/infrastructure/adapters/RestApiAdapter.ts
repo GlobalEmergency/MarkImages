@@ -18,6 +18,8 @@ import type {
 } from "@/import/domain/ports/IDataSourceAdapter";
 import { ImportRecord } from "@/import/domain/value-objects/ImportRecord";
 import { ValidationResult } from "@/import/domain/value-objects/ValidationResult";
+import { enrichRecordIfNeeded } from "./enrichRecord";
+import { validateExternalUrl } from "./validateUrl";
 
 export class RestApiAdapter implements IDataSourceAdapter {
   readonly type = "REST_API" as const;
@@ -142,11 +144,18 @@ export class RestApiAdapter implements IDataSourceAdapter {
 
     const data = await this.fetchJson(url.toString(), config);
     const records = this.extractRecords(data, config.responseDataPath).slice(0, limit);
-    const externalIdField = this.detectExternalIdField(records);
+    const externalIdField = this.resolveExternalIdField(records, config);
 
-    return records.map((record, index) =>
-      ImportRecord.fromApiRecord(record, fieldMappings, index, externalIdField)
-    );
+    const results: ImportRecord[] = [];
+    for (let i = 0; i < records.length; i++) {
+      const { record: enriched, mappings } = await enrichRecordIfNeeded(
+        records[i],
+        fieldMappings,
+        config.fieldTransformers
+      );
+      results.push(ImportRecord.fromApiRecord(enriched, mappings, i, externalIdField));
+    }
+    return results;
   }
 
   async testConnection(config: DataSourceConfig): Promise<ConnectionTestResult> {
@@ -209,12 +218,17 @@ export class RestApiAdapter implements IDataSourceAdapter {
     console.log(`📥 Fetching all records from: ${endpoint}`);
     const data = await this.fetchJson(endpoint, config);
     const records = this.extractRecords(data, config.responseDataPath);
-    const externalIdField = this.detectExternalIdField(records);
+    const externalIdField = this.resolveExternalIdField(records, config);
 
     console.log(`📋 Found ${records.length} records, ID field: '${externalIdField}'`);
 
     for (let i = 0; i < records.length; i++) {
-      yield ImportRecord.fromApiRecord(records[i], fieldMappings, i, externalIdField);
+      const { record: enriched, mappings } = await enrichRecordIfNeeded(
+        records[i],
+        fieldMappings,
+        config.fieldTransformers
+      );
+      yield ImportRecord.fromApiRecord(enriched, mappings, i, externalIdField);
       if ((i + 1) % 1000 === 0) {
         console.log(`📥 Processed ${i + 1} records...`);
       }
@@ -246,13 +260,18 @@ export class RestApiAdapter implements IDataSourceAdapter {
       const records = this.extractRecords(data, config.responseDataPath);
 
       if (rowIndex === 0 && records.length > 0) {
-        const externalIdField = this.detectExternalIdField(records);
+        const externalIdField = this.resolveExternalIdField(records, config);
         console.log(`📋 Offset pagination, ID field: '${externalIdField}', page size: ${pageSize}`);
       }
 
-      const externalIdField = this.detectExternalIdField(records);
+      const externalIdField = this.resolveExternalIdField(records, config);
       for (const record of records) {
-        yield ImportRecord.fromApiRecord(record, fieldMappings, rowIndex, externalIdField);
+        const { record: enriched, mappings } = await enrichRecordIfNeeded(
+          record,
+          fieldMappings,
+          config.fieldTransformers
+        );
+        yield ImportRecord.fromApiRecord(enriched, mappings, rowIndex, externalIdField);
         rowIndex++;
       }
 
@@ -289,9 +308,14 @@ export class RestApiAdapter implements IDataSourceAdapter {
       const data = await this.fetchJson(url.toString(), config);
       const records = this.extractRecords(data, config.responseDataPath);
 
-      const externalIdField = this.detectExternalIdField(records);
+      const externalIdField = this.resolveExternalIdField(records, config);
       for (const record of records) {
-        yield ImportRecord.fromApiRecord(record, fieldMappings, rowIndex, externalIdField);
+        const { record: enriched, mappings } = await enrichRecordIfNeeded(
+          record,
+          fieldMappings,
+          config.fieldTransformers
+        );
+        yield ImportRecord.fromApiRecord(enriched, mappings, rowIndex, externalIdField);
         rowIndex++;
       }
 
@@ -332,9 +356,14 @@ export class RestApiAdapter implements IDataSourceAdapter {
 
       if (records.length === 0) break;
 
-      const externalIdField = this.detectExternalIdField(records);
+      const externalIdField = this.resolveExternalIdField(records, config);
       for (const record of records) {
-        yield ImportRecord.fromApiRecord(record, fieldMappings, rowIndex, externalIdField);
+        const { record: enriched, mappings } = await enrichRecordIfNeeded(
+          record,
+          fieldMappings,
+          config.fieldTransformers
+        );
+        yield ImportRecord.fromApiRecord(enriched, mappings, rowIndex, externalIdField);
         rowIndex++;
       }
 
@@ -359,6 +388,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
     if (!config.apiEndpoint) {
       throw new Error("Se requiere apiEndpoint para REST_API");
     }
+    validateExternalUrl(config.apiEndpoint);
     return config.apiEndpoint;
   }
 
@@ -516,11 +546,29 @@ export class RestApiAdapter implements IDataSourceAdapter {
     return records.length >= pageSize;
   }
 
+  private resolveExternalIdField(
+    records: Record<string, unknown>[],
+    config?: DataSourceConfig
+  ): string {
+    // Explicit config takes priority over auto-detection
+    if (config?.externalIdField) return config.externalIdField;
+    return this.detectExternalIdField(records);
+  }
+
   private detectExternalIdField(records: Record<string, unknown>[]): string {
     if (records.length === 0) return "id";
     const keys = Object.keys(records[0]);
 
-    const idCandidates = ["id", "id_dea", "codigo_dea", "external_id", "dea_id", "_id", "uid"];
+    const idCandidates = [
+      "id",
+      "id_dea",
+      "codigo_dea",
+      "external_id",
+      "dea_id",
+      "numero_inscripcio",
+      "_id",
+      "uid",
+    ];
     for (const candidate of idCandidates) {
       if (keys.includes(candidate)) return candidate;
     }

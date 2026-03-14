@@ -15,6 +15,8 @@ import type {
 } from "@/import/domain/ports/IDataSourceAdapter";
 import { ImportRecord } from "@/import/domain/value-objects/ImportRecord";
 import { ValidationResult } from "@/import/domain/value-objects/ValidationResult";
+import { enrichRecordIfNeeded } from "./enrichRecord";
+import { validateExternalUrl } from "./validateUrl";
 
 export class JsonFileAdapter implements IDataSourceAdapter {
   readonly type = "JSON_FILE" as const;
@@ -23,9 +25,11 @@ export class JsonFileAdapter implements IDataSourceAdapter {
   private readonly retryDelayMs = 1000;
   private readonly fetchTimeoutMs = 30_000; // 30 seconds
 
-  // Cache para evitar descargas múltiples del mismo archivo
-  private dataCache: Map<string, { data: unknown; timestamp: number }> = new Map();
-  private readonly cacheTtlMs = 5 * 60 * 1000; // 5 minutos
+  // Per-request cache: avoids duplicate downloads within a single operation
+  // (e.g. fetchRecords + getRecordCount in the same sync run).
+  // Cleared after each top-level operation to prevent stale data across
+  // serverless invocations and unbounded memory growth.
+  private dataCache: Map<string, unknown> = new Map();
 
   /**
    * Obtiene la URL del archivo JSON
@@ -35,6 +39,7 @@ export class JsonFileAdapter implements IDataSourceAdapter {
     if (!url) {
       throw new Error("Se requiere fileUrl o apiEndpoint para JSON_FILE");
     }
+    validateExternalUrl(url);
     return url;
   }
 
@@ -77,19 +82,7 @@ export class JsonFileAdapter implements IDataSourceAdapter {
       throw new Error(`La ruta '${jsonPath}' no contiene un array de registros`);
     }
 
-    // Auto-detectar la ruta si no se especifica
-    const commonPaths = ["data", "records", "items", "results", "features"];
-
-    for (const path of commonPaths) {
-      if (obj[path] && Array.isArray(obj[path])) {
-        console.log(
-          `✅ Auto-detectado array en '${path}' con ${(obj[path] as unknown[]).length} registros`
-        );
-        return obj[path] as Record<string, unknown>[];
-      }
-    }
-
-    // Si tiene 'features' (GeoJSON), extraer properties
+    // Si tiene 'features' (GeoJSON), extraer properties y coordenadas
     if (obj.features && Array.isArray(obj.features)) {
       const features = obj.features as Array<{
         properties?: Record<string, unknown>;
@@ -106,6 +99,18 @@ export class JsonFileAdapter implements IDataSourceAdapter {
       });
     }
 
+    // Auto-detectar la ruta si no se especifica
+    const commonPaths = ["data", "records", "items", "results"];
+
+    for (const path of commonPaths) {
+      if (obj[path] && Array.isArray(obj[path])) {
+        console.log(
+          `✅ Auto-detectado array en '${path}' con ${(obj[path] as unknown[]).length} registros`
+        );
+        return obj[path] as Record<string, unknown>[];
+      }
+    }
+
     throw new Error(
       `No se encontró un array de registros. Especifica jsonPath para indicar dónde están los datos. ` +
         `Claves disponibles: ${Object.keys(obj).join(", ")}`
@@ -115,13 +120,28 @@ export class JsonFileAdapter implements IDataSourceAdapter {
   /**
    * Detecta el campo de ID externo basado en los campos disponibles
    */
+  private resolveExternalIdField(
+    records: Record<string, unknown>[],
+    config?: DataSourceConfig
+  ): string {
+    if (config?.externalIdField) return config.externalIdField;
+    return this.detectExternalIdField(records);
+  }
+
   private detectExternalIdField(records: Record<string, unknown>[]): string {
     if (records.length === 0) return "id";
     const firstRecord = records[0];
     const keys = Object.keys(firstRecord);
 
-    // Buscar campos comunes de ID
-    const idCandidates = ["id", "codigo_dea", "id_dea", "external_id", "dea_id", "_id"];
+    const idCandidates = [
+      "id",
+      "codigo_dea",
+      "id_dea",
+      "external_id",
+      "dea_id",
+      "numero_inscripcio",
+      "_id",
+    ];
     for (const candidate of idCandidates) {
       if (keys.includes(candidate)) return candidate;
     }
@@ -137,12 +157,17 @@ export class JsonFileAdapter implements IDataSourceAdapter {
     const data = await this.getCachedData(url);
 
     const records = this.extractRecordsFromPath(data, config.jsonPath);
-    const externalIdField = this.detectExternalIdField(records);
+    const externalIdField = this.resolveExternalIdField(records, config);
 
     console.log(`📋 Procesando ${records.length} registros, ID field: '${externalIdField}'`);
 
     for (let rowIndex = 0; rowIndex < records.length; rowIndex++) {
-      yield ImportRecord.fromApiRecord(records[rowIndex], fieldMappings, rowIndex, externalIdField);
+      const { record: enriched, mappings } = await enrichRecordIfNeeded(
+        records[rowIndex],
+        fieldMappings,
+        config.fieldTransformers
+      );
+      yield ImportRecord.fromApiRecord(enriched, mappings, rowIndex, externalIdField);
 
       if ((rowIndex + 1) % 1000 === 0) {
         console.log(`📥 Procesados ${rowIndex + 1}/${records.length} registros...`);
@@ -150,6 +175,9 @@ export class JsonFileAdapter implements IDataSourceAdapter {
     }
 
     console.log(`✅ Procesamiento completado: ${records.length} registros`);
+
+    // Clear cache after full iteration to free memory
+    this.clearCache();
   }
 
   async getRecordCount(config: DataSourceConfig): Promise<number> {
@@ -221,11 +249,18 @@ export class JsonFileAdapter implements IDataSourceAdapter {
     const data = await this.getCachedData(url);
 
     const records = this.extractRecordsFromPath(data, config.jsonPath).slice(0, limit);
-    const externalIdField = this.detectExternalIdField(records);
+    const externalIdField = this.resolveExternalIdField(records, config);
 
-    return records.map((record, index) =>
-      ImportRecord.fromApiRecord(record, fieldMappings, index, externalIdField)
-    );
+    const results: ImportRecord[] = [];
+    for (let i = 0; i < records.length; i++) {
+      const { record: enriched, mappings } = await enrichRecordIfNeeded(
+        records[i],
+        fieldMappings,
+        config.fieldTransformers
+      );
+      results.push(ImportRecord.fromApiRecord(enriched, mappings, i, externalIdField));
+    }
+    return results;
   }
 
   async testConnection(config: DataSourceConfig): Promise<ConnectionTestResult> {
@@ -298,29 +333,20 @@ export class JsonFileAdapter implements IDataSourceAdapter {
   }
 
   /**
-   * Obtiene datos del JSON con caché para evitar descargas múltiples
-   * @param url - URL del archivo JSON
-   * @returns Datos JSON parseados
+   * Obtiene datos del JSON con caché intra-operación para evitar descargas
+   * múltiples dentro de la misma invocación (e.g. preview + count).
    */
   private async getCachedData(url: string): Promise<unknown> {
     const cached = this.dataCache.get(url);
-    const now = Date.now();
-
-    // Si hay datos en caché y no han expirado, usarlos
-    if (cached && now - cached.timestamp < this.cacheTtlMs) {
-      console.log(`📦 Usando datos en caché para: ${url}`);
-      return cached.data;
+    if (cached !== undefined) {
+      return cached;
     }
 
-    // Descargar y cachear
     console.log(`📥 Descargando JSON desde: ${url}`);
     const response = await this.fetchWithRetry(url);
     const data = await response.json();
 
-    // Guardar en caché
-    this.dataCache.set(url, { data, timestamp: now });
-    console.log(`💾 Datos cacheados para: ${url}`);
-
+    this.dataCache.set(url, data);
     return data;
   }
 

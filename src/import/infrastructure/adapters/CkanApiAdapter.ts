@@ -11,6 +11,8 @@ import type {
 } from "@/import/domain/ports/IDataSourceAdapter";
 import { ImportRecord } from "@/import/domain/value-objects/ImportRecord";
 import { ValidationResult } from "@/import/domain/value-objects/ValidationResult";
+import { enrichRecordIfNeeded } from "./enrichRecord";
+import { validateExternalUrl } from "./validateUrl";
 
 /**
  * Respuesta de la API CKAN datastore_search
@@ -55,11 +57,13 @@ export class CkanApiAdapter implements IDataSourceAdapter {
   private getEffectiveUrl(config: DataSourceConfig): { url: string; isDirect: boolean } {
     // Si hay apiEndpoint y es una URL JSON directa, usarla
     if (config.apiEndpoint && this.isDirectJsonUrl(config.apiEndpoint)) {
+      validateExternalUrl(config.apiEndpoint);
       return { url: config.apiEndpoint, isDirect: true };
     }
 
     // Si no, usar el patrón CKAN tradicional
     if (config.baseUrl && config.resourceId) {
+      validateExternalUrl(config.baseUrl);
       return {
         url: this.buildSearchUrl(
           config.baseUrl,
@@ -74,16 +78,27 @@ export class CkanApiAdapter implements IDataSourceAdapter {
     throw new Error("Se requiere apiEndpoint (URL JSON directa) o baseUrl + resourceId (API CKAN)");
   }
 
-  /**
-   * Detecta el campo de ID externo basado en los campos disponibles
-   */
+  private resolveExternalIdField(
+    records: Record<string, unknown>[],
+    config?: DataSourceConfig
+  ): string {
+    if (config?.externalIdField) return config.externalIdField;
+    return this.detectExternalIdField(records);
+  }
+
   private detectExternalIdField(records: Record<string, unknown>[]): string {
     if (records.length === 0) return "id";
     const firstRecord = records[0];
     const keys = Object.keys(firstRecord);
 
-    // Buscar campos comunes de ID
-    const idCandidates = ["id_dea", "codigo_dea", "id", "external_id", "dea_id"];
+    const idCandidates = [
+      "id_dea",
+      "codigo_dea",
+      "id",
+      "external_id",
+      "dea_id",
+      "numero_inscripcio",
+    ];
     for (const candidate of idCandidates) {
       if (keys.includes(candidate)) return candidate;
     }
@@ -97,7 +112,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
 
     if (isDirect) {
       // Descarga directa de JSON
-      yield* this.fetchRecordsFromDirectJson(url, fieldMappings);
+      yield* this.fetchRecordsFromDirectJson(url, fieldMappings, config);
     } else {
       // API CKAN tradicional
       yield* this.fetchRecordsFromCkanApi(config, fieldMappings);
@@ -109,7 +124,8 @@ export class CkanApiAdapter implements IDataSourceAdapter {
    */
   private async *fetchRecordsFromDirectJson(
     url: string,
-    fieldMappings: Record<string, string>
+    fieldMappings: Record<string, string>,
+    config: DataSourceConfig
   ): AsyncGenerator<ImportRecord> {
     console.log(`📥 Fetching records from direct JSON URL: ${url}`);
 
@@ -138,13 +154,18 @@ export class CkanApiAdapter implements IDataSourceAdapter {
       );
     }
 
-    const externalIdField = this.detectExternalIdField(records);
+    const externalIdField = this.resolveExternalIdField(records, config);
     console.log(
       `📋 Found ${records.length} records, using '${externalIdField}' as external ID field`
     );
 
     for (let rowIndex = 0; rowIndex < records.length; rowIndex++) {
-      yield ImportRecord.fromApiRecord(records[rowIndex], fieldMappings, rowIndex, externalIdField);
+      const { record: enriched, mappings } = await enrichRecordIfNeeded(
+        records[rowIndex],
+        fieldMappings,
+        config.fieldTransformers
+      );
+      yield ImportRecord.fromApiRecord(enriched, mappings, rowIndex, externalIdField);
 
       if ((rowIndex + 1) % 1000 === 0) {
         console.log(`📥 Processed ${rowIndex + 1} records...`);
@@ -178,10 +199,15 @@ export class CkanApiAdapter implements IDataSourceAdapter {
       }
 
       const records = response.result.records;
-      const externalIdField = this.detectExternalIdField(records);
+      const externalIdField = this.resolveExternalIdField(records, config);
 
       for (const record of records) {
-        yield ImportRecord.fromApiRecord(record, fieldMappings, rowIndex, externalIdField);
+        const { record: enriched, mappings } = await enrichRecordIfNeeded(
+          record,
+          fieldMappings,
+          config.fieldTransformers
+        );
+        yield ImportRecord.fromApiRecord(enriched, mappings, rowIndex, externalIdField);
         rowIndex++;
       }
 
@@ -241,14 +267,16 @@ export class CkanApiAdapter implements IDataSourceAdapter {
     }
 
     if (typeof data === "object" && data !== null) {
-      const obj = data as any;
+      const obj = data as Record<string, unknown>;
 
       // CKAN API standard format: { success: true, result: { records: [...] } }
-      if (obj.result?.records && Array.isArray(obj.result.records)) {
-        console.log(
-          `✅ Found CKAN result.records format with ${obj.result.records.length} records`
-        );
-        return obj.result.records;
+      const result =
+        typeof obj.result === "object" && obj.result !== null
+          ? (obj.result as Record<string, unknown>)
+          : null;
+      if (result?.records && Array.isArray(result.records)) {
+        console.log(`✅ Found CKAN result.records format with ${result.records.length} records`);
+        return result.records as Record<string, unknown>[];
       }
 
       // Direct data array
@@ -266,9 +294,16 @@ export class CkanApiAdapter implements IDataSourceAdapter {
       // GeoJSON format: { features: [{ properties: {...}, geometry: {...} }] }
       if (obj.features && Array.isArray(obj.features)) {
         console.log(`✅ Found GeoJSON features with ${obj.features.length} records`);
-        return obj.features.map((f: any) => {
+        interface GeoJsonFeature {
+          properties: Record<string, unknown>;
+          geometry?: {
+            type: string;
+            coordinates: unknown[];
+          };
+        }
+        return (obj.features as GeoJsonFeature[]).map((f) => {
           // Extract properties and flatten geometry coordinates
-          const record = { ...f.properties };
+          const record: Record<string, unknown> = { ...f.properties };
           if (f.geometry?.type === "Point" && Array.isArray(f.geometry.coordinates)) {
             record.longitude = f.geometry.coordinates[0];
             record.latitude = f.geometry.coordinates[1];
@@ -389,11 +424,18 @@ export class CkanApiAdapter implements IDataSourceAdapter {
 
       const data = await response.json();
       const records = this.extractRecordsFromJson(data).slice(0, limit);
-      const externalIdField = this.detectExternalIdField(records);
+      const externalIdField = this.resolveExternalIdField(records, config);
 
-      return records.map((record, index) =>
-        ImportRecord.fromApiRecord(record, fieldMappings, index, externalIdField)
-      );
+      const results: ImportRecord[] = [];
+      for (let i = 0; i < records.length; i++) {
+        const { record: enriched, mappings } = await enrichRecordIfNeeded(
+          records[i],
+          fieldMappings,
+          config.fieldTransformers
+        );
+        results.push(ImportRecord.fromApiRecord(enriched, mappings, i, externalIdField));
+      }
+      return results;
     }
 
     // API CKAN tradicional
@@ -404,10 +446,18 @@ export class CkanApiAdapter implements IDataSourceAdapter {
       throw new Error(`CKAN API error: ${response.error?.message || "Unknown error"}`);
     }
 
-    const externalIdField = this.detectExternalIdField(response.result.records);
-    return response.result.records.map((record, index) =>
-      ImportRecord.fromApiRecord(record, fieldMappings, index, externalIdField)
-    );
+    const ckanRecords = response.result.records;
+    const externalIdField = this.resolveExternalIdField(ckanRecords, config);
+    const results: ImportRecord[] = [];
+    for (let i = 0; i < ckanRecords.length; i++) {
+      const { record: enriched, mappings } = await enrichRecordIfNeeded(
+        ckanRecords[i],
+        fieldMappings,
+        config.fieldTransformers
+      );
+      results.push(ImportRecord.fromApiRecord(enriched, mappings, i, externalIdField));
+    }
+    return results;
   }
 
   async testConnection(config: DataSourceConfig): Promise<ConnectionTestResult> {

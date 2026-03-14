@@ -35,7 +35,7 @@ export class ParseCsvPreviewUseCase {
 
       if (lines.length === 0) {
         return {
-          preview: null as any,
+          preview: null as unknown as CsvPreview,
           success: false,
           error: "El archivo CSV está vacío",
         };
@@ -50,7 +50,7 @@ export class ParseCsvPreviewUseCase {
 
       if (headers.length === 0) {
         return {
-          preview: null as any,
+          preview: null as unknown as CsvPreview,
           success: false,
           error: "No se pudieron detectar las columnas del CSV",
         };
@@ -86,7 +86,7 @@ export class ParseCsvPreviewUseCase {
     } catch (error) {
       console.error("Error parsing CSV preview:", error);
       return {
-        preview: null as any,
+        preview: null as unknown as CsvPreview,
         success: false,
         error: error instanceof Error ? error.message : "Error desconocido al leer el CSV",
       };

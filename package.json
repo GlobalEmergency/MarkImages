@@ -53,7 +53,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.993.0",
     "@aws-sdk/client-ses": "^3.993.0",
-    "@batchactions/core": "^0.0.4",
+    "@batchactions/core": "^0.0.6",
     "@batchactions/import": "^0.0.4",
     "@batchactions/state-prisma": "^0.0.2",
     "@paralleldrive/cuid2": "^3.3.0",
@@ -70,7 +70,7 @@
     "jose": "^6.1.2",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
-    "lucide-react": "^0.574.0",
+    "lucide-react": "^0.577.0",
     "next": "^16.1.6",
     "papaparse": "^5.5.3",
     "proj4": "^2.20.2",

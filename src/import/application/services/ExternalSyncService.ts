@@ -266,7 +266,12 @@ export class ExternalSyncService {
     });
 
     // 3. Restore engine from state store
+    // IMPORTANT: batchSize MUST match the value used in startSync. If omitted,
+    // BatchEngine defaults to 100, changing the batch index ↔ record mapping.
+    // This causes records in "completed" batch indices to be silently skipped
+    // even though they weren't part of the original completed batches.
     const engine = await BatchEngine.restore(jobId, {
+      batchSize: DEFAULT_BATCH_SIZE,
       stateStore,
       hooks,
       continueOnError: true,
@@ -293,24 +298,9 @@ export class ExternalSyncService {
       maxRecords: maxRecordsPerChunk,
     });
 
-    let progress = await stateStore.getProgress(jobId);
+    const progress = await stateStore.getProgress(jobId);
 
-    // Fix inflated totalRecords from BatchEngine re-streaming.
-    // BatchEngine.streamRecords() starts recordIndex from ctx.totalRecords,
-    // so each resume adds the full source count again to the total. The actual
-    // processing is correct (completed batches are skipped), but totalRecords
-    // in the state store grows unbounded. Use sourceTotalRecords for accuracy.
-    if (sourceTotalRecords && sourceTotalRecords > 0) {
-      const completed = progress.processedRecords + progress.failedRecords;
-      progress = {
-        ...progress,
-        totalRecords: sourceTotalRecords,
-        pendingRecords: Math.max(0, sourceTotalRecords - completed),
-        percentage: Math.round((completed / sourceTotalRecords) * 100),
-      };
-    }
-
-    // 4. Update registry (preserve sourceTotalRecords for accurate progress)
+    // 4. Update registry
     await this.updateJobRegistry({
       jobId,
       progress,
@@ -356,12 +346,16 @@ export class ExternalSyncService {
    * This is the bridge between IDataSourceAdapter (AsyncGenerator<ImportRecord>)
    * and BatchEngine (DataSource → string/Buffer).
    */
+  /** Max NDJSON buffer size: 256 MB. Prevents OOM on unexpectedly large sources. */
+  private static readonly MAX_NDJSON_BYTES = 256 * 1024 * 1024;
+
   private async fetchAsNdjson(
     adapter: IDataSourceAdapter,
     config: DataSourceConfig
   ): Promise<{ ndjson: string; totalCount: number }> {
     const lines: string[] = [];
     let count = 0;
+    let totalBytes = 0;
 
     for await (const importRecord of adapter.fetchRecords(config)) {
       // Serialize each ImportRecord as a JSON line with normalized fields
@@ -389,12 +383,29 @@ export class ExternalSyncService {
         submitterEmail: importRecord.submitterEmail,
         submitterPhone: importRecord.submitterPhone,
         ownership: importRecord.ownership,
+        // Device fields
+        deviceBrand: importRecord.deviceBrand,
+        deviceModel: importRecord.deviceModel,
+        deviceSerialNumber: importRecord.deviceSerialNumber,
+        deviceManufacturingDate: importRecord.deviceManufacturingDate,
+        deviceInstallationDate: importRecord.deviceInstallationDate,
+        deviceExpirationDate: importRecord.deviceExpirationDate,
         _rawData: importRecord.rawData,
         _contentHash: importRecord.contentHash,
         _rowIndex: importRecord.rowIndex,
       };
 
-      lines.push(JSON.stringify(record));
+      const line = JSON.stringify(record);
+      totalBytes += line.length;
+
+      if (totalBytes > ExternalSyncService.MAX_NDJSON_BYTES) {
+        throw new Error(
+          `Sync abortado: el buffer NDJSON supera ${(ExternalSyncService.MAX_NDJSON_BYTES / 1024 / 1024).toFixed(0)} MB ` +
+            `(${count} registros). La fuente de datos es demasiado grande para procesarla en memoria.`
+        );
+      }
+
+      lines.push(line);
       count++;
 
       if (count % 1000 === 0) {
@@ -760,11 +771,18 @@ export class ExternalSyncService {
     const totalRecords = sourceTotalRecords ?? progress.totalRecords;
 
     try {
+      // When done, all records have been handled (processed, failed, or skipped
+      // in completed batches from previous chunks). The BatchEngine's
+      // processedRecords only counts records that went through the processor
+      // callback, missing records in already-completed batches. Use totalRecords
+      // for the final count so the UI shows 100%.
+      const processedRecords = done ? totalRecords - failedRecords : progress.processedRecords;
+
       const updateData: Record<string, unknown> = {
         status,
         total_records: totalRecords,
-        processed_records: progress.processedRecords,
-        successful_records: Math.max(0, progress.processedRecords - failedRecords),
+        processed_records: processedRecords,
+        successful_records: Math.max(0, processedRecords - failedRecords),
         failed_records: failedRecords,
         current_chunk: progress.currentBatch,
         total_chunks: progress.totalBatches,
