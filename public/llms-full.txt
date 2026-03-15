@@ -1,0 +1,118 @@
+# DeaMap - Full Context for LLMs
+
+## Overview
+
+DeaMap (https://deamap.es) is a collaborative platform to locate Automated External Defibrillators (AEDs/DEAs) in Spain. It provides an interactive map with over 30,000 registered defibrillators across Spanish cities. The platform is available in Spanish, English, French, German, and Portuguese.
+
+## What is an AED/DEA?
+
+An Automated External Defibrillator (AED), known as DEA (Desfibrilador Externo Automático) in Spanish, is a portable device that delivers an electric shock to restore normal heart rhythm during sudden cardiac arrest. AEDs are designed for use by non-medical personnel and provide step-by-step voice instructions. Using an AED within the first few minutes of cardiac arrest can increase survival rates by up to 70%.
+
+## Public API
+
+DeaMap provides a free REST API for querying AED locations. No authentication required.
+
+- **Base URL**: `https://deamap.es/api/v1`
+- **Rate Limit**: 60 requests per minute per IP address
+- **Format**: JSON
+- **CORS**: Enabled (Access-Control-Allow-Origin: *)
+- **OpenAPI Spec**: https://deamap.es/api/v1/openapi.json
+
+### Endpoints
+
+#### 1. Find Nearby AEDs
+```
+GET /api/v1/aeds/nearby?lat={latitude}&lng={longitude}&radius={km}&limit={count}
+```
+
+**Parameters:**
+- `lat` (required): Latitude (-90 to 90)
+- `lng` (required): Longitude (-180 to 180)
+- `radius` (optional): Search radius in km (default: 5, max: 50)
+- `limit` (optional): Max results (default: 10, max: 50)
+
+**Example:**
+```
+GET /api/v1/aeds/nearby?lat=40.4168&lng=-3.7038&radius=2&limit=5
+```
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "name": "DEA Centro de Salud",
+      "latitude": 40.4170,
+      "longitude": -3.7035,
+      "distance_km": 0.035,
+      "address": {
+        "street": "Calle Mayor 15",
+        "city": "Madrid",
+        "district": "Centro",
+        "postal_code": "28013",
+        "access_instructions": "En la entrada principal, planta baja"
+      },
+      "schedule": {
+        "is_24h": true,
+        "weekday_opening": null,
+        "weekday_closing": null
+      },
+      "web_url": "https://deamap.es/dea/uuid"
+    }
+  ],
+  "meta": {
+    "total": 5,
+    "query": { "lat": 40.4168, "lng": -3.7038, "radius_km": 2, "limit": 5 },
+    "api_version": "v1"
+  }
+}
+```
+
+#### 2. Get AED by ID
+```
+GET /api/v1/aeds/{id}
+```
+
+Returns detailed information about a specific AED including address, schedule, and images.
+
+#### 3. Get AEDs by City
+```
+GET /api/v1/aeds/city/{city_name}?limit={count}&offset={start}
+```
+
+**Parameters:**
+- `city_name` (path): City name (case-insensitive)
+- `limit` (optional): Max results (default: 100, max: 500)
+- `offset` (optional): Pagination offset (default: 0)
+
+**Example:**
+```
+GET /api/v1/aeds/city/Barcelona?limit=50&offset=0
+```
+
+#### 4. Get Statistics
+```
+GET /api/v1/aeds/stats
+```
+
+Returns total AED count, number of cities, and top 50 cities by AED count.
+
+## Coverage
+
+DeaMap currently covers Spain with plans for European expansion. Major cities with significant AED registrations include Madrid, Barcelona, Valencia, Bilbao, Sevilla, and many more.
+
+## Emergency Protocol
+
+When someone experiences cardiac arrest:
+1. **Call 112** (European emergency number) immediately
+2. Begin **CPR** (cardiopulmonary resuscitation)
+3. Ask someone to **find the nearest AED** using DeaMap
+4. **Follow the AED instructions** — the device provides voice guidance step by step
+
+## About
+
+DeaMap is developed by [Global Emergency](https://www.globalemergency.online), an organization dedicated to improving emergency response. The project is collaborative — anyone can register new AED locations to help save lives.
+
+Website: https://deamap.es
+Add an AED: https://deamap.es/dea/new-simple

@@ -27,7 +27,7 @@ const PROTECTED_PATH_PREFIXES = [
 ];
 
 // Paths that are always public
-const PUBLIC_PATHS = ["/api/aeds", "/api/auth/", "/api/health", "/api/geocode", "/api/cron/"];
+const PUBLIC_PATHS = ["/api/aeds", "/api/auth/", "/api/health", "/api/geocode", "/api/cron/", "/api/v1/"];
 
 function isProtectedPath(pathname: string): boolean {
   // Check public paths first (they take precedence)

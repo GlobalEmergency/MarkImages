@@ -1,0 +1,29 @@
+# DeaMap - Defibrillator Map
+
+> DeaMap is a collaborative platform to locate Automated External Defibrillators (AEDs) in Spain. It provides an interactive map with over 30,000 registered defibrillators across Spanish cities.
+
+## API
+
+DeaMap provides a free, public REST API for querying AED locations:
+
+- Base URL: `https://deamap.es/api/v1`
+- Rate limit: 60 requests/minute per IP
+- No authentication required
+- OpenAPI spec: [https://deamap.es/api/v1/openapi.json](https://deamap.es/api/v1/openapi.json)
+
+### Endpoints
+
+- `GET /api/v1/aeds/nearby?lat={lat}&lng={lng}&radius={km}&limit={n}` - Find nearest AEDs to a location
+- `GET /api/v1/aeds/{id}` - Get details for a specific AED
+- `GET /api/v1/aeds/city/{city_name}` - Get all AEDs in a city (paginated)
+- `GET /api/v1/aeds/stats` - Get statistics (total AEDs, cities, top cities)
+
+## Docs
+
+- [API Documentation](https://deamap.es/api/docs)
+- [OpenAPI Specification](https://deamap.es/api/v1/openapi.json)
+- [Full LLM context](https://deamap.es/llms-full.txt)
+
+## About
+
+DeaMap is developed by Global Emergency (https://www.globalemergency.online), an organization dedicated to improving emergency response. The platform helps people find the nearest defibrillator during cardiac emergencies, where every second counts.

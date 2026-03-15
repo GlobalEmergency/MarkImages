@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "DeaMap - Mapa de Desfibriladores",
+  "name_for_model": "deamap",
+  "description_for_human": "Encuentra desfibriladores (DEA/AED) cercanos en España. Mapa interactivo con más de 30.000 desfibriladores registrados.",
+  "description_for_model": "DeaMap provides AED (Automated External Defibrillator) location data in Spain. Use this API to find the nearest defibrillators to any location by coordinates, search by city name, or get statistics about AED coverage. The API returns location details, addresses, opening hours, and access instructions. Useful for emergency situations, healthcare planning, and public safety queries.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://deamap.es/api/v1/openapi.json"
+  },
+  "logo_url": "https://deamap.es/favicon-96x96.png",
+  "contact_email": "info@deamap.es",
+  "legal_info_url": "https://deamap.es/legal/condiciones"
+}
