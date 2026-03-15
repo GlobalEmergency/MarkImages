@@ -1,6 +1,10 @@
 {
-  "name": "DeaMap",
+  "name": "DeaMap - Mapa de Desfibriladores",
   "short_name": "DeaMap",
+  "description": "Localiza y verifica desfibriladores en tu zona. Mapa interactivo de DEAs en España.",
+  "start_url": "/",
+  "scope": "/",
+  "lang": "es",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -17,5 +21,6 @@
   ],
   "theme_color": "#247F52",
   "background_color": "#247F52",
-  "display": "standalone"
+  "display": "standalone",
+  "categories": ["health", "medical"]
 }

@@ -4,16 +4,86 @@ import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
 
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import JsonLd from "@/components/JsonLd";
 import Navigation from "@/components/Navigation";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OrganizationProvider } from "@/contexts/OrganizationContext";
 
 import "./globals.css";
 
+const siteUrl = "https://deamap.es";
+const siteName = "DeaMap";
+const siteDescription =
+  "Localiza y verifica desfibriladores en tu zona. Mapa interactivo de DEAs en España con más de 30.000 desfibriladores registrados.";
+
 export const metadata: Metadata = {
-  title: "deamap.es - Mapa de Desfibriladores",
-  description:
-    "Localiza y verifica desfibriladores en tu zona. Mapa interactivo de DEAs en España.",
+  title: {
+    default: "DeaMap - Mapa de Desfibriladores en España",
+    template: "%s | DeaMap",
+  },
+  description: siteDescription,
+  metadataBase: new URL(siteUrl),
+  alternates: {
+    canonical: "/",
+  },
+  keywords: [
+    "desfibrilador",
+    "DEA",
+    "AED",
+    "mapa desfibriladores",
+    "desfibriladores España",
+    "emergencia cardíaca",
+    "parada cardíaca",
+    "primeros auxilios",
+    "salvar vidas",
+    "desfibrilador cerca",
+  ],
+  authors: [{ name: siteName, url: siteUrl }],
+  creator: siteName,
+  publisher: siteName,
+  openGraph: {
+    type: "website",
+    locale: "es_ES",
+    url: siteUrl,
+    siteName,
+    title: "DeaMap - Mapa de Desfibriladores en España",
+    description: siteDescription,
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "DeaMap - Mapa interactivo de desfibriladores en España",
+        type: "image/png",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DeaMap - Mapa de Desfibriladores en España",
+    description: siteDescription,
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+  },
+  appleWebApp: {
+    title: "DeaMap",
+    capable: true,
+    statusBarStyle: "default",
+  },
+  category: "health",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -27,6 +97,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-title" content="DeaMap" />
         <link rel="manifest" href="/site.webmanifest" />
+        <JsonLd />
       </head>
       <body className="font-sans antialiased">
         <GoogleAnalytics />
