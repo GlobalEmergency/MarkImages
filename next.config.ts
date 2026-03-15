@@ -34,6 +34,22 @@ const nextConfig: NextConfig = {
 
   productionBrowserSourceMaps: process.env.VERCEL_ENV === "preview",
 
+  // Redirects (old URLs → new)
+  async redirects() {
+    return [
+      {
+        source: "/desfibriladores",
+        destination: "/locations",
+        permanent: true,
+      },
+      {
+        source: "/desfibriladores/:path*",
+        destination: "/locations/:path*",
+        permanent: true,
+      },
+    ];
+  },
+
   // Security headers (CORS is handled dynamically in src/middleware.ts)
   async headers() {
     return [

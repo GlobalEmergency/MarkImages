@@ -12,13 +12,13 @@ export const metadata: Metadata = {
   description:
     "Directorio completo de desfibriladores (DEA) por ciudad en España. Encuentra el desfibrilador más cercano en tu ciudad con DeaMap.",
   alternates: {
-    canonical: "/desfibriladores",
+    canonical: "/locations",
   },
   openGraph: {
     title: "Desfibriladores en España - Todas las ciudades",
     description:
       "Directorio completo de desfibriladores (DEA) por ciudad en España. Encuentra el desfibrilador más cercano.",
-    url: "/desfibriladores",
+    url: "/locations",
     images: [{ url: "/og-image.png" }],
   },
   twitter: {
@@ -91,7 +91,7 @@ export default async function DesfibriladoresPage() {
           {cityCounts.map(({ city_name, _count }) => (
             <Link
               key={city_name}
-              href={`/desfibriladores/${cityToSlug(city_name)}`}
+              href={`/locations/${cityToSlug(city_name)}`}
               className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-all hover:border-blue-300 group flex items-center justify-between"
             >
               <div className="flex items-center gap-3 min-w-0">

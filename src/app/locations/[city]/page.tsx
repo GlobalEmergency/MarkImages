@@ -138,7 +138,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const title = `Desfibriladores en ${cityName} - ${totalCount} DEAs disponibles${pageSuffix}`;
   const description = `Encuentra ${totalCount} desfibriladores (DEA) en ${cityName}. Mapa interactivo, ubicaciones y horarios de acceso. Localiza el desfibrilador más cercano.`;
   const canonicalUrl =
-    currentPage > 1 ? `/desfibriladores/${slug}?page=${currentPage}` : `/desfibriladores/${slug}`;
+    currentPage > 1 ? `/locations/${slug}?page=${currentPage}` : `/locations/${slug}`;
 
   return {
     title,
@@ -199,13 +199,13 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
         "@type": "ListItem",
         position: 2,
         name: "Desfibriladores",
-        item: "https://deamap.es/desfibriladores",
+        item: "https://deamap.es/locations",
       },
       {
         "@type": "ListItem",
         position: 3,
         name: cityName,
-        item: `https://deamap.es/desfibriladores/${citySlug}`,
+        item: `https://deamap.es/locations/${citySlug}`,
       },
     ],
   };
@@ -224,7 +224,7 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
               DeaMap
             </Link>
             <span>/</span>
-            <Link href="/desfibriladores" className="hover:text-white transition-colors">
+            <Link href="/locations" className="hover:text-white transition-colors">
               Desfibriladores
             </Link>
             <span>/</span>
@@ -366,7 +366,7 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
           <nav className="flex items-center justify-center gap-2 mt-8" aria-label="Paginación">
             {currentPage > 1 && (
               <Link
-                href={`/desfibriladores/${citySlug}${currentPage === 2 ? "" : `?page=${currentPage - 1}`}`}
+                href={`/locations/${citySlug}${currentPage === 2 ? "" : `?page=${currentPage - 1}`}`}
                 className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -394,7 +394,7 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
                 ) : (
                   <Link
                     key={item}
-                    href={`/desfibriladores/${citySlug}${item === 1 ? "" : `?page=${item}`}`}
+                    href={`/locations/${citySlug}${item === 1 ? "" : `?page=${item}`}`}
                     className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                       item === currentPage
                         ? "bg-blue-600 text-white"
@@ -408,7 +408,7 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
 
             {currentPage < totalPages && (
               <Link
-                href={`/desfibriladores/${citySlug}?page=${currentPage + 1}`}
+                href={`/locations/${citySlug}?page=${currentPage + 1}`}
                 className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Siguiente
@@ -461,7 +461,7 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
         {/* Link to other cities */}
         <div className="mt-8 text-center">
           <Link
-            href="/desfibriladores"
+            href="/locations"
             className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
           >
             <ExternalLink className="w-4 h-4" />

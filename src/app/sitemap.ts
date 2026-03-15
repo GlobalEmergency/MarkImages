@@ -23,7 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
     },
     {
-      url: `${baseUrl}/desfibriladores`,
+      url: `${baseUrl}/locations`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.9,
@@ -65,7 +65,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       // Page 1 (canonical URL without ?page=)
       cityPages.push({
-        url: `${baseUrl}/desfibriladores/${slug}`,
+        url: `${baseUrl}/locations/${slug}`,
         lastModified: new Date(),
         changeFrequency: "weekly" as const,
         priority: 0.8,
@@ -74,7 +74,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       // Additional pages
       for (let page = 2; page <= totalPages; page++) {
         cityPages.push({
-          url: `${baseUrl}/desfibriladores/${slug}?page=${page}`,
+          url: `${baseUrl}/locations/${slug}?page=${page}`,
           lastModified: new Date(),
           changeFrequency: "weekly" as const,
           priority: 0.6,
