@@ -7,6 +7,12 @@ import { prisma } from "@/lib/db";
 
 const ITEMS_PER_PAGE = 50;
 
+// Allow unlisted cities to render on-demand
+export const dynamicParams = true;
+
+// Revalidate pages every hour (ISR)
+export const revalidate = 3600;
+
 interface Props {
   params: Promise<{ city: string }>;
   searchParams: Promise<{ page?: string }>;
@@ -25,6 +31,29 @@ function cityToSlug(city: string): string {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/g, "");
+}
+
+export async function generateStaticParams() {
+  try {
+    const cities = (await prisma.$queryRaw`
+      SELECT l.city_name
+      FROM aeds a
+      JOIN aed_locations l ON l.id = a.location_id
+      WHERE a.publication_mode != 'NONE'
+        AND a.published_at IS NOT NULL
+        AND l.city_name IS NOT NULL
+        AND l.city_name != ''
+      GROUP BY l.city_name
+      ORDER BY COUNT(*) DESC
+      LIMIT 100
+    `) as { city_name: string }[];
+
+    return cities.map(({ city_name }) => ({
+      city: cityToSlug(city_name),
+    }));
+  } catch {
+    return [];
+  }
 }
 
 async function resolveCityName(citySlug: string): Promise<string | null> {

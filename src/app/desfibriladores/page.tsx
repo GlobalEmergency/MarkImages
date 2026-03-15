@@ -4,6 +4,9 @@ import Link from "next/link";
 
 import { prisma } from "@/lib/db";
 
+// Revalidate every hour (ISR)
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Desfibriladores en España - Todas las ciudades",
   description:
