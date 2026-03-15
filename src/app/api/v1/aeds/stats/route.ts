@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
       }),
       prisma.$queryRaw<CityCount[]>`
         SELECT l.city_name, COUNT(*)::int as count
-        FROM "Aed" a
-        JOIN "AedLocation" l ON l.id = a.location_id
+        FROM aeds a
+        JOIN aed_locations l ON l.id = a.location_id
         WHERE a.publication_mode != 'NONE'
           AND a.published_at IS NOT NULL
           AND l.city_name IS NOT NULL
