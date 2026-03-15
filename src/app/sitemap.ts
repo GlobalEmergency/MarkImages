@@ -1,14 +1,38 @@
 import type { MetadataRoute } from "next";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+import { prisma } from "@/lib/db";
+
+function cityToSlug(city: string): string {
+  return city
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://deamap.es";
 
-  return [
+  // Static pages
+  const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1,
+    },
+    {
+      url: `${baseUrl}/desfibriladores`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/dea/new-simple`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
     },
     {
       url: `${baseUrl}/login`,
@@ -41,4 +65,30 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.1,
     },
   ];
+
+  // Dynamic city pages
+  try {
+    const cities = (await prisma.$queryRaw`
+      SELECT DISTINCT l.city_name
+      FROM "Aed" a
+      JOIN "AedLocation" l ON l.id = a.location_id
+      WHERE a.publication_mode != 'NONE'
+        AND a.published_at IS NOT NULL
+        AND l.city_name IS NOT NULL
+        AND l.city_name != ''
+      ORDER BY l.city_name
+    `) as { city_name: string }[];
+
+    const cityPages: MetadataRoute.Sitemap = cities.map(({ city_name }) => ({
+      url: `${baseUrl}/desfibriladores/${cityToSlug(city_name)}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    }));
+
+    return [...staticPages, ...cityPages];
+  } catch {
+    // If DB is not available, return only static pages
+    return staticPages;
+  }
 }

@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "title": "DeaMap - Defibrillator Map in Spain",
+    "description": "Find and verify defibrillators near you. Interactive AED map in Spain with over 30,000 registered defibrillators.",
+    "keywords": "defibrillator, AED, defibrillator map, AED near me, AED locator, defibrillator near me, cardiac emergency"
+  },
+  "home": {
+    "searchPlaceholder": "Search address...",
+    "useMyLocation": "Use my location",
+    "searching": "Searching...",
+    "moreInfo": "More information",
+    "aboutTitle": "About DeaMap",
+    "aboutSubtitle": "The most comprehensive collaborative defibrillator map in Spain",
+    "whatIs": "What is DeaMap?",
+    "whatIsDesc": "DeaMap is a collaborative platform to locate nearby defibrillators (AEDs) in case of cardiac emergency.",
+    "howWorks": "How does it work?",
+    "howWorksDesc": "Use location or address search to find the nearest AEDs to you.",
+    "whyImportant": "Why is it important?",
+    "whyImportantDesc": "In a cardiac emergency, every second counts. Quick access to a defibrillator can save lives.",
+    "collaborate": "Collaborate with us",
+    "collaborateDesc": "If you know the location of an AED that's not on the map, you can easily add it.",
+    "addDea": "Add an AED",
+    "coverage": "Our Coverage",
+    "spain": "Spain",
+    "nationalCoverage": "National coverage",
+    "available": "Available",
+    "permanentAccess": "24/7 access",
+    "europe": "Europe",
+    "comingSoon": "Coming soon",
+    "resultsFound": "{count} AED{plural} found",
+    "sortedByDistance": "Sorted by distance",
+    "noDeasFound": "No AEDs found near this location within a 10 km radius."
+  },
+  "city": {
+    "title": "Defibrillators in {city}",
+    "subtitle": "{count} defibrillators (AED) registered in {city}. Find the nearest one.",
+    "registered": "AEDs registered",
+    "districts": "districts",
+    "viewOnMap": "View on map",
+    "findNearest": "Find the nearest defibrillator to your location",
+    "available24h": "Available 24h",
+    "scheduleNotSpecified": "Schedule not specified",
+    "viewAllCities": "View all cities with defibrillators"
+  },
+  "emergency": {
+    "callEmergency": "Call 112",
+    "getDirections": "Get directions",
+    "step1": "Call 112 immediately.",
+    "step2": "Begin cardiopulmonary resuscitation (CPR).",
+    "step3": "Ask someone to find the nearest defibrillator.",
+    "step4": "Follow the AED instructions: the device guides you step by step."
+  },
+  "common": {
+    "defibrillator": "defibrillator",
+    "defibrillators": "defibrillators",
+    "close": "Close",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "error": "Error",
+    "privacyPolicy": "Privacy Policy",
+    "cookiePolicy": "Cookie Policy",
+    "termsOfService": "Terms of Service",
+    "savingLives": "Saving lives together"
+  }
+}

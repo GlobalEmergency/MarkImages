@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "title": "DeaMap - Carte des Défibrillateurs en Espagne",
+    "description": "Localisez et vérifiez les défibrillateurs près de chez vous. Carte interactive des DAE en Espagne avec plus de 30 000 défibrillateurs enregistrés.",
+    "keywords": "défibrillateur, DAE, carte défibrillateurs, défibrillateur près de moi, urgence cardiaque"
+  },
+  "home": {
+    "searchPlaceholder": "Rechercher une adresse...",
+    "useMyLocation": "Utiliser ma position",
+    "searching": "Recherche en cours...",
+    "moreInfo": "Plus d'informations",
+    "aboutTitle": "À propos de DeaMap",
+    "aboutSubtitle": "La carte collaborative de défibrillateurs la plus complète d'Espagne",
+    "whatIs": "Qu'est-ce que DeaMap ?",
+    "whatIsDesc": "DeaMap est une plateforme collaborative pour localiser les défibrillateurs (DAE) à proximité en cas d'urgence cardiaque.",
+    "howWorks": "Comment ça marche ?",
+    "howWorksDesc": "Utilisez la recherche par position ou adresse pour trouver les DAE les plus proches de vous.",
+    "whyImportant": "Pourquoi est-ce important ?",
+    "whyImportantDesc": "Lors d'une urgence cardiaque, chaque seconde compte. Un accès rapide à un défibrillateur peut sauver des vies.",
+    "collaborate": "Collaborez avec nous",
+    "collaborateDesc": "Si vous connaissez l'emplacement d'un DAE qui n'est pas sur la carte, vous pouvez facilement l'ajouter.",
+    "addDea": "Ajouter un DAE",
+    "coverage": "Notre Couverture",
+    "spain": "Espagne",
+    "nationalCoverage": "Couverture nationale",
+    "available": "Disponible",
+    "permanentAccess": "Accès permanent",
+    "europe": "Europe",
+    "comingSoon": "Bientôt",
+    "resultsFound": "{count} DAE trouvé{plural}",
+    "sortedByDistance": "Triés par distance",
+    "noDeasFound": "Aucun DAE trouvé près de cet emplacement dans un rayon de 10 km."
+  },
+  "city": {
+    "title": "Défibrillateurs à {city}",
+    "subtitle": "{count} défibrillateurs (DAE) enregistrés à {city}. Trouvez le plus proche.",
+    "registered": "DAE enregistrés",
+    "districts": "quartiers",
+    "viewOnMap": "Voir sur la carte",
+    "findNearest": "Trouvez le défibrillateur le plus proche de votre position",
+    "available24h": "Disponible 24h",
+    "scheduleNotSpecified": "Horaire non spécifié",
+    "viewAllCities": "Voir toutes les villes avec des défibrillateurs"
+  },
+  "emergency": {
+    "callEmergency": "Appeler le 112",
+    "getDirections": "Itinéraire",
+    "step1": "Appelez le 112 immédiatement.",
+    "step2": "Commencez la réanimation cardio-pulmonaire (RCP).",
+    "step3": "Demandez à quelqu'un de trouver le défibrillateur le plus proche.",
+    "step4": "Suivez les instructions du DAE : l'appareil vous guide étape par étape."
+  },
+  "common": {
+    "defibrillator": "défibrillateur",
+    "defibrillators": "défibrillateurs",
+    "close": "Fermer",
+    "back": "Retour",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "privacyPolicy": "Politique de Confidentialité",
+    "cookiePolicy": "Politique de Cookies",
+    "termsOfService": "Conditions d'Utilisation",
+    "savingLives": "Sauver des vies ensemble"
+  }
+}

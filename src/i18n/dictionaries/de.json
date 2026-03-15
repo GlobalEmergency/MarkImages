@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "title": "DeaMap - Defibrillator-Karte in Spanien",
+    "description": "Finden und überprüfen Sie Defibrillatoren in Ihrer Nähe. Interaktive AED-Karte in Spanien mit über 30.000 registrierten Defibrillatoren.",
+    "keywords": "Defibrillator, AED, Defibrillator-Karte, AED in meiner Nähe, Herznotfall, Defibrillator finden"
+  },
+  "home": {
+    "searchPlaceholder": "Adresse suchen...",
+    "useMyLocation": "Meinen Standort verwenden",
+    "searching": "Suche läuft...",
+    "moreInfo": "Weitere Informationen",
+    "aboutTitle": "Über DeaMap",
+    "aboutSubtitle": "Die umfassendste kollaborative Defibrillator-Karte in Spanien",
+    "whatIs": "Was ist DeaMap?",
+    "whatIsDesc": "DeaMap ist eine kollaborative Plattform zur Lokalisierung von Defibrillatoren (AEDs) in Notfällen.",
+    "howWorks": "Wie funktioniert es?",
+    "howWorksDesc": "Nutzen Sie die Standort- oder Adresssuche, um die nächsten AEDs zu finden.",
+    "whyImportant": "Warum ist das wichtig?",
+    "whyImportantDesc": "Bei einem Herznotfall zählt jede Sekunde. Schneller Zugang zu einem Defibrillator kann Leben retten.",
+    "collaborate": "Arbeiten Sie mit uns zusammen",
+    "collaborateDesc": "Wenn Sie einen AED kennen, der nicht auf der Karte ist, können Sie ihn einfach hinzufügen.",
+    "addDea": "AED hinzufügen",
+    "coverage": "Unsere Abdeckung",
+    "spain": "Spanien",
+    "nationalCoverage": "Landesweite Abdeckung",
+    "available": "Verfügbar",
+    "permanentAccess": "Dauerhafter Zugang",
+    "europe": "Europa",
+    "comingSoon": "Demnächst",
+    "resultsFound": "{count} AED gefunden",
+    "sortedByDistance": "Nach Entfernung sortiert",
+    "noDeasFound": "Keine AEDs in der Nähe dieses Standorts im Umkreis von 10 km gefunden."
+  },
+  "city": {
+    "title": "Defibrillatoren in {city}",
+    "subtitle": "{count} Defibrillatoren (AED) in {city} registriert. Finden Sie den nächsten.",
+    "registered": "AEDs registriert",
+    "districts": "Bezirke",
+    "viewOnMap": "Auf der Karte anzeigen",
+    "findNearest": "Finden Sie den nächsten Defibrillator in Ihrer Nähe",
+    "available24h": "24h verfügbar",
+    "scheduleNotSpecified": "Öffnungszeiten nicht angegeben",
+    "viewAllCities": "Alle Städte mit Defibrillatoren anzeigen"
+  },
+  "emergency": {
+    "callEmergency": "112 anrufen",
+    "getDirections": "Wegbeschreibung",
+    "step1": "Rufen Sie sofort die 112 an.",
+    "step2": "Beginnen Sie mit der Herz-Lungen-Wiederbelebung (HLW).",
+    "step3": "Bitten Sie jemanden, den nächsten Defibrillator zu finden.",
+    "step4": "Folgen Sie den Anweisungen des AED: Das Gerät leitet Sie Schritt für Schritt an."
+  },
+  "common": {
+    "defibrillator": "Defibrillator",
+    "defibrillators": "Defibrillatoren",
+    "close": "Schließen",
+    "back": "Zurück",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "loading": "Wird geladen...",
+    "error": "Fehler",
+    "privacyPolicy": "Datenschutzrichtlinie",
+    "cookiePolicy": "Cookie-Richtlinie",
+    "termsOfService": "Nutzungsbedingungen",
+    "savingLives": "Gemeinsam Leben retten"
+  }
+}

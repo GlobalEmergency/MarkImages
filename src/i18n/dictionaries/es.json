@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "title": "DeaMap - Mapa de Desfibriladores en España",
+    "description": "Localiza y verifica desfibriladores en tu zona. Mapa interactivo de DEAs en España con más de 30.000 desfibriladores registrados.",
+    "keywords": "desfibrilador, DEA, mapa desfibriladores, desfibriladores cerca de mi, mapa dea, desfibrilador cerca, emergencia cardíaca"
+  },
+  "home": {
+    "searchPlaceholder": "Buscar dirección...",
+    "useMyLocation": "Usar mi ubicación",
+    "searching": "Buscando...",
+    "moreInfo": "Más información",
+    "aboutTitle": "Sobre DeaMap",
+    "aboutSubtitle": "El mapa colaborativo de desfibriladores más completo de España",
+    "whatIs": "¿Qué es DeaMap?",
+    "whatIsDesc": "DeaMap es una plataforma colaborativa que permite localizar desfibriladores (DEAs) cercanos en caso de emergencia cardíaca.",
+    "howWorks": "¿Cómo funciona?",
+    "howWorksDesc": "Utiliza la búsqueda por ubicación o dirección para encontrar los DEAs más cercanos a ti.",
+    "whyImportant": "¿Por qué es importante?",
+    "whyImportantDesc": "En una emergencia cardíaca, cada segundo cuenta. Tener acceso rápido a un desfibrilador puede salvar vidas.",
+    "collaborate": "Colabora con nosotros",
+    "collaborateDesc": "Si conoces la ubicación de un DEA que no está en el mapa, puedes agregarlo fácilmente.",
+    "addDea": "Agregar un DEA",
+    "coverage": "Nuestra Cobertura",
+    "spain": "España",
+    "nationalCoverage": "Cobertura nacional",
+    "available": "Disponible",
+    "permanentAccess": "Acceso permanente",
+    "europe": "Europa",
+    "comingSoon": "Próximamente",
+    "resultsFound": "{count} DEA{plural} encontrado{plural}",
+    "sortedByDistance": "Ordenados por distancia",
+    "noDeasFound": "No se encontraron DEAs cerca de esta ubicación en un radio de 10 km."
+  },
+  "city": {
+    "title": "Desfibriladores en {city}",
+    "subtitle": "{count} desfibriladores (DEA) registrados en {city}. Localiza el más cercano a ti.",
+    "registered": "DEAs registrados",
+    "districts": "distritos",
+    "viewOnMap": "Ver en el mapa",
+    "findNearest": "Busca el desfibrilador más cercano a tu ubicación",
+    "available24h": "Disponible 24h",
+    "scheduleNotSpecified": "Horario no especificado",
+    "viewAllCities": "Ver todas las ciudades con desfibriladores"
+  },
+  "emergency": {
+    "callEmergency": "Llamar al 112",
+    "getDirections": "Cómo llegar",
+    "step1": "Llama al 112 inmediatamente.",
+    "step2": "Inicia la reanimación cardiopulmonar (RCP).",
+    "step3": "Pide a alguien que busque el desfibrilador más cercano.",
+    "step4": "Sigue las instrucciones del DEA: el dispositivo te guía paso a paso."
+  },
+  "common": {
+    "defibrillator": "desfibrilador",
+    "defibrillators": "desfibriladores",
+    "close": "Cerrar",
+    "back": "Volver",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "privacyPolicy": "Política de Privacidad",
+    "cookiePolicy": "Política de Cookies",
+    "termsOfService": "Condiciones de Uso",
+    "savingLives": "Salvando vidas juntos"
+  }
+}
