@@ -187,7 +187,20 @@ export function createSyncRecordProcessor(
       return;
     }
 
-    if (existingAed) {
+    // Suspected duplicate: no externalId + coordinate/detector match → create and flag
+    const suspectedDuplicate = data._suspectedDuplicate as
+      | { matchedAedId: string; matchedAedName: string; matchReason: string }
+      | undefined;
+
+    if (suspectedDuplicate) {
+      await createAedWithDuplicateFlag(prisma, data, suspectedDuplicate, {
+        dataSourceId,
+        sourceOrigin,
+        externalId,
+        getDefaults,
+      });
+      if (stats) stats.created++;
+    } else if (existingAed) {
       // Cross-source: AED belongs to a different data source → create as
       // PENDING_REVIEW for manual deduplication in /verify/duplicates
       const isCrossSource = !!(
@@ -356,6 +369,60 @@ async function createAed(
 
     // Stash created ID so afterProcess hook can register it in the cache
     data._createdAedId = createdAed.id;
+  });
+}
+
+// ============================================================
+// Create AED with suspected duplicate flag
+//
+// When an incoming record has NO externalId and matches an existing
+// AED by coordinates or duplicate detector, we create a NEW AED
+// (never merge) and flag it with requires_attention=true + internal note.
+// A human reviewer decides if it's a real duplicate or a distinct device.
+// ============================================================
+
+async function createAedWithDuplicateFlag(
+  prisma: PrismaClient,
+  data: Record<string, unknown>,
+  suspectedDuplicate: { matchedAedId: string; matchedAedName: string; matchReason: string },
+  opts: {
+    dataSourceId: string;
+    sourceOrigin: string;
+    externalId: string | null;
+    getDefaults: () => Promise<DataSourceDefaults>;
+  }
+): Promise<void> {
+  // Load the real matched AED from the database
+  const matchedAed = await prisma.aed.findUnique({
+    where: { id: suspectedDuplicate.matchedAedId },
+    select: {
+      id: true,
+      location_id: true,
+      schedule_id: true,
+      responsible_id: true,
+      last_verified_at: true,
+      name: true,
+      code: true,
+      establishment_type: true,
+      external_reference: true,
+      data_source_id: true,
+      source_origin: true,
+      internal_notes: true,
+      latitude: true,
+      longitude: true,
+    },
+  });
+
+  if (!matchedAed) {
+    // Matched AED no longer exists — just create normally
+    await createAed(prisma, data, opts);
+    return;
+  }
+
+  await createAedForDuplicateReview(prisma, data, matchedAed, {
+    dataSourceId: opts.dataSourceId,
+    sourceOrigin: opts.sourceOrigin,
+    externalId: opts.externalId,
   });
 }
 
