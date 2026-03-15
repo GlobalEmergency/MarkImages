@@ -76,10 +76,12 @@ export class GermanScheduleParser implements IFieldTransformer {
     _context?: Record<string, string | null>
   ): Promise<TransformerResult> {
     // Strip HTML tags, replace <br> with newlines for block splitting
-    const cleaned = value
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/<[^>]+>/g, "")
-      .trim();
+    let cleaned = value.replace(/<br\s*\/?>/gi, "\n");
+    // Loop to handle nested tags like <scr<script>ipt>
+    while (/<[^>]+>/.test(cleaned)) {
+      cleaned = cleaned.replace(/<[^>]+>/g, "");
+    }
+    cleaned = cleaned.trim();
 
     if (!cleaned) {
       return { fields: {}, confidence: 0, rawValue: value };

@@ -81,10 +81,11 @@ export class ViennaAddressParser implements IFieldTransformer {
   }
 
   private cleanHtml(text: string): string {
-    return text
-      .replace(/<br\s*\/?>/gi, " — ")
-      .replace(/<[^>]+>/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
+    let cleaned = text.replace(/<br\s*\/?>/gi, " — ");
+    // Loop to handle nested tags like <scr<script>ipt>
+    while (/<[^>]+>/.test(cleaned)) {
+      cleaned = cleaned.replace(/<[^>]+>/g, "");
+    }
+    return cleaned.replace(/\s+/g, " ").trim();
   }
 }

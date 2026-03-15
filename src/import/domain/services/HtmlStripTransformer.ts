@@ -24,8 +24,10 @@ export class HtmlStripTransformer implements IFieldTransformer {
 
     // Replace <br> variants with " | "
     let cleaned = input.replace(/<br\s*\/?>/gi, " | ");
-    // Strip remaining HTML tags
-    cleaned = cleaned.replace(/<[^>]+>/g, "");
+    // Strip remaining HTML tags (loop to handle nested like <scr<script>ipt>)
+    while (/<[^>]+>/.test(cleaned)) {
+      cleaned = cleaned.replace(/<[^>]+>/g, "");
+    }
     // Normalize whitespace
     cleaned = cleaned.replace(/\s+/g, " ").trim();
 
