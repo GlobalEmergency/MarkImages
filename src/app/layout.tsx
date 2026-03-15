@@ -3,6 +3,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
 
+import Footer from "@/components/Footer";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import JsonLd from "@/components/JsonLd";
 import Navigation from "@/components/Navigation";
@@ -115,12 +116,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="manifest" href="/site.webmanifest" />
         <JsonLd />
       </head>
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased flex flex-col min-h-screen">
         <GoogleAnalytics />
         <AuthProvider>
           <OrganizationProvider>
             <Navigation />
-            {children}
+            <main className="flex-1">{children}</main>
+            <Footer />
             <Toaster
               position="top-right"
               toastOptions={{
