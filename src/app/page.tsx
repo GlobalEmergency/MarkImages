@@ -685,12 +685,32 @@ export default function Home() {
                   <ul className="space-y-2 text-sm">
                     <li>
                       <Link
+                        href="/desfibriladores"
+                        className="text-gray-300 hover:text-white transition-colors inline-flex items-center gap-1"
+                        onClick={() => trackNavClick("Desfibriladores por ciudad (footer)", "/desfibriladores")}
+                      >
+                        <MapPin className="w-3.5 h-3.5" />
+                        Desfibriladores por ciudad
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
                         href="/dea/new-simple"
                         className="text-gray-300 hover:text-white transition-colors inline-flex items-center gap-1"
                         onClick={() => trackNavClick("Agregar un DEA (footer)", "/dea/new-simple")}
                       >
                         <PlusCircle className="w-3.5 h-3.5" />
                         Agregar un DEA
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/api/docs"
+                        className="text-gray-300 hover:text-white transition-colors inline-flex items-center gap-1"
+                        onClick={() => trackNavClick("API pública (footer)", "/api/docs")}
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        API pública
                       </Link>
                     </li>
                     <li>
@@ -727,7 +747,7 @@ export default function Home() {
                     Condiciones de Uso
                   </Link>
                 </div>
-                <p>© 2024 DeaMap - Salvando vidas juntos</p>
+                <p>© 2024-2026 DeaMap - Salvando vidas juntos</p>
               </div>
             </div>
           </footer>
