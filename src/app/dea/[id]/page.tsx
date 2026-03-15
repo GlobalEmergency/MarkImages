@@ -111,12 +111,12 @@ async function getPlaceJsonLd(id: string) {
       "@type": "Place",
       name: aed.name,
       description: `Desfibrilador externo automático (DEA) en ${loc.city_name || "España"}`,
-      ...(loc.latitude && loc.longitude
+      ...(aed.latitude && aed.longitude
         ? {
             geo: {
               "@type": "GeoCoordinates",
-              latitude: loc.latitude,
-              longitude: loc.longitude,
+              latitude: aed.latitude,
+              longitude: aed.longitude,
             },
           }
         : {}),
