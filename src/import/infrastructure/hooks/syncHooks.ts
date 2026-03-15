@@ -21,6 +21,36 @@ import type { ParsedRecord, ProcessedRecord, JobHooks, HookContext } from "@batc
 import type { PrismaClient } from "@/generated/client/client";
 import { getDuplicateDetector } from "@/duplicate-detection/infrastructure/factory";
 import { DuplicateCriteria } from "@/duplicate-detection/domain/value-objects/DuplicateCriteria";
+import { createHash } from "crypto";
+
+// ============================================================
+// Synthetic external ID
+// ============================================================
+
+/**
+ * Generate a deterministic synthetic externalId for records that don't have one.
+ * Uses sha256(normalized_name + ":" + lat_6dp + ":" + lng_6dp) truncated to 16 chars.
+ * Prefixed with "syn:" to distinguish from real external IDs.
+ *
+ * This ensures:
+ * - Same record in subsequent syncs → same synthetic ID → matches existing AED
+ * - Reviewer decisions (duplicate/not duplicate) are preserved across re-imports
+ * - Two DEAs at the same location with different names get different IDs
+ */
+function generateSyntheticExternalId(
+  name: string | null | undefined,
+  lat: number,
+  lng: number
+): string {
+  const normalizedName = (name || "").toLowerCase().trim().replace(/\s+/g, " ");
+  const latRounded = lat.toFixed(6);
+  const lngRounded = lng.toFixed(6);
+  const hash = createHash("sha256")
+    .update(`${normalizedName}:${latRounded}:${lngRounded}`)
+    .digest("hex")
+    .substring(0, 16);
+  return `syn:${hash}`;
+}
 
 // ============================================================
 // Types
@@ -282,52 +312,115 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
       await cache.ensureLoaded();
 
       // Look up existing AED
-      const externalId = record.externalId as string | null;
+      let externalId = record.externalId as string | null;
       let existingAed: ExistingAedRow | undefined;
 
-      // Strategy 1: by external reference
-      if (externalId) {
-        existingAed = cache.findByExternalRef(externalId);
+      // Parse coordinates early — needed for synthetic ID and spatial matching
+      const latStr = record.latitude as string | null;
+      const lngStr = record.longitude as string | null;
+      const lat = latStr ? parseFloat(String(latStr).replace(",", ".")) : NaN;
+      const lng = lngStr ? parseFloat(String(lngStr).replace(",", ".")) : NaN;
+      const hasCoords = !isNaN(lat) && !isNaN(lng);
+
+      // Generate synthetic externalId when source doesn't provide one.
+      // This makes records without externalId trackable across re-imports
+      // and preserves reviewer decisions (duplicate/not duplicate).
+      if (!externalId && hasCoords) {
+        const syntheticId = generateSyntheticExternalId(record.name as string | null, lat, lng);
+        externalId = syntheticId;
+        record = { ...record, externalId: syntheticId };
+        console.log(
+          `[SyncHooks] Generated synthetic ID: ${syntheticId} for "${record.name || "?"}"`
+        );
       }
 
-      // Strategy 2: by coordinates — check cache first (same data source)
-      if (!existingAed) {
-        const latStr = record.latitude as string | null;
-        const lngStr = record.longitude as string | null;
-        if (latStr && lngStr) {
-          const lat = parseFloat(String(latStr).replace(",", "."));
-          const lng = parseFloat(String(lngStr).replace(",", "."));
-          if (!isNaN(lat) && !isNaN(lng)) {
-            existingAed = cache.findByCoordinates(lat, lng);
+      // Strategy 1: by external reference (includes synthetic IDs)
+      if (externalId) {
+        existingAed = cache.findByExternalRef(externalId);
+        if (existingAed)
+          (existingAed as ExistingAedRow & { _matchReason?: string })._matchReason =
+            "external_reference";
+      }
 
-            // Strategy 3: cross-source dedup via scoring engine (PostGIS + pg_trgm)
-            if (!existingAed) {
-              existingAed = await cache.findByGlobalDuplicateDetector(record, lat, lng);
+      // Strategy 2 & 3: coordinate / duplicate-detector matching
+      // Only runs if Strategy 1 didn't find a match.
+      // With synthetic IDs, same-source records always match by Strategy 1 on re-imports.
+      // These strategies catch cross-source duplicates for manual review.
+      if (!existingAed && hasCoords) {
+        // Strategy 2: coordinate match within same data source cache
+        const coordMatch = cache.findByCoordinates(lat, lng);
+
+        if (coordMatch) {
+          // Same coords but different externalIds (real or synthetic) → distinct devices
+          if (
+            externalId &&
+            coordMatch.external_reference &&
+            coordMatch.external_reference !== externalId &&
+            coordMatch.data_source_id === dataSourceId
+          ) {
+            console.log(
+              `[SyncHooks] Same-source, same coords, different IDs — distinct devices: ` +
+                `"${record.name}" (${externalId}) vs "${coordMatch.name}" (${coordMatch.external_reference})`
+            );
+          } else if (!externalId) {
+            // No coords + no externalId → flag as suspected duplicate
+            console.log(
+              `[SyncHooks] Suspected duplicate (coords, no ID): ` +
+                `"${record.name || "?"}" near "${coordMatch.name}" (${coordMatch.id})`
+            );
+            return {
+              ...record,
+              _suspectedDuplicate: {
+                matchedAedId: coordMatch.id,
+                matchedAedName: coordMatch.name,
+                matchReason: "coordinates",
+              },
+            };
+          }
+        }
+
+        // Strategy 3: cross-source dedup via scoring engine (PostGIS + pg_trgm)
+        if (!existingAed) {
+          const globalMatch = await cache.findByGlobalDuplicateDetector(record, lat, lng);
+          if (globalMatch) {
+            // Cross-source match → always flag for manual review, never auto-merge
+            const isCrossSource = !!(
+              globalMatch.data_source_id && globalMatch.data_source_id !== dataSourceId
+            );
+            if (isCrossSource) {
+              existingAed = globalMatch;
+              (existingAed as ExistingAedRow & { _matchReason?: string })._matchReason =
+                "duplicate_detector";
+            } else {
+              console.log(
+                `[SyncHooks] Suspected duplicate (detector): ` +
+                  `"${record.name || "?"}" near "${globalMatch.name}" (${globalMatch.id})`
+              );
+              return {
+                ...record,
+                _suspectedDuplicate: {
+                  matchedAedId: globalMatch.id,
+                  matchedAedName: globalMatch.name,
+                  matchReason: "duplicate_detector",
+                },
+              };
             }
           }
         }
       }
 
-      // Guard: if BOTH the incoming record and the matched AED have
-      // external_reference values but they DIFFER, AND they belong to the
-      // SAME data source, they are distinct registered devices
-      // (e.g., two AEDs in the same building from the same registry).
-      // Cross-source matches naturally have different identifiers
-      // (SAMUR ref "55" vs CM ref "2021-526") so the guard does NOT apply.
-      // Only applies to Strategy 2/3 matches — Strategy 1 already matched
-      // by the same external_reference.
-      if (
-        existingAed &&
-        externalId &&
-        existingAed.external_reference &&
-        existingAed.external_reference !== externalId &&
-        existingAed.data_source_id === dataSourceId
-      ) {
-        existingAed = undefined;
-      }
-
       // Attach to record for processor
       if (existingAed) {
+        // Log the match reason for debugging
+        const matchReason =
+          (existingAed as ExistingAedRow & { _matchReason?: string })._matchReason || "unknown";
+        const isCrossSource = !!(
+          existingAed.data_source_id && existingAed.data_source_id !== dataSourceId
+        );
+        console.log(
+          `[SyncHooks] Match: "${record.name || record.externalId}" → AED ${existingAed.id} ` +
+            `(${existingAed.name}) via ${matchReason}${isCrossSource ? " [CROSS-SOURCE]" : ""}`
+        );
         return { ...record, _existingAed: existingAed };
       }
 
