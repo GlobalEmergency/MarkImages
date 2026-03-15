@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+
 import ResetPasswordForm from "@/components/ResetPasswordForm";
+
+export const metadata: Metadata = {
+  title: "Restablecer contraseña",
+  robots: { index: false, follow: false },
+};
 
 interface ResetPasswordPageProps {
   searchParams: Promise<{ token?: string }>;

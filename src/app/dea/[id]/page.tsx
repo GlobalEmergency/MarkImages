@@ -94,6 +94,61 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default function DeaDetailPage() {
-  return <DeaDetailClient />;
+async function getPlaceJsonLd(id: string) {
+  try {
+    const aed = await prisma.aed.findUnique({
+      where: { id },
+      include: { location: true, schedule: true },
+    });
+
+    if (!aed || aed.publication_mode === "NONE" || !aed.location) return null;
+
+    const loc = aed.location;
+    const address = [loc.street_type, loc.street_name, loc.street_number].filter(Boolean).join(" ");
+
+    return {
+      "@context": "https://schema.org",
+      "@type": "Place",
+      name: aed.name,
+      description: `Desfibrilador externo automático (DEA) en ${loc.city_name || "España"}`,
+      ...(loc.latitude && loc.longitude
+        ? {
+            geo: {
+              "@type": "GeoCoordinates",
+              latitude: loc.latitude,
+              longitude: loc.longitude,
+            },
+          }
+        : {}),
+      address: {
+        "@type": "PostalAddress",
+        ...(address ? { streetAddress: address } : {}),
+        ...(loc.city_name ? { addressLocality: loc.city_name } : {}),
+        ...(loc.postal_code ? { postalCode: loc.postal_code } : {}),
+        addressCountry: "ES",
+      },
+      additionalType: "https://schema.org/EmergencyService",
+      isAccessibleForFree: true,
+      ...(aed.schedule?.has_24h_surveillance ? { openingHours: "Mo-Su 00:00-23:59" } : {}),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export default async function DeaDetailPage({ params }: Props) {
+  const { id } = await params;
+  const jsonLd = await getPlaceJsonLd(id);
+
+  return (
+    <>
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+      <DeaDetailClient />
+    </>
+  );
 }

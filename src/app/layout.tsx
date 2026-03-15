@@ -26,14 +26,6 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   alternates: {
     canonical: "/",
-    languages: {
-      es: "/",
-      en: "/",
-      fr: "/",
-      de: "/",
-      pt: "/",
-      "x-default": "/",
-    },
   },
   keywords: [
     "desfibrilador",

@@ -40,57 +40,47 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.6,
     },
-    {
-      url: `${baseUrl}/login`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/register`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/legal/privacidad`,
-      lastModified: new Date(),
-      changeFrequency: "yearly",
-      priority: 0.1,
-    },
-    {
-      url: `${baseUrl}/legal/cookies`,
-      lastModified: new Date(),
-      changeFrequency: "yearly",
-      priority: 0.1,
-    },
-    {
-      url: `${baseUrl}/legal/condiciones`,
-      lastModified: new Date(),
-      changeFrequency: "yearly",
-      priority: 0.1,
-    },
   ];
 
-  // Dynamic city pages
+  // Dynamic city pages with pagination
   try {
     const cities = (await prisma.$queryRaw`
-      SELECT DISTINCT l.city_name
+      SELECT l.city_name, COUNT(*)::int as "count"
       FROM aeds a
       JOIN aed_locations l ON l.id = a.location_id
       WHERE a.publication_mode != 'NONE'
         AND a.published_at IS NOT NULL
         AND l.city_name IS NOT NULL
         AND l.city_name != ''
+      GROUP BY l.city_name
       ORDER BY l.city_name
-    `) as { city_name: string }[];
+    `) as { city_name: string; count: number }[];
 
-    const cityPages: MetadataRoute.Sitemap = cities.map(({ city_name }) => ({
-      url: `${baseUrl}/desfibriladores/${cityToSlug(city_name)}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    }));
+    const ITEMS_PER_PAGE = 50;
+    const cityPages: MetadataRoute.Sitemap = [];
+
+    for (const { city_name, count } of cities) {
+      const slug = cityToSlug(city_name);
+      const totalPages = Math.ceil(count / ITEMS_PER_PAGE);
+
+      // Page 1 (canonical URL without ?page=)
+      cityPages.push({
+        url: `${baseUrl}/desfibriladores/${slug}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      });
+
+      // Additional pages
+      for (let page = 2; page <= totalPages; page++) {
+        cityPages.push({
+          url: `${baseUrl}/desfibriladores/${slug}?page=${page}`,
+          lastModified: new Date(),
+          changeFrequency: "weekly" as const,
+          priority: 0.6,
+        });
+      }
+    }
 
     return [...staticPages, ...cityPages];
   } catch {

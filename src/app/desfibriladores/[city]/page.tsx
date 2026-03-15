@@ -93,29 +93,35 @@ async function getCityAeds(cityName: string, page: number) {
   });
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { city } = await params;
+  const { page: pageParam } = await searchParams;
   const cityName = await resolveCityName(city);
 
   if (!cityName) {
     return { title: "Ciudad no encontrada | DeaMap" };
   }
 
+  const currentPage = Math.max(1, parseInt(pageParam || "1", 10) || 1);
   const { totalCount } = await getCityStats(cityName);
-  const title = `Desfibriladores en ${cityName} - ${totalCount} DEAs disponibles`;
+  const slug = cityToSlug(cityName);
+  const pageSuffix = currentPage > 1 ? ` - Página ${currentPage}` : "";
+  const title = `Desfibriladores en ${cityName} - ${totalCount} DEAs disponibles${pageSuffix}`;
   const description = `Encuentra ${totalCount} desfibriladores (DEA) en ${cityName}. Mapa interactivo, ubicaciones y horarios de acceso. Localiza el desfibrilador más cercano.`;
+  const canonicalUrl =
+    currentPage > 1 ? `/desfibriladores/${slug}?page=${currentPage}` : `/desfibriladores/${slug}`;
 
   return {
     title,
     description,
     alternates: {
-      canonical: `/desfibriladores/${cityToSlug(cityName)}`,
+      canonical: canonicalUrl,
     },
     openGraph: {
       title,
       description,
       type: "article",
-      url: `/desfibriladores/${cityToSlug(cityName)}`,
+      url: canonicalUrl,
       images: [{ url: "/og-image.png", alt: title }],
     },
     twitter: {
