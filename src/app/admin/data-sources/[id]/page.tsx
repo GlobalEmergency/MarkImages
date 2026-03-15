@@ -163,6 +163,9 @@ export default function DataSourceDetailPage() {
     paginationCursorResponsePath: "",
     paginationTotalCountPath: "",
     paginationHasMorePath: "",
+    // CSV_FILE specific
+    csvDelimiter: ",",
+    encoding: "utf-8",
     // Field mappings
     fieldMappings: {} as Record<string, string>,
     // Matching
@@ -218,6 +221,9 @@ export default function DataSourceDetailPage() {
         method: ((cfg.method as string) || "GET") as "GET" | "POST",
         authToken: (cfg.authToken as string) || "",
         responseDataPath: (cfg.responseDataPath as string) || "",
+        // CSV_FILE
+        csvDelimiter: (cfg.csvDelimiter as string) || ",",
+        encoding: (cfg.encoding as string) || "utf-8",
         // Pagination
         paginationStrategy: ((pagination.strategy as string) || "none") as
           | "offset"
@@ -456,6 +462,10 @@ export default function DataSourceDetailPage() {
         if (editForm.fileUrl) config.fileUrl = editForm.fileUrl;
         if (editForm.jsonPath) config.jsonPath = editForm.jsonPath;
         if (editForm.apiEndpoint) config.apiEndpoint = editForm.apiEndpoint;
+      } else if (dsType === "CSV_FILE") {
+        if (editForm.fileUrl) config.fileUrl = editForm.fileUrl;
+        if (editForm.csvDelimiter) config.csvDelimiter = editForm.csvDelimiter;
+        if (editForm.encoding) config.encoding = editForm.encoding;
       } else if (dsType === "CKAN_API") {
         if (editForm.apiEndpoint) config.apiEndpoint = editForm.apiEndpoint;
         if (editForm.baseUrl) config.baseUrl = editForm.baseUrl;
@@ -1290,12 +1300,56 @@ export default function DataSourceDetailPage() {
 
                     {/* CSV_FILE fields */}
                     {dataSource.type === "CSV_FILE" && (
-                      <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
-                        <p className="text-sm text-gray-600">
-                          La configuración de archivos CSV se gestiona a través del proceso de
-                          importación.
-                        </p>
-                      </div>
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            URL del Archivo CSV
+                          </label>
+                          <input
+                            type="url"
+                            value={editForm.fileUrl}
+                            onChange={(e) => setEditForm({ ...editForm, fileUrl: e.target.value })}
+                            placeholder="https://ejemplo.com/datos.csv"
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          />
+                          <p className="mt-1 text-xs text-gray-500">URL directa al archivo CSV</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Delimitador
+                            </label>
+                            <select
+                              value={editForm.csvDelimiter}
+                              onChange={(e) =>
+                                setEditForm({ ...editForm, csvDelimiter: e.target.value })
+                              }
+                              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            >
+                              <option value=",">Coma (,)</option>
+                              <option value=";">Punto y coma (;)</option>
+                              <option value="\t">Tabulador</option>
+                              <option value="|">Pipe (|)</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Codificación
+                            </label>
+                            <select
+                              value={editForm.encoding}
+                              onChange={(e) =>
+                                setEditForm({ ...editForm, encoding: e.target.value })
+                              }
+                              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            >
+                              <option value="utf-8">UTF-8</option>
+                              <option value="iso-8859-1">ISO-8859-1 (Latin-1)</option>
+                              <option value="windows-1252">Windows-1252</option>
+                            </select>
+                          </div>
+                        </div>
+                      </>
                     )}
                   </div>
                 )}
@@ -2083,12 +2137,32 @@ export default function DataSourceDetailPage() {
 
                 {/* Campos específicos de CSV_FILE */}
                 {dataSource.type === "CSV_FILE" && (
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Ruta del Archivo</dt>
-                    <dd className="mt-1 text-sm text-gray-900 break-all">
-                      {dataSource.filePath || "N/A"}
-                    </dd>
-                  </div>
+                  <>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">URL del Archivo CSV</dt>
+                      <dd className="mt-1 text-sm text-gray-900 break-all font-mono">
+                        {((dataSource.config as Record<string, unknown>)?.fileUrl as string) ||
+                          dataSource.filePath ||
+                          "N/A"}
+                      </dd>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <dt className="text-sm font-medium text-gray-500">Delimitador</dt>
+                        <dd className="mt-1 text-sm text-gray-900 font-mono">
+                          {((dataSource.config as Record<string, unknown>)
+                            ?.csvDelimiter as string) || ","}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-sm font-medium text-gray-500">Codificación</dt>
+                        <dd className="mt-1 text-sm text-gray-900">
+                          {((dataSource.config as Record<string, unknown>)?.encoding as string) ||
+                            "utf-8"}
+                        </dd>
+                      </div>
+                    </div>
+                  </>
                 )}
 
                 {/* Campos comunes a todos los tipos */}

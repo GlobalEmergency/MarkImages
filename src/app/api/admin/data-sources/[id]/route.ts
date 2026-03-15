@@ -163,6 +163,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     if (body.name !== undefined) updateData.name = body.name;
     if (body.description !== undefined) updateData.description = body.description;
+    if (body.type !== undefined) updateData.type = body.type;
     if (body.config !== undefined) updateData.config = body.config;
     if (body.isActive !== undefined) updateData.is_active = body.isActive;
     if (body.matchingStrategy !== undefined) updateData.matching_strategy = body.matchingStrategy;

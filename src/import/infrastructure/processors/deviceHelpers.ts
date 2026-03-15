@@ -17,6 +17,8 @@ const DEVICE_FIELDS = [
   "deviceManufacturingDate",
   "deviceInstallationDate",
   "deviceExpirationDate",
+  "deviceLastMaintenanceDate",
+  "isMobileUnit",
 ] as const;
 
 /**
@@ -62,6 +64,10 @@ export async function createOrUpdateDevice(
 ): Promise<void> {
   if (!hasDeviceData(data)) return;
 
+  const isMobile = String(data.isMobileUnit ?? "")
+    .toLowerCase()
+    .trim();
+
   const deviceData = {
     brand: toStringOrNull(data.deviceBrand),
     model: toStringOrNull(data.deviceModel),
@@ -69,6 +75,8 @@ export async function createOrUpdateDevice(
     manufacturing_date: parseDateOrNull(data.deviceManufacturingDate),
     installation_date: parseDateOrNull(data.deviceInstallationDate),
     expiration_date: parseDateOrNull(data.deviceExpirationDate),
+    last_maintenance_date: parseDateOrNull(data.deviceLastMaintenanceDate),
+    is_mobile: isMobile === "true" || isMobile === "t" || isMobile === "1" || isMobile === "oui",
   };
 
   // Find existing current device for this AED

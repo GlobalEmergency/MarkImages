@@ -76,6 +76,12 @@ export interface DataSourceConfig {
   responseDataPath?: string; // ej: 'results', 'data.records', 'elements'
 
   // ============================================
+  // Para archivos CSV remotos
+  // ============================================
+  csvDelimiter?: string; // default: ',' — usar ';' para ficheros europeos/LATAM
+  encoding?: string; // default: 'utf-8' — usar 'latin1' para fuentes con ISO-8859-1
+
+  // ============================================
   // Común para APIs y JSON
   // ============================================
   fieldMappings?: Record<string, string>; // Campo API → Campo sistema

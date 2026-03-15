@@ -34,6 +34,7 @@ export function buildDataSourceConfig(
     type,
     fieldMappings: fieldMappings || fieldMapping,
     fieldTransformers,
+    externalIdField: cfg.externalIdField as string | undefined,
   };
 
   if (type === "JSON_FILE") {
@@ -83,6 +84,19 @@ export function buildDataSourceConfig(
     };
   }
 
-  // Para CSV_FILE u otros tipos, devolver la configuración base
+  if (type === "CSV_FILE") {
+    // CSV_FILE soporta ficheros locales (filePath) y remotos (fileUrl)
+    return {
+      ...baseConfig,
+      filePath: cfg.filePath as string | undefined,
+      fileUrl: cfg.fileUrl as string | undefined,
+      apiEndpoint: cfg.apiEndpoint as string | undefined,
+      csvDelimiter: cfg.csvDelimiter as string | undefined,
+      encoding: cfg.encoding as string | undefined,
+      columnMappings: cfg.columnMappings as DataSourceConfig["columnMappings"] | undefined,
+    };
+  }
+
+  // Para otros tipos, devolver la configuración base
   return baseConfig;
 }

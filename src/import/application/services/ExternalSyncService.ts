@@ -346,8 +346,8 @@ export class ExternalSyncService {
    * This is the bridge between IDataSourceAdapter (AsyncGenerator<ImportRecord>)
    * and BatchEngine (DataSource → string/Buffer).
    */
-  /** Max NDJSON buffer size: 256 MB. Prevents OOM on unexpectedly large sources. */
-  private static readonly MAX_NDJSON_BYTES = 256 * 1024 * 1024;
+  /** Max NDJSON buffer size: 512 MB. Prevents OOM on unexpectedly large sources. */
+  private static readonly MAX_NDJSON_BYTES = 512 * 1024 * 1024;
 
   private async fetchAsNdjson(
     adapter: IDataSourceAdapter,
@@ -390,6 +390,16 @@ export class ExternalSyncService {
         deviceManufacturingDate: importRecord.deviceManufacturingDate,
         deviceInstallationDate: importRecord.deviceInstallationDate,
         deviceExpirationDate: importRecord.deviceExpirationDate,
+        deviceLastMaintenanceDate: importRecord.deviceLastMaintenanceDate,
+        isMobileUnit: importRecord.isMobileUnit ? "true" : "false",
+        accessRestriction: importRecord.accessRestriction ? "true" : "false",
+        isPmrAccessible:
+          importRecord.isPmrAccessible === null
+            ? null
+            : importRecord.isPmrAccessible
+              ? "true"
+              : "false",
+        has24hSurveillance: importRecord.has24hSurveillance ? "true" : "false",
         _rawData: importRecord.rawData,
         _contentHash: importRecord.contentHash,
         _rowIndex: importRecord.rowIndex,

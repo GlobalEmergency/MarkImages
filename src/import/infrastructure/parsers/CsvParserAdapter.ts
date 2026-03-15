@@ -33,11 +33,15 @@ export class CsvParserAdapter {
     }
   }
 
+  /**
+   * Parsea contenido CSV al formato legacy CsvRow (formulario Madrid).
+   * Delimitador hardcodeado a ";" por compatibilidad con el flujo de importación manual.
+   */
   parseContent(content: string): CsvParseResult {
     const parseResult = Papa.parse<CsvRowData>(content, {
       header: true,
       skipEmptyLines: true,
-      delimiter: ";", // CSV usa punto y coma como separador
+      delimiter: ";", // CSV importación manual usa punto y coma
       transformHeader: (header: string) => header.trim(),
     });
 
@@ -70,6 +74,36 @@ export class CsvParserAdapter {
     return {
       rows,
       totalRows: parseResult.data.length,
+      errors,
+    };
+  }
+
+  /**
+   * Parsea contenido CSV a registros genéricos Record<string, string>.
+   * Usado por fuentes de datos externas (sync remoto) donde los campos
+   * varían según la fuente y se normalizan vía fieldMappings.
+   *
+   * @param content - Texto CSV
+   * @param delimiter - Separador (auto-detectado por PapaParse si no se especifica)
+   */
+  parseToRecords(
+    content: string,
+    delimiter?: string
+  ): { records: Record<string, string>[]; errors: ParseError[] } {
+    const parseResult = Papa.parse<Record<string, string>>(content, {
+      header: true,
+      skipEmptyLines: true,
+      delimiter: delimiter || undefined, // undefined = PapaParse auto-detect
+      transformHeader: (header: string) => header.trim(),
+    });
+
+    const errors: ParseError[] = parseResult.errors.map((error) => ({
+      row: error.row || 0,
+      message: error.message,
+    }));
+
+    return {
+      records: parseResult.data,
       errors,
     };
   }

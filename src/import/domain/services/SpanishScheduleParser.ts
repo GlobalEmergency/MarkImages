@@ -35,7 +35,7 @@ const TIME_PATTERN = /(\d{1,2})[.:h]?(\d{2})?\s*(?:[-aA]\s*|\s+[aA]\s+)(\d{1,2})
 
 // Patrones 24h
 const PATTERN_24H =
-  /^(?:24\s*(?:HORAS?|H)|PERMANENTE|SIEMPRE|HORARIO\s+CONTINUO)(?:\s*,?\s*365\s*DIAS?)?$/i;
+  /^(?:24\s*(?:HORAS?|H)|PERMANENTE|SIEMPRE|HORARIO\s+CONTINUO)(?:\s*[,/]\s*(?:365\s*DIAS?|7\s*DIAS?\s*(?:A\s+LA\s+SEMANA)?))?$/i;
 // Excepciones 24h
 const PATTERN_24H_EXCEPT = /24\s*(?:HORAS?|H)\s*(?:,?\s*)?EXCEPTO\s+(.*)/i;
 

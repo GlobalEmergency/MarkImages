@@ -32,6 +32,14 @@ describe("SpanishScheduleParser", () => {
       expect(result.confidence).toBe(1);
       expect(result.fields.has24hSurveillance).toBe("true");
     });
+
+    it("parses '24 horas / 7 dias a la semana'", async () => {
+      const result = await parser.transform("24 horas / 7 dias a la semana");
+      expect(result.confidence).toBe(1);
+      expect(result.fields.has24hSurveillance).toBe("true");
+      expect(result.fields.weekdayOpening).toBe("00:00");
+      expect(result.fields.sundayOpening).toBe("00:00");
+    });
   });
 
   describe("24h with exceptions", () => {

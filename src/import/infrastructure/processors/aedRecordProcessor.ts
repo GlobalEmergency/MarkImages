@@ -46,7 +46,19 @@ export interface AedRecordProcessorOptions {
 function parseBoolean(value: unknown): boolean {
   if (!value) return false;
   const str = String(value).toLowerCase().trim();
-  return ["true", "1", "sí", "si", "yes", "y", "s", "verdadero"].includes(str);
+  return ["true", "1", "sí", "si", "yes", "y", "s", "verdadero", "t", "oui"].includes(str);
+}
+
+/**
+ * Parsea un booleano que puede ser null (campo opcional, no default false).
+ */
+function parseBooleanOrNull(value: unknown): boolean | null {
+  if (value === null || value === undefined) return null;
+  const str = String(value).toLowerCase().trim();
+  if (!str) return null;
+  if (["true", "1", "sí", "si", "yes", "y", "s", "t", "oui"].includes(str)) return true;
+  if (["false", "0", "no", "n", "f", "non"].includes(str)) return false;
+  return null;
 }
 
 /**
@@ -82,6 +94,8 @@ function hasScheduleData(data: Record<string, unknown>): boolean {
     data.sundayClosing ||
     data.has24hSurveillance ||
     data.hasRestrictedAccess ||
+    data.accessRestriction ||
+    data.isPmrAccessible ||
     data.scheduleDescription
   );
 }
@@ -176,7 +190,9 @@ export function createAedRecordProcessor(
             sunday_opening: toStringOrNull(data.sundayOpening),
             sunday_closing: toStringOrNull(data.sundayClosing),
             has_24h_surveillance: parseBoolean(data.has24hSurveillance),
-            has_restricted_access: parseBoolean(data.hasRestrictedAccess),
+            has_restricted_access:
+              parseBoolean(data.hasRestrictedAccess) || parseBoolean(data.accessRestriction),
+            is_pmr_accessible: parseBooleanOrNull(data.isPmrAccessible),
             description: toStringOrNull(data.scheduleDescription),
             notes: toStringOrNull(data.scheduleNotes),
           },

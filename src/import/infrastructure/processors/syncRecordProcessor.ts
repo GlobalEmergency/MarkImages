@@ -102,7 +102,17 @@ function parseBoolean(value: unknown): boolean {
   if (!value) return false;
   if (typeof value === "boolean") return value;
   const str = String(value).toLowerCase().trim();
-  return ["true", "1", "sí", "si", "yes", "y", "s", "verdadero"].includes(str);
+  return ["true", "1", "sí", "si", "yes", "y", "s", "verdadero", "t", "oui"].includes(str);
+}
+
+function parseBooleanOrNull(value: unknown): boolean | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "boolean") return value;
+  const str = String(value).toLowerCase().trim();
+  if (!str) return null;
+  if (["true", "1", "sí", "si", "yes", "y", "s", "t", "oui"].includes(str)) return true;
+  if (["false", "0", "no", "n", "f", "non"].includes(str)) return false;
+  return null;
 }
 
 function isRealExternalRef(ref: string | null): boolean {
@@ -251,7 +261,14 @@ async function createAed(
 
     // 2. Schedule (conditional)
     let scheduleId: string | null = null;
-    if (data.accessSchedule || data.scheduleDescription || data.weekdayOpening) {
+    if (
+      data.accessSchedule ||
+      data.scheduleDescription ||
+      data.weekdayOpening ||
+      data.accessRestriction ||
+      data.isPmrAccessible ||
+      data.has24hSurveillance
+    ) {
       const schedule = await tx.aedSchedule.create({
         data: {
           description: toStringOrNull(data.accessSchedule || data.scheduleDescription),
@@ -262,6 +279,8 @@ async function createAed(
           sunday_opening: toStringOrNull(data.sundayOpening),
           sunday_closing: toStringOrNull(data.sundayClosing),
           has_24h_surveillance: parseBoolean(data.has24hSurveillance),
+          has_restricted_access: parseBoolean(data.accessRestriction),
+          is_pmr_accessible: parseBooleanOrNull(data.isPmrAccessible),
         },
       });
       scheduleId = schedule.id;
@@ -397,7 +416,14 @@ async function createAedForDuplicateReview(
 
     // 2. Schedule (conditional)
     let scheduleId: string | null = null;
-    if (data.accessSchedule || data.scheduleDescription || data.weekdayOpening) {
+    if (
+      data.accessSchedule ||
+      data.scheduleDescription ||
+      data.weekdayOpening ||
+      data.accessRestriction ||
+      data.isPmrAccessible ||
+      data.has24hSurveillance
+    ) {
       const schedule = await tx.aedSchedule.create({
         data: {
           description: toStringOrNull(data.accessSchedule || data.scheduleDescription),
@@ -408,6 +434,8 @@ async function createAedForDuplicateReview(
           sunday_opening: toStringOrNull(data.sundayOpening),
           sunday_closing: toStringOrNull(data.sundayClosing),
           has_24h_surveillance: parseBoolean(data.has24hSurveillance),
+          has_restricted_access: parseBoolean(data.accessRestriction),
+          is_pmr_accessible: parseBooleanOrNull(data.isPmrAccessible),
         },
       });
       scheduleId = schedule.id;
@@ -558,7 +586,14 @@ async function updateAed(
 
     // Update or create schedule
     let scheduleIdUpdate: string | null | undefined;
-    if (data.accessSchedule || data.scheduleDescription || data.weekdayOpening) {
+    if (
+      data.accessSchedule ||
+      data.scheduleDescription ||
+      data.weekdayOpening ||
+      data.accessRestriction ||
+      data.isPmrAccessible ||
+      data.has24hSurveillance
+    ) {
       const scheduleData = {
         description: toStringOrNull(data.accessSchedule || data.scheduleDescription),
         weekday_opening: toStringOrNull(data.weekdayOpening),
@@ -568,6 +603,8 @@ async function updateAed(
         sunday_opening: toStringOrNull(data.sundayOpening),
         sunday_closing: toStringOrNull(data.sundayClosing),
         has_24h_surveillance: parseBoolean(data.has24hSurveillance),
+        has_restricted_access: parseBoolean(data.accessRestriction),
+        is_pmr_accessible: parseBooleanOrNull(data.isPmrAccessible),
       };
       if (aed.schedule_id) {
         await tx.aedSchedule.update({ where: { id: aed.schedule_id }, data: scheduleData });

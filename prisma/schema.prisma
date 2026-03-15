@@ -373,8 +373,9 @@ model AedLocation {
 model AedSchedule {
   id                    String  @id @default(uuid()) @db.Uuid
   description           String?
-  has_24h_surveillance  Boolean @default(false)
-  has_restricted_access Boolean @default(false)
+  has_24h_surveillance     Boolean @default(false)
+  has_restricted_access    Boolean @default(false)
+  is_pmr_accessible        Boolean? // Accessible for persons with reduced mobility (PMR)
 
   // Structured schedules (HH:MM format)
   weekday_opening  String?
@@ -446,14 +447,16 @@ model AedDevice {
   serial_number String? // Unique serial number
 
   // Dates
-  manufacturing_date DateTime? // When the device was manufactured
-  installation_date  DateTime? // When installed at this location
-  expiration_date    DateTime? // Pad/battery expiry or device end-of-life
-  warranty_end_date  DateTime? // Warranty expiration
+  manufacturing_date    DateTime? // When the device was manufactured
+  installation_date     DateTime? // When installed at this location
+  expiration_date       DateTime? // Pad/battery expiry or device end-of-life
+  warranty_end_date     DateTime? // Warranty expiration
+  last_maintenance_date DateTime? // Last maintenance/inspection date
 
   // Status
   is_current Boolean @default(true) // Only one device per Aed should be is_current=true
-  notes      String?                // Free-text notes about this device
+  is_mobile  Boolean @default(false) // Mobile unit (ambulance, vehicle) — may not be at fixed location
+  notes      String?                 // Free-text notes about this device
 
   // Relation
   aed Aed @relation(fields: [aed_id], references: [id], onDelete: Cascade)

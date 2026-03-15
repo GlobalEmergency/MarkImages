@@ -267,6 +267,9 @@ export class PrismaDataSourceRepository implements IDataSourceRepository {
       // Para JSON_FILE - fileUrl puede ser usado como alternativa a apiEndpoint
       fileUrl: (rawConfig.fileUrl || rawConfig.apiEndpoint) as string | undefined,
       jsonPath: rawConfig.jsonPath as string | undefined,
+      csvDelimiter: rawConfig.csvDelimiter as string | undefined,
+      encoding: rawConfig.encoding as string | undefined,
+      externalIdField: rawConfig.externalIdField as string | undefined,
       // Para REST_API
       authToken: rawConfig.authToken as string | undefined,
       headers: rawConfig.headers as Record<string, string> | undefined,

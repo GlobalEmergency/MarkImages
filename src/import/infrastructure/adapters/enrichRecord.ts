@@ -1,10 +1,11 @@
 /**
  * Utilidad compartida para enriquecer registros con TransformerPipeline
- * Usada por JsonFileAdapter, RestApiAdapter y CkanApiAdapter
+ * Usada por JsonFileAdapter, RestApiAdapter, CsvDataSourceAdapter y CkanApiAdapter
  */
 
 import { TransformerPipeline } from "../transformers/TransformerPipeline";
 import { registerAllTransformers } from "../transformers";
+import { normalizeRecord } from "./normalizeRecord";
 
 let cachedPipeline: TransformerPipeline | null = null;
 
@@ -16,21 +17,24 @@ function getPipeline(): TransformerPipeline {
 }
 
 /**
- * Si hay fieldTransformers configurados, enriquece el record aplicando
- * los transformers. Si no, devuelve record y mappings sin cambios.
+ * Normaliza el record (aplana nested objects, parsea WKT) y si hay
+ * fieldTransformers configurados, enriquece aplicando transformers.
  */
 export async function enrichRecordIfNeeded(
   record: Record<string, unknown>,
   fieldMappings: Record<string, string>,
   fieldTransformers?: Record<string, string | string[]>
 ): Promise<{ record: Record<string, unknown>; mappings: Record<string, string> }> {
+  // Always normalize: flatten nested objects, parse WKT POINT, etc.
+  const normalized = normalizeRecord(record);
+
   if (!fieldTransformers) {
-    return { record, mappings: fieldMappings };
+    return { record: normalized, mappings: fieldMappings };
   }
 
   const pipeline = getPipeline();
   const { enrichedRecord, enrichedMappings } = await pipeline.enrichRecord(
-    record,
+    normalized,
     fieldTransformers,
     fieldMappings
   );

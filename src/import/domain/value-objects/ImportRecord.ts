@@ -43,6 +43,8 @@ export interface NormalizedRecordData {
   // Acceso
   accessDescription?: string | null;
   accessSchedule?: string | null;
+  accessRestriction?: string | null; // "true"/"false" — acceso restringido (maps to has_restricted_access)
+  isPmrAccessible?: string | null; // "true"/"false" — accesible PMR / movilidad reducida
   ownershipType?: string | null;
 
   // Horarios
@@ -77,6 +79,8 @@ export interface NormalizedRecordData {
   deviceManufacturingDate?: string | null;
   deviceInstallationDate?: string | null;
   deviceExpirationDate?: string | null;
+  deviceLastMaintenanceDate?: string | null;
+  isMobileUnit?: string | null; // "true"/"false" — el DEA se mueve (ambulancia, vehículo, etc.)
 
   // Campos adicionales dinámicos
   [key: string]: string | null | undefined;
@@ -346,6 +350,32 @@ export class ImportRecord {
     return this.normalizedData.accessSchedule ?? null;
   }
 
+  get accessRestriction(): boolean {
+    const value = this.normalizedData.accessRestriction?.toLowerCase().trim();
+    // France c_acc_lib: "t" = libre (no restriction), "f" = restricted
+    if (value === "f" || value === "false" || value === "0" || value === "no") return true;
+    if (value === "restringido" || value === "restreint" || value === "restricted") return true;
+    return false;
+  }
+
+  get isPmrAccessible(): boolean | null {
+    const value = this.normalizedData.isPmrAccessible?.toLowerCase().trim();
+    if (!value) return null;
+    if (
+      value === "sí" ||
+      value === "si" ||
+      value === "yes" ||
+      value === "true" ||
+      value === "t" ||
+      value === "1" ||
+      value === "oui"
+    )
+      return true;
+    if (value === "no" || value === "false" || value === "f" || value === "0" || value === "non")
+      return false;
+    return null;
+  }
+
   get ownershipType(): string | null {
     return this.normalizedData.ownershipType ?? null;
   }
@@ -446,6 +476,15 @@ export class ImportRecord {
 
   get deviceExpirationDate(): string | null {
     return this.normalizedData.deviceExpirationDate ?? null;
+  }
+
+  get deviceLastMaintenanceDate(): string | null {
+    return this.normalizedData.deviceLastMaintenanceDate ?? null;
+  }
+
+  get isMobileUnit(): boolean {
+    const value = this.normalizedData.isMobileUnit?.toLowerCase().trim();
+    return value === "true" || value === "t" || value === "1" || value === "oui";
   }
 
   // Detalles de ubicación (combinación de additionalInfo y specificLocation)
@@ -645,6 +684,15 @@ export class ImportRecord {
       const value = record[apiField];
       if (value !== undefined && value !== null) {
         let processedValue = String(value).trim();
+
+        // Filtrar valores nulos disfrazados de string (ej: OpenDataSoft devuelve "null")
+        if (
+          processedValue === "null" ||
+          processedValue === "NULL" ||
+          processedValue === "undefined"
+        ) {
+          continue;
+        }
 
         // Convertir formato español (coma) a formato estándar (punto) para campos numéricos
         if (numericFields.includes(systemField) && processedValue) {
