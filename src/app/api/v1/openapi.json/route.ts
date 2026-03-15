@@ -95,7 +95,8 @@ const spec = {
       get: {
         operationId: "getAedById",
         summary: "Get AED details by ID",
-        description: "Returns detailed information about a specific AED including address, schedule, and images.",
+        description:
+          "Returns detailed information about a specific AED including address, schedule, and images.",
         parameters: [
           {
             name: "id",
@@ -168,7 +169,8 @@ const spec = {
       get: {
         operationId: "getAedStats",
         summary: "Get AED statistics",
-        description: "Returns general statistics: total AEDs, number of cities, and top 50 cities by AED count.",
+        description:
+          "Returns general statistics: total AEDs, number of cities, and top 50 cities by AED count.",
         responses: {
           "200": {
             description: "AED statistics",
@@ -192,7 +194,11 @@ const spec = {
           city: { type: "string", nullable: true },
           district: { type: "string", nullable: true },
           postal_code: { type: "string", nullable: true },
-          access_instructions: { type: "string", nullable: true, description: "How to access the AED" },
+          access_instructions: {
+            type: "string",
+            nullable: true,
+            description: "How to access the AED",
+          },
         },
       },
       AedSchedule: {
@@ -217,7 +223,11 @@ const spec = {
           distance_km: { type: "number", description: "Distance from search point in km" },
           address: { $ref: "#/components/schemas/AedAddress" },
           schedule: { $ref: "#/components/schemas/AedSchedule" },
-          web_url: { type: "string", format: "uri", description: "Link to AED detail page on DeaMap" },
+          web_url: {
+            type: "string",
+            format: "uri",
+            description: "Link to AED detail page on DeaMap",
+          },
         },
       },
       NearbyAedsResponse: {
@@ -257,7 +267,10 @@ const spec = {
             items: {
               type: "object",
               properties: {
-                type: { type: "string", enum: ["FRONT", "LOCATION", "ACCESS", "SIGNAGE", "CONTEXT", "PLATE"] },
+                type: {
+                  type: "string",
+                  enum: ["FRONT", "LOCATION", "ACCESS", "SIGNAGE", "CONTEXT", "PLATE"],
+                },
                 url: { type: "string", format: "uri" },
               },
             },

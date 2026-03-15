@@ -687,7 +687,9 @@ export default function Home() {
                       <Link
                         href="/desfibriladores"
                         className="text-gray-300 hover:text-white transition-colors inline-flex items-center gap-1"
-                        onClick={() => trackNavClick("Desfibriladores por ciudad (footer)", "/desfibriladores")}
+                        onClick={() =>
+                          trackNavClick("Desfibriladores por ciudad (footer)", "/desfibriladores")
+                        }
                       >
                         <MapPin className="w-3.5 h-3.5" />
                         Desfibriladores por ciudad

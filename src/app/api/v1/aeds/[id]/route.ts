@@ -12,10 +12,7 @@ import { filterAedByPublicationMode } from "@/lib/publication-filter";
 import type { AedFullData } from "@/lib/publication-filter";
 import { publicApiRateLimiter } from "@/lib/rate-limit-public-api";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const rateLimitResponse = publicApiRateLimiter(request);
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -70,10 +67,7 @@ export async function GET(
     });
 
     if (!aed) {
-      return NextResponse.json(
-        { error: "not_found", message: "AED not found." },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "not_found", message: "AED not found." }, { status: 404 });
     }
 
     const filtered = filterAedByPublicationMode(aed as AedFullData);

@@ -169,12 +169,10 @@ export default async function CityDeaPage({ params }: Props) {
             <span className="text-white">{cityName}</span>
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Desfibriladores en {cityName}
-          </h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">Desfibriladores en {cityName}</h1>
           <p className="text-xl text-blue-100 mb-6 max-w-2xl">
-            {aeds.length} desfibriladores (DEA) registrados en {cityName}.
-            Localiza el más cercano a ti y accede a información detallada.
+            {aeds.length} desfibriladores (DEA) registrados en {cityName}. Localiza el más cercano a
+            ti y accede a información detallada.
           </p>
 
           <div className="flex flex-wrap gap-4">
@@ -197,9 +195,7 @@ export default async function CityDeaPage({ params }: Props) {
       {/* CTA to map */}
       <section className="bg-white border-b shadow-sm">
         <div className="container mx-auto px-4 max-w-5xl py-4 flex items-center justify-between">
-          <p className="text-gray-600 text-sm">
-            Busca el desfibrilador más cercano a tu ubicación
-          </p>
+          <p className="text-gray-600 text-sm">Busca el desfibrilador más cercano a tu ubicación</p>
           <Link
             href="/"
             className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
@@ -282,15 +278,16 @@ export default async function CityDeaPage({ params }: Props) {
           </h2>
           <div className="prose prose-gray max-w-none">
             <p>
-              En {cityName} hay actualmente <strong>{aeds.length} desfibriladores externos
-              automáticos (DEA)</strong> registrados en DeaMap. Estos dispositivos son esenciales
-              para atender paradas cardíacas, ya que pueden aumentar significativamente las
-              posibilidades de supervivencia si se utilizan en los primeros minutos.
+              En {cityName} hay actualmente{" "}
+              <strong>{aeds.length} desfibriladores externos automáticos (DEA)</strong> registrados
+              en DeaMap. Estos dispositivos son esenciales para atender paradas cardíacas, ya que
+              pueden aumentar significativamente las posibilidades de supervivencia si se utilizan
+              en los primeros minutos.
             </p>
             <p>
               DeaMap te ayuda a localizar el desfibrilador más cercano en {cityName}, con
-              información actualizada sobre ubicación, horarios de acceso y cómo llegar.
-              Si conoces un desfibrilador que no aparece en el mapa, puedes{" "}
+              información actualizada sobre ubicación, horarios de acceso y cómo llegar. Si conoces
+              un desfibrilador que no aparece en el mapa, puedes{" "}
               <Link href="/dea/new-simple" className="text-blue-600 hover:underline">
                 agregarlo fácilmente
               </Link>
@@ -298,9 +295,15 @@ export default async function CityDeaPage({ params }: Props) {
             </p>
             <h3>¿Qué hacer en caso de emergencia cardíaca?</h3>
             <ol>
-              <li><strong>Llama al 112</strong> inmediatamente.</li>
-              <li>Inicia la <strong>reanimación cardiopulmonar (RCP)</strong>.</li>
-              <li>Pide a alguien que busque el <strong>desfibrilador más cercano</strong>.</li>
+              <li>
+                <strong>Llama al 112</strong> inmediatamente.
+              </li>
+              <li>
+                Inicia la <strong>reanimación cardiopulmonar (RCP)</strong>.
+              </li>
+              <li>
+                Pide a alguien que busque el <strong>desfibrilador más cercano</strong>.
+              </li>
               <li>Sigue las instrucciones del DEA: el dispositivo te guía paso a paso.</li>
             </ol>
           </div>

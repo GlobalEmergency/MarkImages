@@ -14,10 +14,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { publicApiRateLimiter } from "@/lib/rate-limit-public-api";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ city: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ city: string }> }) {
   const rateLimitResponse = publicApiRateLimiter(request);
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -108,7 +105,7 @@ export async function GET(
             postal_code: aed.location.postal_code || null,
             access_instructions:
               aed.publication_mode !== "LOCATION_ONLY"
-                ? (aed.location.access_instructions || null)
+                ? aed.location.access_instructions || null
                 : null,
           }
         : null,

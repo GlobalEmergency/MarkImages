@@ -62,8 +62,8 @@ export default function ApiDocsPage() {
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">DeaMap Public API</h1>
           <p className="text-xl text-gray-300 mb-6 max-w-2xl">
-            Free REST API to query AED (defibrillator) locations across Spain.
-            No authentication required.
+            Free REST API to query AED (defibrillator) locations across Spain. No authentication
+            required.
           </p>
           <div className="flex flex-wrap gap-3">
             <span className="bg-green-600/20 text-green-400 px-3 py-1 rounded-full text-sm font-medium">
@@ -86,9 +86,14 @@ export default function ApiDocsPage() {
             <Zap className="w-6 h-6 text-yellow-500" />
             Quick Start
           </h2>
-          <p className="text-gray-600 mb-4">Find the 5 nearest defibrillators to Madrid city center:</p>
+          <p className="text-gray-600 mb-4">
+            Find the 5 nearest defibrillators to Madrid city center:
+          </p>
           <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm">
-            <code>curl &quot;https://deamap.es/api/v1/aeds/nearby?lat=40.4168&amp;lng=-3.7038&amp;limit=5&quot;</code>
+            <code>
+              curl
+              &quot;https://deamap.es/api/v1/aeds/nearby?lat=40.4168&amp;lng=-3.7038&amp;limit=5&quot;
+            </code>
           </pre>
         </section>
 
@@ -113,10 +118,7 @@ export default function ApiDocsPage() {
             <h3 className="font-semibold text-gray-900 mb-2">OpenAPI Spec</h3>
             <p className="text-sm text-gray-600">
               Full{" "}
-              <a
-                href="/api/v1/openapi.json"
-                className="text-blue-600 hover:underline"
-              >
+              <a href="/api/v1/openapi.json" className="text-blue-600 hover:underline">
                 OpenAPI 3.1 specification
               </a>{" "}
               for code generation and tooling.
@@ -182,13 +184,13 @@ export default function ApiDocsPage() {
         <section className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Rate Limiting</h2>
           <p className="text-gray-600 mb-3">
-            The API is limited to <strong>60 requests per minute</strong> per IP address.
-            Exceeding this limit returns a <code className="bg-gray-100 px-1 rounded">429</code> status
-            with a <code className="bg-gray-100 px-1 rounded">Retry-After</code> header.
+            The API is limited to <strong>60 requests per minute</strong> per IP address. Exceeding
+            this limit returns a <code className="bg-gray-100 px-1 rounded">429</code> status with a{" "}
+            <code className="bg-gray-100 px-1 rounded">Retry-After</code> header.
           </p>
           <p className="text-gray-600 text-sm">
-            Responses include <code className="bg-gray-100 px-1 rounded">Cache-Control</code> headers.
-            Please cache responses when possible to reduce API calls.
+            Responses include <code className="bg-gray-100 px-1 rounded">Cache-Control</code>{" "}
+            headers. Please cache responses when possible to reduce API calls.
           </p>
         </section>
 
@@ -201,29 +203,34 @@ export default function ApiDocsPage() {
           <ul className="text-gray-600 text-sm space-y-2">
             <li>
               <code className="bg-gray-100 px-1 rounded">/llms.txt</code> -{" "}
-              <a href="/llms.txt" className="text-blue-600 hover:underline">Summary for LLMs</a>
+              <a href="/llms.txt" className="text-blue-600 hover:underline">
+                Summary for LLMs
+              </a>
             </li>
             <li>
               <code className="bg-gray-100 px-1 rounded">/llms-full.txt</code> -{" "}
-              <a href="/llms-full.txt" className="text-blue-600 hover:underline">Full context with examples</a>
+              <a href="/llms-full.txt" className="text-blue-600 hover:underline">
+                Full context with examples
+              </a>
             </li>
             <li>
               <code className="bg-gray-100 px-1 rounded">/.well-known/ai-plugin.json</code> -{" "}
-              <a href="/.well-known/ai-plugin.json" className="text-blue-600 hover:underline">AI plugin manifest</a>
+              <a href="/.well-known/ai-plugin.json" className="text-blue-600 hover:underline">
+                AI plugin manifest
+              </a>
             </li>
             <li>
               <code className="bg-gray-100 px-1 rounded">/api/v1/openapi.json</code> -{" "}
-              <a href="/api/v1/openapi.json" className="text-blue-600 hover:underline">OpenAPI specification</a>
+              <a href="/api/v1/openapi.json" className="text-blue-600 hover:underline">
+                OpenAPI specification
+              </a>
             </li>
           </ul>
         </section>
 
         {/* Footer link */}
         <div className="text-center pt-4">
-          <Link
-            href="/"
-            className="text-blue-600 hover:text-blue-700 font-medium"
-          >
+          <Link href="/" className="text-blue-600 hover:text-blue-700 font-medium">
             Back to DeaMap
           </Link>
         </div>

@@ -133,7 +133,11 @@ export async function GET(request: NextRequest) {
         distance_km: aed.id ? Math.round((distanceMap.get(aed.id) ?? 0) * 1000) / 1000 : 0,
         address: aed.location
           ? {
-              street: [aed.location.street_type, aed.location.street_name, aed.location.street_number]
+              street: [
+                aed.location.street_type,
+                aed.location.street_name,
+                aed.location.street_number,
+              ]
                 .filter(Boolean)
                 .join(" "),
               city: aed.location.city_name || null,

@@ -26,11 +26,11 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
     languages: {
-      "es": "/",
-      "en": "/",
-      "fr": "/",
-      "de": "/",
-      "pt": "/",
+      es: "/",
+      en: "/",
+      fr: "/",
+      de: "/",
+      pt: "/",
       "x-default": "/",
     },
   },
