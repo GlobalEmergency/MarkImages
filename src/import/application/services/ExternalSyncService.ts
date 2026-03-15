@@ -12,12 +12,13 @@
  * 5. syncHooks batch pre-load existing AEDs to eliminate N+1 queries
  *
  * Key improvements over legacy:
- * - No S3 cache (records persisted in batchactions_records by state store)
+ * - NDJSON cache: compressed in sync_ndjson_cache table between chunks (no re-fetch)
  * - Batch duplicate detection (1 query per batch vs 1 per record)
  * - Transactional AED creation (prisma.$transaction in processor)
  * - Proper streaming (AsyncGenerator → NDJSON → BatchEngine)
  */
 
+import { gzipSync, gunzipSync } from "node:zlib";
 import { BatchEngine } from "@batchactions/core";
 import type { ChunkResult, JobProgress } from "@batchactions/core";
 import { BufferSource, JsonParser } from "@batchactions/import";
@@ -195,6 +196,11 @@ export class ExternalSyncService {
     const jobId = engine.getJobId();
     const progress = await stateStore.getProgress(jobId);
 
+    // 6b. Cache NDJSON for resume (avoid re-downloading on every chunk)
+    if (!chunk.done) {
+      await this.cacheNdjson(jobId, ndjson, sourceTotalRecords);
+    }
+
     // 7. Register in batch_jobs for UI/CRON compatibility
     const syncContext: SyncContext = {
       dataSourceId,
@@ -238,16 +244,27 @@ export class ExternalSyncService {
       sourceTotalRecords,
     } = options;
 
-    // 1. Re-fetch data source config and records
+    // 1. Try to read cached NDJSON; only re-fetch if cache miss
     const dataSource = await this.dataSourceRepository.findById(syncContext.dataSourceId);
     if (!dataSource) throw new Error(`Data source not found: ${syncContext.dataSourceId}`);
 
-    const adapter = DataSourceAdapterFactory.getApiAdapter(
-      dataSource.type as "CKAN_API" | "JSON_FILE" | "REST_API" | "CSV_FILE"
-    );
-
-    console.log(`[Sync:${syncContext.dataSourceName}] Re-fetching records for resume...`);
-    const { ndjson } = await this.fetchAsNdjson(adapter, dataSource.config);
+    let ndjson = await this.getCachedNdjson(jobId);
+    let cacheWasMiss = false;
+    if (ndjson) {
+      console.log(
+        `[Sync:${syncContext.dataSourceName}] Restored ${(ndjson.length / 1024).toFixed(0)} KB NDJSON from cache (skip re-fetch)`
+      );
+    } else {
+      cacheWasMiss = true;
+      console.warn(
+        `[Sync:${syncContext.dataSourceName}] Cache miss — re-fetching all records from API...`
+      );
+      const adapter = DataSourceAdapterFactory.getApiAdapter(
+        dataSource.type as "CKAN_API" | "JSON_FILE" | "REST_API" | "CSV_FILE"
+      );
+      const fetched = await this.fetchAsNdjson(adapter, dataSource.config);
+      ndjson = fetched.ndjson;
+    }
 
     // 2. Build infrastructure
     const stateStore = new PrismaStateStore(this.stateStorePrisma);
@@ -300,7 +317,12 @@ export class ExternalSyncService {
 
     const progress = await stateStore.getProgress(jobId);
 
-    // 4. Update registry
+    // 4. Cache NDJSON for next resume if it was a miss (e.g. job started before cache feature)
+    if (cacheWasMiss && !chunk.done) {
+      await this.cacheNdjson(jobId, ndjson, sourceTotalRecords ?? 0);
+    }
+
+    // 5. Update registry
     await this.updateJobRegistry({
       jobId,
       progress,
@@ -309,9 +331,10 @@ export class ExternalSyncService {
       stats,
     });
 
-    // 5. Finalize if completed
+    // 6. Finalize if completed
     if (chunk.done) {
       clearCache();
+      await this.deleteCachedNdjson(jobId);
       // Use accumulated stats from metadata (all chunks combined), not just this chunk's stats
       const accumulatedStats = await this.getAccumulatedStats(jobId, stats);
       const syncStartTime = syncContext.syncStartTime
@@ -830,6 +853,71 @@ export class ExternalSyncService {
       });
     } catch (error) {
       console.error(`[Sync] Failed to update job registry for ${jobId}:`, error);
+    }
+  }
+
+  // ============================================================
+  // NDJSON Cache — avoid re-downloading on every resume
+  // ============================================================
+
+  /**
+   * Compress and store NDJSON data in sync_ndjson_cache table.
+   * Typical compression ratio: 5-8x (85 MB NDJSON → ~12 MB gzip).
+   */
+  private async cacheNdjson(jobId: string, ndjson: string, recordCount: number): Promise<void> {
+    try {
+      const compressed = gzipSync(Buffer.from(ndjson, "utf-8"), { level: 6 });
+      console.log(
+        `[Sync] Caching NDJSON for job ${jobId}: ` +
+          `${(ndjson.length / 1024 / 1024).toFixed(1)} MB → ${(compressed.length / 1024 / 1024).toFixed(1)} MB gzip`
+      );
+      await this.prisma.syncNdjsonCache.upsert({
+        where: { job_id: jobId },
+        create: {
+          job_id: jobId,
+          compressed_data: compressed,
+          original_size: ndjson.length,
+          record_count: recordCount,
+        },
+        update: {
+          compressed_data: compressed,
+          original_size: ndjson.length,
+          record_count: recordCount,
+        },
+      });
+    } catch (error) {
+      // Non-critical: next resume will re-fetch from API (slower but correct)
+      console.error(`[Sync] Failed to cache NDJSON for ${jobId}:`, error);
+    }
+  }
+
+  /**
+   * Read and decompress cached NDJSON for a job.
+   * Returns null if cache miss (will fall back to re-fetch).
+   */
+  private async getCachedNdjson(jobId: string): Promise<string | null> {
+    try {
+      const cached = await this.prisma.syncNdjsonCache.findUnique({
+        where: { job_id: jobId },
+      });
+      if (!cached) return null;
+
+      const decompressed = gunzipSync(Buffer.from(cached.compressed_data));
+      return decompressed.toString("utf-8");
+    } catch (error) {
+      console.warn(`[Sync] Failed to read NDJSON cache for ${jobId}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Delete cached NDJSON after job completes.
+   */
+  private async deleteCachedNdjson(jobId: string): Promise<void> {
+    try {
+      await this.prisma.syncNdjsonCache.delete({ where: { job_id: jobId } });
+    } catch {
+      // Ignore: record may not exist (e.g. completed in first chunk)
     }
   }
 }

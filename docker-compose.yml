@@ -37,6 +37,31 @@ services:
               count: 1
               capabilities: [gpu]
 
+  libpostal:
+    image: pelias/libpostal-service
+    container_name: dea-libpostal
+    ports:
+      - "${LIBPOSTAL_PORT:-4400}:4400"
+    restart: unless-stopped
+
+  nominatim:
+    image: mediagis/nominatim:4.4
+    container_name: dea-nominatim
+    environment:
+      PBF_URL: https://download.geofabrik.de/europe/spain-latest.osm.pbf
+      REPLICATION_URL: https://download.geofabrik.de/europe/spain-updates/
+      NOMINATIM_PASSWORD: nominatim
+      IMPORT_STYLE: full
+    ports:
+      - "${NOMINATIM_PORT:-8080}:8080"
+    volumes:
+      - nominatim_data:/var/lib/postgresql/14/main
+      - nominatim_flatnode:/nominatim/flatnode
+    restart: unless-stopped
+    shm_size: 1g
+
 volumes:
   postgres_data1:
   face_blur_models:
+  nominatim_data:
+  nominatim_flatnode:

@@ -276,6 +276,7 @@ function extractSyncContextFromMetadata(
       regionCode: (syncContext.regionCode as string) || "",
       dataSourceName: (syncContext.dataSourceName as string) || dataSourceName,
       dryRun: (syncContext.dryRun as boolean) || false,
+      syncStartTime: (syncContext.syncStartTime as string) || undefined,
     };
   }
 

@@ -1504,3 +1504,17 @@ model BatchactionsBatch {
   @@index([jobId, status])
   @@map("batchactions_batches")
 }
+
+// ============================================
+// SYNC NDJSON CACHE - Compressed data between chunks
+// Avoids re-downloading all records from external APIs on every resume
+// ============================================
+model SyncNdjsonCache {
+  job_id          String   @id @db.VarChar(36)
+  compressed_data Bytes
+  original_size   Int      @default(0)
+  record_count    Int      @default(0)
+  created_at      DateTime @default(now())
+
+  @@map("sync_ndjson_cache")
+}
