@@ -42,6 +42,14 @@ interface CreateAedRequest {
   provisional_number?: number;
   source_details?: string;
   internal_notes?: string;
+  origin_observations?: string;
+
+  // Images (optional, URLs from S3 upload)
+  images?: Array<{
+    original_url: string;
+    type: "FRONT" | "LOCATION" | "ACCESS" | "SIGNAGE" | "CONTEXT" | "PLATE";
+    order?: number;
+  }>;
 
   // Location data (optional)
   location?: {
@@ -450,6 +458,7 @@ export async function POST(request: NextRequest) {
           provisional_number: body.provisional_number,
           source_origin: "WEB_FORM",
           source_details: body.source_details,
+          origin_observations: body.origin_observations,
           internal_notes:
             internalNotes.length > 0 ? JSON.parse(JSON.stringify(internalNotes)) : undefined,
           requires_attention: requiresAttention || undefined,
@@ -466,6 +475,19 @@ export async function POST(request: NextRequest) {
           schedule: true,
         },
       });
+
+      // Create images if provided
+      if (body.images && body.images.length > 0) {
+        await tx.aedImage.createMany({
+          data: body.images.map((img, index) => ({
+            aed_id: newAed.id,
+            original_url: img.original_url,
+            type: img.type,
+            order: img.order ?? index + 1,
+            created_at: new Date(),
+          })),
+        });
+      }
 
       // Record status change via shared audit helper
       await recordStatusChange(tx, {

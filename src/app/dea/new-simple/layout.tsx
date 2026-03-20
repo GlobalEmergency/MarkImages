@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Agregar un Desfibrilador (DEA)",
+  title: "Agregar un Desfibrilador (DEA) - DeaMap",
   description:
-    "Registra un nuevo desfibrilador en el mapa de DeaMap. Colabora agregando DEAs para ayudar a salvar vidas en emergencias cardíacas.",
+    "Registra un nuevo desfibrilador en el mapa de DeaMap. Usa tu ubicación, sube fotos y ayuda a salvar vidas en emergencias cardíacas.",
   alternates: {
     canonical: "/dea/new-simple",
   },
