@@ -46,7 +46,7 @@ type Step = 1 | 2;
 
 export default function NewSimpleDeaPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const {
     trackFormStart,
     trackFormFieldFocus,
@@ -273,7 +273,6 @@ export default function NewSimpleDeaPage() {
       }
 
       const hasCoords = formData.latitude && formData.longitude;
-      const fullAddress = `${formData.street}${formData.number ? " " + formData.number : ""}${formData.city ? ", " + formData.city : ""}${formData.country ? ", " + formData.country : ""}`;
 
       // Build extra observations from additional details
       const extraParts: string[] = [];
@@ -642,14 +641,14 @@ export default function NewSimpleDeaPage() {
                 </span>
               </div>
 
-              {!user && (
+              {!authLoading && !user && (
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
                   <strong>Inicia sesión</strong> para poder subir fotos del
                   DEA. Las fotos ayudan mucho a verificar su existencia.
                 </div>
               )}
 
-              {user && (
+              {(user || authLoading) && (
                 <>
                   {images.length > 0 && (
                     <div className="grid grid-cols-3 gap-2">
@@ -859,11 +858,11 @@ export default function NewSimpleDeaPage() {
       {/* ── Success Modal ────────────────────────────────────── */}
       {showSuccess && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in duration-300 p-4"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-modal-backdrop p-4"
           onClick={handleSuccessClose}
         >
           <div
-            className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl text-center animate-in slide-in-from-bottom-4 duration-300"
+            className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl text-center animate-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-20 h-20 rounded-full bg-emerald-500 mx-auto mb-6 flex items-center justify-center">

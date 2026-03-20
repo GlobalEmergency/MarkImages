@@ -17,3 +17,32 @@
 .animate-slide-up {
   animation: slide-up 0.3s ease-out;
 }
+
+/* Modal animations */
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-slide-up {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-modal-backdrop {
+  animation: modal-fade-in 0.3s ease-out;
+}
+
+.animate-modal-content {
+  animation: modal-slide-up 0.3s ease-out;
+}
