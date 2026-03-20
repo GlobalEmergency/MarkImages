@@ -17,7 +17,7 @@ interface DeaImage {
 /** Serialised image ready for the API payload */
 interface UploadedImagePayload {
   original_url: string;
-  type: string;
+  type: AedImageType;
   order: number;
 }
 
@@ -82,18 +82,25 @@ export function useDeaImages() {
 
   /**
    * Upload all pending images to S3 via /api/upload.
-   * Returns the list of successfully uploaded images in API payload format.
+   * Returns the list of successfully uploaded images and a count of failures.
    * Already-uploaded images (with url) are included without re-uploading.
+   *
+   * Always completes all uploads (best-effort) so the caller can decide
+   * whether to proceed with the successful subset or abort.
    */
-  const uploadAll = useCallback(async (): Promise<UploadedImagePayload[]> => {
+  const uploadAll = useCallback(async (): Promise<{
+    uploaded: UploadedImagePayload[];
+    failedCount: number;
+  }> => {
     const results: UploadedImagePayload[] = [];
+    let failedCount = 0;
 
     for (let i = 0; i < images.length; i++) {
       const img = images[i];
 
       // Skip already-uploaded
       if (img.url) {
-        results.push({ original_url: img.url, type: img.type, order: i + 1 });
+        results.push({ original_url: img.url, type: img.type, order: results.length + 1 });
         continue;
       }
 
@@ -111,22 +118,22 @@ export function useDeaImages() {
         if (!res.ok) throw new Error("Error al subir imagen");
 
         const data = await res.json();
-        results.push({ original_url: data.url, type: img.type, order: i + 1 });
+        results.push({ original_url: data.url, type: img.type, order: results.length + 1 });
 
         setImages((prev) =>
           prev.map((item, idx) => (idx === i ? { ...item, uploading: false, url: data.url } : item))
         );
       } catch {
+        failedCount++;
         setImages((prev) =>
           prev.map((item, idx) =>
             idx === i ? { ...item, uploading: false, error: "Error al subir" } : item
           )
         );
-        // Continue uploading remaining images even if one fails
       }
     }
 
-    return results;
+    return { uploaded: results, failedCount };
   }, [images]);
 
   return {

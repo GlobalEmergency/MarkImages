@@ -164,12 +164,18 @@ describe("buildAedPayload", () => {
       expect(payload.location.postal_code).toBe("28001");
     });
 
+    it("debe mapear city al campo city_name del location", () => {
+      const payload = buildAedPayload(makeForm({ name: "Test", city: "Madrid" }));
+      expect(payload.location.city_name).toBe("Madrid");
+    });
+
     it("debe omitir campos de location vacíos (undefined, no cadena vacía)", () => {
       const payload = buildAedPayload(makeForm({ name: "Test" }));
 
       expect(payload.location.street_name).toBeUndefined();
       expect(payload.location.street_number).toBeUndefined();
       expect(payload.location.postal_code).toBeUndefined();
+      expect(payload.location.city_name).toBeUndefined();
       expect(payload.location.floor).toBeUndefined();
     });
 
@@ -282,6 +288,7 @@ describe("buildAedPayload", () => {
       expect(payload.location.street_name).toBe("Gran Vía");
       expect(payload.location.street_number).toBe("1");
       expect(payload.location.postal_code).toBe("28013");
+      expect(payload.location.city_name).toBe("Madrid");
       expect(payload.location.access_instructions).toBe("Al lado de la información");
       expect(payload.location.floor).toBe("Planta baja");
       expect(payload.location.location_details).toBe("Junto al punto de información");

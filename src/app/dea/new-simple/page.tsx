@@ -152,7 +152,17 @@ export default function NewSimpleDeaPage() {
 
     try {
       // Upload images first (only if authenticated)
-      const uploadedImages = user && images.length > 0 ? await uploadAll() : [];
+      let uploadedImages: { original_url: string; type: string; order: number }[] = [];
+
+      if (user && images.length > 0) {
+        const { uploaded, failedCount } = await uploadAll();
+        uploadedImages = uploaded;
+        if (failedCount > 0) {
+          setError(
+            `No se pudieron subir ${failedCount} de ${images.length} foto(s). El DEA se enviará con las fotos que se subieron correctamente.`
+          );
+        }
+      }
 
       const payload = buildAedPayload(formData, uploadedImages);
 

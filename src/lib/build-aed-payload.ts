@@ -45,6 +45,7 @@ interface AedApiPayload {
     street_name?: string;
     street_number?: string;
     postal_code?: string;
+    city_name?: string;
     access_instructions?: string;
     floor?: string;
     location_details?: string;
@@ -98,6 +99,7 @@ export function buildAedPayload(
       street_name: form.street || undefined,
       street_number: form.number || undefined,
       postal_code: form.postalCode || undefined,
+      city_name: form.city || undefined,
       access_instructions: form.accessDescription || undefined,
       floor: form.floor || undefined,
       location_details: form.specificLocation || undefined,

@@ -57,6 +57,7 @@ interface CreateAedRequest {
     street_name?: string;
     street_number?: string;
     postal_code?: string;
+    city_name?: string;
     district_id?: number;
     neighborhood_id?: number;
     floor?: string;
@@ -465,6 +466,7 @@ export async function POST(request: NextRequest) {
           street_name: body.location?.street_name,
           street_number: body.location?.street_number,
           postal_code: body.location?.postal_code,
+          city_name: body.location?.city_name,
           floor: body.location?.floor,
           location_details: body.location?.location_details,
           access_instructions: body.location?.access_instructions,
@@ -537,7 +539,6 @@ export async function POST(request: NextRequest) {
             original_url: img.original_url,
             type: img.type,
             order: img.order ?? index + 1,
-            created_at: new Date(),
           })),
         });
       }
