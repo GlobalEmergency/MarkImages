@@ -296,6 +296,53 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate images if provided
+    const VALID_IMAGE_TYPES = new Set([
+      "FRONT",
+      "LOCATION",
+      "ACCESS",
+      "SIGNAGE",
+      "CONTEXT",
+      "PLATE",
+    ]);
+    const MAX_IMAGES = 10;
+
+    if (body.images) {
+      if (!Array.isArray(body.images) || body.images.length > MAX_IMAGES) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Invalid images",
+            message: `images must be an array with at most ${MAX_IMAGES} entries`,
+          },
+          { status: 400 }
+        );
+      }
+
+      for (const img of body.images) {
+        if (!img.original_url || typeof img.original_url !== "string") {
+          return NextResponse.json(
+            {
+              success: false,
+              error: "Invalid image",
+              message: "Each image must have an original_url",
+            },
+            { status: 400 }
+          );
+        }
+        if (!VALID_IMAGE_TYPES.has(img.type)) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: "Invalid image type",
+              message: `Image type must be one of: ${[...VALID_IMAGE_TYPES].join(", ")}`,
+            },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
     // ========================================
     // Duplicate detection (identity + fuzzy/spatial scoring)
     // Resilient: failure does NOT block AED creation

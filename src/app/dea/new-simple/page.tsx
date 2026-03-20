@@ -15,10 +15,14 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { useDeaImages } from "@/hooks/useDeaImages";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import type { AddressData } from "@/hooks/useGeolocation";
+import { buildAedPayload } from "@/lib/build-aed-payload";
 
 // Dynamic import to avoid SSR issues with Leaflet
 const LocationPickerMap = dynamic(() => import("@/components/LocationPickerMap"), {
@@ -33,42 +37,23 @@ const LocationPickerMap = dynamic(() => import("@/components/LocationPickerMap")
   ),
 });
 
-interface UploadedImage {
-  file: File;
-  preview: string;
-  url?: string;
-  type: "FRONT" | "LOCATION" | "ACCESS" | "CONTEXT";
-  uploading?: boolean;
-  error?: string;
-}
-
 type Step = 1 | 2;
 
 export default function NewSimpleDeaPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const {
-    trackFormStart,
-    trackFormFieldFocus,
-    trackFormSubmit,
-    trackButtonClick,
-    trackModalOpen,
-  } = useAnalytics();
+  const { trackFormStart, trackFormFieldFocus, trackFormSubmit, trackButtonClick, trackModalOpen } =
+    useAnalytics();
 
   const [step, setStep] = useState<Step>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [formStarted, setFormStarted] = useState(false);
-  const [geolocating, setGeolocating] = useState(false);
-  const [reverseGeocoding, setReverseGeocoding] = useState(false);
   const [showExtraDetails, setShowExtraDetails] = useState(false);
-  const [images, setImages] = useState<UploadedImage[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form state
   const [formData, setFormData] = useState({
-    // Step 1: Location
     latitude: "",
     longitude: "",
     street: "",
@@ -76,18 +61,58 @@ export default function NewSimpleDeaPage() {
     city: "",
     postalCode: "",
     country: "España",
-
-    // Step 2: Details
     name: "",
     establishmentType: "",
     observations: "",
-
-    // Extra details (collapsible)
     accessDescription: "",
     floor: "",
     specificLocation: "",
     scheduleDescription: "",
   });
+
+  // ── Hooks ─────────────────────────────────────────────────────
+
+  const handlePositionObtained = useCallback((lat: number, lng: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      latitude: lat.toFixed(6),
+      longitude: lng.toFixed(6),
+    }));
+  }, []);
+
+  const handleAddressObtained = useCallback((address: AddressData) => {
+    setFormData((prev) => ({
+      ...prev,
+      street: address.street || prev.street,
+      number: address.number || prev.number,
+      city: address.city || prev.city,
+      postalCode: address.postalCode || prev.postalCode,
+      country: address.country || prev.country,
+    }));
+  }, []);
+
+  const {
+    geolocating,
+    reverseGeocoding,
+    error: geoError,
+    requestPosition,
+    reverseGeocode,
+  } = useGeolocation(handlePositionObtained, handleAddressObtained);
+
+  const {
+    images,
+    fileInputRef,
+    canAddMore,
+    openFilePicker,
+    handleFileSelect,
+    removeImage,
+    uploadAll,
+  } = useDeaImages();
+
+  // Propagate geolocation errors to main error state
+  useEffect(() => {
+    if (geoError) setError(geoError);
+  }, [geoError]);
 
   // Track form start on first interaction
   useEffect(() => {
@@ -96,6 +121,8 @@ export default function NewSimpleDeaPage() {
       setFormStarted(true);
     }
   }, [formData, formStarted, trackFormStart]);
+
+  // ── Handlers ──────────────────────────────────────────────────
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -108,205 +135,26 @@ export default function NewSimpleDeaPage() {
     trackFormFieldFocus("add_dea_simple_v2", fieldName);
   };
 
-  // ── Geolocation ──────────────────────────────────────────────
-  const handleGeolocate = useCallback(async () => {
-    if (!navigator.geolocation) {
-      setError("Tu navegador no soporta geolocalización");
-      return;
-    }
-
-    setGeolocating(true);
+  const handleGeolocate = () => {
     setError(null);
     trackButtonClick("geolocate", "step_1_location");
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        setFormData((prev) => ({
-          ...prev,
-          latitude: latitude.toFixed(6),
-          longitude: longitude.toFixed(6),
-        }));
-
-        // Reverse geocode to fill address
-        await reverseGeocode(latitude, longitude);
-        setGeolocating(false);
-      },
-      (err) => {
-        setGeolocating(false);
-        switch (err.code) {
-          case err.PERMISSION_DENIED:
-            setError("Permiso de ubicación denegado. Actívalo en la configuración del navegador.");
-            break;
-          case err.POSITION_UNAVAILABLE:
-            setError("No se pudo determinar tu ubicación.");
-            break;
-          case err.TIMEOUT:
-            setError("Se agotó el tiempo para obtener la ubicación.");
-            break;
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-    );
-  }, [trackButtonClick]);
-
-  const reverseGeocode = async (lat: number, lng: number) => {
-    setReverseGeocoding(true);
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=es`,
-        { headers: { "User-Agent": "DeaMap/1.0" } }
-      );
-      if (!res.ok) return;
-      const data = await res.json();
-      const addr = data.address || {};
-
-      setFormData((prev) => ({
-        ...prev,
-        street: addr.road || addr.pedestrian || addr.footway || prev.street,
-        number: addr.house_number || prev.number,
-        city:
-          addr.city || addr.town || addr.village || addr.municipality || prev.city,
-        postalCode: addr.postcode || prev.postalCode,
-        country: addr.country || prev.country,
-      }));
-    } catch {
-      // Silently fail - user can still fill manually
-    } finally {
-      setReverseGeocoding(false);
-    }
+    requestPosition();
   };
 
   const handleLocationChange = async (lat: number, lng: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      latitude: lat.toFixed(6),
-      longitude: lng.toFixed(6),
-    }));
+    handlePositionObtained(lat, lng);
     await reverseGeocode(lat, lng);
   };
 
-  // ── Photo upload ─────────────────────────────────────────────
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    const newImages: UploadedImage[] = Array.from(files).map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-      type: images.length === 0 ? "FRONT" : "CONTEXT",
-    }));
-
-    setImages((prev) => [...prev, ...newImages].slice(0, 5));
-
-    // Reset file input
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const removeImage = (index: number) => {
-    setImages((prev) => {
-      const updated = [...prev];
-      URL.revokeObjectURL(updated[index].preview);
-      updated.splice(index, 1);
-      return updated;
-    });
-  };
-
-  const uploadImages = async (): Promise<
-    Array<{ original_url: string; type: string; order: number }>
-  > => {
-    const uploaded: Array<{ original_url: string; type: string; order: number }> = [];
-
-    for (let i = 0; i < images.length; i++) {
-      const img = images[i];
-      if (img.url) {
-        uploaded.push({ original_url: img.url, type: img.type, order: i + 1 });
-        continue;
-      }
-
-      const formDataUpload = new FormData();
-      formDataUpload.append("file", img.file);
-      formDataUpload.append("prefix", "dea-community");
-
-      setImages((prev) =>
-        prev.map((item, idx) => (idx === i ? { ...item, uploading: true } : item))
-      );
-
-      try {
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formDataUpload,
-        });
-
-        if (!res.ok) throw new Error("Error al subir imagen");
-
-        const data = await res.json();
-        uploaded.push({ original_url: data.url, type: img.type, order: i + 1 });
-
-        setImages((prev) =>
-          prev.map((item, idx) =>
-            idx === i ? { ...item, uploading: false, url: data.url } : item
-          )
-        );
-      } catch {
-        setImages((prev) =>
-          prev.map((item, idx) =>
-            idx === i ? { ...item, uploading: false, error: "Error al subir" } : item
-          )
-        );
-      }
-    }
-
-    return uploaded;
-  };
-
-  // ── Submit ───────────────────────────────────────────────────
   const handleSubmit = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Upload images first (if user is logged in and has images)
-      let uploadedImages: Array<{ original_url: string; type: string; order: number }> = [];
-      if (user && images.length > 0) {
-        uploadedImages = await uploadImages();
-      }
+      // Upload images first (only if authenticated)
+      const uploadedImages = user && images.length > 0 ? await uploadAll() : [];
 
-      const hasCoords = formData.latitude && formData.longitude;
-
-      // Build extra observations from additional details
-      const extraParts: string[] = [];
-      if (formData.accessDescription)
-        extraParts.push(`Acceso: ${formData.accessDescription}`);
-      if (formData.floor) extraParts.push(`Planta: ${formData.floor}`);
-      if (formData.specificLocation)
-        extraParts.push(`Ubicación específica: ${formData.specificLocation}`);
-      if (formData.scheduleDescription)
-        extraParts.push(`Horario: ${formData.scheduleDescription}`);
-
-      const allObservations = [formData.observations, ...extraParts]
-        .filter(Boolean)
-        .join("\n");
-
-      const payload = {
-        name: formData.name,
-        establishment_type: formData.establishmentType || undefined,
-        latitude: hasCoords ? parseFloat(formData.latitude) : undefined,
-        longitude: hasCoords ? parseFloat(formData.longitude) : undefined,
-        origin_observations: allObservations || undefined,
-        source_details: hasCoords
-          ? "Formulario simplificado v2 - con geolocalización"
-          : "Formulario simplificado v2 - dirección sin geocodificar",
-        location: {
-          street_name: formData.street || undefined,
-          street_number: formData.number || undefined,
-          postal_code: formData.postalCode || undefined,
-          access_instructions: formData.accessDescription || undefined,
-          floor: formData.floor || undefined,
-          location_details: formData.specificLocation || undefined,
-        },
-        images: uploadedImages.length > 0 ? uploadedImages : undefined,
-      };
+      const payload = buildAedPayload(formData, uploadedImages);
 
       const response = await fetch("/api/aeds", {
         method: "POST",
@@ -338,14 +186,15 @@ export default function NewSimpleDeaPage() {
     router.push("/");
   };
 
-  const canProceedToStep2 =
-    formData.latitude && formData.longitude
-      ? true
-      : formData.street && formData.city;
+  // ── Derived state ─────────────────────────────────────────────
 
+  const hasCoords = !!(formData.latitude && formData.longitude);
+  const hasAddress = !!(formData.street && formData.city);
+  const canProceedToStep2 = hasCoords || hasAddress;
   const canSubmit = formData.name.trim().length >= 2;
 
-  // ── Render ───────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -363,21 +212,15 @@ export default function NewSimpleDeaPage() {
           <div className="flex-1">
             <h1 className="text-lg font-semibold text-gray-900">Agregar DEA</h1>
             <p className="text-xs text-gray-500">
-              Paso {step} de 2 &mdash;{" "}
-              {step === 1 ? "Ubicación" : "Detalles"}
+              Paso {step} de 2 &mdash; {step === 1 ? "Ubicación" : "Detalles"}
             </p>
           </div>
-          {/* Step indicator */}
           <div className="flex gap-1.5">
             <div
-              className={`h-1.5 w-8 rounded-full transition-colors ${
-                step >= 1 ? "bg-emerald-500" : "bg-gray-200"
-              }`}
+              className={`h-1.5 w-8 rounded-full transition-colors ${step >= 1 ? "bg-emerald-500" : "bg-gray-200"}`}
             />
             <div
-              className={`h-1.5 w-8 rounded-full transition-colors ${
-                step >= 2 ? "bg-emerald-500" : "bg-gray-200"
-              }`}
+              className={`h-1.5 w-8 rounded-full transition-colors ${step >= 2 ? "bg-emerald-500" : "bg-gray-200"}`}
             />
           </div>
         </div>
@@ -398,15 +241,12 @@ export default function NewSimpleDeaPage() {
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100 mb-3">
                 <MapPin className="w-6 h-6 text-emerald-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">
-                ¿Dónde está el DEA?
-              </h2>
+              <h2 className="text-xl font-bold text-gray-900">¿Dónde está el DEA?</h2>
               <p className="text-sm text-gray-500 mt-1">
                 Usa tu ubicación actual o marca el punto en el mapa
               </p>
             </div>
 
-            {/* Geolocation button */}
             <button
               type="button"
               onClick={handleGeolocate}
@@ -427,43 +267,34 @@ export default function NewSimpleDeaPage() {
             </button>
 
             {reverseGeocoding && (
-              <p className="text-center text-xs text-gray-400">
-                Obteniendo dirección...
-              </p>
+              <p className="text-center text-xs text-gray-400">Obteniendo dirección...</p>
             )}
 
-            {/* Map */}
             <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
               <LocationPickerMap
                 latitude={formData.latitude ? parseFloat(formData.latitude) : 0}
-                longitude={
-                  formData.longitude ? parseFloat(formData.longitude) : 0
-                }
+                longitude={formData.longitude ? parseFloat(formData.longitude) : 0}
                 onLocationChange={handleLocationChange}
               />
             </div>
 
-            {formData.latitude && formData.longitude && (
+            {hasCoords && (
               <p className="text-center text-xs text-gray-400">
                 Coordenadas: {formData.latitude}, {formData.longitude}
               </p>
             )}
 
-            {/* Address fields (auto-filled or manual) */}
+            {/* Address fields */}
             <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
                 Dirección
-                {reverseGeocoding && (
-                  <Loader2 className="w-3 h-3 animate-spin text-gray-400" />
-                )}
+                {reverseGeocoding && <Loader2 className="w-3 h-3 animate-spin text-gray-400" />}
               </h3>
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2">
-                  <label className="block text-xs text-gray-500 mb-1">
-                    Calle
-                  </label>
+                  <label className="block text-xs text-gray-500 mb-1">Calle</label>
                   <input
                     type="text"
                     name="street"
@@ -475,9 +306,7 @@ export default function NewSimpleDeaPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    Nº
-                  </label>
+                  <label className="block text-xs text-gray-500 mb-1">Nº</label>
                   <input
                     type="text"
                     name="number"
@@ -492,9 +321,7 @@ export default function NewSimpleDeaPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    Población
-                  </label>
+                  <label className="block text-xs text-gray-500 mb-1">Población</label>
                   <input
                     type="text"
                     name="city"
@@ -506,9 +333,7 @@ export default function NewSimpleDeaPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    C.P.
-                  </label>
+                  <label className="block text-xs text-gray-500 mb-1">C.P.</label>
                   <input
                     type="text"
                     name="postalCode"
@@ -522,7 +347,6 @@ export default function NewSimpleDeaPage() {
               </div>
             </div>
 
-            {/* Next button */}
             <button
               type="button"
               onClick={() => {
@@ -538,8 +362,7 @@ export default function NewSimpleDeaPage() {
 
             {!canProceedToStep2 && (
               <p className="text-center text-xs text-gray-400">
-                Marca un punto en el mapa o escribe al menos la calle y
-                población
+                Marca un punto en el mapa o escribe al menos la calle y población
               </p>
             )}
           </div>
@@ -552,15 +375,13 @@ export default function NewSimpleDeaPage() {
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mb-3">
                 <Info className="w-6 h-6 text-blue-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">
-                Cuéntanos sobre el DEA
-              </h2>
+              <h2 className="text-xl font-bold text-gray-900">Cuéntanos sobre el DEA</h2>
               <p className="text-sm text-gray-500 mt-1">
                 Cuantos más datos aportes, más fácil será verificarlo
               </p>
             </div>
 
-            {/* Name */}
+            {/* Name & type */}
             <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -581,7 +402,6 @@ export default function NewSimpleDeaPage() {
                 </p>
               </div>
 
-              {/* Establishment type */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Tipo de lugar
@@ -600,19 +420,14 @@ export default function NewSimpleDeaPage() {
                   <option value="Centro educativo">Centro educativo</option>
                   <option value="Edificio público">Edificio público</option>
                   <option value="Centro comercial">Centro comercial</option>
-                  <option value="Estación de transporte">
-                    Estación de transporte
-                  </option>
-                  <option value="Hotel / alojamiento">
-                    Hotel / alojamiento
-                  </option>
+                  <option value="Estación de transporte">Estación de transporte</option>
+                  <option value="Hotel / alojamiento">Hotel / alojamiento</option>
                   <option value="Empresa privada">Empresa privada</option>
                   <option value="Vía pública">Vía pública</option>
                   <option value="Otro">Otro</option>
                 </select>
               </div>
 
-              {/* Observations */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Observaciones
@@ -629,22 +444,20 @@ export default function NewSimpleDeaPage() {
               </div>
             </div>
 
-            {/* Photos section */}
+            {/* Photos */}
             <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                   <Camera className="w-4 h-4" />
                   Fotos del DEA
                 </h3>
-                <span className="text-xs text-gray-400">
-                  {images.length}/5
-                </span>
+                <span className="text-xs text-gray-400">{images.length}/5</span>
               </div>
 
               {!authLoading && !user && (
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
-                  <strong>Inicia sesión</strong> para poder subir fotos del
-                  DEA. Las fotos ayudan mucho a verificar su existencia.
+                  <strong>Inicia sesión</strong> para poder subir fotos del DEA. Las fotos ayudan
+                  mucho a verificar su existencia.
                 </div>
               )}
 
@@ -670,9 +483,7 @@ export default function NewSimpleDeaPage() {
                           )}
                           {img.error && (
                             <div className="absolute inset-0 bg-red-500/40 flex items-center justify-center">
-                              <span className="text-white text-xs">
-                                Error
-                              </span>
+                              <span className="text-white text-xs">Error</span>
                             </div>
                           )}
                           <button
@@ -692,16 +503,14 @@ export default function NewSimpleDeaPage() {
                     </div>
                   )}
 
-                  {images.length < 5 && (
+                  {canAddMore && (
                     <button
                       type="button"
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={openFilePicker}
                       className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-emerald-400 hover:text-emerald-600 transition-colors"
                     >
                       <Camera className="w-4 h-4" />
-                      {images.length === 0
-                        ? "Añadir foto del DEA"
-                        : "Añadir otra foto"}
+                      {images.length === 0 ? "Añadir foto del DEA" : "Añadir otra foto"}
                     </button>
                   )}
 
@@ -710,13 +519,13 @@ export default function NewSimpleDeaPage() {
                     type="file"
                     accept="image/*"
                     multiple
-                    onChange={handlePhotoSelect}
+                    onChange={handleFileSelect}
                     className="hidden"
                   />
 
                   <p className="text-xs text-gray-400">
-                    Saca una foto del DEA, su señalización o su ubicación. Esto
-                    acelera muchísimo la verificación.
+                    Saca una foto del DEA, su señalización o su ubicación. Esto acelera muchísimo la
+                    verificación.
                   </p>
                 </>
               )}
@@ -761,9 +570,7 @@ export default function NewSimpleDeaPage() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">
-                        Planta / Piso
-                      </label>
+                      <label className="block text-xs text-gray-500 mb-1">Planta / Piso</label>
                       <input
                         type="text"
                         name="floor"
@@ -775,9 +582,7 @@ export default function NewSimpleDeaPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">
-                        Ubicación concreta
-                      </label>
+                      <label className="block text-xs text-gray-500 mb-1">Ubicación concreta</label>
                       <input
                         type="text"
                         name="specificLocation"
@@ -813,8 +618,8 @@ export default function NewSimpleDeaPage() {
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700 flex items-start gap-2">
               <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <span>
-                Un administrador revisará y completará los datos. Cuanta más
-                información aportes, más rápido se publicará el DEA en el mapa.
+                Un administrador revisará y completará los datos. Cuanta más información aportes,
+                más rápido se publicará el DEA en el mapa.
               </span>
             </div>
 
@@ -880,9 +685,7 @@ export default function NewSimpleDeaPage() {
               </svg>
             </div>
 
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">
-              ¡Gracias por tu aporte!
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">¡Gracias por tu aporte!</h2>
 
             <p className="text-gray-500 mb-6 leading-relaxed">
               El DEA ha sido registrado y está pendiente de verificación.{" "}
