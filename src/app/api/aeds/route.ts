@@ -411,13 +411,20 @@ export async function POST(request: NextRequest) {
       ];
     }
 
-    // Build internal_notes: user notes + duplicate detection notes
+    // Build internal_notes: user notes + origin observations + duplicate detection notes
     const internalNotes: Array<Record<string, unknown>> = [];
     if (body.internal_notes) {
       internalNotes.push({
         text: body.internal_notes,
         date: new Date().toISOString(),
         type: "creation",
+      });
+    }
+    if (body.origin_observations) {
+      internalNotes.push({
+        text: body.origin_observations,
+        date: new Date().toISOString(),
+        type: "origin_observations",
       });
     }
     if (duplicateNotes) {
@@ -505,7 +512,6 @@ export async function POST(request: NextRequest) {
           provisional_number: body.provisional_number,
           source_origin: "WEB_FORM",
           source_details: body.source_details,
-          origin_observations: body.origin_observations,
           internal_notes:
             internalNotes.length > 0 ? JSON.parse(JSON.stringify(internalNotes)) : undefined,
           requires_attention: requiresAttention || undefined,
