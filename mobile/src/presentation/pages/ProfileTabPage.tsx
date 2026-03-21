@@ -14,10 +14,11 @@ import {
   IonInput,
   IonText,
   IonSpinner,
+  IonAlert,
   useIonToast,
 } from "@ionic/react";
 import { useHistory } from "react-router-dom";
-import { logOut, person, mail, shield, addCircleOutline } from "ionicons/icons";
+import { logOut, person, mail, shield, addCircleOutline, trashOutline } from "ionicons/icons";
 
 import { useAuth } from "../hooks/useAuth";
 import { promptSaveCredentials } from "../../infrastructure/auth/CredentialService";
@@ -224,8 +225,11 @@ const AuthForm: React.FC = () => {
 /* ---------- Profile Tab Page ---------- */
 
 const ProfileTabPage: React.FC = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, deleteAccount } = useAuth();
   const history = useHistory();
+  const [presentToast] = useIonToast();
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   if (!isAuthenticated || !user) {
     return (
@@ -308,6 +312,77 @@ const ProfileTabPage: React.FC = () => {
           <IonIcon icon={logOut} slot="start" />
           Cerrar sesión
         </IonButton>
+
+        <IonButton
+          expand="block"
+          color="danger"
+          fill="clear"
+          onClick={() => setShowDeleteAlert(true)}
+          disabled={deletingAccount}
+          style={{ marginTop: 32 }}
+        >
+          {deletingAccount ? (
+            <IonSpinner name="crescent" />
+          ) : (
+            <>
+              <IonIcon icon={trashOutline} slot="start" />
+              Eliminar mi cuenta
+            </>
+          )}
+        </IonButton>
+
+        <IonAlert
+          isOpen={showDeleteAlert}
+          onDidDismiss={() => setShowDeleteAlert(false)}
+          header="Eliminar cuenta"
+          message="Esta acción es irreversible. Se borrarán tus datos personales (nombre, email, contraseña). Los desfibriladores que hayas registrado se mantendrán. Introduce tu contraseña para confirmar."
+          inputs={[
+            {
+              name: "password",
+              type: "password",
+              placeholder: "Tu contraseña",
+            },
+          ]}
+          buttons={[
+            { text: "Cancelar", role: "cancel" },
+            {
+              text: "Eliminar cuenta",
+              cssClass: "alert-button-danger",
+              handler: async (data) => {
+                if (!data.password) {
+                  presentToast({
+                    message: "Debes introducir tu contraseña",
+                    duration: 3000,
+                    color: "warning",
+                    position: "top",
+                  });
+                  return false;
+                }
+                setDeletingAccount(true);
+                try {
+                  await deleteAccount(data.password);
+                  presentToast({
+                    message: "Cuenta eliminada correctamente",
+                    duration: 3000,
+                    color: "success",
+                    position: "top",
+                  });
+                } catch (error) {
+                  const message =
+                    error instanceof Error ? error.message : "Error al eliminar la cuenta";
+                  presentToast({
+                    message,
+                    duration: 3000,
+                    color: "danger",
+                    position: "top",
+                  });
+                } finally {
+                  setDeletingAccount(false);
+                }
+              },
+            },
+          ]}
+        />
       </IonContent>
     </IonPage>
   );

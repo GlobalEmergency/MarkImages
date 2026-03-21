@@ -18,6 +18,7 @@ function createMockAuthRepository(overrides: Partial<IAuthRepository> = {}): IAu
     login: vi.fn(),
     register: vi.fn(),
     logout: vi.fn(),
+    deleteAccount: vi.fn(),
     getMe: vi.fn().mockResolvedValue(null),
     ...overrides,
   };

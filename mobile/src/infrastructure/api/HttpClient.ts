@@ -55,6 +55,10 @@ export class HttpClient implements IHttpClient {
     return this.request<T>(`${this.baseUrl}${path}`, "PATCH", body);
   }
 
+  async delete<T>(path: string, body?: unknown): Promise<T> {
+    return this.request<T>(`${this.baseUrl}${path}`, "DELETE", body);
+  }
+
   private async request<T>(url: string, method: string, body?: unknown): Promise<T> {
     const token = await this.tokenStorage.getToken();
     const headers: Record<string, string> = {};

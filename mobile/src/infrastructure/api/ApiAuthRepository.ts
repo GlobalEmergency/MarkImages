@@ -45,6 +45,11 @@ export class ApiAuthRepository implements IAuthRepository {
     await this.tokenStorage.removeToken();
   }
 
+  async deleteAccount(password: string): Promise<void> {
+    await this.httpClient.delete("/api/auth/delete-account", { password });
+    await this.tokenStorage.removeToken();
+  }
+
   async getMe(): Promise<UserPublic | null> {
     try {
       const response = await this.httpClient.get<{ user: UserPublic }>("/api/auth/me");

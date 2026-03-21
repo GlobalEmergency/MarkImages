@@ -19,6 +19,7 @@ function createMockAuthRepository(overrides: Partial<IAuthRepository> = {}): IAu
       token: "jwt-token",
     }),
     logout: vi.fn(),
+    deleteAccount: vi.fn(),
     getMe: vi.fn(),
     ...overrides,
   };
