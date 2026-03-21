@@ -6,9 +6,10 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release (e.g., 1.0.0)"
-        required: true
+        description: "Version override (leave empty to use mobile/version.json)"
+        required: false
         type: string
+        default: ""
       deploy_android:
         description: "Deploy to Google Play Store"
         required: false
@@ -54,6 +55,9 @@ jobs:
       build_number: ${{ steps.version.outputs.build_number }}
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Get version
         id: version
         run: |
@@ -61,8 +65,12 @@ jobs:
             # Tag format: mobile@x.y.z → extract version after @
             VERSION="${{ github.event.release.tag_name }}"
             VERSION="${VERSION#*@}"
-          else
+          elif [ -n "${{ github.event.inputs.version }}" ]; then
             VERSION="${{ github.event.inputs.version }}"
+          else
+            # Read version from mobile/version.json on the selected branch
+            VERSION=$(node -p "require('./mobile/version.json').version")
+            echo "Read version from mobile/version.json: $VERSION"
           fi
 
           # Validate version format (x.y.z)
