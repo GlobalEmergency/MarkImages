@@ -166,10 +166,14 @@ export default function Navigation() {
               <>
                 {user ? (
                   <div className="flex items-center space-x-1">
-                    <span className="text-xs text-gray-600 flex items-center space-x-1 px-2">
+                    <Link
+                      href="/profile"
+                      onClick={() => handleNavLinkClick("Perfil", "/profile")}
+                      className="text-xs text-gray-600 flex items-center space-x-1 px-2 hover:text-gray-900 transition-colors"
+                    >
                       <User className="w-3.5 h-3.5" />
                       <span className="max-w-[100px] truncate">{user.name}</span>
-                    </span>
+                    </Link>
                     <button
                       onClick={handleLogout}
                       className="flex items-center space-x-1 px-3 py-1.5 rounded-lg font-medium text-sm text-gray-600 hover:bg-gray-100/80 hover:text-gray-900 transition-all duration-200"
@@ -244,13 +248,20 @@ export default function Navigation() {
                 <>
                   {user ? (
                     <>
-                      <div className="px-4 py-3 bg-gray-50/80 rounded-lg">
+                      <Link
+                        href="/profile"
+                        onClick={() => {
+                          handleNavLinkClick("Perfil", "/profile");
+                          setMobileMenuOpen(false);
+                        }}
+                        className="px-4 py-3 bg-gray-50/80 rounded-lg block hover:bg-gray-100/80 transition-colors"
+                      >
                         <div className="flex items-center space-x-2 text-sm text-gray-600">
                           <User className="w-5 h-5" />
                           <span>{user.name}</span>
                         </div>
                         <div className="text-xs text-gray-500 mt-1">{user.email}</div>
-                      </div>
+                      </Link>
                       <button
                         onClick={handleLogout}
                         className="flex items-center space-x-3 px-4 py-3 rounded-lg font-medium text-gray-600 hover:bg-gray-100/80 hover:text-gray-900 transition-all duration-200"
