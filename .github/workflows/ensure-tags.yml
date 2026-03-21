@@ -69,17 +69,7 @@ jobs:
             --generate-notes
           echo "✅ Release created"
 
-      - name: Trigger mobile release workflow
-        if: steps.mobile-tag.outputs.created == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          echo "🚀 Triggering release workflow for v${{ steps.mobile-tag.outputs.version }}"
-          gh workflow run release-mobile-app.yml \
-            -f version=${{ steps.mobile-tag.outputs.version }} \
-            -f deploy_android=true \
-            -f deploy_ios=true \
-            -f android_track=internal
+      # release-mobile-app.yml triggers automatically via the release published event
 
       - name: Ensure web tag
         run: |
