@@ -29,10 +29,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Node.js
-        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: 22
           cache: npm
@@ -65,7 +65,7 @@ jobs:
         working-directory: mobile
 
       - name: Cache SPM packages
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: ${{ runner.temp }}/spm-cache
           key: ${{ runner.os }}-spm-${{ hashFiles('mobile/ios/App/CapApp-SPM/Package.swift') }}
@@ -215,7 +215,7 @@ jobs:
 
       - name: Upload IPA artifact
         if: env.IOS_CERTIFICATE_P12_BASE64 != ''
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         env:
           IOS_CERTIFICATE_P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
         with:
@@ -224,7 +224,7 @@ jobs:
           retention-days: 30
 
       - name: Upload dSYMs artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: dsyms
           path: ${{ runner.temp }}/App.xcarchive/dSYMs/
@@ -266,13 +266,13 @@ jobs:
 
       - name: Checkout (for version.json)
         if: steps.check_secrets.outputs.skip != 'true'
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           sparse-checkout: mobile/version.json
 
       - name: Download IPA
         if: steps.check_secrets.outputs.skip != 'true'
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: release-ipa
           path: artifacts
@@ -311,7 +311,7 @@ jobs:
 
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           path: artifacts
 
@@ -322,7 +322,7 @@ jobs:
       # Uses same release name as Android workflow — softprops/action-gh-release
       # is idempotent: creates if not exists, appends files if it does.
       - name: Append to Release
-        uses: softprops/action-gh-release@c062e08bd532815e2082a7e09ce9f200309e996d # v2.2.1
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
           name: "DeaMap Mobile v${{ steps.version.outputs.version }}"
           generate_release_notes: true
