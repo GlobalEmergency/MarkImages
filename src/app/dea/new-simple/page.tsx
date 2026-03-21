@@ -18,7 +18,6 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 
-import { useAuth } from "@/contexts/AuthContext";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useDeaImages } from "@/hooks/useDeaImages";
 import { useGeolocation } from "@/hooks/useGeolocation";
@@ -42,7 +41,6 @@ type Step = 1 | 2;
 
 export default function NewSimpleDeaPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
   const { trackFormStart, trackFormFieldFocus, trackFormSubmit, trackButtonClick, trackModalOpen } =
     useAnalytics();
 
@@ -497,7 +495,6 @@ export default function NewSimpleDeaPage() {
                       key={i}
                       className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group"
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={img.preview}
                         alt={`Foto ${i + 1}`}
