@@ -12,6 +12,7 @@ import {
   ArrowRight,
   Clock,
   Info,
+  ExternalLink,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -151,10 +152,10 @@ export default function NewSimpleDeaPage() {
     setError(null);
 
     try {
-      // Upload images first (only if authenticated)
+      // Upload images (presigned URLs — works for anonymous and authenticated users)
       let uploadedImages: { original_url: string; type: string; order: number }[] = [];
 
-      if (user && images.length > 0) {
+      if (images.length > 0) {
         const { uploaded, failedCount } = await uploadAll();
         uploadedImages = uploaded;
         if (failedCount > 0) {
@@ -464,81 +465,90 @@ export default function NewSimpleDeaPage() {
                 <span className="text-xs text-gray-400">{images.length}/5</span>
               </div>
 
-              {!authLoading && !user && (
-                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
-                  <strong>Inicia sesión</strong> para poder subir fotos del DEA. Las fotos ayudan
-                  mucho a verificar su existencia.
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800 space-y-2">
+                <p className="font-semibold">
+                  Las fotos ayudan a quien necesite encontrar el DEA en una emergencia:
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-emerald-700">
+                  <li>
+                    <strong>Entrada al edificio</strong> — fachada o acceso desde la calle
+                  </li>
+                  <li>
+                    <strong>Interior con el DEA visible</strong> — dónde está exactamente dentro
+                  </li>
+                  <li>Señalización, carteles o indicaciones si las hay</li>
+                </ul>
+                <a
+                  href="/dea/example-verified"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-700 font-medium underline underline-offset-2"
+                  onClick={() => trackButtonClick("view_example_dea", "photos_section")}
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  Ver un ejemplo de DEA bien documentado
+                </a>
+              </div>
+
+              {images.length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {images.map((img, i) => (
+                    <div
+                      key={i}
+                      className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={img.preview}
+                        alt={`Foto ${i + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      {img.uploading && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <Loader2 className="w-5 h-5 text-white animate-spin" />
+                        </div>
+                      )}
+                      {img.error && (
+                        <div className="absolute inset-0 bg-red-500/40 flex items-center justify-center">
+                          <span className="text-white text-xs">Error</span>
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeImage(i)}
+                        className="absolute top-1 right-1 p-0.5 bg-black/60 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                      {i === 0 && (
+                        <span className="absolute bottom-1 left-1 text-[10px] bg-black/60 text-white px-1.5 py-0.5 rounded">
+                          Principal
+                        </span>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
 
-              {(user || authLoading) && (
-                <>
-                  {images.length > 0 && (
-                    <div className="grid grid-cols-3 gap-2">
-                      {images.map((img, i) => (
-                        <div
-                          key={i}
-                          className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group"
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={img.preview}
-                            alt={`Foto ${i + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                          {img.uploading && (
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                              <Loader2 className="w-5 h-5 text-white animate-spin" />
-                            </div>
-                          )}
-                          {img.error && (
-                            <div className="absolute inset-0 bg-red-500/40 flex items-center justify-center">
-                              <span className="text-white text-xs">Error</span>
-                            </div>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => removeImage(i)}
-                            className="absolute top-1 right-1 p-0.5 bg-black/60 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                          {i === 0 && (
-                            <span className="absolute bottom-1 left-1 text-[10px] bg-black/60 text-white px-1.5 py-0.5 rounded">
-                              Principal
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {canAddMore && (
-                    <button
-                      type="button"
-                      onClick={openFilePicker}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-emerald-400 hover:text-emerald-600 transition-colors"
-                    >
-                      <Camera className="w-4 h-4" />
-                      {images.length === 0 ? "Añadir foto del DEA" : "Añadir otra foto"}
-                    </button>
-                  )}
-
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-
-                  <p className="text-xs text-gray-400">
-                    Saca una foto del DEA, su señalización o su ubicación. Esto acelera muchísimo la
-                    verificación.
-                  </p>
-                </>
+              {canAddMore && (
+                <button
+                  type="button"
+                  onClick={openFilePicker}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-emerald-400 hover:text-emerald-600 transition-colors"
+                >
+                  <Camera className="w-4 h-4" />
+                  {images.length === 0 ? "Añadir foto del DEA" : "Añadir otra foto"}
+                </button>
               )}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileSelect}
+                className="hidden"
+              />
             </div>
 
             {/* Extra details (collapsible) */}
