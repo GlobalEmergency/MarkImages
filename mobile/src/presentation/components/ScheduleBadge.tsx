@@ -9,6 +9,7 @@ interface ScheduleBadgeProps {
 
 function isOpenNow(schedule: Aed["schedule"]): boolean {
   if (!schedule) return false;
+  if (schedule.has_24h_surveillance) return true;
   const now = new Date();
   const dayOfWeek = now.getDay();
 
