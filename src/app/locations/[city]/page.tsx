@@ -343,7 +343,7 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
                             {is24h
                               ? "Disponible 24h"
                               : aed.schedule.weekday_opening && aed.schedule.weekday_closing
-                                ? `${aed.schedule.weekday_opening} - ${aed.schedule.weekday_closing}`
+                                ? `L-V: ${aed.schedule.weekday_opening} - ${aed.schedule.weekday_closing}${aed.schedule.saturday_opening && aed.schedule.saturday_closing ? ` · Sáb: ${aed.schedule.saturday_opening} - ${aed.schedule.saturday_closing}` : ""}${aed.schedule.sunday_opening && aed.schedule.sunday_closing ? ` · Dom: ${aed.schedule.sunday_opening} - ${aed.schedule.sunday_closing}` : ""}`
                                 : "Horario no especificado"}
                           </p>
                         )}

@@ -88,6 +88,10 @@ export interface Aed {
     has_24h_surveillance: boolean;
     weekday_opening: string | null;
     weekday_closing: string | null;
+    saturday_opening: string | null;
+    saturday_closing: string | null;
+    sunday_opening: string | null;
+    sunday_closing: string | null;
   } | null;
   responsible?: {
     name: string;

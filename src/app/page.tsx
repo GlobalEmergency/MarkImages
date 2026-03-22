@@ -780,7 +780,7 @@ function NearbyAedCard({
               {aed.schedule.has_24h_surveillance
                 ? "24h"
                 : aed.schedule.weekday_opening && aed.schedule.weekday_closing
-                  ? `${aed.schedule.weekday_opening}-${aed.schedule.weekday_closing}`
+                  ? `L-V: ${aed.schedule.weekday_opening}-${aed.schedule.weekday_closing}${aed.schedule.saturday_opening && aed.schedule.saturday_closing ? ` · S: ${aed.schedule.saturday_opening}-${aed.schedule.saturday_closing}` : ""}${aed.schedule.sunday_opening && aed.schedule.sunday_closing ? ` · D: ${aed.schedule.sunday_opening}-${aed.schedule.sunday_closing}` : ""}`
                   : "Horario no especificado"}
             </p>
           </div>

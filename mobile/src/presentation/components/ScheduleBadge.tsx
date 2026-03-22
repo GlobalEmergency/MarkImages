@@ -7,12 +7,29 @@ interface ScheduleBadgeProps {
   schedule: Aed["schedule"];
 }
 
-function isOpenNow(opening: string | null, closing: string | null): boolean {
-  if (!opening || !closing) return false;
+function isOpenNow(schedule: Aed["schedule"]): boolean {
+  if (!schedule) return false;
   const now = new Date();
   const dayOfWeek = now.getDay();
-  // Weekday-only schedule: closed on weekends (0 = Sunday, 6 = Saturday)
-  if (dayOfWeek === 0 || dayOfWeek === 6) return false;
+
+  let opening: string | null = null;
+  let closing: string | null = null;
+
+  if (dayOfWeek === 0) {
+    // Sunday
+    opening = schedule.sunday_opening ?? null;
+    closing = schedule.sunday_closing ?? null;
+  } else if (dayOfWeek === 6) {
+    // Saturday
+    opening = schedule.saturday_opening ?? null;
+    closing = schedule.saturday_closing ?? null;
+  } else {
+    // Weekday
+    opening = schedule.weekday_opening ?? null;
+    closing = schedule.weekday_closing ?? null;
+  }
+
+  if (!opening || !closing) return false;
   const [openH, openM] = opening.split(":").map(Number);
   const [closeH, closeM] = closing.split(":").map(Number);
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -28,7 +45,7 @@ const ScheduleBadge: React.FC<ScheduleBadgeProps> = ({ schedule }) => {
     return <IonBadge color="success">24h</IonBadge>;
   }
 
-  const open = isOpenNow(schedule.weekday_opening, schedule.weekday_closing);
+  const open = isOpenNow(schedule);
 
   return <IonBadge color={open ? "success" : "medium"}>{open ? "Abierto" : "Cerrado"}</IonBadge>;
 };

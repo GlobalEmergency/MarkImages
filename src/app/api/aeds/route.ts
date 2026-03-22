@@ -164,6 +164,10 @@ export async function GET(request: NextRequest) {
               has_24h_surveillance: true,
               weekday_opening: true,
               weekday_closing: true,
+              saturday_opening: true,
+              saturday_closing: true,
+              sunday_opening: true,
+              sunday_closing: true,
             },
           },
           responsible: {

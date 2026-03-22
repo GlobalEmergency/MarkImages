@@ -112,7 +112,7 @@ export function filterAedByPublicationMode(aed: AedFullData): AedFilteredData | 
     publication_mode: aed.publication_mode,
   };
 
-  // LOCATION_ONLY: Only location data (no contact, no schedule, no images)
+  // LOCATION_ONLY: Location data + schedule (schedule is essential for users)
   if (aed.publication_mode === "LOCATION_ONLY") {
     return {
       ...base,
@@ -133,6 +133,20 @@ export function filterAedByPublicationMode(aed: AedFullData): AedFilteredData | 
             district_code: null,
             neighborhood_code: null,
             access_instructions: null,
+          }
+        : null,
+      schedule: aed.schedule
+        ? {
+            id: aed.schedule.id,
+            description: aed.schedule.description,
+            has_24h_surveillance: aed.schedule.has_24h_surveillance,
+            has_restricted_access: aed.schedule.has_restricted_access,
+            weekday_opening: aed.schedule.weekday_opening,
+            weekday_closing: aed.schedule.weekday_closing,
+            saturday_opening: aed.schedule.saturday_opening,
+            saturday_closing: aed.schedule.saturday_closing,
+            sunday_opening: aed.schedule.sunday_opening,
+            sunday_closing: aed.schedule.sunday_closing,
           }
         : null,
     };

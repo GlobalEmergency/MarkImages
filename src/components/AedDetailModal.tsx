@@ -211,13 +211,27 @@ export default function AedDetailModal({ aed, isOpen, onClose }: AedDetailModalP
                 <Clock className="w-6 h-6 text-purple-500 flex-shrink-0 mt-1" />
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 mb-1">Horario</h3>
-                  <p className="text-gray-700">
-                    {aed.schedule.has_24h_surveillance
-                      ? "✅ Vigilancia 24 horas"
-                      : aed.schedule.weekday_opening && aed.schedule.weekday_closing
-                        ? `${aed.schedule.weekday_opening} - ${aed.schedule.weekday_closing}`
-                        : "Horario no especificado"}
-                  </p>
+                  {aed.schedule.has_24h_surveillance ? (
+                    <p className="text-gray-700">✅ Vigilancia 24 horas</p>
+                  ) : aed.schedule.weekday_opening && aed.schedule.weekday_closing ? (
+                    <div className="space-y-0.5">
+                      <p className="text-gray-700">
+                        L-V: {aed.schedule.weekday_opening} - {aed.schedule.weekday_closing}
+                      </p>
+                      {aed.schedule.saturday_opening && aed.schedule.saturday_closing && (
+                        <p className="text-gray-500 text-sm">
+                          Sáb: {aed.schedule.saturday_opening} - {aed.schedule.saturday_closing}
+                        </p>
+                      )}
+                      {aed.schedule.sunday_opening && aed.schedule.sunday_closing && (
+                        <p className="text-gray-500 text-sm">
+                          Dom: {aed.schedule.sunday_opening} - {aed.schedule.sunday_closing}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-gray-700">Horario no especificado</p>
+                  )}
                 </div>
               </div>
             )}

@@ -356,16 +356,33 @@ export default function DeaDetailClient() {
               <Clock className="w-5 h-5 text-teal-400" />
             </div>
             <div className="flex-1">
-              <p className="text-white font-medium">
-                {is24h
-                  ? "Lunes a Domingo: 24 horas"
-                  : aed.schedule?.weekday_opening && aed.schedule?.weekday_closing
-                    ? `${aed.schedule.weekday_opening} - ${aed.schedule.weekday_closing}`
-                    : "Horario no especificado"}
-              </p>
-              <p className="text-gray-400 text-sm">
-                {is24h ? "Disponible las 24 horas" : "Horario de servicio"}
-              </p>
+              {is24h ? (
+                <>
+                  <p className="text-white font-medium">Lunes a Domingo: 24 horas</p>
+                  <p className="text-gray-400 text-sm">Disponible las 24 horas</p>
+                </>
+              ) : aed.schedule?.weekday_opening && aed.schedule?.weekday_closing ? (
+                <div className="space-y-1">
+                  <p className="text-white font-medium">
+                    L-V: {aed.schedule.weekday_opening} - {aed.schedule.weekday_closing}
+                  </p>
+                  {aed.schedule.saturday_opening && aed.schedule.saturday_closing && (
+                    <p className="text-gray-300 text-sm">
+                      Sáb: {aed.schedule.saturday_opening} - {aed.schedule.saturday_closing}
+                    </p>
+                  )}
+                  {aed.schedule.sunday_opening && aed.schedule.sunday_closing && (
+                    <p className="text-gray-300 text-sm">
+                      Dom: {aed.schedule.sunday_opening} - {aed.schedule.sunday_closing}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <p className="text-white font-medium">Horario no especificado</p>
+                  <p className="text-gray-400 text-sm">Horario de servicio</p>
+                </>
+              )}
             </div>
           </div>
 

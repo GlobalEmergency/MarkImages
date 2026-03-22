@@ -58,6 +58,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
               has_24h_surveillance: true,
               weekday_opening: true,
               weekday_closing: true,
+              saturday_opening: true,
+              saturday_closing: true,
+              sunday_opening: true,
+              sunday_closing: true,
             },
           },
         },
@@ -109,14 +113,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
                 : null,
           }
         : null,
-      schedule:
-        aed.publication_mode !== "LOCATION_ONLY" && aed.schedule
-          ? {
-              is_24h: aed.schedule.has_24h_surveillance,
-              weekday_opening: aed.schedule.weekday_opening,
-              weekday_closing: aed.schedule.weekday_closing,
-            }
-          : null,
+      schedule: aed.schedule
+        ? {
+            is_24h: aed.schedule.has_24h_surveillance,
+            weekday_opening: aed.schedule.weekday_opening,
+            weekday_closing: aed.schedule.weekday_closing,
+            saturday_opening: aed.schedule.saturday_opening,
+            saturday_closing: aed.schedule.saturday_closing,
+            sunday_opening: aed.schedule.sunday_opening,
+            sunday_closing: aed.schedule.sunday_closing,
+          }
+        : null,
       web_url: `https://deamap.es/dea/${aed.id}`,
     }));
 
