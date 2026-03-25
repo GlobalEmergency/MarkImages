@@ -41,6 +41,7 @@ yarn-error.log*
 # Keystores and signing credentials (NEVER commit these)
 /keystores/*.keystore
 /keystores/*.jks
+/keystores/*.json
 /keystores/apple/
 keystore.properties
 *.p12
