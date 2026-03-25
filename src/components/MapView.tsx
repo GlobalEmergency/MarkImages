@@ -46,7 +46,7 @@ const aedIcon = L.divIcon({
       align-items: center;
       justify-content: center;
     ">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(45deg);">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(45deg);" aria-hidden="true">
         <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
       </svg>
     </div>
@@ -67,7 +67,7 @@ const searchLocationIcon = L.divIcon({
         background: rgba(220, 38, 38, 0.3);
         border-radius: 50%;
         animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-      "></div>
+      " aria-hidden="true"></div>
       <div style="
         position: absolute; top: 50%; left: 50%;
         background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);
@@ -78,7 +78,7 @@ const searchLocationIcon = L.divIcon({
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
         display: flex; align-items: center; justify-content: center;
       ">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white" style="transform: rotate(45deg);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white" style="transform: rotate(45deg);" aria-hidden="true">
           <circle cx="12" cy="12" r="10" />
           <circle cx="12" cy="12" r="3" fill="#DC2626" />
         </svg>
@@ -99,16 +99,21 @@ const searchLocationIcon = L.divIcon({
 // Client-side spiderfy cluster icon (for overlapping markers at same location)
 const spiderfyIconCreateFunction = (cluster: { getChildCount: () => number }) => {
   const count = cluster.getChildCount();
+  const spiderfyLabel = `Grupo de ${count} desfibriladores superpuestos. Haz clic para separar.`;
   return L.divIcon({
-    html: `<div style="
-      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-      width: 34px; height: 34px;
-      border-radius: 50%;
-      border: 3px solid white;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-      display: flex; align-items: center; justify-content: center;
-      color: white; font-weight: bold; font-size: 13px;
-    ">${count}</div>`,
+    html: `<div
+      aria-label="${spiderfyLabel}"
+      title="${spiderfyLabel}"
+      style="
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        width: 34px; height: 34px;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        display: flex; align-items: center; justify-content: center;
+        color: white; font-weight: bold; font-size: 13px;
+      "
+    ><span aria-hidden="true">${count}</span></div>`,
     className: "client-marker-cluster",
     iconSize: L.point(34, 34, true),
   });
@@ -224,7 +229,11 @@ export default function MapView({
   );
 
   return (
-    <div className="relative w-full h-full rounded-xl overflow-hidden shadow-xl">
+    <div
+      className="relative w-full h-full rounded-xl overflow-hidden shadow-xl"
+      role="region"
+      aria-label="Mapa interactivo de desfibriladores (DEA)"
+    >
       <MapContainer
         center={[40.4168, -3.7038]}
         zoom={12}
@@ -263,6 +272,8 @@ export default function MapView({
           <Marker
             position={[searchLocation.lat, searchLocation.lng]}
             icon={searchLocationIcon}
+            alt="Tu ubicación de búsqueda"
+            title="Tu ubicación de búsqueda — arrastra para ajustar"
             zIndexOffset={1000}
             draggable={true}
             eventHandlers={{
@@ -336,6 +347,8 @@ export default function MapView({
               key={aed.id}
               position={[aed.latitude, aed.longitude]}
               icon={aedIcon}
+              alt={`DEA: ${aed.name}`}
+              title={aed.name}
               eventHandlers={{
                 click: () => handleMarkerClick(aed),
               }}
@@ -348,7 +361,10 @@ export default function MapView({
 
                     <div className="space-y-2 text-sm">
                       <div className="flex items-start gap-2">
-                        <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                        <MapPin
+                          className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5"
+                          aria-hidden="true"
+                        />
                         <div>
                           <p className="text-gray-700">{aed.establishment_type}</p>
                         </div>
@@ -358,6 +374,7 @@ export default function MapView({
                     <button
                       onClick={() => handleMarkerClick(aed)}
                       className="w-full mt-3 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all"
+                      aria-label={`Ver detalles de ${aed.name}`}
                     >
                       Ver detalles
                     </button>
@@ -369,18 +386,30 @@ export default function MapView({
         </MarkerClusterGroup>
       </MapContainer>
 
+      {/* Screen reader announcement for loaded AED count */}
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {!loading && aeds.length > 0 && `${aeds.length} desfibriladores encontrados en esta zona`}
+      </div>
+
       {/* Loading indicator */}
       {loading && (
-        <div className="absolute top-4 left-4 z-[1000] bg-white rounded-lg shadow-lg px-4 py-2 flex items-center gap-2">
-          <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+        <div
+          className="absolute top-4 left-4 z-[1000] bg-white rounded-lg shadow-lg px-4 py-2 flex items-center gap-2"
+          role="status"
+          aria-live="polite"
+        >
+          <Loader2 className="w-4 h-4 animate-spin text-blue-600" aria-hidden="true" />
           <span className="text-sm font-medium text-gray-700">Cargando DEAs...</span>
         </div>
       )}
 
       {/* Error indicator */}
       {error && (
-        <div className="absolute top-4 left-4 z-[1000] bg-red-50 border border-red-200 rounded-lg shadow-lg px-4 py-2 flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-red-600" />
+        <div
+          className="absolute top-4 left-4 z-[1000] bg-red-50 border border-red-200 rounded-lg shadow-lg px-4 py-2 flex items-center gap-2"
+          role="alert"
+        >
+          <AlertCircle className="w-4 h-4 text-red-600" aria-hidden="true" />
           <span className="text-sm font-medium text-red-700">{error}</span>
         </div>
       )}

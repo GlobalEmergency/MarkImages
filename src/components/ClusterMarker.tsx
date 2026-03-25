@@ -76,7 +76,7 @@ function getClusterIcon(count: number): L.DivIcon {
           border: 3px solid white;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
           opacity: 0.9;
-        "></div>
+        " aria-hidden="true"></div>
         <div style="
           position: relative;
           z-index: 1;
@@ -103,6 +103,8 @@ export function ClusterMarker({ cluster, onClusterClick }: ClusterMarkerProps) {
     <Marker
       position={[cluster.center.lat, cluster.center.lng]}
       icon={getClusterIcon(cluster.count)}
+      alt={`Grupo de ${cluster.count} desfibriladores`}
+      title={`${cluster.count} desfibriladores — clic para ampliar`}
       eventHandlers={{
         click: () => onClusterClick?.(cluster),
       }}
