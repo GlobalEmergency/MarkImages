@@ -5,7 +5,12 @@
     <key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
+	<string>es</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>es</string>
+		<string>en</string>
+	</array>
 	<key>CFBundleDisplayName</key>
         <string>DeaMap</string>
 	<key>CFBundleExecutable</key>
@@ -47,6 +52,17 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>es.deamap.mobile</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>deamap</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>DeaMap necesita tu ubicación para encontrar desfibriladores cercanos</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

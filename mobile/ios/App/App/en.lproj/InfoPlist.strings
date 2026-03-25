@@ -1,0 +1,5 @@
+/* English — localized Info.plist strings */
+
+"CFBundleDisplayName" = "DeaMap";
+"NSLocationWhenInUseUsageDescription" = "DeaMap needs your location to find nearby defibrillators";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "DeaMap needs your location to find nearby defibrillators";
