@@ -17,6 +17,12 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 
 import AedDetailModal from "@/components/AedDetailModal";
+import {
+  AppDownloadPrompt,
+  AppDownloadSection,
+  AppSmartBanner,
+  useAppDownloadPrompt,
+} from "@/components/AppDownloadBanner";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import type { Aed } from "@/types/aed";
 
@@ -77,6 +83,8 @@ export default function Home() {
     trackButtonClick,
   } = useAnalytics();
 
+  const appPrompt = useAppDownloadPrompt();
+
   // Debounce for address search
   const searchAddressSuggestions = async (query: string) => {
     if (query.length < 3) {
@@ -136,6 +144,8 @@ export default function Home() {
         setNearbyAeds(nearbyData.data);
         if (nearbyData.data.length === 0) {
           setError("No se encontraron DEAs cerca de esta ubicación en un radio de 10 km.");
+        } else {
+          appPrompt.trigger("search_results", 2000);
         }
       } else {
         throw new Error(nearbyData.message || "Error al buscar DEAs");
@@ -196,6 +206,7 @@ export default function Home() {
       });
 
       trackGeolocationRequest("success");
+      appPrompt.trigger("geolocation", 3000);
       const { latitude, longitude } = position.coords;
       setSearchLocation({ lat: latitude, lng: longitude });
 
@@ -318,6 +329,17 @@ export default function Home() {
 
   return (
     <>
+      {/* Smart App Banner for mobile users */}
+      <AppSmartBanner />
+
+      {/* Contextual App Download Prompt */}
+      <AppDownloadPrompt
+        visible={appPrompt.visible}
+        context={appPrompt.context}
+        platform={appPrompt.platform}
+        onDismiss={appPrompt.dismiss}
+      />
+
       {/* Fullscreen Map Section */}
       <div className="relative w-full h-[calc(100vh-56px)]">
         <MapView
@@ -327,8 +349,10 @@ export default function Home() {
           onAddressChange={handleAddressChange}
         />
 
-        {/* Search Controls Overlay - Desktop: Top Left, Mobile: Top */}
-        <div className="absolute top-4 left-4 right-4 z-[1000] pointer-events-none">
+        {/* Search Controls Overlay - Desktop: Top Left, Mobile: Top (hidden when modal open) */}
+        <div
+          className={`absolute top-4 left-4 right-4 z-[1000] pointer-events-none ${modalOpen ? "hidden" : ""}`}
+        >
           <div className="max-w-md pointer-events-auto">
             {/* Search Box */}
             <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
@@ -419,8 +443,10 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Geolocation Button - Mobile: Bottom Center */}
-        <div className="md:hidden absolute bottom-24 left-1/2 transform -translate-x-1/2 z-[1000]">
+        {/* Geolocation Button - Mobile: Bottom Center (hidden when modal open) */}
+        <div
+          className={`md:hidden absolute bottom-24 left-1/2 transform -translate-x-1/2 z-[1000] ${modalOpen ? "hidden" : ""}`}
+        >
           <button
             onClick={handleFindNearestByGeolocation}
             disabled={loading}
@@ -518,8 +544,8 @@ export default function Home() {
           </>
         )}
 
-        {/* Scroll Down Indicator - Hide when showing results */}
-        {!showResults && (
+        {/* Scroll Down Indicator - Hide when showing results or modal open */}
+        {!showResults && !modalOpen && (
           <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-[999] pointer-events-none">
             <div className="flex flex-col items-center gap-2 text-white drop-shadow-lg">
               <span className="text-sm font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
@@ -531,7 +557,13 @@ export default function Home() {
         )}
 
         {/* Detail Modal */}
-        <AedDetailModal aed={selectedAed} isOpen={modalOpen} onClose={handleCloseModal} />
+        <AedDetailModal
+          aed={selectedAed}
+          isOpen={modalOpen}
+          onClose={handleCloseModal}
+          onDirectionsClick={() => appPrompt.trigger("directions")}
+          onViewDuration={() => appPrompt.trigger("dea_detail")}
+        />
       </div>
 
       {/* Info Section - After the map */}
@@ -613,6 +645,9 @@ export default function Home() {
               </div>
             </div>
           </section>
+
+          {/* App Download Banner */}
+          <AppDownloadSection />
 
           {/* Stats Section */}
           <section className="max-w-4xl mx-auto">
