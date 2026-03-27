@@ -3,6 +3,7 @@
 import { ExternalLink, MapPin, PlusCircle } from "lucide-react";
 import Link from "next/link";
 
+import { AppStoreFooterLinks } from "@/components/AppDownloadBanner";
 import { useAnalytics } from "@/hooks/useAnalytics";
 
 export default function Footer() {
@@ -11,7 +12,7 @@ export default function Footer() {
   return (
     <footer className="bg-gradient-to-br from-gray-900 to-gray-800 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="grid md:grid-cols-3 gap-8 mb-8">
+        <div className="grid md:grid-cols-4 gap-8 mb-8">
           {/* DeaMap Info */}
           <div>
             <h3 className="font-bold text-lg mb-3 text-white">DeaMap</h3>
@@ -41,6 +42,9 @@ export default function Footer() {
             </a>
             <p className="text-gray-400 text-xs mt-2">Mejorando la respuesta ante emergencias</p>
           </div>
+
+          {/* App Móvil */}
+          <AppStoreFooterLinks />
 
           {/* Enlaces rápidos */}
           <div>

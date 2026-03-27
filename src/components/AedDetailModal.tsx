@@ -19,9 +19,17 @@ interface AedDetailModalProps {
   aed: Aed | null;
   isOpen: boolean;
   onClose: () => void;
+  onDirectionsClick?: () => void;
+  onViewDuration?: () => void;
 }
 
-export default function AedDetailModal({ aed, isOpen, onClose }: AedDetailModalProps) {
+export default function AedDetailModal({
+  aed,
+  isOpen,
+  onClose,
+  onDirectionsClick,
+  onViewDuration,
+}: AedDetailModalProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const { trackDeaImageView, trackDeaPhoneClick, trackExternalLink, trackButtonClick } =
     useAnalytics();
@@ -30,6 +38,14 @@ export default function AedDetailModal({ aed, isOpen, onClose }: AedDetailModalP
   useEffect(() => {
     setSelectedImageIndex(0);
   }, [aed?.id]);
+
+  // Trigger app download prompt after viewing for 5 seconds
+  const aedId = aed?.id;
+  useEffect(() => {
+    if (!isOpen || !aedId || !onViewDuration) return;
+    const timer = setTimeout(onViewDuration, 5000);
+    return () => clearTimeout(timer);
+  }, [isOpen, aedId, onViewDuration]);
 
   const handleImageChange = useCallback(
     (index: number) => {
@@ -57,8 +73,9 @@ export default function AedDetailModal({ aed, isOpen, onClose }: AedDetailModalP
         "Cómo llegar",
         "dea_modal"
       );
+      onDirectionsClick?.();
     }
-  }, [aed, trackExternalLink]);
+  }, [aed, trackExternalLink, onDirectionsClick]);
 
   const handleEmailClick = useCallback(
     (_email: string) => {
@@ -82,7 +99,7 @@ export default function AedDetailModal({ aed, isOpen, onClose }: AedDetailModalP
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[1500] flex items-center justify-center p-4"
       style={{
         background:
           "radial-gradient(circle at center, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.9) 100%)",
