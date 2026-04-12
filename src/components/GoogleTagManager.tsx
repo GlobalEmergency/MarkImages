@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Script from 'next/script';
+import Script from "next/script";
 
-const GTM_ID = 'GTM-5BLL9B87';
+const GTM_ID = "GTM-5BLL9B87";
 
 export function GoogleTagManagerHead() {
   if (!GTM_ID) return null;
@@ -33,7 +33,7 @@ export function GoogleTagManagerBody() {
         src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
         height="0"
         width="0"
-        style={{ display: 'none', visibility: 'hidden' }}
+        style={{ display: "none", visibility: "hidden" }}
       />
     </noscript>
   );
