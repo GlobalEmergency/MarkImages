@@ -185,8 +185,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Cache 24h + 48h SWR — invalidated on-demand when AEDs change
-    response.headers.set("Cache-Control", "public, s-maxage=86400, stale-while-revalidate=172800");
+    // Short CDN cache — internal API used by logged-in users who need to see changes quickly
+    response.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=120");
 
     return response;
   } catch (error) {

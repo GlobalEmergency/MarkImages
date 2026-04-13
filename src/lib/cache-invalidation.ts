@@ -1,12 +1,13 @@
 /**
  * On-demand cache invalidation for AED data.
  *
- * Strategy: all public endpoints use long TTLs (24h) with stale-while-revalidate.
- * When AED data changes, we invalidate specific paths so Vercel purges the CDN
- * cache and the next request gets fresh data.
+ * Cache strategy:
+ * - Internal APIs (/api/aeds/*): 60s TTL — users see changes within ~1 min
+ * - Public APIs (/api/v1/*): 24h TTL — invalidated on-demand when AEDs change
+ * - ISR pages (/locations/*): 24h revalidate — invalidated on-demand
  *
- * Uses Next.js `revalidatePath()` which works both for ISR pages and API routes
- * cached at the CDN level on Vercel.
+ * Uses Next.js `revalidatePath()` to purge Vercel CDN cache for long-TTL routes.
+ * Internal APIs don't need invalidation — their short TTL handles freshness.
  */
 
 import { revalidatePath } from "next/cache";
@@ -20,18 +21,15 @@ export function invalidateAedCaches(options?: {
   cityName?: string;
   communitySlug?: string;
 }): void {
-  // Map/list endpoints — always invalidate on any AED change
-  revalidatePath("/api/aeds", "page");
-  revalidatePath("/api/aeds/by-bounds", "page");
-  revalidatePath("/api/aeds/nearby", "page");
+  // Public API v1 endpoints (24h TTL — need explicit invalidation)
   revalidatePath("/api/v1/aeds/stats", "page");
   revalidatePath("/api/v1/aeds/nearby", "page");
 
-  // ISR location pages
+  // ISR location pages (24h revalidate)
   revalidatePath("/locations", "page");
   revalidatePath("/locations/spain", "page");
 
-  // Specific AED detail
+  // Specific AED detail (public API)
   if (options?.aedId) {
     revalidatePath(`/api/v1/aeds/${options.aedId}`, "page");
   }

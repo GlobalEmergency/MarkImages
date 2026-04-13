@@ -89,11 +89,8 @@ export async function GET(request: NextRequest) {
     });
 
     const httpResponse = NextResponse.json(response);
-    // Cache 24h + 48h SWR — invalidated on-demand when AEDs change
-    httpResponse.headers.set(
-      "Cache-Control",
-      "public, s-maxage=86400, stale-while-revalidate=172800"
-    );
+    // Short CDN cache — internal API used by logged-in users who need to see changes quickly
+    httpResponse.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=120");
 
     // Server-Timing header: visible in browser DevTools → Network → Timing tab
     if (response.timing) {
