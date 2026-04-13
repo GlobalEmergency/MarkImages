@@ -40,8 +40,8 @@ async function getCountryStats(): Promise<CountryStats[]> {
              COUNT(DISTINCT l.city_name)::int as "city_count"
       FROM aeds a
       JOIN aed_locations l ON l.id = a.location_id
-      WHERE a.publication_mode != 'NONE'
-        AND a.published_at IS NOT NULL
+      WHERE a.status = 'PUBLISHED'
+        AND a.publication_mode != 'NONE'
         AND l.city_name IS NOT NULL
         AND l.city_name != ''
       GROUP BY a.country_code

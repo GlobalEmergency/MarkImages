@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
+import { PUBLISHED_AED_WHERE } from "@/lib/aed-status";
 import { prisma } from "@/lib/db";
 import {
   COMMUNITY_BY_SLUG,
@@ -11,6 +12,7 @@ import {
   cityPath,
   communityPath,
   countryPath,
+  slugToApproxCityName,
 } from "@/lib/geography";
 import { safeJsonLd } from "@/lib/json-ld";
 
@@ -24,36 +26,23 @@ interface Props {
   searchParams: Promise<{ page?: string }>;
 }
 
-function slugToCity(slug: string): string {
-  return decodeURIComponent(slug)
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 const resolveCityName = cache(async (citySlug: string): Promise<string | null> => {
-  const cityName = slugToCity(citySlug);
+  const approxName = slugToApproxCityName(citySlug);
 
-  const exact = await prisma.aed.findFirst({
+  const match = await prisma.aed.findFirst({
     where: {
-      publication_mode: { not: "NONE" },
-      published_at: { not: null },
-      location: { city_name: { equals: cityName, mode: "insensitive" } },
+      ...PUBLISHED_AED_WHERE,
+      location: {
+        OR: [
+          { city_name: { equals: approxName, mode: "insensitive" } },
+          { city_name: { contains: approxName, mode: "insensitive" } },
+        ],
+      },
     },
     include: { location: { select: { city_name: true } } },
   });
 
-  if (exact) return exact.location?.city_name || cityName;
-
-  const partial = await prisma.aed.findFirst({
-    where: {
-      publication_mode: { not: "NONE" },
-      published_at: { not: null },
-      location: { city_name: { contains: cityName, mode: "insensitive" } },
-    },
-    include: { location: { select: { city_name: true } } },
-  });
-
-  return partial?.location?.city_name || null;
+  return match?.location?.city_name ?? null;
 });
 
 interface DistrictCount {
@@ -62,26 +51,29 @@ interface DistrictCount {
 }
 
 const getCityStats = cache(async (cityName: string) => {
-  const districtCounts = (await prisma.$queryRaw`
-    SELECT l.district_name, COUNT(*)::int as "count"
-    FROM aeds a
-    JOIN aed_locations l ON l.id = a.location_id
-    WHERE a.publication_mode != 'NONE'
-      AND a.published_at IS NOT NULL
-      AND LOWER(l.city_name) = LOWER(${cityName})
-    GROUP BY l.district_name
-    ORDER BY COUNT(*) DESC
-  `) as DistrictCount[];
+  try {
+    const districtCounts = (await prisma.$queryRaw`
+      SELECT l.district_name, COUNT(*)::int as "count"
+      FROM aeds a
+      JOIN aed_locations l ON l.id = a.location_id
+      WHERE a.status = 'PUBLISHED'
+        AND a.publication_mode != 'NONE'
+        AND LOWER(l.city_name) = LOWER(${cityName})
+      GROUP BY l.district_name
+      ORDER BY COUNT(*) DESC
+    `) as DistrictCount[];
 
-  const totalCount = districtCounts.reduce((sum, d) => sum + d.count, 0);
-  return { totalCount, districtCounts };
+    const totalCount = districtCounts.reduce((sum, d) => sum + d.count, 0);
+    return { totalCount, districtCounts };
+  } catch {
+    return { totalCount: 0, districtCounts: [] };
+  }
 });
 
 async function getCityAeds(cityName: string, page: number) {
   return prisma.aed.findMany({
     where: {
-      publication_mode: { not: "NONE" },
-      published_at: { not: null },
+      ...PUBLISHED_AED_WHERE,
       location: { city_name: { equals: cityName, mode: "insensitive" } },
     },
     select: {
