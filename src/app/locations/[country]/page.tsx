@@ -7,6 +7,7 @@ import { PUBLISHED_AED_WHERE } from "@/lib/aed-status";
 import { prisma } from "@/lib/db";
 import {
   countryFromSlug,
+  toSlug,
   communityPath,
   cityPath,
   slugToApproxCityName,
@@ -47,7 +48,6 @@ async function getCountryStats(countryCode: string): Promise<{
         AND a.country_code = ${countryCode}
         AND l.city_name IS NOT NULL
         AND l.city_name != ''
-        AND (l.admin_level_1 IS NOT NULL OR COALESCE(NULLIF(l.city_code, ''), NULLIF(l.postal_code, '')) IS NOT NULL)
       GROUP BY l.admin_level_1, COALESCE(LEFT(NULLIF(l.city_code, ''), 2), LEFT(NULLIF(l.postal_code, ''), 2)), l.city_name
     `) as {
       admin_level_1: string | null;
@@ -64,15 +64,28 @@ async function getCountryStats(countryCode: string): Promise<{
     for (const row of raw) {
       const regionSlug = resolveRegionSlug(row.admin_level_1, row.ine_code);
       const regionName = resolveRegionName(row.admin_level_1, row.ine_code);
-      if (!regionSlug || !regionName) continue;
-      const existing = communityAgg.get(regionSlug) || {
-        name: regionName,
-        totalAeds: 0,
-        cities: new Set<string>(),
-      };
-      existing.totalAeds += row.aed_count;
-      existing.cities.add(row.city_name);
-      communityAgg.set(regionSlug, existing);
+      if (regionSlug && regionName) {
+        // Records with a known region → group by region
+        const existing = communityAgg.get(regionSlug) || {
+          name: regionName,
+          totalAeds: 0,
+          cities: new Set<string>(),
+        };
+        existing.totalAeds += row.aed_count;
+        existing.cities.add(row.city_name);
+        communityAgg.set(regionSlug, existing);
+      } else {
+        // Records without region (e.g., city-states, unenriched) → group by city directly
+        const citySlug = toSlug(row.city_name);
+        const existing = communityAgg.get(citySlug) || {
+          name: row.city_name,
+          totalAeds: 0,
+          cities: new Set<string>(),
+        };
+        existing.totalAeds += row.aed_count;
+        existing.cities.add(row.city_name);
+        communityAgg.set(citySlug, existing);
+      }
     }
 
     const communities: CommunityStats[] = [...communityAgg.entries()]

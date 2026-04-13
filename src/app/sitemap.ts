@@ -42,7 +42,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         AND a.country_code IS NOT NULL
         AND l.city_name IS NOT NULL
         AND l.city_name != ''
-        AND (l.admin_level_1 IS NOT NULL OR COALESCE(NULLIF(l.city_code, ''), NULLIF(l.postal_code, '')) IS NOT NULL)
       GROUP BY a.country_code, l.city_name, l.admin_level_1, COALESCE(LEFT(NULLIF(l.city_code, ''), 2), LEFT(NULLIF(l.postal_code, ''), 2))
       ORDER BY "count" DESC
     `) as {

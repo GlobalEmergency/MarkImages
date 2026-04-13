@@ -473,6 +473,17 @@ async function main() {
         });
       }
 
+      // Fill missing city_name from Nominatim
+      const currentCity = aed.location?.city_name ?? null;
+      if (!currentCity && result.city) {
+        update.city_name = result.city;
+        fieldChanges.push({
+          field: "city_name",
+          oldValue: "",
+          newValue: result.city,
+        });
+      }
+
       if (opts.fixCityCode && cityCodeMismatch && result.postalCode) {
         const newPrefix = result.postalCode.substring(0, 2);
         const oldSuffix = currentCityCode!.substring(2);
