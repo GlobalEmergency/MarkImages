@@ -23,11 +23,15 @@
  *   --fix-city-code        Also fix city_code prefix from Nominatim result
  *   --country ES           Only process records from this country
  *   --report               Generate CSV reports (mismatches + wrong countries)
+ *   --random               Randomize record order (for diverse geographic sampling)
  */
 
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/client/client";
 import { reverseGeocode, type ReverseGeocodeResult } from "../src/lib/nominatim";
+
+const SYSTEM_USER_UUID = "00000000-0000-0000-0000-000000000000";
+const CHANGE_SOURCE = "IMPORT" as const;
 
 // --- Coordinate validation ---
 
@@ -63,6 +67,7 @@ interface Options {
   fixCityCode: boolean;
   country: string | null;
   report: boolean;
+  random: boolean;
 }
 
 function parseArgs(): Options {
@@ -75,6 +80,7 @@ function parseArgs(): Options {
     fixCityCode: false,
     country: null,
     report: false,
+    random: false,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -105,6 +111,9 @@ function parseArgs(): Options {
         break;
       case "--report":
         opts.report = true;
+        break;
+      case "--random":
+        opts.random = true;
         break;
     }
   }
@@ -175,28 +184,89 @@ async function main() {
     );
     console.log();
 
-    const aeds = await prisma.aed.findMany({
-      where,
-      select: {
-        id: true,
-        name: true,
-        latitude: true,
-        longitude: true,
-        country_code: true,
+    // Use raw query for random ordering (Prisma doesn't support ORDER BY RANDOM())
+    // For sequential ordering, use Prisma's findMany
+    let aeds: {
+      id: string;
+      name: string | null;
+      latitude: number | null;
+      longitude: number | null;
+      country_code: string | null;
+      location: {
+        id: string;
+        city_name: string | null;
+        city_code: string | null;
+        postal_code: string | null;
+        admin_level_1: string | null;
+      } | null;
+    }[];
+
+    if (opts.random) {
+      // Random sampling via raw SQL for geographic diversity
+      const verifiedFilter = opts.onlyUnverified ? `AND l.nominatim_verified_at IS NULL` : "";
+      const countryFilter = opts.country ? `AND a.country_code = '${opts.country}'` : "";
+      const limitClause = processCount ? `LIMIT ${processCount}` : "";
+
+      const rawAeds = (await prisma.$queryRawUnsafe(`
+        SELECT a.id, a.name, a.latitude, a.longitude, a.country_code,
+               l.id as location_id, l.city_name, l.city_code, l.postal_code, l.admin_level_1
+        FROM aeds a
+        JOIN aed_locations l ON l.id = a.location_id
+        WHERE a.latitude IS NOT NULL AND a.longitude IS NOT NULL
+          ${verifiedFilter} ${countryFilter}
+        ORDER BY RANDOM()
+        ${limitClause}
+      `)) as {
+        id: string;
+        name: string | null;
+        latitude: number;
+        longitude: number;
+        country_code: string | null;
+        location_id: string;
+        city_name: string | null;
+        city_code: string | null;
+        postal_code: string | null;
+        admin_level_1: string | null;
+      }[];
+
+      aeds = rawAeds.map((r) => ({
+        id: r.id,
+        name: r.name,
+        latitude: r.latitude,
+        longitude: r.longitude,
+        country_code: r.country_code,
         location: {
-          select: {
-            id: true,
-            city_name: true,
-            city_code: true,
-            postal_code: true,
-            admin_level_1: true,
+          id: r.location_id,
+          city_name: r.city_name,
+          city_code: r.city_code,
+          postal_code: r.postal_code,
+          admin_level_1: r.admin_level_1,
+        },
+      }));
+    } else {
+      aeds = await prisma.aed.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          latitude: true,
+          longitude: true,
+          country_code: true,
+          location: {
+            select: {
+              id: true,
+              city_name: true,
+              city_code: true,
+              postal_code: true,
+              admin_level_1: true,
+            },
           },
         },
-      },
-      orderBy: { created_at: "asc" },
-      skip: opts.offset,
-      take: processCount,
-    });
+        orderBy: { created_at: "asc" },
+        skip: opts.offset,
+        take: processCount,
+      });
+    }
 
     let enriched = 0;
     let skipped = 0;
@@ -281,9 +351,9 @@ async function main() {
       }
 
       // Check for city_code mismatches (Spain only)
-      const currentAdmin = aed.location?.admin_level_1;
-      const currentCityCode = aed.location?.city_code;
-      const currentPostal = aed.location?.postal_code;
+      const currentAdmin = aed.location?.admin_level_1 ?? null;
+      const currentCityCode = aed.location?.city_code ?? null;
+      const currentPostal = aed.location?.postal_code ?? null;
 
       let cityCodeMismatch = false;
       if (result.countryCode === "ES" && currentCityCode && result.postalCode) {
@@ -305,30 +375,64 @@ async function main() {
         }
       }
 
-      // Build update
+      // Build update and track field changes for audit trail
       const update: Record<string, string | Date | undefined> = {
         nominatim_verified_at: new Date(),
       };
+      const fieldChanges: { field: string; oldValue: string; newValue: string }[] = [];
 
-      if (result.adminLevel1) {
+      if (result.adminLevel1 && result.adminLevel1 !== currentAdmin) {
         update.admin_level_1 = result.adminLevel1;
+        fieldChanges.push({
+          field: "admin_level_1",
+          oldValue: currentAdmin || "",
+          newValue: result.adminLevel1,
+        });
       }
 
       if (opts.fixCityCode && cityCodeMismatch && result.postalCode) {
         const newPrefix = result.postalCode.substring(0, 2);
         const oldSuffix = currentCityCode!.substring(2);
-        update.city_code = newPrefix + oldSuffix;
+        const newCityCode = newPrefix + oldSuffix;
+        update.city_code = newCityCode;
+        fieldChanges.push({
+          field: "city_code",
+          oldValue: currentCityCode || "",
+          newValue: newCityCode,
+        });
       }
 
       // Fill missing postal_code
       if (!currentPostal && result.postalCode) {
         update.postal_code = result.postalCode;
+        fieldChanges.push({
+          field: "postal_code",
+          oldValue: "",
+          newValue: result.postalCode,
+        });
       }
 
       if (!opts.dryRun) {
-        await prisma.aedLocation.update({
-          where: { id: locationId },
-          data: update,
+        // Transaction: update location + record field changes in audit trail
+        await prisma.$transaction(async (tx) => {
+          await tx.aedLocation.update({
+            where: { id: locationId },
+            data: update,
+          });
+
+          // Record each field change for full traceability
+          for (const change of fieldChanges) {
+            await tx.aedFieldChange.create({
+              data: {
+                aed_id: aed.id,
+                field_name: change.field,
+                old_value: change.oldValue,
+                new_value: change.newValue,
+                changed_by: SYSTEM_USER_UUID,
+                change_source: CHANGE_SOURCE,
+              },
+            });
+          }
         });
       }
 
