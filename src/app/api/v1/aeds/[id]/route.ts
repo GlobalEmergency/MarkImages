@@ -121,16 +121,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       web_url: `https://deamap.es/dea/${filtered.id}`,
     };
 
-    const response = NextResponse.json({
-      data,
-      meta: { api_version: "v1" },
-    });
-
-    // Cache 24h + 48h SWR — invalidated on-demand when AEDs change
-    response.headers.set("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=7200");
-    response.headers.set("Access-Control-Allow-Origin", "*");
-
-    return response;
+    return NextResponse.json(
+      { data, meta: { api_version: "v1" } },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
+          "CDN-Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
+          "Access-Control-Allow-Origin": "*",
+        },
+      }
+    );
   } catch (error) {
     console.error("[Public API v1] Error fetching AED:", error);
     return NextResponse.json(

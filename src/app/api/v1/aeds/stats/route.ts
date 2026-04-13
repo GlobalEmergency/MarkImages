@@ -48,23 +48,26 @@ export async function GET(request: NextRequest) {
       `,
     ]);
 
-    const response = NextResponse.json({
-      data: {
-        total_aeds: totalAeds,
-        total_cities: totalCitiesResult[0]?.count ?? 0,
-        top_cities: topCities.map((c) => ({
-          name: c.city_name,
-          count: c.count,
-        })),
+    return NextResponse.json(
+      {
+        data: {
+          total_aeds: totalAeds,
+          total_cities: totalCitiesResult[0]?.count ?? 0,
+          top_cities: topCities.map((c) => ({
+            name: c.city_name,
+            count: c.count,
+          })),
+        },
+        meta: { api_version: "v1" },
       },
-      meta: { api_version: "v1" },
-    });
-
-    // Cache 24h + 48h SWR — invalidated on-demand when AEDs change
-    response.headers.set("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=7200");
-    response.headers.set("Access-Control-Allow-Origin", "*");
-
-    return response;
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
+          "CDN-Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
+          "Access-Control-Allow-Origin": "*",
+        },
+      }
+    );
   } catch (error) {
     console.error("[Public API v1] Error fetching stats:", error);
     return NextResponse.json(
