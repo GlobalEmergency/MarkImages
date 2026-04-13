@@ -19,6 +19,7 @@
  *   --report           Generate a CSV report of mismatches (default: false)
  */
 
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/client/client";
 import { reverseGeocode } from "../src/lib/nominatim";
 
@@ -91,7 +92,13 @@ interface Mismatch {
 
 async function main() {
   const opts = parseArgs();
-  const prisma = new PrismaClient();
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    console.error("DATABASE_URL environment variable is required");
+    process.exit(1);
+  }
+  const adapter = new PrismaPg({ connectionString });
+  const prisma = new PrismaClient({ adapter });
   const startTime = Date.now();
 
   console.log("=== Geographic Enrichment Script ===");
