@@ -15,7 +15,7 @@ import "./globals.css";
 const siteUrl = "https://deamap.es";
 const siteName = "DeaMap";
 const siteDescription =
-  "Encuentra desfibriladores cerca de ti en tiempo real. Mapa interactivo con más de 50.000 DEAs en España, horarios de acceso y rutas.";
+  "Encuentra desfibriladores cerca de ti en tiempo real. Mapa interactivo con más de 50.000 DEAs registrados en España y en todo el mundo.";
 
 export const metadata: Metadata = {
   title: {
@@ -49,6 +49,9 @@ export const metadata: Metadata = {
     "AED locator",
     "AED map",
     "defibrillator map",
+    "AED finder",
+    "defibrillator near me",
+    "defibrillator map worldwide",
   ],
   authors: [{ name: siteName, url: siteUrl }],
   creator: siteName,
@@ -65,7 +68,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "DeaMap - Mapa interactivo de desfibriladores en España",
+        alt: "DeaMap - Mapa interactivo de desfibriladores en España y en todo el mundo",
         type: "image/png",
       },
     ],

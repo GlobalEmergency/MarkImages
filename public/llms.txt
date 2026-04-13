@@ -1,6 +1,6 @@
 # DeaMap - Defibrillator Map
 
-> DeaMap is a collaborative platform to locate Automated External Defibrillators (AEDs) in Spain. It provides an interactive map with over 50,000 registered defibrillators across Spanish cities.
+> DeaMap is a collaborative platform to locate Automated External Defibrillators (AEDs). It provides an interactive map with over 50,000 registered defibrillators worldwide, with primary coverage in Spain and growing international presence.
 
 ## API
 
