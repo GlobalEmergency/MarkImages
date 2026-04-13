@@ -6,6 +6,7 @@ import { uploadToS3 } from "@/lib/s3";
 import { buildImageKey, extractExtension } from "@/lib/s3-utils";
 import { processVerificationImages, type ImageToProcess } from "@/lib/imageProcessing";
 import { recordStatusChange } from "@/lib/audit";
+import { invalidateAedCaches } from "@/lib/cache-invalidation";
 import type { ProcessedImageData } from "@/types/verification";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -259,6 +260,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     } else {
       console.log("🎉 Verificación completada exitosamente");
     }
+
+    invalidateAedCaches(id);
 
     return NextResponse.json({
       ...updatedValidation,

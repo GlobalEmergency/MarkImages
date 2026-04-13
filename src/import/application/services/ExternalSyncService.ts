@@ -43,6 +43,7 @@ import {
   DEFAULT_CHUNK_MAX_RECORDS,
 } from "@/import/constants";
 import { appendInternalNote, recordStatusChange } from "@/lib/audit";
+import { invalidateAllAedCaches } from "@/lib/cache-invalidation";
 import { SYSTEM_USER_UUID } from "@/constants/system";
 
 // ============================================================
@@ -571,7 +572,10 @@ export class ExternalSyncService {
       console.error(`[Sync] Failed to finalize data source ${dataSourceId}:`, error);
     }
 
-    // 2. Disappearance detection — skip for dry runs or if no syncStartTime
+    // 2. Invalidate all caches after bulk sync
+    invalidateAllAedCaches();
+
+    // 3. Disappearance detection — skip for dry runs or if no syncStartTime
     if (dryRun || !syncStartTime) return;
 
     await this.detectDisappearedIdentifiers(dataSourceId, syncStartTime);

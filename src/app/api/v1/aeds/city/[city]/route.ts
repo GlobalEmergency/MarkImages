@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { PUBLISHED_AED_WHERE } from "@/lib/aed-status";
+import { V1_PUBLIC_HEADERS } from "@/lib/cache-headers";
 import { prisma } from "@/lib/db";
 import { publicApiRateLimiter } from "@/lib/rate-limit-public-api";
 
@@ -126,22 +127,20 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       web_url: `https://deamap.es/dea/${aed.id}`,
     }));
 
-    const response = NextResponse.json({
-      data,
-      meta: {
-        city: actualCityName,
-        total,
-        limit,
-        offset,
-        has_more: offset + limit < total,
-        api_version: "v1",
+    return NextResponse.json(
+      {
+        data,
+        meta: {
+          city: actualCityName,
+          total,
+          limit,
+          offset,
+          has_more: offset + limit < total,
+          api_version: "v1",
+        },
       },
-    });
-
-    response.headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600");
-    response.headers.set("Access-Control-Allow-Origin", "*");
-
-    return response;
+      { headers: V1_PUBLIC_HEADERS }
+    );
   } catch (error) {
     console.error("[Public API v1] Error fetching city AEDs:", error);
     return NextResponse.json(

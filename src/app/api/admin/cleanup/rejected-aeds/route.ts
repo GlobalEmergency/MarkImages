@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAdmin } from "@/lib/auth";
+import { invalidateAllAedCaches } from "@/lib/cache-invalidation";
 import { prisma } from "@/lib/db";
 
 /**
@@ -117,6 +118,8 @@ export async function DELETE(request: NextRequest) {
 
       return deleted;
     });
+
+    invalidateAllAedCaches();
 
     return NextResponse.json({
       message: "DEAs eliminados exitosamente",

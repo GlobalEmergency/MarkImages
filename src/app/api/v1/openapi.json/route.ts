@@ -6,6 +6,8 @@
 
 import { NextResponse } from "next/server";
 
+import { V1_OPENAPI_HEADERS } from "@/lib/cache-headers";
+
 const spec = {
   openapi: "3.1.0",
   info: {
@@ -348,8 +350,5 @@ const spec = {
 };
 
 export async function GET() {
-  const response = NextResponse.json(spec);
-  response.headers.set("Cache-Control", "public, s-maxage=86400");
-  response.headers.set("Access-Control-Allow-Origin", "*");
-  return response;
+  return NextResponse.json(spec, { headers: V1_OPENAPI_HEADERS });
 }

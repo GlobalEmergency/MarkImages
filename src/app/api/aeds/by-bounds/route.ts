@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
+import { getInternalCacheHeaders } from "@/lib/cache-headers";
 import { getQueryStrategy, isValidBoundingBox } from "@/lib/zoom-strategy";
 import { GetAedsWithClustersUseCase } from "@/clustering/application/use-cases/GetAedsWithClustersUseCase";
 import { PostGISClusteringAdapter } from "@/clustering/infrastructure/adapters/PostGISClusteringAdapter";
@@ -88,20 +89,18 @@ export async function GET(request: NextRequest) {
       strategy,
     });
 
-    const httpResponse = NextResponse.json(response);
-    // Cache clustered map data for 30s, allow stale for 2min while revalidating
-    httpResponse.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=120");
+    const headers: Record<string, string> = {
+      ...getInternalCacheHeaders(request),
+    };
 
     // Server-Timing header: visible in browser DevTools → Network → Timing tab
     if (response.timing) {
       const { total_ms, cache_used } = response.timing;
-      httpResponse.headers.set(
-        "Server-Timing",
-        `db;dur=${total_ms};desc="DB queries", cache;desc="${cache_used ? "HIT" : "MISS"}"`
-      );
+      headers["Server-Timing"] =
+        `db;dur=${total_ms};desc="DB queries", cache;desc="${cache_used ? "HIT" : "MISS"}"`;
     }
 
-    return httpResponse;
+    return NextResponse.json(response, { headers });
   } catch (error) {
     console.error("Error fetching AEDs by bounds:", error);
     return NextResponse.json(

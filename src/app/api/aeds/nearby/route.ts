@@ -7,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { getInternalCacheHeaders } from "@/lib/cache-headers";
 import { prisma } from "@/lib/db";
 import { filterAedByPublicationMode } from "@/lib/publication-filter";
 import type { AedFullData } from "@/lib/publication-filter";
@@ -170,25 +171,15 @@ export async function GET(request: NextRequest) {
         distance: aed.id ? (distanceMap.get(aed.id) ?? 0) : 0,
       }));
 
-    const response = NextResponse.json({
-      success: true,
-      data: filteredAeds,
-      query: {
-        lat,
-        lng,
-        radius,
-        limit,
+    return NextResponse.json(
+      {
+        success: true,
+        data: filteredAeds,
+        query: { lat, lng, radius, limit },
+        stats: { found: filteredAeds.length, searchRadius: radius },
       },
-      stats: {
-        found: filteredAeds.length,
-        searchRadius: radius,
-      },
-    });
-
-    // Cache nearby results for 60s, allow stale for 5min while revalidating
-    response.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
-
-    return response;
+      { headers: getInternalCacheHeaders(request) }
+    );
   } catch (error) {
     console.error("Error fetching nearby AEDs:", error);
     return NextResponse.json(

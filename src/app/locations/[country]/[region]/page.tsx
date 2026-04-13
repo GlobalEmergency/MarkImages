@@ -15,7 +15,7 @@ import {
 } from "@/lib/geography";
 import { safeJsonLd } from "@/lib/json-ld";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 export const dynamicParams = true;
 
 interface Props {

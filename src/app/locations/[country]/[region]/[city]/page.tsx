@@ -19,7 +19,7 @@ import { safeJsonLd } from "@/lib/json-ld";
 const ITEMS_PER_PAGE = 50;
 
 export const dynamicParams = true;
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 interface Props {
   params: Promise<{ country: string; region: string; city: string }>;

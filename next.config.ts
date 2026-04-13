@@ -63,6 +63,19 @@ const nextConfig: NextConfig = {
           { key: "Cache-Control", value: "public, max-age=3600" },
         ],
       },
+      // Static assets: immutable hashed files get long cache
+      {
+        source: "/_next/static/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      // Public static files (icons, manifests, images)
+      {
+        source:
+          "/:path(favicon.ico|og-image.png|manifest.json|robots.txt|sitemap.xml|llms.txt|llms-full.txt)",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" },
+        ],
+      },
       // Security headers for all routes
       {
         source: "/(.*)",

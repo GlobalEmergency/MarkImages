@@ -6,6 +6,7 @@ import { filterAedByPublicationMode } from "@/lib/publication-filter";
 import type { AedFullData } from "@/lib/publication-filter";
 import { validateStatusTransition } from "@/lib/aed-status";
 import { recordStatusChange } from "@/lib/audit";
+import { invalidateAedCaches } from "@/lib/cache-invalidation";
 
 interface AedImageInput {
   type: string;
@@ -262,6 +263,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         return updatedAed;
       });
 
+      invalidateAedCaches(id);
+
       return NextResponse.json(result);
     }
 
@@ -277,6 +280,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         responsible: true,
       },
     });
+
+    invalidateAedCaches(id);
 
     return NextResponse.json(updatedAed);
   } catch (error) {

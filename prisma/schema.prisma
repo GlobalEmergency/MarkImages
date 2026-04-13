@@ -362,6 +362,8 @@ model AedLocation {
   updated_at DateTime @updatedAt
 
   @@index([postal_code])
+  @@index([city_name], map: "idx_aed_locations_city_name")
+  @@index([city_code], map: "idx_aed_locations_city_code")
   @@index([city_code, district_code])
   @@index([city_code, postal_code])
   @@map("aed_locations")

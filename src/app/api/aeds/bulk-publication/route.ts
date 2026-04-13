@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/auth";
+import { invalidateAllAedCaches } from "@/lib/cache-invalidation";
 import { prisma } from "@/lib/db";
 import type { PublicationMode } from "@/generated/client/client";
 
@@ -157,6 +158,8 @@ export async function POST(request: NextRequest) {
         history_entries_created: historyEntries.length,
       };
     });
+
+    invalidateAllAedCaches();
 
     return NextResponse.json({
       success: true,

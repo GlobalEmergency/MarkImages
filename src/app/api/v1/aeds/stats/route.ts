@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { PUBLISHED_AED_WHERE } from "@/lib/aed-status";
+import { V1_PUBLIC_HEADERS } from "@/lib/cache-headers";
 import { prisma } from "@/lib/db";
 import { publicApiRateLimiter } from "@/lib/rate-limit-public-api";
 
@@ -48,22 +49,20 @@ export async function GET(request: NextRequest) {
       `,
     ]);
 
-    const response = NextResponse.json({
-      data: {
-        total_aeds: totalAeds,
-        total_cities: totalCitiesResult[0]?.count ?? 0,
-        top_cities: topCities.map((c) => ({
-          name: c.city_name,
-          count: c.count,
-        })),
+    return NextResponse.json(
+      {
+        data: {
+          total_aeds: totalAeds,
+          total_cities: totalCitiesResult[0]?.count ?? 0,
+          top_cities: topCities.map((c) => ({
+            name: c.city_name,
+            count: c.count,
+          })),
+        },
+        meta: { api_version: "v1" },
       },
-      meta: { api_version: "v1" },
-    });
-
-    response.headers.set("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=7200");
-    response.headers.set("Access-Control-Allow-Origin", "*");
-
-    return response;
+      { headers: V1_PUBLIC_HEADERS }
+    );
   } catch (error) {
     console.error("[Public API v1] Error fetching stats:", error);
     return NextResponse.json(

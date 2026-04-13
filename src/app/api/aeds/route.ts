@@ -11,6 +11,8 @@ import { getUserFromRequest } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { recordStatusChange } from "@/lib/audit";
+import { getInternalCacheHeaders } from "@/lib/cache-headers";
+import { invalidateAedCaches } from "@/lib/cache-invalidation";
 import { filterAedByPublicationMode } from "@/lib/publication-filter";
 import type { AedFullData } from "@/lib/publication-filter";
 import { getDuplicateDetector } from "@/duplicate-detection/infrastructure/factory";
@@ -204,21 +206,19 @@ export async function GET(request: NextRequest) {
       .map((aed) => filterAedByPublicationMode(aed as AedFullData))
       .filter((aed): aed is NonNullable<typeof aed> => aed !== null);
 
-    const response = NextResponse.json({
-      success: true,
-      data: filteredAeds,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
+    return NextResponse.json(
+      {
+        success: true,
+        data: filteredAeds,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
       },
-    });
-
-    // Cache public AED list for 60s, allow stale for 5min while revalidating
-    response.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
-
-    return response;
+      { headers: getInternalCacheHeaders(request) }
+    );
   } catch (error) {
     console.error("Error fetching AEDs:", error);
     return NextResponse.json(
@@ -557,6 +557,8 @@ export async function POST(request: NextRequest) {
 
       return newAed;
     });
+
+    invalidateAedCaches(aed.id);
 
     return NextResponse.json(
       {
