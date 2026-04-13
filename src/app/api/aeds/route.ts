@@ -11,7 +11,7 @@ import { getUserFromRequest } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { recordStatusChange } from "@/lib/audit";
-import { invalidateAedCaches } from "@/lib/cache-invalidation";
+import { invalidateAedCaches, getCacheControl } from "@/lib/cache-invalidation";
 import { filterAedByPublicationMode } from "@/lib/publication-filter";
 import type { AedFullData } from "@/lib/publication-filter";
 import { getDuplicateDetector } from "@/duplicate-detection/infrastructure/factory";
@@ -216,8 +216,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Short CDN cache — internal API used by logged-in users who need to see changes quickly
-    response.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=120");
+    response.headers.set("Cache-Control", getCacheControl(request));
 
     return response;
   } catch (error) {

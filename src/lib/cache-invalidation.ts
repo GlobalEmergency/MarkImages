@@ -2,15 +2,32 @@
  * On-demand cache invalidation for AED data.
  *
  * Cache strategy:
- * - Internal APIs (/api/aeds/*): 60s TTL — users see changes within ~1 min
- * - Public APIs (/api/v1/*): 24h TTL — invalidated on-demand when AEDs change
+ * - Authenticated requests: no CDN cache (private, no-store) — always fresh
+ * - Anonymous requests: 24h CDN cache — invalidated on-demand when AEDs change
+ * - Public API v1: 24h CDN cache — invalidated on-demand
  * - ISR pages (/locations/*): 24h revalidate — invalidated on-demand
  *
  * Uses Next.js `revalidatePath()` to purge Vercel CDN cache for long-TTL routes.
- * Internal APIs don't need invalidation — their short TTL handles freshness.
  */
 
+import type { NextRequest } from "next/server";
 import { revalidatePath } from "next/cache";
+
+/**
+ * Returns the appropriate Cache-Control header based on authentication.
+ * Authenticated users get no cache (instant freshness after mutations).
+ * Anonymous users get long CDN cache (purged on-demand via invalidation).
+ */
+export function getCacheControl(request: NextRequest): string {
+  const hasAuth =
+    request.cookies.has("auth-token") ||
+    request.headers.get("authorization")?.startsWith("Bearer ");
+
+  if (hasAuth) {
+    return "private, no-store";
+  }
+  return "public, s-maxage=86400, stale-while-revalidate=172800";
+}
 
 /**
  * Invalidate caches after a single AED is created, updated, or deleted.
@@ -21,7 +38,12 @@ export function invalidateAedCaches(options?: {
   cityName?: string;
   communitySlug?: string;
 }): void {
-  // Public API v1 endpoints (24h TTL — need explicit invalidation)
+  // Internal API endpoints (cached for anonymous users)
+  revalidatePath("/api/aeds", "page");
+  revalidatePath("/api/aeds/by-bounds", "page");
+  revalidatePath("/api/aeds/nearby", "page");
+
+  // Public API v1 endpoints (24h TTL)
   revalidatePath("/api/v1/aeds/stats", "page");
   revalidatePath("/api/v1/aeds/nearby", "page");
 

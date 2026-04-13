@@ -7,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { getCacheControl } from "@/lib/cache-invalidation";
 import { prisma } from "@/lib/db";
 import { filterAedByPublicationMode } from "@/lib/publication-filter";
 import type { AedFullData } from "@/lib/publication-filter";
@@ -185,8 +186,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Short CDN cache — internal API used by logged-in users who need to see changes quickly
-    response.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=120");
+    response.headers.set("Cache-Control", getCacheControl(request));
 
     return response;
   } catch (error) {

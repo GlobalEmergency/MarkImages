@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
+import { getCacheControl } from "@/lib/cache-invalidation";
 import { getQueryStrategy, isValidBoundingBox } from "@/lib/zoom-strategy";
 import { GetAedsWithClustersUseCase } from "@/clustering/application/use-cases/GetAedsWithClustersUseCase";
 import { PostGISClusteringAdapter } from "@/clustering/infrastructure/adapters/PostGISClusteringAdapter";
@@ -89,8 +90,7 @@ export async function GET(request: NextRequest) {
     });
 
     const httpResponse = NextResponse.json(response);
-    // Short CDN cache — internal API used by logged-in users who need to see changes quickly
-    httpResponse.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=120");
+    httpResponse.headers.set("Cache-Control", getCacheControl(request));
 
     // Server-Timing header: visible in browser DevTools → Network → Timing tab
     if (response.timing) {
