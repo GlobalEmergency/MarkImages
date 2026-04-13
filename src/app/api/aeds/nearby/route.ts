@@ -171,24 +171,15 @@ export async function GET(request: NextRequest) {
         distance: aed.id ? (distanceMap.get(aed.id) ?? 0) : 0,
       }));
 
-    const response = NextResponse.json({
-      success: true,
-      data: filteredAeds,
-      query: {
-        lat,
-        lng,
-        radius,
-        limit,
+    return NextResponse.json(
+      {
+        success: true,
+        data: filteredAeds,
+        query: { lat, lng, radius, limit },
+        stats: { found: filteredAeds.length, searchRadius: radius },
       },
-      stats: {
-        found: filteredAeds.length,
-        searchRadius: radius,
-      },
-    });
-
-    response.headers.set("Cache-Control", getCacheControl(request));
-
-    return response;
+      { headers: { "Cache-Control": getCacheControl(request) } }
+    );
   } catch (error) {
     console.error("Error fetching nearby AEDs:", error);
     return NextResponse.json(

@@ -205,20 +205,19 @@ export async function GET(request: NextRequest) {
       .map((aed) => filterAedByPublicationMode(aed as AedFullData))
       .filter((aed): aed is NonNullable<typeof aed> => aed !== null);
 
-    const response = NextResponse.json({
-      success: true,
-      data: filteredAeds,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
+    return NextResponse.json(
+      {
+        success: true,
+        data: filteredAeds,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
       },
-    });
-
-    response.headers.set("Cache-Control", getCacheControl(request));
-
-    return response;
+      { headers: { "Cache-Control": getCacheControl(request) } }
+    );
   } catch (error) {
     console.error("Error fetching AEDs:", error);
     return NextResponse.json(

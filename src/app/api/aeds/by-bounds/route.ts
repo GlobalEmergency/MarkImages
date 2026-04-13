@@ -89,19 +89,18 @@ export async function GET(request: NextRequest) {
       strategy,
     });
 
-    const httpResponse = NextResponse.json(response);
-    httpResponse.headers.set("Cache-Control", getCacheControl(request));
+    const headers: Record<string, string> = {
+      "Cache-Control": getCacheControl(request),
+    };
 
     // Server-Timing header: visible in browser DevTools → Network → Timing tab
     if (response.timing) {
       const { total_ms, cache_used } = response.timing;
-      httpResponse.headers.set(
-        "Server-Timing",
-        `db;dur=${total_ms};desc="DB queries", cache;desc="${cache_used ? "HIT" : "MISS"}"`
-      );
+      headers["Server-Timing"] =
+        `db;dur=${total_ms};desc="DB queries", cache;desc="${cache_used ? "HIT" : "MISS"}"`;
     }
 
-    return httpResponse;
+    return NextResponse.json(response, { headers });
   } catch (error) {
     console.error("Error fetching AEDs by bounds:", error);
     return NextResponse.json(
