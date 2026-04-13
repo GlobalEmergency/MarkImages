@@ -35,8 +35,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       SELECT l.city_name, LEFT(l.city_code, 2) as "ine_code", COUNT(*)::int as "count"
       FROM aeds a
       JOIN aed_locations l ON l.id = a.location_id
-      WHERE a.status = 'PUBLISHED'
-        AND a.publication_mode != 'NONE'
+      WHERE a.publication_mode != 'NONE'
+        AND a.published_at IS NOT NULL
         AND l.city_name IS NOT NULL
         AND l.city_name != ''
         AND l.city_code IS NOT NULL

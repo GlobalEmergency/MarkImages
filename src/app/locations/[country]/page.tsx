@@ -38,8 +38,8 @@ async function getCountryStats(countryCode: string): Promise<{
              COUNT(DISTINCT l.city_name)::int as "city_count"
       FROM aeds a
       JOIN aed_locations l ON l.id = a.location_id
-      WHERE a.status = 'PUBLISHED'
-        AND a.publication_mode != 'NONE'
+      WHERE a.publication_mode != 'NONE'
+        AND a.published_at IS NOT NULL
         AND a.country_code = ${countryCode}
         AND l.city_code IS NOT NULL
         AND l.city_code != ''
@@ -111,8 +111,8 @@ async function tryLegacyCityRedirect(citySlug: string): Promise<never> {
 
   const aed = await prisma.aed.findFirst({
     where: {
-      status: "PUBLISHED",
       publication_mode: { not: "NONE" },
+      published_at: { not: null },
       location: {
         OR: [
           { city_name: { equals: cityName, mode: "insensitive" } },

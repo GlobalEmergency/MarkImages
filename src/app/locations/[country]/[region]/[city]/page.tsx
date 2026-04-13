@@ -35,8 +35,8 @@ const resolveCityName = cache(async (citySlug: string): Promise<string | null> =
 
   const exact = await prisma.aed.findFirst({
     where: {
-      status: "PUBLISHED",
       publication_mode: { not: "NONE" },
+      published_at: { not: null },
       location: { city_name: { equals: cityName, mode: "insensitive" } },
     },
     include: { location: { select: { city_name: true } } },
@@ -46,8 +46,8 @@ const resolveCityName = cache(async (citySlug: string): Promise<string | null> =
 
   const partial = await prisma.aed.findFirst({
     where: {
-      status: "PUBLISHED",
       publication_mode: { not: "NONE" },
+      published_at: { not: null },
       location: { city_name: { contains: cityName, mode: "insensitive" } },
     },
     include: { location: { select: { city_name: true } } },
@@ -66,8 +66,8 @@ const getCityStats = cache(async (cityName: string) => {
     SELECT l.district_name, COUNT(*)::int as "count"
     FROM aeds a
     JOIN aed_locations l ON l.id = a.location_id
-    WHERE a.status = 'PUBLISHED'
-      AND a.publication_mode != 'NONE'
+    WHERE a.publication_mode != 'NONE'
+      AND a.published_at IS NOT NULL
       AND LOWER(l.city_name) = LOWER(${cityName})
     GROUP BY l.district_name
     ORDER BY COUNT(*) DESC
@@ -80,8 +80,8 @@ const getCityStats = cache(async (cityName: string) => {
 async function getCityAeds(cityName: string, page: number) {
   return prisma.aed.findMany({
     where: {
-      status: "PUBLISHED",
       publication_mode: { not: "NONE" },
+      published_at: { not: null },
       location: { city_name: { equals: cityName, mode: "insensitive" } },
     },
     select: {

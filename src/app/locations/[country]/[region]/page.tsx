@@ -33,8 +33,8 @@ const getRegionCities = cache(async (ineCodes: string[]): Promise<CityInRegion[]
       SELECT l.city_name, COUNT(*)::int as "count"
       FROM aeds a
       JOIN aed_locations l ON l.id = a.location_id
-      WHERE a.status = 'PUBLISHED'
-        AND a.publication_mode != 'NONE'
+      WHERE a.publication_mode != 'NONE'
+        AND a.published_at IS NOT NULL
         AND l.city_name IS NOT NULL
         AND l.city_name != ''
         AND l.city_code IS NOT NULL
