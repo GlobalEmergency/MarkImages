@@ -5,7 +5,7 @@ export default function JsonLd() {
     name: "DeaMap",
     url: "https://deamap.es",
     description:
-      "Encuentra desfibriladores cerca de ti en tiempo real. Mapa interactivo con más de 30.000 DEAs en España, horarios de acceso y rutas.",
+      "Encuentra desfibriladores cerca de ti en tiempo real. Mapa interactivo con más de 50.000 DEAs en España, horarios de acceso y rutas.",
     applicationCategory: "HealthApplication",
     operatingSystem: "Web",
     inLanguage: "es",

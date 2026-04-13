@@ -2,7 +2,7 @@
 
 ## Overview
 
-DeaMap (https://deamap.es) is a collaborative platform to locate Automated External Defibrillators (AEDs/DEAs) in Spain. It provides an interactive map with over 30,000 registered defibrillators across Spanish cities. The platform is available in Spanish, English, French, German, and Portuguese.
+DeaMap (https://deamap.es) is a collaborative platform to locate Automated External Defibrillators (AEDs/DEAs) in Spain. It provides an interactive map with over 50,000 registered defibrillators across Spanish cities. The platform is available in Spanish, English, French, German, and Portuguese.
 
 ## What is an AED/DEA?
 

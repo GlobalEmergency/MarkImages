@@ -15,7 +15,7 @@ import "./globals.css";
 const siteUrl = "https://deamap.es";
 const siteName = "DeaMap";
 const siteDescription =
-  "Encuentra desfibriladores cerca de ti en tiempo real. Mapa interactivo con más de 30.000 DEAs en España, horarios de acceso y rutas.";
+  "Encuentra desfibriladores cerca de ti en tiempo real. Mapa interactivo con más de 50.000 DEAs en España, horarios de acceso y rutas.";
 
 export const metadata: Metadata = {
   title: {
