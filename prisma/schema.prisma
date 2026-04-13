@@ -354,7 +354,8 @@ model AedLocation {
   access_instructions String? // How to access the AED
 
   // Geocoding enrichment validation (automatic coordinate validation)
-  geocoding_validation Json? // Validation result from geocoding enrichment: {status, distance_meters, original_coords, geocoded_coords, reason, validated_at}
+  geocoding_validation    Json? // Validation result from geocoding enrichment: {status, distance_meters, original_coords, geocoded_coords, reason, validated_at}
+  nominatim_verified_at   DateTime? // When admin_level_1 was last verified via Nominatim reverse geocoding
 
   aed                Aed?
   address_validation AedAddressValidation?
