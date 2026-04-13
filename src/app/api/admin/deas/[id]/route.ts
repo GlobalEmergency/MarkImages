@@ -658,7 +658,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return updatedAed;
     });
 
-    invalidateAedCaches({ aedId: id, cityName: result.location?.city_name ?? undefined });
+    invalidateAedCaches({ aedId: id });
 
     return NextResponse.json({
       success: true,

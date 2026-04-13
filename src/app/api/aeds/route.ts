@@ -558,7 +558,7 @@ export async function POST(request: NextRequest) {
       return newAed;
     });
 
-    invalidateAedCaches({ aedId: aed.id, cityName: aed.location?.city_name ?? undefined });
+    invalidateAedCaches({ aedId: aed.id });
 
     return NextResponse.json(
       {

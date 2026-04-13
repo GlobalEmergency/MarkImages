@@ -3,11 +3,14 @@
  *
  * Cache strategy:
  * - Authenticated requests: no CDN cache (private, no-store) — always fresh
- * - Anonymous requests: 24h CDN cache — invalidated on-demand when AEDs change
+ * - Anonymous requests: 24h CDN cache — invalidated surgically when AEDs change
  * - Public API v1: 24h CDN cache — invalidated on-demand
  * - ISR pages (/locations/*): 24h revalidate — invalidated on-demand
  *
- * Uses Next.js `revalidatePath()` to purge Vercel CDN cache for long-TTL routes.
+ * IMPORTANT: single-AED mutations only invalidate targeted paths (detail, stats,
+ * city page). Map/list endpoints (by-bounds, nearby, /api/aeds) are NOT purged
+ * on every change — their SWR policy handles gradual freshness. Only bulk
+ * operations (imports, batch deletes) purge everything.
  */
 
 import type { NextRequest } from "next/server";
@@ -31,44 +34,39 @@ export function getCacheControl(request: NextRequest): string {
 
 /**
  * Invalidate caches after a single AED is created, updated, or deleted.
+ * Only targets specific paths — does NOT purge map/list endpoints.
+ *
  * Call this AFTER the database transaction commits successfully.
  */
-export function invalidateAedCaches(options?: {
-  aedId?: string;
-  cityName?: string;
-  communitySlug?: string;
-}): void {
-  // Internal API endpoints (cached for anonymous users)
-  revalidatePath("/api/aeds", "page");
-  revalidatePath("/api/aeds/by-bounds", "page");
-  revalidatePath("/api/aeds/nearby", "page");
-
-  // Public API v1 endpoints (24h TTL)
+export function invalidateAedCaches(options?: { aedId?: string; communitySlug?: string }): void {
+  // Stats may change (total count, city counts)
   revalidatePath("/api/v1/aeds/stats", "page");
-  revalidatePath("/api/v1/aeds/nearby", "page");
-
-  // ISR location pages (24h revalidate)
-  revalidatePath("/locations", "page");
-  revalidatePath("/locations/spain", "page");
 
   // Specific AED detail (public API)
   if (options?.aedId) {
     revalidatePath(`/api/v1/aeds/${options.aedId}`, "page");
   }
 
-  // Community page
+  // Community location page (AED count per community)
   if (options?.communitySlug) {
     revalidatePath(`/locations/spain/${options.communitySlug}`, "page");
   }
 }
 
 /**
- * Invalidate ALL AED caches. Use for bulk operations (imports, batch deletes).
+ * Invalidate ALL AED caches. Use ONLY for bulk operations
+ * (imports, batch deletes, bulk publication changes).
  */
 export function invalidateAllAedCaches(): void {
-  invalidateAedCaches();
+  // Map/list endpoints — only purged on bulk changes
+  revalidatePath("/api/aeds", "page");
+  revalidatePath("/api/aeds/by-bounds", "page");
+  revalidatePath("/api/aeds/nearby", "page");
+  revalidatePath("/api/v1/aeds/nearby", "page");
+  revalidatePath("/api/v1/aeds/stats", "page");
 
-  // Also invalidate sitemap and all location sub-pages
-  revalidatePath("/sitemap.xml", "page");
+  // All ISR location pages
+  revalidatePath("/locations", "page");
   revalidatePath("/locations/spain", "layout");
+  revalidatePath("/sitemap.xml", "page");
 }
