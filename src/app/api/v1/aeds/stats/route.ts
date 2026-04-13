@@ -23,16 +23,16 @@ export async function GET(request: NextRequest) {
     const [totalAeds, topCities] = await Promise.all([
       prisma.aed.count({
         where: {
+          status: "PUBLISHED",
           publication_mode: { not: "NONE" },
-          published_at: { not: null },
         },
       }),
       prisma.$queryRaw<CityCount[]>`
         SELECT l.city_name, COUNT(*)::int as count
         FROM aeds a
         JOIN aed_locations l ON l.id = a.location_id
-        WHERE a.publication_mode != 'NONE'
-          AND a.published_at IS NOT NULL
+        WHERE a.status = 'PUBLISHED'
+          AND a.publication_mode != 'NONE'
           AND l.city_name IS NOT NULL
           AND l.city_name != ''
         GROUP BY l.city_name
