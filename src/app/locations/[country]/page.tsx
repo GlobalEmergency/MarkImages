@@ -6,7 +6,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { PUBLISHED_AED_WHERE } from "@/lib/aed-status";
 import { prisma } from "@/lib/db";
 import {
-  COUNTRY_BY_SLUG,
+  countryFromSlug,
   communityPath,
   cityPath,
   slugToApproxCityName,
@@ -94,17 +94,20 @@ async function getCountryStats(countryCode: string): Promise<{
 }
 
 export async function generateStaticParams() {
+  // Spain is always pre-rendered; other countries are rendered on-demand via dynamicParams
   return [{ country: "spain" }];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { country: slug } = await params;
-  const country = COUNTRY_BY_SLUG.get(slug);
+  const country = countryFromSlug(slug);
   if (!country) return { title: "País no encontrado | DeaMap" };
 
+  const isSpain = country.code === "ES";
   const { totalAeds, totalCities, communities } = await getCountryStats(country.code);
+  const regionLabel = isSpain ? "comunidades autónomas" : "regiones";
   const title = `Desfibriladores en ${country.name} — ${totalAeds.toLocaleString("es-ES")} DEAs en ${totalCities} ciudades`;
-  const description = `Directorio de ${totalAeds.toLocaleString("es-ES")} desfibriladores (DEA) en ${country.name}, distribuidos en ${communities.length} comunidades autónomas y ${totalCities} ciudades. Encuentra el más cercano.`;
+  const description = `Directorio de ${totalAeds.toLocaleString("es-ES")} desfibriladores (DEA) en ${country.name}, distribuidos en ${communities.length} ${regionLabel} y ${totalCities} ciudades. Encuentra el más cercano.`;
 
   return {
     title,
@@ -151,11 +154,15 @@ async function tryLegacyCityRedirect(citySlug: string): Promise<never> {
 
 export default async function CountryPage({ params }: Props) {
   const { country: slug } = await params;
-  const country = COUNTRY_BY_SLUG.get(slug);
+  const country = countryFromSlug(slug);
   if (!country) {
     await tryLegacyCityRedirect(slug);
     notFound(); // unreachable — tryLegacyCityRedirect always redirects or calls notFound
   }
+
+  const isSpain = country.code === "ES";
+  const regionLabel = isSpain ? "comunidades autónomas" : "regiones";
+  const regionLabelSingular = isSpain ? "comunidad autónoma" : "región";
 
   const { communities, totalAeds, totalCities } = await getCountryStats(country.code);
 
@@ -182,7 +189,7 @@ export default async function CountryPage({ params }: Props) {
   const itemListLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `Desfibriladores en ${country.name} por comunidad autónoma`,
+    name: `Desfibriladores en ${country.name} por ${regionLabelSingular}`,
     numberOfItems: communities.length,
     itemListElement: communities.map((c, i) => ({
       "@type": "ListItem",
@@ -220,7 +227,7 @@ export default async function CountryPage({ params }: Props) {
 
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Desfibriladores en {country.name}</h1>
           <p className="text-xl text-blue-100 mb-6 max-w-2xl">
-            Directorio completo de desfibriladores (DEA) por comunidad autónoma. Localiza el más
+            Directorio completo de desfibriladores (DEA) por {regionLabelSingular}. Localiza el más
             cercano a tu ubicación.
           </p>
 
@@ -233,7 +240,7 @@ export default async function CountryPage({ params }: Props) {
             <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3 flex items-center gap-2">
               <Building2 className="w-5 h-5 text-yellow-300" />
               <span className="font-semibold text-lg">{communities.length}</span>
-              <span className="text-blue-200">comunidades</span>
+              <span className="text-blue-200">{regionLabel}</span>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3 flex items-center gap-2">
               <MapPin className="w-5 h-5 text-green-300" />
@@ -248,7 +255,7 @@ export default async function CountryPage({ params }: Props) {
       <div className="container mx-auto px-4 max-w-5xl py-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
           <Globe className="w-6 h-6 text-blue-600" />
-          Comunidades Autónomas
+          {isSpain ? "Comunidades Autónomas" : "Regiones"}
         </h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {communities.map((c) => (
@@ -287,8 +294,10 @@ export default async function CountryPage({ params }: Props) {
                 {totalAeds.toLocaleString("es-ES")} desfibriladores externos automáticos (DEA)
               </strong>{" "}
               registrados en DeaMap, distribuidos en{" "}
-              <strong>{communities.length} comunidades autónomas</strong> y{" "}
-              <strong>{totalCities} ciudades</strong>. Las comunidades con mayor cobertura son{" "}
+              <strong>
+                {communities.length} {regionLabel}
+              </strong>{" "}
+              y <strong>{totalCities} ciudades</strong>. Las comunidades con mayor cobertura son{" "}
               {communities.slice(0, 3).map((c, i) => (
                 <span key={c.slug}>
                   {i > 0 && (i === 2 ? " y " : ", ")}

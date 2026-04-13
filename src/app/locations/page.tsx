@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { prisma } from "@/lib/db";
-import { COUNTRIES, countryPath } from "@/lib/geography";
+import { countryFromCode, countryPath } from "@/lib/geography";
 import { safeJsonLd } from "@/lib/json-ld";
 
 export const revalidate = 86400;
@@ -57,21 +57,22 @@ export default async function LocationsIndexPage() {
   const totalAeds = stats.reduce((sum, s) => sum + s.aed_count, 0);
   const totalCities = stats.reduce((sum, s) => sum + s.city_count, 0);
 
-  const countryMap = new Map(COUNTRIES.map((c) => [c.code, c]));
-
   const itemListLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: "Desfibriladores por país",
     numberOfItems: stats.length,
     itemListElement: stats
-      .filter((s) => countryMap.has(s.country_code))
-      .map((s, i) => ({
-        "@type": "ListItem",
-        position: i + 1,
-        url: `https://deamap.es${countryPath(countryMap.get(s.country_code)!)}`,
-        name: `Desfibriladores en ${countryMap.get(s.country_code)!.name}`,
-      })),
+      .filter((s) => s.country_code)
+      .map((s, i) => {
+        const country = countryFromCode(s.country_code);
+        return {
+          "@type": "ListItem",
+          position: i + 1,
+          url: `https://deamap.es${countryPath(country)}`,
+          name: `Desfibriladores en ${country.name}`,
+        };
+      }),
   };
 
   return (
@@ -115,34 +116,35 @@ export default async function LocationsIndexPage() {
           Países con desfibriladores
         </h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {stats.map((s) => {
-            const country = countryMap.get(s.country_code);
-            if (!country) return null;
-            return (
-              <Link
-                key={s.country_code}
-                href={countryPath(country)}
-                className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-all hover:border-blue-300 group"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
-                    {country.name}
-                  </h3>
-                  <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
-                </div>
-                <div className="flex gap-4 text-sm text-gray-500">
-                  <span className="flex items-center gap-1">
-                    <Heart className="w-3.5 h-3.5 text-red-400" />
-                    {s.aed_count.toLocaleString("es-ES")} DEAs
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-blue-400" />
-                    {s.city_count.toLocaleString("es-ES")} ciudad{s.city_count !== 1 ? "es" : ""}
-                  </span>
-                </div>
-              </Link>
-            );
-          })}
+          {stats
+            .filter((s) => s.country_code)
+            .map((s) => {
+              const country = countryFromCode(s.country_code);
+              return (
+                <Link
+                  key={s.country_code}
+                  href={countryPath(country)}
+                  className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-all hover:border-blue-300 group"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
+                      {country.name}
+                    </h3>
+                    <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                  </div>
+                  <div className="flex gap-4 text-sm text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Heart className="w-3.5 h-3.5 text-red-400" />
+                      {s.aed_count.toLocaleString("es-ES")} DEAs
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-blue-400" />
+                      {s.city_count.toLocaleString("es-ES")} ciudad{s.city_count !== 1 ? "es" : ""}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
         </div>
 
         {/* SEO Content */}

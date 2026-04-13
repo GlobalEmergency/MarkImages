@@ -8,11 +8,12 @@ import { PUBLISHED_AED_WHERE } from "@/lib/aed-status";
 import { prisma } from "@/lib/db";
 import {
   COMMUNITY_BY_SLUG,
-  COUNTRY_BY_SLUG,
+  countryFromSlug,
   cityPath,
   communityPath,
   countryPath,
   slugToApproxCityName,
+  toSlug,
 } from "@/lib/geography";
 import { safeJsonLd } from "@/lib/json-ld";
 
@@ -25,6 +26,35 @@ interface Props {
   params: Promise<{ country: string; region: string; city: string }>;
   searchParams: Promise<{ page?: string }>;
 }
+
+/**
+ * Resolve region display name from slug. Checks static communities first,
+ * then queries DB for matching admin_level_1.
+ */
+const resolveRegionDisplayName = cache(
+  async (regionSlug: string, countryCode: string): Promise<string | null> => {
+    const community = COMMUNITY_BY_SLUG.get(regionSlug);
+    if (community) return community.name;
+
+    try {
+      const result = (await prisma.$queryRaw`
+        SELECT DISTINCT l.admin_level_1
+        FROM aeds a
+        JOIN aed_locations l ON l.id = a.location_id
+        WHERE a.status = 'PUBLISHED'
+          AND a.publication_mode != 'NONE'
+          AND a.country_code = ${countryCode}
+          AND l.admin_level_1 IS NOT NULL
+      `) as { admin_level_1: string }[];
+
+      const match = result.find((r) => toSlug(r.admin_level_1) === regionSlug);
+      if (match) return match.admin_level_1;
+    } catch {
+      // Fall through
+    }
+    return null;
+  }
+);
 
 const resolveCityName = cache(async (citySlug: string): Promise<string | null> => {
   const approxName = slugToApproxCityName(citySlug);
@@ -107,10 +137,11 @@ async function getCityAeds(cityName: string, page: number) {
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { country: countrySlug, region: regionSlug, city: citySlug } = await params;
   const { page: pageParam } = await searchParams;
-  const country = COUNTRY_BY_SLUG.get(countrySlug);
-  const community = COMMUNITY_BY_SLUG.get(regionSlug);
+  const country = countryFromSlug(countrySlug);
+  if (!country) return { title: "Ciudad no encontrada | DeaMap" };
 
-  if (!country || !community) return { title: "Ciudad no encontrada | DeaMap" };
+  const regionDisplayName = await resolveRegionDisplayName(regionSlug, country.code);
+  if (!regionDisplayName) return { title: "Ciudad no encontrada | DeaMap" };
 
   const cityName = await resolveCityName(citySlug);
   if (!cityName) return { title: "Ciudad no encontrada | DeaMap" };
@@ -120,7 +151,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const canonical = cityPath(countrySlug, regionSlug, cityName);
   const pageSuffix = currentPage > 1 ? ` - Página ${currentPage}` : "";
   const title = `Desfibriladores en ${cityName} - ${totalCount} DEAs disponibles${pageSuffix}`;
-  const description = `Encuentra ${totalCount} desfibriladores (DEA) en ${cityName}, ${community.name}. Mapa interactivo, ubicaciones y horarios de acceso.`;
+  const description = `Encuentra ${totalCount} desfibriladores (DEA) en ${cityName}, ${regionDisplayName}. Mapa interactivo, ubicaciones y horarios de acceso.`;
   const canonicalUrl = currentPage > 1 ? `${canonical}?page=${currentPage}` : canonical;
 
   return {
@@ -141,10 +172,11 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 export default async function CityDeaPage({ params, searchParams }: Props) {
   const { country: countrySlug, region: regionSlug, city: citySlug } = await params;
   const { page: pageParam } = await searchParams;
-  const country = COUNTRY_BY_SLUG.get(countrySlug);
-  const community = COMMUNITY_BY_SLUG.get(regionSlug);
+  const country = countryFromSlug(countrySlug);
+  if (!country) notFound();
 
-  if (!country || !community) notFound();
+  const regionDisplayName = await resolveRegionDisplayName(regionSlug, country.code);
+  if (!regionDisplayName) notFound();
 
   const cityName = await resolveCityName(citySlug);
   if (!cityName) notFound();
@@ -230,8 +262,8 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
       {
         "@type": "ListItem",
         position: 4,
-        name: community.name,
-        item: `https://deamap.es${communityPath(countrySlug, community)}`,
+        name: regionDisplayName,
+        item: `https://deamap.es${communityPath(countrySlug, regionSlug)}`,
       },
       { "@type": "ListItem", position: 5, name: cityName, item: `https://deamap.es${cityUrl}` },
     ],
@@ -267,10 +299,10 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
             </Link>
             <span>/</span>
             <Link
-              href={communityPath(countrySlug, community)}
+              href={communityPath(countrySlug, regionSlug)}
               className="hover:text-white transition-colors"
             >
-              {community.name}
+              {regionDisplayName}
             </Link>
             <span>/</span>
             <span className="text-white">{cityName}</span>
@@ -278,8 +310,8 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
 
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Desfibriladores en {cityName}</h1>
           <p className="text-xl text-blue-100 mb-6 max-w-2xl">
-            {totalCount} desfibriladores (DEA) registrados en {cityName}, {community.name}. Localiza
-            el más cercano a ti.
+            {totalCount} desfibriladores (DEA) registrados en {cityName}, {regionDisplayName}.
+            Localiza el más cercano a ti.
           </p>
 
           <div className="flex flex-wrap gap-4">
@@ -456,7 +488,7 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
             </h2>
             <div className="prose prose-gray max-w-none">
               <p>
-                En {cityName} ({community.name}) hay actualmente{" "}
+                En {cityName} ({regionDisplayName}) hay actualmente{" "}
                 <strong>{totalCount} desfibriladores externos automáticos (DEA)</strong> registrados
                 en DeaMap
                 {districtCounts.length > 1 && (
@@ -516,11 +548,11 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
         {/* Back links */}
         <div className="mt-8 text-center flex flex-col gap-2">
           <Link
-            href={communityPath(countrySlug, community)}
+            href={communityPath(countrySlug, regionSlug)}
             className="inline-flex items-center justify-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
           >
             <ExternalLink className="w-4 h-4" />
-            Ver todas las ciudades de {community.name}
+            Ver todas las ciudades de {regionDisplayName}
           </Link>
         </div>
       </div>

@@ -8,7 +8,8 @@ import { prisma } from "@/lib/db";
 import {
   COMMUNITIES,
   COMMUNITY_BY_SLUG,
-  COUNTRY_BY_SLUG,
+  countryFromSlug,
+  toSlug,
   cityPath,
   communityPath,
   countryPath,
@@ -29,11 +30,30 @@ interface CityInRegion {
 
 /**
  * Get cities in a region using admin_level_1 as primary source,
- * falling back to INE province codes for records not yet enriched.
+ * falling back to INE province codes for records not yet enriched (Spain only).
  */
 const getRegionCities = cache(
   async (communityName: string, ineCodes: string[]): Promise<CityInRegion[]> => {
     try {
+      if (ineCodes.length > 0) {
+        // Spain: match by admin_level_1 OR INE fallback
+        return (await prisma.$queryRaw`
+          SELECT l.city_name, COUNT(*)::int as "count"
+          FROM aeds a
+          JOIN aed_locations l ON l.id = a.location_id
+          WHERE a.status = 'PUBLISHED'
+            AND a.publication_mode != 'NONE'
+            AND l.city_name IS NOT NULL
+            AND l.city_name != ''
+            AND (
+              l.admin_level_1 = ${communityName}
+              OR (l.admin_level_1 IS NULL AND COALESCE(LEFT(NULLIF(l.city_code, ''), 2), LEFT(NULLIF(l.postal_code, ''), 2)) = ANY(${ineCodes}))
+            )
+          GROUP BY l.city_name
+          ORDER BY COUNT(*) DESC
+        `) as CityInRegion[];
+      }
+      // Non-Spain: match only by admin_level_1
       return (await prisma.$queryRaw`
         SELECT l.city_name, COUNT(*)::int as "count"
         FROM aeds a
@@ -42,10 +62,7 @@ const getRegionCities = cache(
           AND a.publication_mode != 'NONE'
           AND l.city_name IS NOT NULL
           AND l.city_name != ''
-          AND (
-            l.admin_level_1 = ${communityName}
-            OR (l.admin_level_1 IS NULL AND COALESCE(LEFT(NULLIF(l.city_code, ''), 2), LEFT(NULLIF(l.postal_code, ''), 2)) = ANY(${ineCodes}))
-          )
+          AND l.admin_level_1 = ${communityName}
         GROUP BY l.city_name
         ORDER BY COUNT(*) DESC
       `) as CityInRegion[];
@@ -59,18 +76,53 @@ export async function generateStaticParams() {
   return COMMUNITIES.map((c) => ({ country: "spain", region: c.slug }));
 }
 
+/**
+ * Resolve region info from slug. For Spain, uses static COMMUNITY_BY_SLUG.
+ * For other countries, queries admin_level_1 from the database.
+ */
+const resolveRegion = cache(
+  async (
+    regionSlug: string,
+    countryCode: string
+  ): Promise<{ name: string; ineCodes: string[] } | null> => {
+    // Try static Spanish community first
+    const community = COMMUNITY_BY_SLUG.get(regionSlug);
+    if (community) return { name: community.name, ineCodes: community.provinceIneCodes };
+
+    // For non-Spain (or unknown Spanish regions), query DB for admin_level_1
+    try {
+      const result = (await prisma.$queryRaw`
+      SELECT DISTINCT l.admin_level_1
+      FROM aeds a
+      JOIN aed_locations l ON l.id = a.location_id
+      WHERE a.status = 'PUBLISHED'
+        AND a.publication_mode != 'NONE'
+        AND a.country_code = ${countryCode}
+        AND l.admin_level_1 IS NOT NULL
+    `) as { admin_level_1: string }[];
+
+      const match = result.find((r) => toSlug(r.admin_level_1) === regionSlug);
+      if (match) return { name: match.admin_level_1, ineCodes: [] };
+    } catch {
+      // Fall through
+    }
+    return null;
+  }
+);
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { country: countrySlug, region: regionSlug } = await params;
-  const country = COUNTRY_BY_SLUG.get(countrySlug);
-  const community = COMMUNITY_BY_SLUG.get(regionSlug);
+  const country = countryFromSlug(countrySlug);
+  if (!country) return { title: "Región no encontrada | DeaMap" };
 
-  if (!country || !community) return { title: "Región no encontrada | DeaMap" };
+  const region = await resolveRegion(regionSlug, country.code);
+  if (!region) return { title: "Región no encontrada | DeaMap" };
 
-  const cities = await getRegionCities(community.name, community.provinceIneCodes);
+  const cities = await getRegionCities(region.name, region.ineCodes);
   const totalCount = cities.reduce((sum, c) => sum + c.count, 0);
 
-  const title = `Desfibriladores en ${community.name} — ${totalCount.toLocaleString("es-ES")} DEAs en ${cities.length} ciudades`;
-  const description = `Encuentra ${totalCount.toLocaleString("es-ES")} desfibriladores (DEA) en ${community.name}, ${country.name}. Directorio de ${cities.length} ciudades con ubicaciones y horarios de acceso.`;
+  const title = `Desfibriladores en ${region.name} — ${totalCount.toLocaleString("es-ES")} DEAs en ${cities.length} ciudades`;
+  const description = `Encuentra ${totalCount.toLocaleString("es-ES")} desfibriladores (DEA) en ${region.name}, ${country.name}. Directorio de ${cities.length} ciudades con ubicaciones y horarios de acceso.`;
   const canonical = communityPath(countrySlug, regionSlug);
 
   return {
@@ -90,12 +142,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function RegionPage({ params }: Props) {
   const { country: countrySlug, region: regionSlug } = await params;
-  const country = COUNTRY_BY_SLUG.get(countrySlug);
-  const community = COMMUNITY_BY_SLUG.get(regionSlug);
+  const country = countryFromSlug(countrySlug);
+  if (!country) notFound();
 
-  if (!country || !community) notFound();
+  const region = await resolveRegion(regionSlug, country.code);
+  if (!region) notFound();
 
-  const cities = await getRegionCities(community.name, community.provinceIneCodes);
+  const regionName = region.name;
+  const cities = await getRegionCities(regionName, region.ineCodes);
   const totalCount = cities.reduce((sum, c) => sum + c.count, 0);
   const avg = cities.length > 0 ? Math.round(totalCount / cities.length) : 0;
 
@@ -119,8 +173,8 @@ export default async function RegionPage({ params }: Props) {
       {
         "@type": "ListItem",
         position: 4,
-        name: community.name,
-        item: `https://deamap.es${communityPath(countrySlug, community)}`,
+        name: regionName,
+        item: `https://deamap.es${communityPath(countrySlug, regionSlug)}`,
       },
     ],
   };
@@ -130,7 +184,7 @@ export default async function RegionPage({ params }: Props) {
       ? {
           "@context": "https://schema.org",
           "@type": "ItemList",
-          name: `Desfibriladores en ${community.name} por ciudad`,
+          name: `Desfibriladores en ${regionName} por ciudad`,
           numberOfItems: cities.length,
           itemListElement: cities.map((c, i) => ({
             "@type": "ListItem",
@@ -172,16 +226,14 @@ export default async function RegionPage({ params }: Props) {
               {country.name}
             </Link>
             <span>/</span>
-            <span className="text-white">{community.name}</span>
+            <span className="text-white">{regionName}</span>
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Desfibriladores en {community.name}
-          </h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">Desfibriladores en {regionName}</h1>
           <p className="text-xl text-blue-100 mb-6 max-w-2xl">
             {totalCount > 0
-              ? `${totalCount.toLocaleString("es-ES")} desfibriladores (DEA) en ${cities.length} ciudad${cities.length !== 1 ? "es" : ""} de ${community.name}.`
-              : `Directorio de desfibriladores en ${community.name}. Próximamente con datos actualizados.`}
+              ? `${totalCount.toLocaleString("es-ES")} desfibriladores (DEA) en ${cities.length} ciudad${cities.length !== 1 ? "es" : ""} de ${regionName}.`
+              : `Directorio de desfibriladores en ${regionName}. Próximamente con datos actualizados.`}
           </p>
 
           <div className="flex flex-wrap gap-4">
@@ -242,11 +294,11 @@ export default async function RegionPage({ params }: Props) {
           <div className="text-center py-12">
             <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-700 mb-2">
-              Aún no hay desfibriladores registrados en {community.name}
+              Aún no hay desfibriladores registrados en {regionName}
             </h2>
             <p className="text-gray-500 mb-6">
-              Estamos ampliando nuestra cobertura. Si conoces la ubicación de un DEA en{" "}
-              {community.name}, puedes añadirlo.
+              Estamos ampliando nuestra cobertura. Si conoces la ubicación de un DEA en {regionName}
+              , puedes añadirlo.
             </p>
             <Link
               href="/dea/new-simple"
@@ -261,9 +313,9 @@ export default async function RegionPage({ params }: Props) {
         {/* SEO Content with stats */}
         <section className="mt-12 bg-white rounded-xl border border-gray-200 p-8">
           <div className="prose prose-gray max-w-none">
-            <h2>Desfibriladores (DEA) en {community.name}</h2>
+            <h2>Desfibriladores (DEA) en {regionName}</h2>
             <p>
-              {community.name} cuenta con{" "}
+              {regionName} cuenta con{" "}
               <strong>
                 {totalCount.toLocaleString("es-ES")} desfibriladores externos automáticos (DEA)
               </strong>{" "}
@@ -296,7 +348,7 @@ export default async function RegionPage({ params }: Props) {
               vidas durante una parada cardíaca. Por cada minuto sin desfibrilación, las
               posibilidades de supervivencia disminuyen un 10%.
             </p>
-            <h3>¿Qué hacer en caso de emergencia cardíaca en {community.name}?</h3>
+            <h3>¿Qué hacer en caso de emergencia cardíaca en {regionName}?</h3>
             <ol>
               <li>
                 <strong>Llama al 112</strong> inmediatamente.
@@ -314,7 +366,7 @@ export default async function RegionPage({ params }: Props) {
               <Link href="/" className="text-blue-600 hover:underline">
                 Usa nuestro mapa interactivo
               </Link>{" "}
-              para encontrar el desfibrilador más cercano en {community.name}, o{" "}
+              para encontrar el desfibrilador más cercano en {regionName}, o{" "}
               <Link href="/dea/new-simple" className="text-blue-600 hover:underline">
                 colabora añadiendo un DEA
               </Link>{" "}

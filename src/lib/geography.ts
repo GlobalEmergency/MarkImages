@@ -20,6 +20,120 @@ export const COUNTRIES: Country[] = [{ name: "España", slug: "spain", code: "ES
 export const COUNTRY_BY_SLUG = new Map(COUNTRIES.map((c) => [c.slug, c]));
 export const COUNTRY_BY_CODE = new Map(COUNTRIES.map((c) => [c.code, c]));
 
+/** Display names for countries by ISO code. Extends the static COUNTRIES list. */
+const COUNTRY_DISPLAY_NAMES: Record<string, string> = {
+  ES: "España",
+  FR: "Francia",
+  DE: "Alemania",
+  IT: "Italia",
+  PT: "Portugal",
+  GB: "Reino Unido",
+  AT: "Austria",
+  BE: "Bélgica",
+  NL: "Países Bajos",
+  CH: "Suiza",
+  PL: "Polonia",
+  CZ: "República Checa",
+  SE: "Suecia",
+  NO: "Noruega",
+  DK: "Dinamarca",
+  FI: "Finlandia",
+  IE: "Irlanda",
+  GR: "Grecia",
+  RO: "Rumanía",
+  HU: "Hungría",
+  HR: "Croacia",
+  SK: "Eslovaquia",
+  SI: "Eslovenia",
+  BG: "Bulgaria",
+  LT: "Lituania",
+  LV: "Letonia",
+  EE: "Estonia",
+  LU: "Luxemburgo",
+  MT: "Malta",
+  CY: "Chipre",
+  US: "Estados Unidos",
+  CA: "Canadá",
+  MX: "México",
+  BR: "Brasil",
+  AR: "Argentina",
+  CL: "Chile",
+  CO: "Colombia",
+  PE: "Perú",
+  UY: "Uruguay",
+  VE: "Venezuela",
+  EC: "Ecuador",
+  JP: "Japón",
+  KR: "Corea del Sur",
+  CN: "China",
+  AU: "Australia",
+  NZ: "Nueva Zelanda",
+  IN: "India",
+  ZA: "Sudáfrica",
+  MA: "Marruecos",
+  IL: "Israel",
+  TR: "Turquía",
+  RU: "Rusia",
+  UA: "Ucrania",
+};
+
+/** Slug overrides for countries where ISO code doesn't make a good slug */
+const COUNTRY_SLUG_OVERRIDES: Record<string, string> = {
+  ES: "spain",
+  FR: "france",
+  DE: "germany",
+  IT: "italy",
+  PT: "portugal",
+  GB: "united-kingdom",
+  AT: "austria",
+  BE: "belgium",
+  NL: "netherlands",
+  CH: "switzerland",
+  US: "united-states",
+  CA: "canada",
+  MX: "mexico",
+  BR: "brazil",
+  AR: "argentina",
+  UY: "uruguay",
+  JP: "japan",
+  AU: "australia",
+};
+
+/**
+ * Resolve a Country from its ISO code. Returns static entry if available,
+ * otherwise generates one dynamically from display name maps.
+ */
+export function countryFromCode(code: string): Country {
+  const upper = code.toUpperCase();
+  const existing = COUNTRY_BY_CODE.get(upper);
+  if (existing) return existing;
+
+  const name = COUNTRY_DISPLAY_NAMES[upper] || upper;
+  const slug = COUNTRY_SLUG_OVERRIDES[upper] || toSlug(name);
+  return { name, slug, code: upper };
+}
+
+/**
+ * Resolve a Country from its URL slug. Checks static COUNTRIES first,
+ * then tries to match against known slug overrides and display names.
+ */
+export function countryFromSlug(slug: string): Country | undefined {
+  const existing = COUNTRY_BY_SLUG.get(slug);
+  if (existing) return existing;
+
+  // Check slug overrides (reverse lookup)
+  for (const [code, s] of Object.entries(COUNTRY_SLUG_OVERRIDES)) {
+    if (s === slug) return countryFromCode(code);
+  }
+
+  // Check display names (generate slug and compare)
+  for (const [code, name] of Object.entries(COUNTRY_DISPLAY_NAMES)) {
+    if (toSlug(name) === slug) return countryFromCode(code);
+  }
+
+  return undefined;
+}
+
 // --- Communities (Autonomous Regions in Spain) ---
 
 export interface Community {

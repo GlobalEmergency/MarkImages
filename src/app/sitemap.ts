@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 import { prisma } from "@/lib/db";
 import {
-  COMMUNITIES,
   COMMUNITY_BY_SLUG,
   communityPath,
+  countryFromCode,
   countryPath,
   cityPath,
   resolveRegionSlug,
@@ -25,19 +25,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.9,
     },
-    {
-      url: `${baseUrl}${countryPath("spain")}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
   ];
 
   try {
-    // Get all cities with their region info
-    // Priority: admin_level_1 (Nominatim) → city_code/postal_code prefix (INE fallback)
+    // Get all cities with their country and region info
     const cities = (await prisma.$queryRaw`
-      SELECT l.city_name,
+      SELECT a.country_code,
+             l.city_name,
              l.admin_level_1,
              COALESCE(LEFT(NULLIF(l.city_code, ''), 2), LEFT(NULLIF(l.postal_code, ''), 2)) as "ine_code",
              COUNT(*)::int as "count"
@@ -45,46 +39,73 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       JOIN aed_locations l ON l.id = a.location_id
       WHERE a.status = 'PUBLISHED'
         AND a.publication_mode != 'NONE'
+        AND a.country_code IS NOT NULL
         AND l.city_name IS NOT NULL
         AND l.city_name != ''
         AND (l.admin_level_1 IS NOT NULL OR COALESCE(NULLIF(l.city_code, ''), NULLIF(l.postal_code, '')) IS NOT NULL)
-      GROUP BY l.city_name, l.admin_level_1, COALESCE(LEFT(NULLIF(l.city_code, ''), 2), LEFT(NULLIF(l.postal_code, ''), 2))
+      GROUP BY a.country_code, l.city_name, l.admin_level_1, COALESCE(LEFT(NULLIF(l.city_code, ''), 2), LEFT(NULLIF(l.postal_code, ''), 2))
       ORDER BY "count" DESC
     `) as {
+      country_code: string;
       city_name: string;
       admin_level_1: string | null;
       ine_code: string | null;
       count: number;
     }[];
 
-    // Community pages (only those with data)
-    const communitiesWithData = new Set<string>();
+    // Country pages — one per country with data
+    const countryCodes = new Set(cities.map((c) => c.country_code));
+    const countryPages: MetadataRoute.Sitemap = [...countryCodes].map((code) => {
+      const country = countryFromCode(code);
+      return {
+        url: `${baseUrl}${countryPath(country)}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.9,
+      };
+    });
+
+    // Region pages (communities for Spain, admin_level_1 for others)
+    const regionPages: MetadataRoute.Sitemap = [];
+    const seenRegionUrls = new Set<string>();
+
     for (const city of cities) {
       const regionSlug = resolveRegionSlug(city.admin_level_1, city.ine_code);
-      if (regionSlug) communitiesWithData.add(regionSlug);
+      if (!regionSlug) continue;
+      const country = countryFromCode(city.country_code);
+      const url = `${baseUrl}${communityPath(country.slug, regionSlug)}`;
+      if (seenRegionUrls.has(url)) continue;
+      // For Spain, only emit known communities; for other countries, emit all regions with admin_level_1
+      if (city.country_code === "ES" && !COMMUNITY_BY_SLUG.has(regionSlug)) continue;
+      if (city.country_code !== "ES" && !city.admin_level_1) continue;
+      seenRegionUrls.add(url);
+      regionPages.push({
+        url,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.85,
+      });
     }
 
-    const communityPages: MetadataRoute.Sitemap = COMMUNITIES.filter((c) =>
-      communitiesWithData.has(c.slug)
-    ).map((c) => ({
-      url: `${baseUrl}${communityPath("spain", c)}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.85,
-    }));
-
-    // City pages — deduplicate by URL to avoid duplicates from mixed admin_level_1/INE data
+    // City pages — deduplicate by URL
     const cityPages: MetadataRoute.Sitemap = [];
     const seenCityUrls = new Set<string>();
     const budget =
-      MAX_SITEMAP_URLS - staticPages.length - communityPages.length - GUIDE_SLUGS.length;
+      MAX_SITEMAP_URLS -
+      staticPages.length -
+      countryPages.length -
+      regionPages.length -
+      GUIDE_SLUGS.length;
 
-    for (const { city_name, admin_level_1, ine_code } of cities) {
+    for (const { country_code, city_name, admin_level_1, ine_code } of cities) {
       if (cityPages.length >= budget) break;
       const regionSlug = resolveRegionSlug(admin_level_1, ine_code);
-      // Only emit URLs for known communities to avoid 404s from foreign/unrecognized regions
-      if (!regionSlug || !COMMUNITY_BY_SLUG.has(regionSlug)) continue;
-      const url = `${baseUrl}${cityPath("spain", regionSlug, city_name)}`;
+      if (!regionSlug) continue;
+      // For Spain, only emit known communities; for others, require admin_level_1
+      if (country_code === "ES" && !COMMUNITY_BY_SLUG.has(regionSlug)) continue;
+      if (country_code !== "ES" && !admin_level_1) continue;
+      const country = countryFromCode(country_code);
+      const url = `${baseUrl}${cityPath(country.slug, regionSlug, city_name)}`;
       if (seenCityUrls.has(url)) continue;
       seenCityUrls.add(url);
       cityPages.push({
@@ -103,7 +124,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
-    return [...staticPages, ...communityPages, ...cityPages, ...guidePages];
+    return [...staticPages, ...countryPages, ...regionPages, ...cityPages, ...guidePages];
   } catch (err) {
     console.error("[sitemap] Failed to generate dynamic pages:", err);
     return staticPages;
