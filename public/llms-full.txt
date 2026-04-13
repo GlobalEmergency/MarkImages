@@ -98,6 +98,21 @@ GET /api/v1/aeds/stats
 
 Returns total AED count, number of cities, and top 50 cities by AED count.
 
+## Content Pages
+
+DeaMap provides SEO-optimized pages for discovering AED locations and learning about defibrillators:
+
+### Directory Pages
+- **City pages**: `https://deamap.es/locations/{city-slug}` — AED listings by city with district breakdown, schedule info, and pagination. Example: [Madrid](https://deamap.es/locations/madrid), [Barcelona](https://deamap.es/locations/barcelona)
+- **Province pages**: `https://deamap.es/locations/provincia/{province-slug}` — All municipalities with AEDs in a province. Example: [Madrid province](https://deamap.es/locations/provincia/madrid)
+- **Full directory**: `https://deamap.es/locations` — All cities and provinces with AED counts
+
+### Guide Articles (Spanish)
+- [¿Qué es un DEA?](https://deamap.es/guia/que-es-un-dea) — Complete guide about AEDs: how they work, where to find them, legislation
+- [Cómo usar un desfibrilador](https://deamap.es/guia/como-usar-desfibrilador) — Step-by-step emergency instructions
+- [Normativa DEA en España](https://deamap.es/guia/normativa-dea-espana) — AED regulations by autonomous community
+- [Cardioprotección de espacios](https://deamap.es/guia/cardioproteccion-espacios) — Guide for businesses and public spaces
+
 ## Coverage
 
 DeaMap currently covers Spain with plans for European expansion. Major cities with significant AED registrations include Madrid, Barcelona, Valencia, Bilbao, Sevilla, and many more.

@@ -18,6 +18,15 @@ DeaMap provides a free, public REST API for querying AED locations:
 - `GET /api/v1/aeds/city/{city_name}` - Get all AEDs in a city (paginated)
 - `GET /api/v1/aeds/stats` - Get statistics (total AEDs, cities, top cities)
 
+## Content Pages
+
+- [Defibrillator Directory by City](https://deamap.es/locations)
+- [Defibrillators by Province](https://deamap.es/locations/provincia/madrid) (52 provinces)
+- [What is an AED?](https://deamap.es/guia/que-es-un-dea)
+- [How to Use a Defibrillator](https://deamap.es/guia/como-usar-desfibrilador)
+- [AED Regulations in Spain](https://deamap.es/guia/normativa-dea-espana)
+- [Cardioprotection Guide](https://deamap.es/guia/cardioproteccion-espacios)
+
 ## Docs
 
 - [API Documentation](https://deamap.es/api/docs)
