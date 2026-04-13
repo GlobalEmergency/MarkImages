@@ -39,6 +39,39 @@ function isNullIsland(lat: number, lon: number): boolean {
   return Math.abs(lat) < 0.1 && Math.abs(lon) < 0.1;
 }
 
+/**
+ * Check if a postal code is plausibly valid for a given country.
+ * Used to cross-validate stored country_code vs Nominatim coordinates.
+ *
+ * If the postal code matches the stored country's format, there's a real
+ * conflict (coordinates say one country, postal code says another).
+ * If it doesn't match, the coordinates win and we fix country_code.
+ */
+const POSTAL_CODE_VALIDATORS: Record<string, (pc: string) => boolean> = {
+  // Spain: 5 digits, prefix 01-52
+  ES: (pc) =>
+    /^\d{5}$/.test(pc) &&
+    parseInt(pc.substring(0, 2), 10) >= 1 &&
+    parseInt(pc.substring(0, 2), 10) <= 52,
+  // France: 5 digits, prefix 01-95 or 97-98 (DOM-TOM)
+  FR: (pc) => /^\d{5}$/.test(pc),
+  // Germany: 5 digits
+  DE: (pc) => /^\d{5}$/.test(pc),
+  // Italy: 5 digits
+  IT: (pc) => /^\d{5}$/.test(pc),
+  // Portugal: 4 digits, dash, 3 digits (or just 4 digits)
+  PT: (pc) => /^\d{4}(-\d{3})?$/.test(pc),
+  // UK: alphanumeric pattern
+  GB: (pc) => /^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i.test(pc),
+};
+
+function postalCodeMatchesCountry(postalCode: string | null, countryCode: string): boolean {
+  if (!postalCode) return false;
+  const validator = POSTAL_CODE_VALIDATORS[countryCode.toUpperCase()];
+  if (!validator) return false; // Unknown country format — can't validate
+  return validator(postalCode);
+}
+
 // --- Geocode result cache ---
 const geocodeCache = new Map<string, ReverseGeocodeResult | null>();
 
@@ -140,6 +173,8 @@ interface WrongCountry {
   nominatimCountry: string;
   lat: number;
   lon: number;
+  action: "fixed" | "conflict";
+  reason: string;
 }
 
 async function main() {
@@ -275,6 +310,8 @@ async function main() {
     let cacheHits = 0;
     let nullIslands = 0;
     let wrongCountries = 0;
+    let countryFixed = 0;
+    let countryConflict = 0;
     const mismatchList: Mismatch[] = [];
     const wrongCountryList: WrongCountry[] = [];
 
@@ -330,6 +367,36 @@ async function main() {
         aed.country_code.toUpperCase() !== result.countryCode.toUpperCase()
       ) {
         wrongCountries++;
+        const storedPostal = aed.location?.postal_code ?? null;
+        const postalConfirmsStored = postalCodeMatchesCountry(storedPostal, aed.country_code);
+
+        if (postalConfirmsStored) {
+          // Postal code matches stored country → real conflict, coordinates might be wrong
+          countryConflict++;
+          wrongCountryList.push({
+            aedId: aed.id,
+            name: aed.name,
+            cityName: aed.location?.city_name || null,
+            storedCountry: aed.country_code,
+            nominatimCountry: result.countryCode,
+            lat,
+            lon,
+            action: "conflict",
+            reason: `postal_code "${storedPostal}" matches ${aed.country_code} format`,
+          });
+          // Mark as verified but DON'T enrich — needs manual review
+          if (!opts.dryRun) {
+            await prisma.aedLocation.update({
+              where: { id: locationId },
+              data: { nominatim_verified_at: new Date() },
+            });
+          }
+          skipped++;
+          continue;
+        }
+
+        // No postal evidence for stored country → coordinates win, fix country_code
+        countryFixed++;
         wrongCountryList.push({
           aedId: aed.id,
           name: aed.name,
@@ -338,16 +405,32 @@ async function main() {
           nominatimCountry: result.countryCode,
           lat,
           lon,
+          action: "fixed",
+          reason: storedPostal
+            ? `postal_code "${storedPostal}" does NOT match ${aed.country_code} format`
+            : "no postal_code to corroborate stored country",
         });
-        // Mark as verified but DON'T update admin_level_1 — data is geographically incoherent
+
+        // Fix country_code on the AED and continue with normal enrichment
         if (!opts.dryRun) {
-          await prisma.aedLocation.update({
-            where: { id: locationId },
-            data: { nominatim_verified_at: new Date() },
+          await prisma.$transaction(async (tx) => {
+            await tx.aed.update({
+              where: { id: aed.id },
+              data: { country_code: result.countryCode },
+            });
+            await tx.aedFieldChange.create({
+              data: {
+                aed_id: aed.id,
+                field_name: "country_code",
+                old_value: aed.country_code!,
+                new_value: result.countryCode,
+                changed_by: SYSTEM_USER_UUID,
+                change_source: CHANGE_SOURCE,
+              },
+            });
           });
         }
-        skipped++;
-        continue;
+        // Fall through to enrich with Nominatim data (admin_level_1, postal, etc.)
       }
 
       // Check for city_code mismatches (Spain only)
@@ -448,7 +531,9 @@ async function main() {
     console.log(`Cache hits:    ${cacheHits}`);
     console.log(`Null Islands:  ${nullIslands}`);
     console.log(`Mismatches:    ${mismatches} (city_code prefix != Nominatim postal)`);
-    console.log(`Wrong country: ${wrongCountries} (coordinates outside stored country — excluded)`);
+    console.log(
+      `Wrong country: ${wrongCountries} (${countryFixed} fixed, ${countryConflict} conflicts — manual review)`
+    );
     console.log(`Time:          ${Math.round((Date.now() - startTime) / 1000)}s`);
 
     if (opts.dryRun && enriched > 0) {
@@ -484,7 +569,7 @@ async function main() {
 
       if (wrongCountryList.length > 0) {
         const csv = [
-          "aed_id,name,city_name,stored_country,nominatim_country,lat,lon",
+          "aed_id,name,city_name,stored_country,nominatim_country,lat,lon,action,reason",
           ...wrongCountryList.map((w) =>
             [
               w.aedId,
@@ -494,6 +579,8 @@ async function main() {
               w.nominatimCountry,
               w.lat,
               w.lon,
+              w.action,
+              `"${w.reason}"`,
             ].join(",")
           ),
         ].join("\n");
@@ -508,7 +595,7 @@ async function main() {
       console.log(`=== Wrong Country (${wrongCountryList.length} total, showing first 10) ===`);
       for (const w of wrongCountryList.slice(0, 10)) {
         console.log(
-          `  ${w.aedId}: "${w.name}" stored=${w.storedCountry} actual=${w.nominatimCountry} (${w.lat}, ${w.lon})`
+          `  [${w.action.toUpperCase()}] ${w.aedId}: "${w.name}" ${w.storedCountry}→${w.nominatimCountry} | ${w.reason}`
         );
       }
     }
