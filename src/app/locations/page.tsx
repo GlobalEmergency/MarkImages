@@ -1,106 +1,77 @@
-import { MapPin, Heart, ArrowRight, Building2 } from "lucide-react";
+import { Globe, Heart, MapPin, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { prisma } from "@/lib/db";
+import { COUNTRIES, countryPath } from "@/lib/geography";
 import { safeJsonLd } from "@/lib/json-ld";
-import { PROVINCES, PROVINCE_BY_INE, toSlug, type Province } from "@/lib/provinces";
 
-// Revalidate every hour (ISR)
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Desfibriladores en España - Todas las ciudades",
+  title: "Desfibriladores en el mundo - Directorio por país",
   description:
-    "Directorio completo de desfibriladores (DEA) por ciudad en España. Encuentra el desfibrilador más cercano en tu ciudad con DeaMap.",
-  alternates: {
-    canonical: "/locations",
-  },
+    "Directorio mundial de desfibriladores (DEA/AED). Encuentra el desfibrilador más cercano por país, región y ciudad con DeaMap.",
+  alternates: { canonical: "/locations" },
   openGraph: {
-    title: "Desfibriladores en España - Todas las ciudades",
-    description:
-      "Directorio completo de desfibriladores (DEA) por ciudad en España. Encuentra el desfibrilador más cercano.",
+    title: "Desfibriladores en el mundo - Directorio por país",
+    description: "Directorio mundial de desfibriladores (DEA/AED). Encuentra el más cercano.",
     url: "/locations",
     images: [{ url: "/og-image.png" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Desfibriladores en España - Todas las ciudades",
-    description: "Directorio completo de desfibriladores (DEA) por ciudad en España.",
+    title: "Desfibriladores en el mundo - Directorio por país",
+    description: "Directorio mundial de desfibriladores (DEA/AED).",
     images: ["/og-image.png"],
   },
 };
 
-interface CityCount {
-  city_name: string;
-  _count: number;
+interface CountryStats {
+  country_code: string;
+  aed_count: number;
+  city_count: number;
 }
 
-async function getCityCounts(): Promise<CityCount[]> {
+async function getCountryStats(): Promise<CountryStats[]> {
   try {
     return (await prisma.$queryRaw`
-      SELECT l.city_name, COUNT(*)::int as "_count"
+      SELECT a.country_code, COUNT(*)::int as "aed_count",
+             COUNT(DISTINCT l.city_name)::int as "city_count"
       FROM aeds a
       JOIN aed_locations l ON l.id = a.location_id
       WHERE a.publication_mode != 'NONE'
         AND a.published_at IS NOT NULL
         AND l.city_name IS NOT NULL
         AND l.city_name != ''
-      GROUP BY l.city_name
+      GROUP BY a.country_code
       ORDER BY COUNT(*) DESC
-    `) as CityCount[];
+    `) as CountryStats[];
   } catch {
     return [];
   }
 }
 
-interface ProvinceCount {
-  province_code: string;
-  count: number;
-}
+export default async function LocationsIndexPage() {
+  const stats = await getCountryStats();
+  const totalAeds = stats.reduce((sum, s) => sum + s.aed_count, 0);
+  const totalCities = stats.reduce((sum, s) => sum + s.city_count, 0);
 
-async function getProvinceCounts(): Promise<(Province & { count: number })[]> {
-  try {
-    const raw = (await prisma.$queryRaw`
-      SELECT LEFT(l.city_code, 2) as "province_code", COUNT(*)::int as "count"
-      FROM aeds a
-      JOIN aed_locations l ON l.id = a.location_id
-      WHERE a.publication_mode != 'NONE'
-        AND a.published_at IS NOT NULL
-        AND l.city_code IS NOT NULL
-        AND l.city_code != ''
-      GROUP BY LEFT(l.city_code, 2)
-      ORDER BY COUNT(*) DESC
-    `) as ProvinceCount[];
-
-    return raw
-      .map((r) => {
-        const province = PROVINCE_BY_INE.get(r.province_code);
-        return province ? { ...province, count: r.count } : null;
-      })
-      .filter((p): p is Province & { count: number } => p !== null);
-  } catch {
-    return [];
-  }
-}
-
-export default async function DesfibriladoresPage() {
-  const cityCounts = await getCityCounts();
-  const provinceCounts = await getProvinceCounts();
-  const totalAeds = cityCounts.reduce((sum, c) => sum + c._count, 0);
+  const countryMap = new Map(COUNTRIES.map((c) => [c.code, c]));
 
   const itemListLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "Desfibriladores por ciudad en España",
-    description: `Directorio de desfibriladores en ${cityCounts.length} ciudades de España`,
-    numberOfItems: cityCounts.length,
-    itemListElement: cityCounts.map((c, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      url: `https://deamap.es/locations/${toSlug(c.city_name)}`,
-      name: `Desfibriladores en ${c.city_name}`,
-    })),
+    name: "Desfibriladores por país",
+    numberOfItems: stats.length,
+    itemListElement: stats
+      .filter((s) => countryMap.has(s.country_code))
+      .map((s, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: `https://deamap.es${countryPath(countryMap.get(s.country_code)!)}`,
+        name: `Desfibriladores en ${countryMap.get(s.country_code)!.name}`,
+      })),
   };
 
   return (
@@ -109,12 +80,13 @@ export default async function DesfibriladoresPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(itemListLd) }}
       />
+
       {/* Hero */}
       <section className="bg-gradient-to-br from-blue-600 to-blue-800 text-white py-16">
         <div className="container mx-auto px-4 max-w-5xl">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Desfibriladores en España</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">Directorio de desfibriladores</h1>
           <p className="text-xl text-blue-100 mb-6 max-w-2xl">
-            Directorio completo de desfibriladores por ciudad. Encuentra el DEA más cercano a ti.
+            Encuentra desfibriladores (DEA) en todo el mundo. Navega por país, región y ciudad.
           </p>
           <div className="flex flex-wrap gap-4">
             <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3 flex items-center gap-2">
@@ -124,98 +96,73 @@ export default async function DesfibriladoresPage() {
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3 flex items-center gap-2">
               <MapPin className="w-5 h-5 text-green-300" />
-              <span className="font-semibold text-lg">
-                {cityCounts.length.toLocaleString("es-ES")}
-              </span>
+              <span className="font-semibold text-lg">{totalCities.toLocaleString("es-ES")}</span>
               <span className="text-blue-200">ciudades</span>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3 flex items-center gap-2">
+              <Globe className="w-5 h-5 text-yellow-300" />
+              <span className="font-semibold text-lg">{stats.length}</span>
+              <span className="text-blue-200">país{stats.length !== 1 ? "es" : ""}</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Provinces Section */}
-      {provinceCounts.length > 0 && (
-        <div className="container mx-auto px-4 max-w-5xl pt-8 pb-4">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Building2 className="w-6 h-6 text-blue-600" />
-            Por provincia
-          </h2>
-          <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-4">
-            {provinceCounts.map((p) => (
-              <Link
-                key={p.slug}
-                href={`/locations/provincia/${p.slug}`}
-                className="bg-white rounded-lg border border-gray-200 p-3 hover:shadow-md transition-all hover:border-blue-300 group flex items-center justify-between"
-              >
-                <div className="min-w-0">
-                  <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors truncate text-sm">
-                    {p.name}
-                  </h3>
-                  <p className="text-xs text-gray-500">
-                    {p.count} DEA{p.count !== 1 ? "s" : ""}
-                  </p>
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0" />
-              </Link>
-            ))}
-          </div>
-          {/* Show all provinces link when there are provinces without data */}
-          {provinceCounts.length < PROVINCES.length && (
-            <p className="text-sm text-gray-500 mt-3">
-              Mostrando {provinceCounts.length} de {PROVINCES.length} provincias con datos. Estamos
-              ampliando la cobertura.
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* City List */}
+      {/* Country List */}
       <div className="container mx-auto px-4 max-w-5xl py-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <MapPin className="w-6 h-6 text-blue-600" />
-          Por ciudad
+        <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <Globe className="w-6 h-6 text-blue-600" />
+          Países con desfibriladores
         </h2>
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {cityCounts.map(({ city_name, _count }) => (
-            <Link
-              key={city_name}
-              href={`/locations/${toSlug(city_name)}`}
-              className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-all hover:border-blue-300 group flex items-center justify-between"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <MapPin className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                <div className="min-w-0">
-                  <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
-                    {city_name}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {stats.map((s) => {
+            const country = countryMap.get(s.country_code);
+            if (!country) return null;
+            return (
+              <Link
+                key={s.country_code}
+                href={countryPath(country)}
+                className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-all hover:border-blue-300 group"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
+                    {country.name}
                   </h3>
-                  <p className="text-sm text-gray-500">
-                    {_count} desfibrilador{_count !== 1 ? "es" : ""}
-                  </p>
+                  <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
                 </div>
-              </div>
-              <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0" />
-            </Link>
-          ))}
+                <div className="flex gap-4 text-sm text-gray-500">
+                  <span className="flex items-center gap-1">
+                    <Heart className="w-3.5 h-3.5 text-red-400" />
+                    {s.aed_count.toLocaleString("es-ES")} DEAs
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-blue-400" />
+                    {s.city_count.toLocaleString("es-ES")} ciudad{s.city_count !== 1 ? "es" : ""}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
 
         {/* SEO Content */}
         <section className="mt-12 bg-white rounded-xl border border-gray-200 p-8">
           <div className="prose prose-gray max-w-none">
-            <h2>Mapa de desfibriladores en España</h2>
+            <h2>Mapa mundial de desfibriladores</h2>
             <p>
-              DeaMap es el directorio colaborativo de desfibriladores más completo de España, con{" "}
+              DeaMap es el directorio colaborativo de desfibriladores más completo, con{" "}
               <strong>{totalAeds.toLocaleString("es-ES")} DEAs</strong> registrados en{" "}
-              <strong>{cityCounts.length} ciudades</strong>. Nuestra misión es que cualquier persona
-              pueda localizar el desfibrilador más cercano en segundos durante una emergencia
-              cardíaca.
+              <strong>{totalCities.toLocaleString("es-ES")} ciudades</strong> de{" "}
+              <strong>
+                {stats.length} país{stats.length !== 1 ? "es" : ""}
+              </strong>
+              . Nuestra misión es que cualquier persona pueda localizar el desfibrilador más cercano
+              en segundos durante una emergencia cardíaca.
             </p>
             <p>
               Un desfibrilador externo automático (DEA) es un dispositivo que puede salvar vidas
               durante una parada cardíaca. Por cada minuto que pasa sin desfibrilación, las
-              posibilidades de supervivencia disminuyen un 10%. Saber dónde está el DEA más cercano
-              puede marcar la diferencia.
-            </p>
-            <p>
+              posibilidades de supervivencia disminuyen un 10%.{" "}
               <Link href="/" className="text-blue-600 hover:underline">
                 Usa nuestro mapa interactivo
               </Link>{" "}

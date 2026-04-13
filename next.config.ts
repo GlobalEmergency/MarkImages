@@ -47,6 +47,8 @@ const nextConfig: NextConfig = {
         destination: "/locations/:path*",
         permanent: true,
       },
+      // Old province URLs → new community pages (handled dynamically in /locations/provincia/[province])
+      // Old city URLs → resolved dynamically in /locations/[city] (catch-all redirect page)
     ];
   },
 

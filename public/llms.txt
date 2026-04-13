@@ -20,8 +20,8 @@ DeaMap provides a free, public REST API for querying AED locations:
 
 ## Content Pages
 
-- [Defibrillator Directory by City](https://deamap.es/locations)
-- [Defibrillators by Province](https://deamap.es/locations/provincia/madrid) (52 provinces)
+- [Defibrillator Directory](https://deamap.es/locations) — Browse by country, region, and city
+- [Defibrillators in Spain](https://deamap.es/locations/spain) — All autonomous communities
 - [What is an AED?](https://deamap.es/guia/que-es-un-dea)
 - [How to Use a Defibrillator](https://deamap.es/guia/como-usar-desfibrilador)
 - [AED Regulations in Spain](https://deamap.es/guia/normativa-dea-espana)

@@ -5,19 +5,22 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 
 import { prisma } from "@/lib/db";
+import {
+  COMMUNITY_BY_SLUG,
+  COUNTRY_BY_SLUG,
+  cityPath,
+  communityPath,
+  countryPath,
+} from "@/lib/geography";
 import { safeJsonLd } from "@/lib/json-ld";
-import { toSlug } from "@/lib/provinces";
 
 const ITEMS_PER_PAGE = 50;
 
-// Allow unlisted cities to render on-demand
 export const dynamicParams = true;
-
-// Revalidate pages every hour (ISR)
 export const revalidate = 3600;
 
 interface Props {
-  params: Promise<{ city: string }>;
+  params: Promise<{ country: string; region: string; city: string }>;
   searchParams: Promise<{ page?: string }>;
 }
 
@@ -27,33 +30,9 @@ function slugToCity(slug: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export async function generateStaticParams() {
-  try {
-    const cities = (await prisma.$queryRaw`
-      SELECT l.city_name
-      FROM aeds a
-      JOIN aed_locations l ON l.id = a.location_id
-      WHERE a.publication_mode != 'NONE'
-        AND a.published_at IS NOT NULL
-        AND l.city_name IS NOT NULL
-        AND l.city_name != ''
-      GROUP BY l.city_name
-      ORDER BY COUNT(*) DESC
-      LIMIT 100
-    `) as { city_name: string }[];
-
-    return cities.map(({ city_name }) => ({
-      city: toSlug(city_name),
-    }));
-  } catch {
-    return [];
-  }
-}
-
 const resolveCityName = cache(async (citySlug: string): Promise<string | null> => {
   const cityName = slugToCity(citySlug);
 
-  // Check exact match first
   const exact = await prisma.aed.findFirst({
     where: {
       publication_mode: { not: "NONE" },
@@ -65,7 +44,6 @@ const resolveCityName = cache(async (citySlug: string): Promise<string | null> =
 
   if (exact) return exact.location?.city_name || cityName;
 
-  // Try partial match
   const partial = await prisma.aed.findFirst({
     where: {
       publication_mode: { not: "NONE" },
@@ -138,29 +116,28 @@ async function getCityAeds(cityName: string, page: number) {
 }
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
-  const { city } = await params;
+  const { country: countrySlug, region: regionSlug, city: citySlug } = await params;
   const { page: pageParam } = await searchParams;
-  const cityName = await resolveCityName(city);
+  const country = COUNTRY_BY_SLUG.get(countrySlug);
+  const community = COMMUNITY_BY_SLUG.get(regionSlug);
 
-  if (!cityName) {
-    return { title: "Ciudad no encontrada | DeaMap" };
-  }
+  if (!country || !community) return { title: "Ciudad no encontrada | DeaMap" };
+
+  const cityName = await resolveCityName(citySlug);
+  if (!cityName) return { title: "Ciudad no encontrada | DeaMap" };
 
   const currentPage = Math.max(1, parseInt(pageParam || "1", 10) || 1);
   const { totalCount } = await getCityStats(cityName);
-  const slug = toSlug(cityName);
+  const canonical = cityPath(countrySlug, regionSlug, cityName);
   const pageSuffix = currentPage > 1 ? ` - Página ${currentPage}` : "";
   const title = `Desfibriladores en ${cityName} - ${totalCount} DEAs disponibles${pageSuffix}`;
-  const description = `Encuentra ${totalCount} desfibriladores (DEA) en ${cityName}. Mapa interactivo, ubicaciones y horarios de acceso. Localiza el desfibrilador más cercano.`;
-  const canonicalUrl =
-    currentPage > 1 ? `/locations/${slug}?page=${currentPage}` : `/locations/${slug}`;
+  const description = `Encuentra ${totalCount} desfibriladores (DEA) en ${cityName}, ${community.name}. Mapa interactivo, ubicaciones y horarios de acceso.`;
+  const canonicalUrl = currentPage > 1 ? `${canonical}?page=${currentPage}` : canonical;
 
   return {
     title,
     description,
-    alternates: {
-      canonical: canonicalUrl,
-    },
+    alternates: { canonical: canonicalUrl },
     openGraph: {
       title,
       description,
@@ -168,39 +145,35 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       url: canonicalUrl,
       images: [{ url: "/og-image.png", alt: title }],
     },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: ["/og-image.png"],
-    },
+    twitter: { card: "summary_large_image", title, description, images: ["/og-image.png"] },
   };
 }
 
 export default async function CityDeaPage({ params, searchParams }: Props) {
-  const { city } = await params;
+  const { country: countrySlug, region: regionSlug, city: citySlug } = await params;
   const { page: pageParam } = await searchParams;
-  const cityName = await resolveCityName(city);
+  const country = COUNTRY_BY_SLUG.get(countrySlug);
+  const community = COMMUNITY_BY_SLUG.get(regionSlug);
 
+  if (!country || !community) notFound();
+
+  const cityName = await resolveCityName(citySlug);
   if (!cityName) notFound();
 
   const currentPage = Math.max(1, parseInt(pageParam || "1", 10) || 1);
   const { totalCount, districtCounts } = await getCityStats(cityName);
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
   const aeds = await getCityAeds(cityName, currentPage);
+  const cityUrl = cityPath(countrySlug, regionSlug, cityName);
 
-  // Group current page AEDs by district
   const byDistrict = new Map<string, typeof aeds>();
   for (const aed of aeds) {
     const district = aed.location?.district_name || "Otros";
     if (!byDistrict.has(district)) byDistrict.set(district, []);
     byDistrict.get(district)!.push(aed);
   }
-
   const sortedDistricts = [...byDistrict.entries()].sort((a, b) => b[1].length - a[1].length);
-  const citySlug = toSlug(cityName);
 
-  // ItemList JSON-LD for AEDs on this page
   const itemListLd =
     currentPage === 1
       ? {
@@ -216,7 +189,6 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
             ]
               .filter(Boolean)
               .join(" ");
-
             return {
               "@type": "ListItem",
               position: i + 1,
@@ -238,7 +210,7 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
                           ...(aed.location?.postal_code
                             ? { postalCode: aed.location.postal_code }
                             : {}),
-                          addressCountry: "ES",
+                          addressCountry: country.code,
                         },
                       },
                     }
@@ -253,12 +225,7 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "DeaMap",
-        item: "https://deamap.es",
-      },
+      { "@type": "ListItem", position: 1, name: "DeaMap", item: "https://deamap.es" },
       {
         "@type": "ListItem",
         position: 2,
@@ -268,9 +235,16 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
       {
         "@type": "ListItem",
         position: 3,
-        name: cityName,
-        item: `https://deamap.es/locations/${citySlug}`,
+        name: country.name,
+        item: `https://deamap.es${countryPath(country)}`,
       },
+      {
+        "@type": "ListItem",
+        position: 4,
+        name: community.name,
+        item: `https://deamap.es${communityPath(countrySlug, community)}`,
+      },
+      { "@type": "ListItem", position: 5, name: cityName, item: `https://deamap.es${cityUrl}` },
     ],
   };
 
@@ -286,10 +260,11 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
           dangerouslySetInnerHTML={{ __html: safeJsonLd(itemListLd) }}
         />
       )}
+
       {/* Hero */}
       <section className="bg-gradient-to-br from-blue-600 to-blue-800 text-white py-16">
         <div className="container mx-auto px-4 max-w-5xl">
-          <div className="flex items-center gap-2 text-blue-200 text-sm mb-4">
+          <div className="flex items-center gap-2 text-blue-200 text-sm mb-4 flex-wrap">
             <Link href="/" className="hover:text-white transition-colors">
               DeaMap
             </Link>
@@ -298,13 +273,24 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
               Desfibriladores
             </Link>
             <span>/</span>
+            <Link href={countryPath(country)} className="hover:text-white transition-colors">
+              {country.name}
+            </Link>
+            <span>/</span>
+            <Link
+              href={communityPath(countrySlug, community)}
+              className="hover:text-white transition-colors"
+            >
+              {community.name}
+            </Link>
+            <span>/</span>
             <span className="text-white">{cityName}</span>
           </div>
 
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Desfibriladores en {cityName}</h1>
           <p className="text-xl text-blue-100 mb-6 max-w-2xl">
-            {totalCount} desfibriladores (DEA) registrados en {cityName}. Localiza el más cercano a
-            ti y accede a información detallada.
+            {totalCount} desfibriladores (DEA) registrados en {cityName}, {community.name}. Localiza
+            el más cercano a ti.
           </p>
 
           <div className="flex flex-wrap gap-4">
@@ -324,7 +310,7 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
         </div>
       </section>
 
-      {/* CTA to map */}
+      {/* CTA */}
       <section className="bg-white border-b shadow-sm">
         <div className="container mx-auto px-4 max-w-5xl py-4 flex items-center justify-between">
           <p className="text-gray-600 text-sm">Busca el desfibrilador más cercano a tu ubicación</p>
@@ -338,7 +324,7 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
         </div>
       </section>
 
-      {/* District Overview (for cities with many districts) */}
+      {/* District Overview */}
       {districtCounts.length > 3 && totalPages > 1 && (
         <section className="bg-white border-b">
           <div className="container mx-auto px-4 max-w-5xl py-6">
@@ -358,9 +344,8 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
         </section>
       )}
 
-      {/* AED Listings by District */}
+      {/* AED Listings */}
       <div className="container mx-auto px-4 max-w-5xl py-8">
-        {/* Pagination info */}
         {totalPages > 1 && (
           <p className="text-sm text-gray-500 mb-6">
             Mostrando {(currentPage - 1) * ITEMS_PER_PAGE + 1}-
@@ -377,7 +362,6 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
                 ({districtAeds.length} DEA{districtAeds.length !== 1 ? "s" : ""})
               </span>
             </h2>
-
             <div className="grid gap-4 md:grid-cols-2">
               {districtAeds.map((aed) => {
                 const address = [
@@ -387,9 +371,7 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
                 ]
                   .filter(Boolean)
                   .join(" ");
-
                 const is24h = aed.schedule?.has_24h_surveillance;
-
                 return (
                   <Link
                     key={aed.id}
@@ -436,21 +418,15 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
           <nav className="flex items-center justify-center gap-2 mt-8" aria-label="Paginación">
             {currentPage > 1 && (
               <Link
-                href={`/locations/${citySlug}${currentPage === 2 ? "" : `?page=${currentPage - 1}`}`}
+                href={`${cityUrl}${currentPage === 2 ? "" : `?page=${currentPage - 1}`}`}
                 className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Anterior
               </Link>
             )}
-
             {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter((p) => {
-                // Show first, last, and pages near current
-                if (p === 1 || p === totalPages) return true;
-                if (Math.abs(p - currentPage) <= 2) return true;
-                return false;
-              })
+              .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
               .reduce<(number | "ellipsis")[]>((acc, p, i, arr) => {
                 if (i > 0 && arr[i - 1] !== p - 1) acc.push("ellipsis");
                 acc.push(p);
@@ -464,21 +440,16 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
                 ) : (
                   <Link
                     key={item}
-                    href={`/locations/${citySlug}${item === 1 ? "" : `?page=${item}`}`}
-                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      item === currentPage
-                        ? "bg-blue-600 text-white"
-                        : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
-                    }`}
+                    href={`${cityUrl}${item === 1 ? "" : `?page=${item}`}`}
+                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${item === currentPage ? "bg-blue-600 text-white" : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"}`}
                   >
                     {item}
                   </Link>
                 )
               )}
-
             {currentPage < totalPages && (
               <Link
-                href={`/locations/${citySlug}?page=${currentPage + 1}`}
+                href={`${cityUrl}?page=${currentPage + 1}`}
                 className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Siguiente
@@ -488,7 +459,7 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
           </nav>
         )}
 
-        {/* SEO Content Section - only on first page */}
+        {/* SEO Content */}
         {currentPage === 1 && (
           <section className="mt-12 bg-white rounded-xl border border-gray-200 p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
@@ -496,20 +467,27 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
             </h2>
             <div className="prose prose-gray max-w-none">
               <p>
-                En {cityName} hay actualmente{" "}
+                En {cityName} ({community.name}) hay actualmente{" "}
                 <strong>{totalCount} desfibriladores externos automáticos (DEA)</strong> registrados
-                en DeaMap. Estos dispositivos son esenciales para atender paradas cardíacas, ya que
-                pueden aumentar significativamente las posibilidades de supervivencia si se utilizan
-                en los primeros minutos.
+                en DeaMap
+                {districtCounts.length > 1 && (
+                  <>
+                    , distribuidos en <strong>{districtCounts.length} distritos</strong>
+                  </>
+                )}
+                . Estos dispositivos son esenciales para atender paradas cardíacas, ya que pueden
+                aumentar significativamente las posibilidades de supervivencia si se utilizan en los
+                primeros minutos.
               </p>
               <p>
-                DeaMap te ayuda a localizar el desfibrilador más cercano en {cityName}, con
-                información actualizada sobre ubicación, horarios de acceso y cómo llegar. Si
-                conoces un desfibrilador que no aparece en el mapa, puedes{" "}
+                <Link href="/" className="text-blue-600 hover:underline">
+                  Usa nuestro mapa interactivo
+                </Link>{" "}
+                para encontrar desfibriladores cerca de ti, o{" "}
                 <Link href="/dea/new-simple" className="text-blue-600 hover:underline">
-                  agregarlo fácilmente
-                </Link>
-                .
+                  colabora añadiendo un DEA
+                </Link>{" "}
+                que no esté registrado.
               </p>
               <h3>¿Qué hacer en caso de emergencia cardíaca?</h3>
               <ol>
@@ -546,14 +524,14 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
           </section>
         )}
 
-        {/* Link to other cities */}
-        <div className="mt-8 text-center">
+        {/* Back links */}
+        <div className="mt-8 text-center flex flex-col gap-2">
           <Link
-            href="/locations"
-            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
+            href={communityPath(countrySlug, community)}
+            className="inline-flex items-center justify-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
           >
             <ExternalLink className="w-4 h-4" />
-            Ver todas las ciudades con desfibriladores
+            Ver todas las ciudades de {community.name}
           </Link>
         </div>
       </div>
