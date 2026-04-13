@@ -185,8 +185,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Cache nearby results for 60s, allow stale for 5min while revalidating
-    response.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
+    // Cache nearby results: 5min CDN + 15min stale-while-revalidate
+    response.headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900");
 
     return response;
   } catch (error) {

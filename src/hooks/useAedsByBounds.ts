@@ -64,7 +64,6 @@ export function useAedsByBounds(
   });
   const [strategy, setStrategy] = useState<string>("full");
 
-  // eslint-disable-next-line no-undef
   const abortControllerRef = useRef<AbortController | null>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastFetchedBoundsRef = useRef<BoundingBox | null>(null);
@@ -89,17 +88,18 @@ export function useAedsByBounds(
         abortControllerRef.current.abort();
       }
 
-      // eslint-disable-next-line no-undef
       abortControllerRef.current = new AbortController();
 
       setLoading(true);
       setError(null);
 
+      // Round coordinates to reduce unique URLs and improve browser HTTP cache hits
+      const precision = zoomLevel >= 14 ? 4 : zoomLevel >= 10 ? 3 : 2;
       const params = new URLSearchParams({
-        minLat: boundingBox.minLat.toFixed(6),
-        maxLat: boundingBox.maxLat.toFixed(6),
-        minLng: boundingBox.minLng.toFixed(6),
-        maxLng: boundingBox.maxLng.toFixed(6),
+        minLat: boundingBox.minLat.toFixed(precision),
+        maxLat: boundingBox.maxLat.toFixed(precision),
+        minLng: boundingBox.minLng.toFixed(precision),
+        maxLng: boundingBox.maxLng.toFixed(precision),
         zoom: zoomLevel.toString(),
       });
 

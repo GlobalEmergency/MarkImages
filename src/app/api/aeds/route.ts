@@ -215,8 +215,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Cache public AED list for 60s, allow stale for 5min while revalidating
-    response.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
+    // Cache public AED list: 5min CDN + 15min stale-while-revalidate
+    response.headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900");
 
     return response;
   } catch (error) {

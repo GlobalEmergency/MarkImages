@@ -138,7 +138,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       },
     });
 
-    response.headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600");
+    response.headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900");
     response.headers.set("Access-Control-Allow-Origin", "*");
 
     return response;

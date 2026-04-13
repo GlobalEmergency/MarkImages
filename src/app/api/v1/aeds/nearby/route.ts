@@ -173,7 +173,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    response.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
+    response.headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900");
     response.headers.set("Access-Control-Allow-Origin", "*");
 
     return response;

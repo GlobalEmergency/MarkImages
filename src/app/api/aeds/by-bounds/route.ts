@@ -89,8 +89,9 @@ export async function GET(request: NextRequest) {
     });
 
     const httpResponse = NextResponse.json(response);
-    // Cache clustered map data for 30s, allow stale for 2min while revalidating
-    httpResponse.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=120");
+    // Cache clustered map data: 5min CDN + 15min stale-while-revalidate
+    // AED data changes infrequently; cluster cache regeneration handles freshness
+    httpResponse.headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900");
 
     // Server-Timing header: visible in browser DevTools → Network → Timing tab
     if (response.timing) {
