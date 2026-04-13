@@ -2,8 +2,11 @@ import { Heart, MapPin, Clock, ExternalLink, ChevronLeft, ChevronRight } from "l
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 
 import { prisma } from "@/lib/db";
+import { safeJsonLd } from "@/lib/json-ld";
+import { toSlug } from "@/lib/provinces";
 
 const ITEMS_PER_PAGE = 50;
 
@@ -24,15 +27,6 @@ function slugToCity(slug: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function cityToSlug(city: string): string {
-  return city
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
-}
-
 export async function generateStaticParams() {
   try {
     const cities = (await prisma.$queryRaw`
@@ -49,14 +43,14 @@ export async function generateStaticParams() {
     `) as { city_name: string }[];
 
     return cities.map(({ city_name }) => ({
-      city: cityToSlug(city_name),
+      city: toSlug(city_name),
     }));
   } catch {
     return [];
   }
 }
 
-async function resolveCityName(citySlug: string): Promise<string | null> {
+const resolveCityName = cache(async (citySlug: string): Promise<string | null> => {
   const cityName = slugToCity(citySlug);
 
   // Check exact match first
@@ -82,14 +76,14 @@ async function resolveCityName(citySlug: string): Promise<string | null> {
   });
 
   return partial?.location?.city_name || null;
-}
+});
 
 interface DistrictCount {
   district_name: string | null;
   count: number;
 }
 
-async function getCityStats(cityName: string) {
+const getCityStats = cache(async (cityName: string) => {
   const districtCounts = (await prisma.$queryRaw`
     SELECT l.district_name, COUNT(*)::int as "count"
     FROM aeds a
@@ -103,7 +97,7 @@ async function getCityStats(cityName: string) {
 
   const totalCount = districtCounts.reduce((sum, d) => sum + d.count, 0);
   return { totalCount, districtCounts };
-}
+});
 
 async function getCityAeds(cityName: string, page: number) {
   return prisma.aed.findMany({
@@ -154,7 +148,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
   const currentPage = Math.max(1, parseInt(pageParam || "1", 10) || 1);
   const { totalCount } = await getCityStats(cityName);
-  const slug = cityToSlug(cityName);
+  const slug = toSlug(cityName);
   const pageSuffix = currentPage > 1 ? ` - Página ${currentPage}` : "";
   const title = `Desfibriladores en ${cityName} - ${totalCount} DEAs disponibles${pageSuffix}`;
   const description = `Encuentra ${totalCount} desfibriladores (DEA) en ${cityName}. Mapa interactivo, ubicaciones y horarios de acceso. Localiza el desfibrilador más cercano.`;
@@ -204,7 +198,7 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
   }
 
   const sortedDistricts = [...byDistrict.entries()].sort((a, b) => b[1].length - a[1].length);
-  const citySlug = cityToSlug(cityName);
+  const citySlug = toSlug(cityName);
 
   // ItemList JSON-LD for AEDs on this page
   const itemListLd =
@@ -284,12 +278,12 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
     <div className="min-h-screen bg-gray-50">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbLd) }}
       />
       {itemListLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(itemListLd) }}
         />
       )}
       {/* Hero */}

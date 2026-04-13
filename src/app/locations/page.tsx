@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { prisma } from "@/lib/db";
-import { PROVINCES, PROVINCE_BY_INE, type Province } from "@/lib/provinces";
+import { safeJsonLd } from "@/lib/json-ld";
+import { PROVINCES, PROVINCE_BY_INE, toSlug, type Province } from "@/lib/provinces";
 
 // Revalidate every hour (ISR)
 export const revalidate = 3600;
@@ -29,15 +30,6 @@ export const metadata: Metadata = {
     images: ["/og-image.png"],
   },
 };
-
-function cityToSlug(city: string): string {
-  return city
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
-}
 
 interface CityCount {
   city_name: string;
@@ -106,7 +98,7 @@ export default async function DesfibriladoresPage() {
     itemListElement: cityCounts.map((c, i) => ({
       "@type": "ListItem",
       position: i + 1,
-      url: `https://deamap.es/locations/${cityToSlug(c.city_name)}`,
+      url: `https://deamap.es/locations/${toSlug(c.city_name)}`,
       name: `Desfibriladores en ${c.city_name}`,
     })),
   };
@@ -115,7 +107,7 @@ export default async function DesfibriladoresPage() {
     <div className="min-h-screen bg-gray-50">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(itemListLd) }}
       />
       {/* Hero */}
       <section className="bg-gradient-to-br from-blue-600 to-blue-800 text-white py-16">
@@ -187,15 +179,15 @@ export default async function DesfibriladoresPage() {
           {cityCounts.map(({ city_name, _count }) => (
             <Link
               key={city_name}
-              href={`/locations/${cityToSlug(city_name)}`}
+              href={`/locations/${toSlug(city_name)}`}
               className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-all hover:border-blue-300 group flex items-center justify-between"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <MapPin className="w-5 h-5 text-blue-600 flex-shrink-0" />
                 <div className="min-w-0">
-                  <h2 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
+                  <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
                     {city_name}
-                  </h2>
+                  </h3>
                   <p className="text-sm text-gray-500">
                     {_count} desfibrilador{_count !== 1 ? "es" : ""}
                   </p>

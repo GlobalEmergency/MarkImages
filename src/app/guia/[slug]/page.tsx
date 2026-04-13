@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { GUIDES, GUIDE_BY_SLUG } from "@/lib/guides";
+import { safeJsonLd } from "@/lib/json-ld";
 
 export const revalidate = 86400; // Revalidate daily
 
@@ -100,7 +101,7 @@ export default async function GuidePage({ params }: Props) {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "DeaMap", item: "https://deamap.es" },
-      { "@type": "ListItem", position: 2, name: "Guías", item: "https://deamap.es/guia" },
+      { "@type": "ListItem", position: 2, name: "Guías", item: "https://deamap.es/locations" },
       {
         "@type": "ListItem",
         position: 3,
@@ -117,17 +118,17 @@ export default async function GuidePage({ params }: Props) {
     <div className="min-h-screen bg-gray-50">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(articleLd) }}
       />
       {faqLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(faqLd) }}
         />
       )}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbLd) }}
       />
 
       {/* Hero */}
@@ -138,7 +139,7 @@ export default async function GuidePage({ params }: Props) {
               DeaMap
             </Link>
             <span>/</span>
-            <Link href="/guia/que-es-un-dea" className="hover:text-white transition-colors">
+            <Link href="/locations" className="hover:text-white transition-colors">
               Guías
             </Link>
             <span>/</span>

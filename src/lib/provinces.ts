@@ -10,7 +10,7 @@ export interface Province {
   community: string;
 }
 
-function toSlug(name: string): string {
+export function toSlug(name: string): string {
   return name
     .toLowerCase()
     .normalize("NFD")

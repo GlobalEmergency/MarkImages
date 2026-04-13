@@ -2,9 +2,11 @@ import { Heart, MapPin, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 
 import { prisma } from "@/lib/db";
-import { PROVINCES, PROVINCE_BY_SLUG } from "@/lib/provinces";
+import { safeJsonLd } from "@/lib/json-ld";
+import { PROVINCES, PROVINCE_BY_SLUG, toSlug } from "@/lib/provinces";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -13,21 +15,12 @@ interface Props {
   params: Promise<{ province: string }>;
 }
 
-function cityToSlug(city: string): string {
-  return city
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
-}
-
 interface CityInProvince {
   city_name: string;
   count: number;
 }
 
-async function getProvinceCities(ineCode: string): Promise<CityInProvince[]> {
+const getProvinceCities = cache(async (ineCode: string): Promise<CityInProvince[]> => {
   try {
     return (await prisma.$queryRaw`
       SELECT l.city_name, COUNT(*)::int as "count"
@@ -45,7 +38,7 @@ async function getProvinceCities(ineCode: string): Promise<CityInProvince[]> {
   } catch {
     return [];
   }
-}
+});
 
 export async function generateStaticParams() {
   return PROVINCES.map((p) => ({ province: p.slug }));
@@ -129,7 +122,7 @@ export default async function ProvincePage({ params }: Props) {
           itemListElement: cities.map((c, i) => ({
             "@type": "ListItem",
             position: i + 1,
-            url: `https://deamap.es/locations/${cityToSlug(c.city_name)}`,
+            url: `https://deamap.es/locations/${toSlug(c.city_name)}`,
             name: `Desfibriladores en ${c.city_name}`,
           })),
         }
@@ -139,12 +132,12 @@ export default async function ProvincePage({ params }: Props) {
     <div className="min-h-screen bg-gray-50">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbLd) }}
       />
       {itemListLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(itemListLd) }}
         />
       )}
 
@@ -208,15 +201,15 @@ export default async function ProvincePage({ params }: Props) {
             {cities.map(({ city_name, count }) => (
               <Link
                 key={city_name}
-                href={`/locations/${cityToSlug(city_name)}`}
+                href={`/locations/${toSlug(city_name)}`}
                 className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-all hover:border-blue-300 group flex items-center justify-between"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <MapPin className="w-5 h-5 text-blue-600 flex-shrink-0" />
                   <div className="min-w-0">
-                    <h2 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
+                    <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
                       {city_name}
-                    </h2>
+                    </h3>
                     <p className="text-sm text-gray-500">
                       {count} desfibrilador{count !== 1 ? "es" : ""}
                     </p>

@@ -541,4 +541,5 @@ export const GUIDES: Guide[] = [
   },
 ];
 
+export const GUIDE_SLUGS = GUIDES.map((g) => g.slug);
 export const GUIDE_BY_SLUG = new Map(GUIDES.map((g) => [g.slug, g]));

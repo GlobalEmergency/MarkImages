@@ -1,16 +1,8 @@
 import type { MetadataRoute } from "next";
 
 import { prisma } from "@/lib/db";
-import { PROVINCE_BY_INE } from "@/lib/provinces";
-
-function cityToSlug(city: string): string {
-  return city
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
-}
+import { GUIDE_SLUGS } from "@/lib/guides";
+import { PROVINCE_BY_INE, toSlug } from "@/lib/provinces";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://deamap.es";
@@ -46,7 +38,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     `) as { city_name: string; count: number }[];
 
     const cityPages: MetadataRoute.Sitemap = cities.map(({ city_name }) => ({
-      url: `${baseUrl}/locations/${cityToSlug(city_name)}`,
+      url: `${baseUrl}/locations/${toSlug(city_name)}`,
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.8,
@@ -74,12 +66,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }));
 
     // Guide pages
-    const guidePages: MetadataRoute.Sitemap = [
-      "que-es-un-dea",
-      "como-usar-desfibrilador",
-      "normativa-dea-espana",
-      "cardioproteccion-espacios",
-    ].map((slug) => ({
+    const guidePages: MetadataRoute.Sitemap = GUIDE_SLUGS.map((slug) => ({
       url: `${baseUrl}/guia/${slug}`,
       lastModified: new Date(),
       changeFrequency: "monthly" as const,
