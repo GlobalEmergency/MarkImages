@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { prisma } from "@/lib/db";
+import { PROVINCE_BY_INE } from "@/lib/provinces";
 
 function cityToSlug(city: string): string {
   return city
@@ -51,7 +52,41 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
-    return [...staticPages, ...cityPages];
+    // Province pages (only those with data)
+    const provinceCodes = (await prisma.$queryRaw`
+      SELECT DISTINCT LEFT(l.city_code, 2) as "code"
+      FROM aeds a
+      JOIN aed_locations l ON l.id = a.location_id
+      WHERE a.publication_mode != 'NONE'
+        AND a.published_at IS NOT NULL
+        AND l.city_code IS NOT NULL
+        AND l.city_code != ''
+    `) as { code: string }[];
+
+    const provincePages: MetadataRoute.Sitemap = provinceCodes
+      .map(({ code }) => PROVINCE_BY_INE.get(code))
+      .filter((p) => p !== undefined)
+      .map((p) => ({
+        url: `${baseUrl}/locations/provincia/${p.slug}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.85,
+      }));
+
+    // Guide pages
+    const guidePages: MetadataRoute.Sitemap = [
+      "que-es-un-dea",
+      "como-usar-desfibrilador",
+      "normativa-dea-espana",
+      "cardioproteccion-espacios",
+    ].map((slug) => ({
+      url: `${baseUrl}/guia/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    }));
+
+    return [...staticPages, ...provincePages, ...cityPages, ...guidePages];
   } catch {
     // If DB is not available, return only static pages
     return staticPages;

@@ -1,8 +1,9 @@
-import { MapPin, Heart, ArrowRight } from "lucide-react";
+import { MapPin, Heart, ArrowRight, Building2 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { prisma } from "@/lib/db";
+import { PROVINCES, PROVINCE_BY_INE, type Province } from "@/lib/provinces";
 
 // Revalidate every hour (ISR)
 export const revalidate = 3600;
@@ -61,8 +62,39 @@ async function getCityCounts(): Promise<CityCount[]> {
   }
 }
 
+interface ProvinceCount {
+  province_code: string;
+  count: number;
+}
+
+async function getProvinceCounts(): Promise<(Province & { count: number })[]> {
+  try {
+    const raw = (await prisma.$queryRaw`
+      SELECT LEFT(l.city_code, 2) as "province_code", COUNT(*)::int as "count"
+      FROM aeds a
+      JOIN aed_locations l ON l.id = a.location_id
+      WHERE a.publication_mode != 'NONE'
+        AND a.published_at IS NOT NULL
+        AND l.city_code IS NOT NULL
+        AND l.city_code != ''
+      GROUP BY LEFT(l.city_code, 2)
+      ORDER BY COUNT(*) DESC
+    `) as ProvinceCount[];
+
+    return raw
+      .map((r) => {
+        const province = PROVINCE_BY_INE.get(r.province_code);
+        return province ? { ...province, count: r.count } : null;
+      })
+      .filter((p): p is Province & { count: number } => p !== null);
+  } catch {
+    return [];
+  }
+}
+
 export default async function DesfibriladoresPage() {
   const cityCounts = await getCityCounts();
+  const provinceCounts = await getProvinceCounts();
   const totalAeds = cityCounts.reduce((sum, c) => sum + c._count, 0);
 
   const itemListLd = {
@@ -109,8 +141,48 @@ export default async function DesfibriladoresPage() {
         </div>
       </section>
 
+      {/* Provinces Section */}
+      {provinceCounts.length > 0 && (
+        <div className="container mx-auto px-4 max-w-5xl pt-8 pb-4">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Building2 className="w-6 h-6 text-blue-600" />
+            Por provincia
+          </h2>
+          <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-4">
+            {provinceCounts.map((p) => (
+              <Link
+                key={p.slug}
+                href={`/locations/provincia/${p.slug}`}
+                className="bg-white rounded-lg border border-gray-200 p-3 hover:shadow-md transition-all hover:border-blue-300 group flex items-center justify-between"
+              >
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors truncate text-sm">
+                    {p.name}
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    {p.count} DEA{p.count !== 1 ? "s" : ""}
+                  </p>
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0" />
+              </Link>
+            ))}
+          </div>
+          {/* Show all provinces link when there are provinces without data */}
+          {provinceCounts.length < PROVINCES.length && (
+            <p className="text-sm text-gray-500 mt-3">
+              Mostrando {provinceCounts.length} de {PROVINCES.length} provincias con datos. Estamos
+              ampliando la cobertura.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* City List */}
       <div className="container mx-auto px-4 max-w-5xl py-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <MapPin className="w-6 h-6 text-blue-600" />
+          Por ciudad
+        </h2>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {cityCounts.map(({ city_name, _count }) => (
             <Link

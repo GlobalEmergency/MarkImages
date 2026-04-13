@@ -112,9 +112,30 @@ async function getCityAeds(cityName: string, page: number) {
       published_at: { not: null },
       location: { city_name: { equals: cityName, mode: "insensitive" } },
     },
-    include: {
-      location: true,
-      schedule: true,
+    select: {
+      id: true,
+      name: true,
+      location: {
+        select: {
+          street_type: true,
+          street_name: true,
+          street_number: true,
+          city_name: true,
+          district_name: true,
+          postal_code: true,
+        },
+      },
+      schedule: {
+        select: {
+          has_24h_surveillance: true,
+          weekday_opening: true,
+          weekday_closing: true,
+          saturday_opening: true,
+          saturday_closing: true,
+          sunday_opening: true,
+          sunday_closing: true,
+        },
+      },
     },
     orderBy: [{ location: { district_name: "asc" } }, { name: "asc" }],
     skip: (page - 1) * ITEMS_PER_PAGE,
@@ -509,6 +530,24 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
                 </li>
                 <li>Sigue las instrucciones del DEA: el dispositivo te guía paso a paso.</li>
               </ol>
+              <p>
+                Aprende más sobre{" "}
+                <Link
+                  href="/guia/como-usar-desfibrilador"
+                  className="text-blue-600 hover:underline"
+                >
+                  cómo usar un desfibrilador
+                </Link>
+                ,{" "}
+                <Link href="/guia/que-es-un-dea" className="text-blue-600 hover:underline">
+                  qué es un DEA
+                </Link>{" "}
+                o consulta la{" "}
+                <Link href="/guia/normativa-dea-espana" className="text-blue-600 hover:underline">
+                  normativa sobre desfibriladores en España
+                </Link>
+                .
+              </p>
             </div>
           </section>
         )}
