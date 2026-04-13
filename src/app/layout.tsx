@@ -15,11 +15,11 @@ import "./globals.css";
 const siteUrl = "https://deamap.es";
 const siteName = "DeaMap";
 const siteDescription =
-  "Localiza y verifica desfibriladores en tu zona. Mapa interactivo de DEAs en España con más de 30.000 desfibriladores registrados.";
+  "Encuentra desfibriladores cerca de ti en tiempo real. Mapa interactivo con más de 50.000 DEAs registrados en España y en todo el mundo.";
 
 export const metadata: Metadata = {
   title: {
-    default: "DeaMap - Mapa de Desfibriladores en España",
+    default: "Mapa de Desfibriladores (DEA) en España — Encuentra el más cercano | DeaMap",
     template: "%s | DeaMap",
   },
   description: siteDescription,
@@ -49,6 +49,9 @@ export const metadata: Metadata = {
     "AED locator",
     "AED map",
     "defibrillator map",
+    "AED finder",
+    "defibrillator near me",
+    "defibrillator map worldwide",
   ],
   authors: [{ name: siteName, url: siteUrl }],
   creator: siteName,
@@ -58,21 +61,21 @@ export const metadata: Metadata = {
     locale: "es_ES",
     url: siteUrl,
     siteName,
-    title: "DeaMap - Mapa de Desfibriladores en España",
+    title: "Mapa de Desfibriladores (DEA) en España — Encuentra el más cercano | DeaMap",
     description: siteDescription,
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "DeaMap - Mapa interactivo de desfibriladores en España",
+        alt: "DeaMap - Mapa interactivo de desfibriladores en España y en todo el mundo",
         type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "DeaMap - Mapa de Desfibriladores en España",
+    title: "Mapa de Desfibriladores (DEA) en España — Encuentra el más cercano | DeaMap",
     description: siteDescription,
     images: ["/og-image.png"],
   },

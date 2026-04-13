@@ -5,7 +5,7 @@ export default function JsonLd() {
     name: "DeaMap",
     url: "https://deamap.es",
     description:
-      "Localiza y verifica desfibriladores en tu zona. Mapa interactivo de DEAs en España con más de 30.000 desfibriladores registrados.",
+      "Encuentra desfibriladores cerca de ti en tiempo real. Mapa interactivo con más de 50.000 DEAs registrados en España y en todo el mundo.",
     applicationCategory: "HealthApplication",
     operatingSystem: "Web",
     inLanguage: "es",
@@ -35,7 +35,7 @@ export default function JsonLd() {
         name: "¿Qué es DeaMap?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "DeaMap es una plataforma colaborativa que permite localizar desfibriladores (DEAs) cercanos en caso de emergencia cardíaca. Contamos con cobertura en España y planes de expansión a nivel europeo. Es un proyecto desarrollado por Global Emergency.",
+          text: "DeaMap es una plataforma colaborativa que permite localizar desfibriladores (DEAs) cercanos en caso de emergencia cardíaca. Contamos con más de 50.000 DEAs registrados en España y en todo el mundo. Es un proyecto desarrollado por Global Emergency.",
         },
       },
       {

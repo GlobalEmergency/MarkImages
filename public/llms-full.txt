@@ -2,7 +2,7 @@
 
 ## Overview
 
-DeaMap (https://deamap.es) is a collaborative platform to locate Automated External Defibrillators (AEDs/DEAs) in Spain. It provides an interactive map with over 30,000 registered defibrillators across Spanish cities. The platform is available in Spanish, English, French, German, and Portuguese.
+DeaMap (https://deamap.es) is a collaborative platform to locate Automated External Defibrillators (AEDs/DEAs). It provides an interactive map with over 50,000 registered defibrillators worldwide, with primary coverage in Spain and growing international presence. The platform is available in Spanish, English, French, German, and Portuguese.
 
 ## What is an AED/DEA?
 
@@ -98,9 +98,25 @@ GET /api/v1/aeds/stats
 
 Returns total AED count, number of cities, and top 50 cities by AED count.
 
+## Content Pages
+
+DeaMap provides SEO-optimized pages for discovering AED locations and learning about defibrillators:
+
+### Directory Pages
+- **Country pages**: `https://deamap.es/locations/{country}` — AED listings by region. Example: [Spain](https://deamap.es/locations/spain)
+- **Region pages**: `https://deamap.es/locations/{country}/{region}` — All cities with AEDs in a region. Example: [Cataluña](https://deamap.es/locations/spain/cataluna)
+- **City pages**: `https://deamap.es/locations/{country}/{region}/{city}` — AED listings by district. Example: [Madrid](https://deamap.es/locations/spain/comunidad-de-madrid/madrid), [Barcelona](https://deamap.es/locations/spain/cataluna/barcelona)
+- **Full directory**: `https://deamap.es/locations` — All countries with AED counts
+
+### Guide Articles (Spanish)
+- [¿Qué es un DEA?](https://deamap.es/guia/que-es-un-dea) — Complete guide about AEDs: how they work, where to find them, legislation
+- [Cómo usar un desfibrilador](https://deamap.es/guia/como-usar-desfibrilador) — Step-by-step emergency instructions
+- [Normativa DEA en España](https://deamap.es/guia/normativa-dea-espana) — AED regulations by autonomous community
+- [Cardioprotección de espacios](https://deamap.es/guia/cardioproteccion-espacios) — Guide for businesses and public spaces
+
 ## Coverage
 
-DeaMap currently covers Spain with plans for European expansion. Major cities with significant AED registrations include Madrid, Barcelona, Valencia, Bilbao, Sevilla, and many more.
+DeaMap has over 50,000 registered AEDs worldwide. Primary coverage is in Spain (Madrid, Barcelona, Valencia, Bilbao, Sevilla, and many more), with growing international presence across Europe and other regions.
 
 ## Emergency Protocol
 
