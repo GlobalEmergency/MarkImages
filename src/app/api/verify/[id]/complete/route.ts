@@ -261,7 +261,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       console.log("🎉 Verificación completada exitosamente");
     }
 
-    invalidateAedCaches({ aedId: id });
+    invalidateAedCaches(id);
 
     return NextResponse.json({
       ...updatedValidation,

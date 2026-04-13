@@ -263,7 +263,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         return updatedAed;
       });
 
-      invalidateAedCaches({ aedId: id });
+      invalidateAedCaches(id);
 
       return NextResponse.json(result);
     }
@@ -281,7 +281,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       },
     });
 
-    invalidateAedCaches({ aedId: id });
+    invalidateAedCaches(id);
 
     return NextResponse.json(updatedAed);
   } catch (error) {

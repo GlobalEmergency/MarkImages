@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
+import { V1_PUBLIC_HEADERS } from "@/lib/cache-headers";
 import { prisma } from "@/lib/db";
 import { filterAedByPublicationMode } from "@/lib/publication-filter";
 import type { AedFullData } from "@/lib/publication-filter";
@@ -173,13 +174,7 @@ export async function GET(request: NextRequest) {
           api_version: "v1",
         },
       },
-      {
-        headers: {
-          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
-          "CDN-Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
+      { headers: V1_PUBLIC_HEADERS }
     );
   } catch (error) {
     console.error("[Public API v1] Error fetching nearby AEDs:", error);

@@ -10,7 +10,7 @@ import { prisma } from "@/lib/db";
 import { uploadToS3 } from "@/lib/s3";
 import { validateStatusTransition } from "@/lib/aed-status";
 import { recordStatusChange } from "@/lib/audit";
-import { invalidateAedCaches } from "@/lib/cache-invalidation";
+import { invalidateAedCaches, invalidateAllAedCaches } from "@/lib/cache-invalidation";
 
 /**
  * GET /api/admin/deas/[id]
@@ -658,7 +658,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return updatedAed;
     });
 
-    invalidateAedCaches({ aedId: id });
+    invalidateAedCaches(id);
 
     return NextResponse.json({
       success: true,
@@ -759,7 +759,7 @@ export async function DELETE(
       // Note: responsible_id is NOT cleaned up — it may be shared across AEDs
     });
 
-    invalidateAedCaches({ aedId: id });
+    invalidateAllAedCaches();
 
     return NextResponse.json({
       success: true,

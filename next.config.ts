@@ -76,16 +76,6 @@ const nextConfig: NextConfig = {
           { key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" },
         ],
       },
-      // Public API v1: allow CDN caching
-      {
-        source: "/api/v1/:path*",
-        headers: [
-          {
-            key: "CDN-Cache-Control",
-            value: "public, max-age=3600, stale-while-revalidate=7200",
-          },
-        ],
-      },
       // Security headers for all routes
       {
         source: "/(.*)",

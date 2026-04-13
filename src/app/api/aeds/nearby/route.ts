@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getCacheHeaders } from "@/lib/cache-invalidation";
+import { getInternalCacheHeaders } from "@/lib/cache-headers";
 import { prisma } from "@/lib/db";
 import { filterAedByPublicationMode } from "@/lib/publication-filter";
 import type { AedFullData } from "@/lib/publication-filter";
@@ -178,7 +178,7 @@ export async function GET(request: NextRequest) {
         query: { lat, lng, radius, limit },
         stats: { found: filteredAeds.length, searchRadius: radius },
       },
-      { headers: getCacheHeaders(request) }
+      { headers: getInternalCacheHeaders(request) }
     );
   } catch (error) {
     console.error("Error fetching nearby AEDs:", error);
