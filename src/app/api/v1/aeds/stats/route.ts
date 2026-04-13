@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
+import { PUBLISHED_AED_WHERE } from "@/lib/aed-status";
 import { prisma } from "@/lib/db";
 import { publicApiRateLimiter } from "@/lib/rate-limit-public-api";
 
@@ -20,19 +21,25 @@ export async function GET(request: NextRequest) {
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
-    const [totalAeds, topCities] = await Promise.all([
+    const [totalAeds, totalCitiesResult, topCities] = await Promise.all([
       prisma.aed.count({
-        where: {
-          publication_mode: { not: "NONE" },
-          published_at: { not: null },
-        },
+        where: PUBLISHED_AED_WHERE,
       }),
+      prisma.$queryRaw<[{ count: number }]>`
+        SELECT COUNT(DISTINCT l.city_name)::int as count
+        FROM aeds a
+        JOIN aed_locations l ON l.id = a.location_id
+        WHERE a.status = 'PUBLISHED'
+          AND a.publication_mode != 'NONE'
+          AND l.city_name IS NOT NULL
+          AND l.city_name != ''
+      `,
       prisma.$queryRaw<CityCount[]>`
         SELECT l.city_name, COUNT(*)::int as count
         FROM aeds a
         JOIN aed_locations l ON l.id = a.location_id
-        WHERE a.publication_mode != 'NONE'
-          AND a.published_at IS NOT NULL
+        WHERE a.status = 'PUBLISHED'
+          AND a.publication_mode != 'NONE'
           AND l.city_name IS NOT NULL
           AND l.city_name != ''
         GROUP BY l.city_name
@@ -44,7 +51,7 @@ export async function GET(request: NextRequest) {
     const response = NextResponse.json({
       data: {
         total_aeds: totalAeds,
-        total_cities: topCities.length,
+        total_cities: totalCitiesResult[0]?.count ?? 0,
         top_cities: topCities.map((c) => ({
           name: c.city_name,
           count: c.count,

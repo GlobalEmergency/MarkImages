@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { PUBLISHED_AED_WHERE } from "@/lib/aed-status";
 import { prisma } from "@/lib/db";
 import {
   COMMUNITIES,
@@ -10,6 +11,7 @@ import {
   communityForIneCode,
   communityPath,
   cityPath,
+  slugToApproxCityName,
 } from "@/lib/geography";
 import { safeJsonLd } from "@/lib/json-ld";
 
@@ -34,33 +36,34 @@ async function getCountryStats(countryCode: string): Promise<{
 }> {
   try {
     const raw = (await prisma.$queryRaw`
-      SELECT LEFT(l.city_code, 2) as "ine_code", COUNT(*)::int as "aed_count",
-             COUNT(DISTINCT l.city_name)::int as "city_count"
+      SELECT LEFT(l.city_code, 2) as "ine_code", l.city_name, COUNT(*)::int as "aed_count"
       FROM aeds a
       JOIN aed_locations l ON l.id = a.location_id
-      WHERE a.publication_mode != 'NONE'
-        AND a.published_at IS NOT NULL
+      WHERE a.status = 'PUBLISHED'
+        AND a.publication_mode != 'NONE'
         AND a.country_code = ${countryCode}
         AND l.city_code IS NOT NULL
         AND l.city_code != ''
-      GROUP BY LEFT(l.city_code, 2)
-    `) as { ine_code: string; aed_count: number; city_count: number }[];
+        AND l.city_name IS NOT NULL
+        AND l.city_name != ''
+      GROUP BY LEFT(l.city_code, 2), l.city_name
+    `) as { ine_code: string; city_name: string; aed_count: number }[];
 
-    const communityAgg = new Map<string, { totalAeds: number; cityCount: number }>();
+    const communityAgg = new Map<string, { totalAeds: number; cities: Set<string> }>();
 
     for (const row of raw) {
       const community = communityForIneCode(row.ine_code);
       if (!community) continue;
-      const existing = communityAgg.get(community.slug) || { totalAeds: 0, cityCount: 0 };
+      const existing = communityAgg.get(community.slug) || { totalAeds: 0, cities: new Set() };
       existing.totalAeds += row.aed_count;
-      existing.cityCount += row.city_count;
+      existing.cities.add(row.city_name);
       communityAgg.set(community.slug, existing);
     }
 
     const communities: CommunityStats[] = COMMUNITIES.filter((c) => communityAgg.has(c.slug))
       .map((c) => {
-        const stats = communityAgg.get(c.slug)!;
-        return { name: c.name, slug: c.slug, ...stats };
+        const agg = communityAgg.get(c.slug)!;
+        return { name: c.name, slug: c.slug, totalAeds: agg.totalAeds, cityCount: agg.cities.size };
       })
       .sort((a, b) => b.totalAeds - a.totalAeds);
 
@@ -105,14 +108,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  * When slug is not a known country, try to resolve it as a city name.
  */
 async function tryLegacyCityRedirect(citySlug: string): Promise<never> {
-  const cityName = decodeURIComponent(citySlug)
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  const cityName = slugToApproxCityName(citySlug);
 
   const aed = await prisma.aed.findFirst({
     where: {
-      publication_mode: { not: "NONE" },
-      published_at: { not: null },
+      ...PUBLISHED_AED_WHERE,
       location: {
         OR: [
           { city_name: { equals: cityName, mode: "insensitive" } },

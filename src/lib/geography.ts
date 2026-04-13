@@ -89,5 +89,16 @@ export function cityPathFromIne(ineCode: string, cityName: string): string {
   return cityPath("spain", community.slug, cityName);
 }
 
+/**
+ * Best-effort reverse of `toSlug()` for city names.
+ * Since `toSlug()` strips accents (NFD normalization), this is lossy —
+ * use it as a hint for DB lookups, never as the canonical name.
+ */
+export function slugToApproxCityName(slug: string): string {
+  return decodeURIComponent(slug)
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 /** Get the province for a given INE code (re-export for convenience) */
 export { PROVINCE_BY_INE };

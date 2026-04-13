@@ -11,6 +11,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
+import { PUBLISHED_AED_WHERE } from "@/lib/aed-status";
 import { prisma } from "@/lib/db";
 import { publicApiRateLimiter } from "@/lib/rate-limit-public-api";
 
@@ -29,8 +30,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const [aeds, total] = await Promise.all([
       prisma.aed.findMany({
         where: {
-          publication_mode: { not: "NONE" },
-          published_at: { not: null },
+          ...PUBLISHED_AED_WHERE,
           location: {
             city_name: { equals: cityName, mode: "insensitive" },
           },
@@ -71,8 +71,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       }),
       prisma.aed.count({
         where: {
-          publication_mode: { not: "NONE" },
-          published_at: { not: null },
+          ...PUBLISHED_AED_WHERE,
           location: {
             city_name: { equals: cityName, mode: "insensitive" },
           },
