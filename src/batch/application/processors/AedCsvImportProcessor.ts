@@ -620,7 +620,7 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
     let adminLevel1: string | null = null;
     if (latitude != null && longitude != null) {
       try {
-        const geo = await reverseGeocode(latitude, longitude);
+        const geo = await reverseGeocode(latitude, longitude, 1);
         if (geo) adminLevel1 = geo.adminLevel1;
       } catch {
         // Non-blocking: enrichment can be done later via batch job

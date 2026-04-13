@@ -3,6 +3,7 @@ import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";
 import {
   COMMUNITIES,
+  COMMUNITY_BY_SLUG,
   communityPath,
   countryPath,
   cityPath,
@@ -81,7 +82,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const { city_name, admin_level_1, ine_code } of cities) {
       if (cityPages.length >= budget) break;
       const regionSlug = resolveRegionSlug(admin_level_1, ine_code);
-      if (!regionSlug) continue;
+      // Only emit URLs for known communities to avoid 404s from foreign/unrecognized regions
+      if (!regionSlug || !COMMUNITY_BY_SLUG.has(regionSlug)) continue;
       const url = `${baseUrl}${cityPath("spain", regionSlug, city_name)}`;
       if (seenCityUrls.has(url)) continue;
       seenCityUrls.add(url);

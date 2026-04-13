@@ -260,7 +260,7 @@ async function createAed(
   let adminLevel1: string | null = null;
   if (latitude != null && longitude != null) {
     try {
-      const geo = await reverseGeocode(latitude, longitude);
+      const geo = await reverseGeocode(latitude, longitude, 1);
       if (geo) adminLevel1 = geo.adminLevel1;
     } catch {
       // Non-blocking: enrichment can be done later via batch job
@@ -612,12 +612,17 @@ async function updateAed(
   const { dataSourceId, sourceOrigin, externalId } = opts;
 
   // Reverse geocode OUTSIDE transaction (network I/O)
+  // Skip if coordinates haven't changed — avoids redundant Nominatim calls on repeated syncs
   let updateAdminLevel1: string | null = null;
   const updateLat = parseCoordinate(data.latitude);
   const updateLon = parseCoordinate(data.longitude);
-  if (updateLat != null && updateLon != null) {
+  const coordsChanged =
+    updateLat != null &&
+    updateLon != null &&
+    (updateLat !== Number(aed.latitude) || updateLon !== Number(aed.longitude));
+  if (coordsChanged) {
     try {
-      const geo = await reverseGeocode(updateLat, updateLon);
+      const geo = await reverseGeocode(updateLat!, updateLon!, 1);
       if (geo) updateAdminLevel1 = geo.adminLevel1;
     } catch {
       // Non-blocking
