@@ -29,15 +29,12 @@ interface Props {
 const resolveCityName = cache(async (citySlug: string): Promise<string | null> => {
   const approxName = slugToApproxCityName(citySlug);
 
+  // Exact match only (case-insensitive). No `contains` — it can match
+  // wrong cities (e.g., slug "tor" matching "Torrevieja" instead of "Tor").
   const match = await prisma.aed.findFirst({
     where: {
       ...PUBLISHED_AED_WHERE,
-      location: {
-        OR: [
-          { city_name: { equals: approxName, mode: "insensitive" } },
-          { city_name: { contains: approxName, mode: "insensitive" } },
-        ],
-      },
+      location: { city_name: { equals: approxName, mode: "insensitive" } },
     },
     include: { location: { select: { city_name: true } } },
   });
