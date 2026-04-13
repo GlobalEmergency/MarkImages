@@ -26,8 +26,10 @@ export const PUBLISHED_AED_WHERE = {
   publication_mode: { not: "NONE" as const },
 };
 
-/** SQL WHERE fragment for raw queries (must follow a preceding WHERE or AND). */
-export const PUBLISHED_AED_SQL = `a.status = 'PUBLISHED' AND a.publication_mode != 'NONE'`;
+// For raw SQL ($queryRaw tagged templates), use inline:
+//   WHERE a.status = 'PUBLISHED' AND a.publication_mode != 'NONE'
+// A string constant can't be interpolated into Prisma tagged templates
+// (it would be escaped as a parameter, not SQL).
 
 const VALID_TRANSITIONS: Record<AedStatus, AedStatus[]> = {
   DRAFT: ["PENDING_REVIEW", "PUBLISHED"],

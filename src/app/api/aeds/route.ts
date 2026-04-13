@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
+import { PUBLISHED_AED_WHERE } from "@/lib/aed-status";
 import { getUserFromRequest } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createRateLimiter } from "@/lib/rate-limit";
@@ -119,10 +120,7 @@ export async function GET(request: NextRequest) {
 
     // Build where clause
     const where = {
-      status: "PUBLISHED" as const,
-      publication_mode: {
-        not: "NONE" as const,
-      },
+      ...PUBLISHED_AED_WHERE,
       ...(search && {
         OR: [
           { name: { contains: search, mode: "insensitive" as const } },
