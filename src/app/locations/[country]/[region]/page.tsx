@@ -53,7 +53,7 @@ const getRegionCities = cache(
           ORDER BY COUNT(*) DESC
         `) as CityInRegion[];
       }
-      // Non-Spain: match only by admin_level_1
+      // Non-Spain: match by admin_level_1, or by city_name for city-states without region data
       return (await prisma.$queryRaw`
         SELECT l.city_name, COUNT(*)::int as "count"
         FROM aeds a
@@ -62,7 +62,10 @@ const getRegionCities = cache(
           AND a.publication_mode != 'NONE'
           AND l.city_name IS NOT NULL
           AND l.city_name != ''
-          AND l.admin_level_1 = ${communityName}
+          AND (
+            l.admin_level_1 = ${communityName}
+            OR (l.admin_level_1 IS NULL AND l.city_name = ${communityName})
+          )
         GROUP BY l.city_name
         ORDER BY COUNT(*) DESC
       `) as CityInRegion[];
@@ -92,17 +95,37 @@ const resolveRegion = cache(
     // For non-Spain (or unknown Spanish regions), query DB for admin_level_1
     try {
       const result = (await prisma.$queryRaw`
-      SELECT DISTINCT l.admin_level_1
-      FROM aeds a
-      JOIN aed_locations l ON l.id = a.location_id
-      WHERE a.status = 'PUBLISHED'
-        AND a.publication_mode != 'NONE'
-        AND a.country_code = ${countryCode}
-        AND l.admin_level_1 IS NOT NULL
-    `) as { admin_level_1: string }[];
+        SELECT DISTINCT l.admin_level_1
+        FROM aeds a
+        JOIN aed_locations l ON l.id = a.location_id
+        WHERE a.status = 'PUBLISHED'
+          AND a.publication_mode != 'NONE'
+          AND a.country_code = ${countryCode}
+          AND l.admin_level_1 IS NOT NULL
+      `) as { admin_level_1: string }[];
 
       const match = result.find((r) => toSlug(r.admin_level_1) === regionSlug);
       if (match) return { name: match.admin_level_1, ineCodes: [] };
+    } catch {
+      // Fall through
+    }
+
+    // Fallback: for countries without admin_level_1 (city-states, unenriched),
+    // check if the slug matches a city_name directly
+    try {
+      const cityResult = (await prisma.$queryRaw`
+        SELECT DISTINCT l.city_name
+        FROM aeds a
+        JOIN aed_locations l ON l.id = a.location_id
+        WHERE a.status = 'PUBLISHED'
+          AND a.publication_mode != 'NONE'
+          AND a.country_code = ${countryCode}
+          AND l.city_name IS NOT NULL
+          AND l.admin_level_1 IS NULL
+      `) as { city_name: string }[];
+
+      const cityMatch = cityResult.find((r) => toSlug(r.city_name) === regionSlug);
+      if (cityMatch) return { name: cityMatch.city_name, ineCodes: [] };
     } catch {
       // Fall through
     }

@@ -52,6 +52,25 @@ const resolveRegionDisplayName = cache(
     } catch {
       // Fall through
     }
+
+    // Fallback: city-states without admin_level_1
+    try {
+      const cityResult = (await prisma.$queryRaw`
+        SELECT DISTINCT l.city_name
+        FROM aeds a
+        JOIN aed_locations l ON l.id = a.location_id
+        WHERE a.status = 'PUBLISHED'
+          AND a.publication_mode != 'NONE'
+          AND a.country_code = ${countryCode}
+          AND l.city_name IS NOT NULL
+          AND l.admin_level_1 IS NULL
+      `) as { city_name: string }[];
+
+      const cityMatch = cityResult.find((r) => toSlug(r.city_name) === regionSlug);
+      if (cityMatch) return cityMatch.city_name;
+    } catch {
+      // Fall through
+    }
     return null;
   }
 );
