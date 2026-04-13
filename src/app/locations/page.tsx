@@ -65,8 +65,26 @@ export default async function DesfibriladoresPage() {
   const cityCounts = await getCityCounts();
   const totalAeds = cityCounts.reduce((sum, c) => sum + c._count, 0);
 
+  const itemListLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Desfibriladores por ciudad en España",
+    description: `Directorio de desfibriladores en ${cityCounts.length} ciudades de España`,
+    numberOfItems: cityCounts.length,
+    itemListElement: cityCounts.map((c, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: `https://deamap.es/locations/${cityToSlug(c.city_name)}`,
+      name: `Desfibriladores en ${c.city_name}`,
+    })),
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+      />
       {/* Hero */}
       <section className="bg-gradient-to-br from-blue-600 to-blue-800 text-white py-16">
         <div className="container mx-auto px-4 max-w-5xl">

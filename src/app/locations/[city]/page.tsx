@@ -185,6 +185,55 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
   const sortedDistricts = [...byDistrict.entries()].sort((a, b) => b[1].length - a[1].length);
   const citySlug = cityToSlug(cityName);
 
+  // ItemList JSON-LD for AEDs on this page
+  const itemListLd =
+    currentPage === 1
+      ? {
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: `Desfibriladores en ${cityName}`,
+          numberOfItems: totalCount,
+          itemListElement: aeds.slice(0, 30).map((aed, i) => {
+            const address = [
+              aed.location?.street_type,
+              aed.location?.street_name,
+              aed.location?.street_number,
+            ]
+              .filter(Boolean)
+              .join(" ");
+
+            return {
+              "@type": "ListItem",
+              position: i + 1,
+              item: {
+                "@type": "MedicalDevice",
+                name: aed.name,
+                description: "Desfibrilador externo automático (DEA)",
+                url: `https://deamap.es/dea/${aed.id}`,
+                ...(address || aed.location?.city_name
+                  ? {
+                      location: {
+                        "@type": "Place",
+                        address: {
+                          "@type": "PostalAddress",
+                          ...(address ? { streetAddress: address } : {}),
+                          ...(aed.location?.city_name
+                            ? { addressLocality: aed.location.city_name }
+                            : {}),
+                          ...(aed.location?.postal_code
+                            ? { postalCode: aed.location.postal_code }
+                            : {}),
+                          addressCountry: "ES",
+                        },
+                      },
+                    }
+                  : {}),
+              },
+            };
+          }),
+        }
+      : null;
+
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -216,6 +265,12 @@ export default async function CityDeaPage({ params, searchParams }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
+      {itemListLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+        />
+      )}
       {/* Hero */}
       <section className="bg-gradient-to-br from-blue-600 to-blue-800 text-white py-16">
         <div className="container mx-auto px-4 max-w-5xl">

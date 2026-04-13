@@ -14,7 +14,7 @@ function cityToSlug(city: string): string {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://deamap.es";
 
-  // Static pages
+  // Static pages (only pages with SEO value)
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
@@ -27,18 +27,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/dea/new-simple`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${baseUrl}/api/docs`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.6,
     },
   ];
 
@@ -56,31 +44,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ORDER BY l.city_name
     `) as { city_name: string; count: number }[];
 
-    const ITEMS_PER_PAGE = 50;
-    const cityPages: MetadataRoute.Sitemap = [];
-
-    for (const { city_name, count } of cities) {
-      const slug = cityToSlug(city_name);
-      const totalPages = Math.ceil(count / ITEMS_PER_PAGE);
-
-      // Page 1 (canonical URL without ?page=)
-      cityPages.push({
-        url: `${baseUrl}/locations/${slug}`,
-        lastModified: new Date(),
-        changeFrequency: "weekly" as const,
-        priority: 0.8,
-      });
-
-      // Additional pages
-      for (let page = 2; page <= totalPages; page++) {
-        cityPages.push({
-          url: `${baseUrl}/locations/${slug}?page=${page}`,
-          lastModified: new Date(),
-          changeFrequency: "weekly" as const,
-          priority: 0.6,
-        });
-      }
-    }
+    const cityPages: MetadataRoute.Sitemap = cities.map(({ city_name }) => ({
+      url: `${baseUrl}/locations/${cityToSlug(city_name)}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    }));
 
     return [...staticPages, ...cityPages];
   } catch {

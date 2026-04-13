@@ -342,6 +342,9 @@ export default function Home() {
 
       {/* Fullscreen Map Section */}
       <div className="relative w-full h-[calc(100vh-56px)]">
+        <h1 className="sr-only">
+          Mapa de Desfibriladores (DEA) en España — Encuentra el más cercano
+        </h1>
         <MapView
           onAedClick={handleMapMarkerClick}
           searchLocation={searchLocation}
