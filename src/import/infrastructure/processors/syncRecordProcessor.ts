@@ -20,6 +20,7 @@ import type { PrismaClient } from "@/generated/client/client";
 import type { AedStatus, PublicationMode, SourceOrigin } from "@/generated/client/enums";
 import { SYSTEM_USER_UUID } from "@/constants/system";
 import { appendInternalNote } from "@/lib/audit";
+import { reverseGeocode } from "@/lib/nominatim";
 import { createOrUpdateDevice } from "./deviceHelpers";
 
 // ============================================================
@@ -255,6 +256,17 @@ async function createAed(
   const locationDetails = combineLocationDetails(data.additionalInfo, data.specificLocation);
   const baseCode = isRealExternalRef(opts.externalId) ? opts.externalId : null;
 
+  // Reverse geocode OUTSIDE transaction (network I/O)
+  let adminLevel1: string | null = null;
+  if (latitude != null && longitude != null) {
+    try {
+      const geo = await reverseGeocode(latitude, longitude);
+      if (geo) adminLevel1 = geo.adminLevel1;
+    } catch {
+      // Non-blocking: enrichment can be done later via batch job
+    }
+  }
+
   await prisma.$transaction(async (tx) => {
     // 1. Location
     const location = await tx.aedLocation.create({
@@ -268,6 +280,7 @@ async function createAed(
         access_instructions: toStringOrNull(data.accessDescription),
         city_name: toStringOrNull(data.city),
         city_code: toStringOrNull(data.cityCode),
+        admin_level_1: adminLevel1,
         district_name: toStringOrNull(data.district),
       },
     });
@@ -598,6 +611,19 @@ async function updateAed(
 ): Promise<void> {
   const { dataSourceId, sourceOrigin, externalId } = opts;
 
+  // Reverse geocode OUTSIDE transaction (network I/O)
+  let updateAdminLevel1: string | null = null;
+  const updateLat = parseCoordinate(data.latitude);
+  const updateLon = parseCoordinate(data.longitude);
+  if (updateLat != null && updateLon != null) {
+    try {
+      const geo = await reverseGeocode(updateLat, updateLon);
+      if (geo) updateAdminLevel1 = geo.adminLevel1;
+    } catch {
+      // Non-blocking
+    }
+  }
+
   await prisma.$transaction(async (tx) => {
     // ==============================
     // TIER 1: VERIFIED AED PROTECTION
@@ -646,6 +672,7 @@ async function updateAed(
           access_instructions: toStringOrNull(data.accessDescription),
           city_name: toStringOrNull(data.city),
           city_code: toStringOrNull(data.cityCode),
+          admin_level_1: updateAdminLevel1 || undefined,
           district_name: toStringOrNull(data.district),
         },
       });

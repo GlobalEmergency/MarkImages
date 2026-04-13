@@ -27,25 +27,33 @@ interface CityInRegion {
   count: number;
 }
 
-const getRegionCities = cache(async (ineCodes: string[]): Promise<CityInRegion[]> => {
-  try {
-    return (await prisma.$queryRaw`
-      SELECT l.city_name, COUNT(*)::int as "count"
-      FROM aeds a
-      JOIN aed_locations l ON l.id = a.location_id
-      WHERE a.status = 'PUBLISHED'
-        AND a.publication_mode != 'NONE'
-        AND l.city_name IS NOT NULL
-        AND l.city_name != ''
-        AND l.city_code IS NOT NULL
-        AND LEFT(l.city_code, 2) = ANY(${ineCodes})
-      GROUP BY l.city_name
-      ORDER BY COUNT(*) DESC
-    `) as CityInRegion[];
-  } catch {
-    return [];
+/**
+ * Get cities in a region using admin_level_1 as primary source,
+ * falling back to INE province codes for records not yet enriched.
+ */
+const getRegionCities = cache(
+  async (communityName: string, ineCodes: string[]): Promise<CityInRegion[]> => {
+    try {
+      return (await prisma.$queryRaw`
+        SELECT l.city_name, COUNT(*)::int as "count"
+        FROM aeds a
+        JOIN aed_locations l ON l.id = a.location_id
+        WHERE a.status = 'PUBLISHED'
+          AND a.publication_mode != 'NONE'
+          AND l.city_name IS NOT NULL
+          AND l.city_name != ''
+          AND (
+            l.admin_level_1 = ${communityName}
+            OR (l.admin_level_1 IS NULL AND COALESCE(LEFT(NULLIF(l.city_code, ''), 2), LEFT(NULLIF(l.postal_code, ''), 2)) = ANY(${ineCodes}))
+          )
+        GROUP BY l.city_name
+        ORDER BY COUNT(*) DESC
+      `) as CityInRegion[];
+    } catch {
+      return [];
+    }
   }
-});
+);
 
 export async function generateStaticParams() {
   return COMMUNITIES.map((c) => ({ country: "spain", region: c.slug }));
@@ -58,7 +66,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!country || !community) return { title: "Región no encontrada | DeaMap" };
 
-  const cities = await getRegionCities(community.provinceIneCodes);
+  const cities = await getRegionCities(community.name, community.provinceIneCodes);
   const totalCount = cities.reduce((sum, c) => sum + c.count, 0);
 
   const title = `Desfibriladores en ${community.name} — ${totalCount.toLocaleString("es-ES")} DEAs en ${cities.length} ciudades`;
@@ -87,7 +95,7 @@ export default async function RegionPage({ params }: Props) {
 
   if (!country || !community) notFound();
 
-  const cities = await getRegionCities(community.provinceIneCodes);
+  const cities = await getRegionCities(community.name, community.provinceIneCodes);
   const totalCount = cities.reduce((sum, c) => sum + c.count, 0);
   const avg = cities.length > 0 ? Math.round(totalCount / cities.length) : 0;
 

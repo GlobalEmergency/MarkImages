@@ -1,17 +1,17 @@
 import { Globe, Heart, MapPin, ArrowRight, Building2 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 
 import { PUBLISHED_AED_WHERE } from "@/lib/aed-status";
 import { prisma } from "@/lib/db";
 import {
-  COMMUNITIES,
   COUNTRY_BY_SLUG,
-  communityForIneCode,
   communityPath,
   cityPath,
   slugToApproxCityName,
+  resolveRegionSlug,
+  resolveRegionName,
 } from "@/lib/geography";
 import { safeJsonLd } from "@/lib/json-ld";
 
@@ -36,35 +36,52 @@ async function getCountryStats(countryCode: string): Promise<{
 }> {
   try {
     const raw = (await prisma.$queryRaw`
-      SELECT LEFT(l.city_code, 2) as "ine_code", l.city_name, COUNT(*)::int as "aed_count"
+      SELECT l.admin_level_1,
+             COALESCE(LEFT(NULLIF(l.city_code, ''), 2), LEFT(NULLIF(l.postal_code, ''), 2)) as "ine_code",
+             l.city_name,
+             COUNT(*)::int as "aed_count"
       FROM aeds a
       JOIN aed_locations l ON l.id = a.location_id
       WHERE a.status = 'PUBLISHED'
         AND a.publication_mode != 'NONE'
         AND a.country_code = ${countryCode}
-        AND l.city_code IS NOT NULL
-        AND l.city_code != ''
         AND l.city_name IS NOT NULL
         AND l.city_name != ''
-      GROUP BY LEFT(l.city_code, 2), l.city_name
-    `) as { ine_code: string; city_name: string; aed_count: number }[];
+        AND (l.admin_level_1 IS NOT NULL OR COALESCE(NULLIF(l.city_code, ''), NULLIF(l.postal_code, '')) IS NOT NULL)
+      GROUP BY l.admin_level_1, COALESCE(LEFT(NULLIF(l.city_code, ''), 2), LEFT(NULLIF(l.postal_code, ''), 2)), l.city_name
+    `) as {
+      admin_level_1: string | null;
+      ine_code: string | null;
+      city_name: string;
+      aed_count: number;
+    }[];
 
-    const communityAgg = new Map<string, { totalAeds: number; cities: Set<string> }>();
+    const communityAgg = new Map<
+      string,
+      { name: string; totalAeds: number; cities: Set<string> }
+    >();
 
     for (const row of raw) {
-      const community = communityForIneCode(row.ine_code);
-      if (!community) continue;
-      const existing = communityAgg.get(community.slug) || { totalAeds: 0, cities: new Set() };
+      const regionSlug = resolveRegionSlug(row.admin_level_1, row.ine_code);
+      const regionName = resolveRegionName(row.admin_level_1, row.ine_code);
+      if (!regionSlug || !regionName) continue;
+      const existing = communityAgg.get(regionSlug) || {
+        name: regionName,
+        totalAeds: 0,
+        cities: new Set<string>(),
+      };
       existing.totalAeds += row.aed_count;
       existing.cities.add(row.city_name);
-      communityAgg.set(community.slug, existing);
+      communityAgg.set(regionSlug, existing);
     }
 
-    const communities: CommunityStats[] = COMMUNITIES.filter((c) => communityAgg.has(c.slug))
-      .map((c) => {
-        const agg = communityAgg.get(c.slug)!;
-        return { name: c.name, slug: c.slug, totalAeds: agg.totalAeds, cityCount: agg.cities.size };
-      })
+    const communities: CommunityStats[] = [...communityAgg.entries()]
+      .map(([slug, agg]) => ({
+        name: agg.name,
+        slug,
+        totalAeds: agg.totalAeds,
+        cityCount: agg.cities.size,
+      }))
       .sort((a, b) => b.totalAeds - a.totalAeds);
 
     const totalAeds = communities.reduce((sum, c) => sum + c.totalAeds, 0);
@@ -113,21 +130,19 @@ async function tryLegacyCityRedirect(citySlug: string): Promise<never> {
   const aed = await prisma.aed.findFirst({
     where: {
       ...PUBLISHED_AED_WHERE,
-      location: {
-        OR: [
-          { city_name: { equals: cityName, mode: "insensitive" } },
-          { city_name: { contains: cityName, mode: "insensitive" } },
-        ],
-      },
+      location: { city_name: { equals: cityName, mode: "insensitive" } },
     },
-    include: { location: { select: { city_name: true, city_code: true } } },
+    include: { location: { select: { city_name: true, city_code: true, admin_level_1: true } } },
   });
 
-  if (aed?.location?.city_code && aed.location.city_name) {
-    const ineCode = aed.location.city_code.substring(0, 2);
-    const community = communityForIneCode(ineCode);
-    if (community) {
-      redirect(cityPath("spain", community.slug, aed.location.city_name));
+  if (aed?.location?.city_name) {
+    // Resolve region: admin_level_1 (Nominatim) → city_code INE fallback
+    const regionSlug = resolveRegionSlug(
+      aed.location.admin_level_1 ?? null,
+      aed.location.city_code?.substring(0, 2) ?? null
+    );
+    if (regionSlug) {
+      permanentRedirect(cityPath("spain", regionSlug, aed.location.city_name));
     }
   }
 

@@ -24,6 +24,7 @@ import { DownloadAndUploadImageUseCase } from "@/storage/application/use-cases/D
 import * as os from "os";
 import * as path from "path";
 import { invalidateAllAedCaches } from "@/lib/cache-invalidation";
+import { reverseGeocode } from "@/lib/nominatim";
 
 interface CsvRecord {
   [key: string]: string;
@@ -615,6 +616,17 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
     // ========================================
     // 1. CREATE LOCATION
     // ========================================
+    // Reverse geocode to get admin_level_1 (region/state) from coordinates
+    let adminLevel1: string | null = null;
+    if (latitude != null && longitude != null) {
+      try {
+        const geo = await reverseGeocode(latitude, longitude);
+        if (geo) adminLevel1 = geo.adminLevel1;
+      } catch {
+        // Non-blocking: enrichment can be done later via batch job
+      }
+    }
+
     const location = await this.prisma.aedLocation.create({
       data: {
         street_type: data.streetType || null,
@@ -623,6 +635,7 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
         postal_code: data.postalCode || null,
         city_name: data.city || data.cityName || null,
         city_code: data.cityCode || null,
+        admin_level_1: adminLevel1,
         district_code: data.districtCode || null,
         district_name: data.district || null,
         neighborhood_code: data.neighborhoodCode || null,

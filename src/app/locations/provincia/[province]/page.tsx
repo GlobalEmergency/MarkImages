@@ -1,11 +1,11 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 
 import { communityForIneCode, communityPath } from "@/lib/geography";
 import { PROVINCE_BY_SLUG } from "@/lib/provinces";
 
 /**
  * Legacy redirect: /locations/provincia/[province] → /locations/spain/[community]
- * Maps province slug to its community and issues a 301 redirect.
+ * Maps province slug to its community and issues a 308 permanent redirect.
  */
 
 interface Props {
@@ -21,5 +21,5 @@ export default async function LegacyProvinceRedirect({ params }: Props) {
   const community = communityForIneCode(province.ineCode);
   if (!community) notFound();
 
-  redirect(communityPath("spain", community));
+  permanentRedirect(communityPath("spain", community));
 }

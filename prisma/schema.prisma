@@ -342,6 +342,7 @@ model AedLocation {
   // Geographic information by city (no FK - multi-city support)
   city_name         String?
   city_code         String?
+  admin_level_1     String? // Region/State from reverse geocoding (e.g., "Comunidad de Madrid", "Île-de-France")
   district_code     String?
   district_name     String?
   neighborhood_code String?
@@ -364,6 +365,7 @@ model AedLocation {
   @@index([postal_code])
   @@index([city_name], map: "idx_aed_locations_city_name")
   @@index([city_code], map: "idx_aed_locations_city_code")
+  @@index([admin_level_1], map: "idx_aed_locations_admin_level_1")
   @@index([city_code, district_code])
   @@index([city_code, postal_code])
   @@map("aed_locations")
