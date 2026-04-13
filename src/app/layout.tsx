@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
 
 import Footer from "@/components/Footer";
-import GoogleAnalytics from "@/components/GoogleAnalytics";
+import { GoogleTagManagerHead, GoogleTagManagerBody } from "@/components/GoogleTagManager";
 import JsonLd from "@/components/JsonLd";
 import Navigation from "@/components/Navigation";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -106,10 +106,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-title" content="DeaMap" />
         <link rel="manifest" href="/site.webmanifest" />
+        <GoogleTagManagerHead />
         <JsonLd />
       </head>
       <body className="font-sans antialiased flex flex-col min-h-screen">
-        <GoogleAnalytics />
+        <GoogleTagManagerBody />
         <AuthProvider>
           <OrganizationProvider>
             <Navigation />
