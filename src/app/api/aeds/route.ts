@@ -11,6 +11,7 @@ import { getUserFromRequest } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { recordStatusChange } from "@/lib/audit";
+import { invalidateAedCaches } from "@/lib/cache-invalidation";
 import { filterAedByPublicationMode } from "@/lib/publication-filter";
 import type { AedFullData } from "@/lib/publication-filter";
 import { getDuplicateDetector } from "@/duplicate-detection/infrastructure/factory";
@@ -215,8 +216,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Cache public AED list: 5min CDN + 15min stale-while-revalidate
-    response.headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900");
+    // Cache 24h + 48h SWR — invalidated on-demand when AEDs change
+    response.headers.set("Cache-Control", "public, s-maxage=86400, stale-while-revalidate=172800");
 
     return response;
   } catch (error) {
@@ -557,6 +558,8 @@ export async function POST(request: NextRequest) {
 
       return newAed;
     });
+
+    invalidateAedCaches({ aedId: aed.id, cityName: aed.location?.city_name ?? undefined });
 
     return NextResponse.json(
       {

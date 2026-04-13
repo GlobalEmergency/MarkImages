@@ -185,8 +185,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Cache nearby results: 5min CDN + 15min stale-while-revalidate
-    response.headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900");
+    // Cache 24h + 48h SWR — invalidated on-demand when AEDs change
+    response.headers.set("Cache-Control", "public, s-maxage=86400, stale-while-revalidate=172800");
 
     return response;
   } catch (error) {

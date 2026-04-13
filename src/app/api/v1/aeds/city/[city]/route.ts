@@ -138,7 +138,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       },
     });
 
-    response.headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900");
+    // Cache 24h + 48h SWR — invalidated on-demand when AEDs change
+    response.headers.set("Cache-Control", "public, s-maxage=86400, stale-while-revalidate=172800");
     response.headers.set("Access-Control-Allow-Origin", "*");
 
     return response;

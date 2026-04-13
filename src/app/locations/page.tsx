@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { COUNTRIES, countryPath } from "@/lib/geography";
 import { safeJsonLd } from "@/lib/json-ld";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "Desfibriladores en el mundo - Directorio por país",

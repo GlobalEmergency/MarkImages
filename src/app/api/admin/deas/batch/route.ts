@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAdmin, AuthError } from "@/lib/auth";
+import { invalidateAllAedCaches } from "@/lib/cache-invalidation";
 import { prisma } from "@/lib/db";
 
 const MAX_BATCH_SIZE = 50;
@@ -111,6 +112,8 @@ export async function DELETE(request: NextRequest) {
         }
       }
     });
+
+    invalidateAllAedCaches();
 
     return NextResponse.json({
       success: true,

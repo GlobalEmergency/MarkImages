@@ -23,6 +23,7 @@ import { randomUUID } from "crypto";
 import { DownloadAndUploadImageUseCase } from "@/storage/application/use-cases/DownloadAndUploadImageUseCase";
 import * as os from "os";
 import * as path from "path";
+import { invalidateAllAedCaches } from "@/lib/cache-invalidation";
 
 interface CsvRecord {
   [key: string]: string;
@@ -897,6 +898,7 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
   }
 
   async finalize(job: BatchJob): Promise<JobResult> {
+    invalidateAllAedCaches();
     return JobResult.fromProgress(job.progress).complete();
   }
 

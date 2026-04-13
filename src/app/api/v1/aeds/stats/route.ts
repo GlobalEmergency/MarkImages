@@ -60,7 +60,8 @@ export async function GET(request: NextRequest) {
       meta: { api_version: "v1" },
     });
 
-    response.headers.set("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=7200");
+    // Cache 24h + 48h SWR — invalidated on-demand when AEDs change
+    response.headers.set("Cache-Control", "public, s-maxage=86400, stale-while-revalidate=172800");
     response.headers.set("Access-Control-Allow-Origin", "*");
 
     return response;

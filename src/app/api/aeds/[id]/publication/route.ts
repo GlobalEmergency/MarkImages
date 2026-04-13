@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/auth";
+import { invalidateAedCaches } from "@/lib/cache-invalidation";
 import { prisma } from "@/lib/db";
 import type { PublicationMode } from "@/generated/client/client";
 
@@ -122,6 +123,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
       return updatedAed;
     });
+
+    invalidateAedCaches({ aedId: result.id, cityName: result.location?.city_name ?? undefined });
 
     return NextResponse.json({
       success: true,
