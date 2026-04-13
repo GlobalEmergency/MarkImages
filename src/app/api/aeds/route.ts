@@ -11,7 +11,7 @@ import { getUserFromRequest } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { recordStatusChange } from "@/lib/audit";
-import { invalidateAedCaches, getCacheControl } from "@/lib/cache-invalidation";
+import { invalidateAedCaches, getCacheHeaders } from "@/lib/cache-invalidation";
 import { filterAedByPublicationMode } from "@/lib/publication-filter";
 import type { AedFullData } from "@/lib/publication-filter";
 import { getDuplicateDetector } from "@/duplicate-detection/infrastructure/factory";
@@ -216,7 +216,7 @@ export async function GET(request: NextRequest) {
           totalPages: Math.ceil(total / limit),
         },
       },
-      { headers: { "Cache-Control": getCacheControl(request) } }
+      { headers: getCacheHeaders(request) }
     );
   } catch (error) {
     console.error("Error fetching AEDs:", error);

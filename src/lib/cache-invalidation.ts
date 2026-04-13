@@ -20,18 +20,28 @@ import { revalidatePath } from "next/cache";
 // ── Cache-Control helpers ───────────────────────────────────────────
 
 /**
- * Cache-Control for internal API routes (/api/aeds/*).
+ * Cache headers for internal API routes (/api/aeds/*).
  * Authenticated users always get fresh data; anonymous users get 5 min CDN cache.
+ *
+ * Returns both Cache-Control and CDN-Cache-Control because Next.js 15 on Vercel
+ * may override Cache-Control on route handlers. CDN-Cache-Control is respected
+ * by Vercel Edge regardless.
  */
-export function getCacheControl(request: NextRequest): string {
+export function getCacheHeaders(request: NextRequest): Record<string, string> {
   const hasAuth =
     request.cookies.has("auth-token") ||
     request.headers.get("authorization")?.startsWith("Bearer ");
 
   if (hasAuth) {
-    return "private, no-store";
+    return {
+      "Cache-Control": "private, no-store",
+      "CDN-Cache-Control": "private, no-store",
+    };
   }
-  return "public, s-maxage=300, stale-while-revalidate=60";
+  return {
+    "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
+    "CDN-Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
+  };
 }
 
 // ── On-demand invalidation ──────────────────────────────────────────

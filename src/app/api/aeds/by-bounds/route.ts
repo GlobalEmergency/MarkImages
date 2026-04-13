@@ -13,7 +13,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { getCacheControl } from "@/lib/cache-invalidation";
+import { getCacheHeaders } from "@/lib/cache-invalidation";
 import { getQueryStrategy, isValidBoundingBox } from "@/lib/zoom-strategy";
 import { GetAedsWithClustersUseCase } from "@/clustering/application/use-cases/GetAedsWithClustersUseCase";
 import { PostGISClusteringAdapter } from "@/clustering/infrastructure/adapters/PostGISClusteringAdapter";
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
     });
 
     const headers: Record<string, string> = {
-      "Cache-Control": getCacheControl(request),
+      ...getCacheHeaders(request),
     };
 
     // Server-Timing header: visible in browser DevTools → Network → Timing tab
