@@ -11,7 +11,7 @@
 
 const NOMINATIM_BASE_URL = "https://nominatim.openstreetmap.org";
 const USER_AGENT = "DeaMap/1.0 (https://deamap.es)";
-const TIMEOUT_MS = 5_000;
+const TIMEOUT_MS = 15_000;
 const MIN_INTERVAL_MS = 1_100; // ~1 req/s with safety margin
 
 /**
