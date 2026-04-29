@@ -222,11 +222,11 @@ export class AedExportProcessor extends BaseBatchJobProcessor<AedExportConfig> {
     let csvContent = "";
 
     if (useImportFormat) {
-      csvContent = aedsToImportFormatCsv(this.exportedRecords);
+      csvContent = aedsToImportFormatCsv(this.exportedRecords as AedImportFormatData[]);
     } else {
       // If custom fields are specified, we might need a different approach,
       // but for now we follow the plan to use the central utility.
-      csvContent = aedsToCsv(this.exportedRecords);
+      csvContent = aedsToCsv(this.exportedRecords as AedExportData[]);
     }
 
     // Add UTF-8 BOM for Excel compatibility

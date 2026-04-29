@@ -48,5 +48,17 @@
       "europe": "Europa",
       "coming_soon": "Próximamente"
     }
+  },
+  "import_validation": {
+    "invalid_latitude": "La latitud es inv\u00E1lida. Debe ser un n\u00FAmero decimal entre -90 y 90 (ej: 40.4165).",
+    "invalid_longitude": "La longitud es inv\u00E1lida. Debe ser un n\u00FAmero decimal entre -180 y 180 (ej: -3.7038).",
+    "invalid_postal_code": "El c\u00F3digo postal es incorrecto. Para Espa\u00F1a, deben ser exactamente 5 d\u00EDgitos (ej: 28001).",
+    "invalid_email": "El formato del correo electr\u00F3nico no es v\u00E1lido (ejemplo correcto: contacto@empresa.com).",
+    "invalid_url": "El formato del enlace web no es v\u00E1lido (debe empezar por http:// o https://).",
+    "invalid_time": "El formato de hora no es v\u00E1lido. Usa el formato 24h HH:MM (ej: 09:00, 18:30).",
+    "name_too_short": "El nombre es demasiado corto. Se recomienda un m\u00EDnimo de 3 caracteres.",
+    "name_too_long": "El nombre es demasiado largo. El m\u00E1ximo son 255 caracteres.",
+    "invalid_boolean": "El valor no se reconoce como s\u00ED o no. Usa 'S\u00ED', 'No', 'true' o 'false'.",
+    "generic_error": "Error de validaci\u00F3n en este campo."
   }
 }
