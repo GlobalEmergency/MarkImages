@@ -240,6 +240,16 @@ const ProfileTabPage: React.FC = () => {
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding" scrollY>
+          <div style={{ maxWidth: 400, margin: "0 auto", paddingTop: 24 }}>
+            <IonButton
+              expand="block"
+              onClick={() => history.push("/new-dea")}
+              style={{ marginBottom: 16 }}
+            >
+              <IonIcon icon={addCircleOutline} slot="start" />
+              Registrar nuevo DEA (Invitado)
+            </IonButton>
+          </div>
           <AuthForm />
         </IonContent>
       </IonPage>
