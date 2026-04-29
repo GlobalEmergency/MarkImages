@@ -2,6 +2,38 @@
 
 Thanks for your interest in contributing to DeaMap! This platform helps emergency services locate defibrillators and is actively used by SAMUR-Protección Civil Madrid and Civil Protection teams across Andalusia.
 
+## 🛠 Setup & Troubleshooting Guide
+
+We have centralized technical details for setting up the development environment here, especially those related to the geospatial layer (**PostGIS**).
+
+### 1. Database Requirements
+This project uses **Prisma** with the **PostGIS** extension. Without this extension, migrations will fail.
+
+#### Error: `Type "Geography" does not exist`
+This indicates the extension is not enabled. Run the following in your SQL client:
+```sql
+CREATE EXTENSION IF NOT EXISTS postgis;
+```
+
+### 2. PostGIS Installation by Platform
+| OS | Recommended Method |
+|---|---|
+| **Windows** | Use Stack Builder (Spatial Extensions section). |
+| **macOS** | `brew install postgis` and restart the service. |
+| **Linux** | `sudo apt-get install postgresql-[version]-postgis-3`. |
+
+### 3. User Permissions and Shadow Database
+Make sure your DB user has permissions to create databases (Shadow DB):
+```sql
+ALTER USER your_user WITH SUPERUSER;
+```
+
+### 4. Prisma Workflow
+1. Verify that PostgreSQL is running.
+2. Ensure the `postgis` extension is active.
+3. Run `npx prisma generate` to update the client.
+4. Run `npx prisma migrate dev` to synchronize changes.
+
 ## Quick start (< 5 minutes)
 
 ### Prerequisites
