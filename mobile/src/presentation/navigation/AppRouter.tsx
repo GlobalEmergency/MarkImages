@@ -23,7 +23,6 @@ import NearbyPage from "../pages/NearbyPage";
 import NewDeaPage from "../pages/NewDeaPage";
 import ProfileTabPage from "../pages/ProfileTabPage";
 import DeaDetailPage from "../pages/DeaDetailPage";
-import AuthGuard from "../components/AuthGuard";
 
 const AppRouter: React.FC = () => {
   const { isLoading } = useAuth();
@@ -58,15 +57,7 @@ const AppRouter: React.FC = () => {
         <Route exact path="/login" component={LoginPage} />
         <Route exact path="/register" component={RegisterPage} />
         <Route exact path="/dea/:id" component={DeaDetailPage} />
-        <Route
-          exact
-          path="/new-dea"
-          render={() => (
-            <AuthGuard>
-              <NewDeaPage />
-            </AuthGuard>
-          )}
-        />
+        <Route exact path="/new-dea" component={NewDeaPage} />
 
         {/* Tabbed layout (public - no auth required) */}
         <Route
