@@ -81,7 +81,11 @@ DATABASE_URL="postgresql://user:password@host:port/database"
    npx prisma generate
    ```
 
-   **Nota**: `npm run build` NO ejecuta migraciones en local (solo en Vercel)
+> [!IMPORTANT]
+> **¿Problemas con PostGIS o la Base de Datos?**
+> Si encuentras errores durante la migración o la configuración de PostgreSQL, consulta nuestra **[Guía de Resolución de Problemas en CONTRIBUTING.md](./CONTRIBUTING.md#setup--troubleshooting-guide)**.
+
+**Nota**: `npm run build` NO ejecuta migraciones en local (solo en Vercel)
 
 5. **Seed (opcional)**
 
