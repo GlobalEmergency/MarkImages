@@ -1,6 +1,6 @@
 /**
  * Value Object: Datos de checkpoint para importaciones resumibles
- * Capa de Dominio - Representa un punto de recuperación
+ * Capa de Dominio - Representa un punto de recuperaciÃ³n
  */
 
 /**
@@ -13,12 +13,12 @@ export type CheckpointStatus = "SUCCESS" | "FAILED" | "SKIPPED";
  */
 export interface CheckpointData {
   /**
-   * ID del batch de importación
+   * ID del batch de importaciÃ³n
    */
   batchId: string;
 
   /**
-   * Índice del registro en la fuente (0-based)
+   * Ãndice del registro en la fuente (0-based)
    */
   recordIndex: number;
 
@@ -38,7 +38,7 @@ export interface CheckpointData {
   status: CheckpointStatus;
 
   /**
-   * Mensaje de error si falló
+   * Mensaje de error si fallÃ³
    */
   errorMessage?: string;
 
@@ -59,7 +59,7 @@ export interface CheckpointData {
 }
 
 /**
- * Estadísticas agregadas de checkpoints
+ * EstadÃ­sticas agregadas de checkpoints
  */
 export interface CheckpointStats {
   /**
@@ -83,7 +83,7 @@ export interface CheckpointStats {
   skipped: number;
 
   /**
-   * Último índice procesado
+   * Ãšltimo Ã­ndice procesado
    */
   lastIndex: number;
 
@@ -176,7 +176,7 @@ export class CheckpointDataBuilder {
 }
 
 /**
- * Helper para crear checkpoints rápidamente
+ * Helper para crear checkpoints rÃ¡pidamente
  */
 export const Checkpoint = {
   success(batchId: string, recordIndex: number, reference?: string): CheckpointData {

@@ -1,5 +1,5 @@
 /**
- * Value Object: Representa una fila del CSV con mapeo dinámico
+ * Value Object: Representa una fila del CSV con mapeo dinÃ¡mico
  * Capa de Dominio - Universal para cualquier ciudad europea
  */
 
@@ -39,7 +39,7 @@ export class DynamicCsvRow {
     return this.get("establishmentType");
   }
 
-  // Dirección - Campos universales
+  // DirecciÃ³n - Campos universales
   get streetType(): string | null {
     return this.get("streetType");
   }
@@ -70,7 +70,7 @@ export class DynamicCsvRow {
   }
 
   // ============================================
-  // CAMPOS OPCIONALES (específicos de ciertas ciudades)
+  // CAMPOS OPCIONALES (especÃ­ficos de ciertas ciudades)
   // ============================================
 
   // Distrito - Solo relevante para ciertas ciudades (Madrid, etc.)
@@ -140,11 +140,13 @@ export class DynamicCsvRow {
 
   get has24hSurveillance(): boolean {
     const value = this.get("has24hSurveillance")?.toLowerCase().trim();
-    return value === "sí" || value === "si" || value === "yes" || value === "true" || value === "1";
+    return (
+      value === "sÃ­" || value === "si" || value === "yes" || value === "true" || value === "1"
+    );
   }
 
   // ============================================
-  // IMÁGENES Y DESCRIPCIÓN
+  // IMÃGENES Y DESCRIPCIÃ“N
   // ============================================
 
   get photo1Url(): string | null {
@@ -184,9 +186,9 @@ export class DynamicCsvRow {
   // ============================================
 
   /**
-   * Valida que la fila tenga los campos mínimos requeridos UNIVERSALES
-   * Solo son obligatorios: nombre (proposedName), nombre de calle y número de calle
-   * NO asume campos específicos de ninguna ciudad
+   * Valida que la fila tenga los campos mÃ­nimos requeridos UNIVERSALES
+   * Solo son obligatorios: nombre (proposedName), nombre de calle y nÃºmero de calle
+   * NO asume campos especÃ­ficos de ninguna ciudad
    */
   hasMinimumRequiredFields(): boolean {
     // Validar directamente las keys para mayor claridad

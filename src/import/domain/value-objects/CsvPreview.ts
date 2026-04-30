@@ -41,7 +41,7 @@ export class CsvPreview {
   }
 
   /**
-   * Obtiene el índice de una columna por su nombre
+   * Obtiene el Ã­ndice de una columna por su nombre
    */
   getColumnIndex(columnName: string): number {
     return this.headers.indexOf(columnName);
@@ -55,7 +55,7 @@ export class CsvPreview {
   }
 
   /**
-   * Obtiene los valores de una columna específica en las filas de muestra
+   * Obtiene los valores de una columna especÃ­fica en las filas de muestra
    */
   getColumnSampleValues(columnName: string): string[] {
     const index = this.getColumnIndex(columnName);
@@ -67,22 +67,22 @@ export class CsvPreview {
   }
 
   /**
-   * Valida que todas las filas tengan el mismo número de columnas
-   * 🔧 MEJORADO: También verifica que no haya headers vacíos
+   * Valida que todas las filas tengan el mismo nÃºmero de columnas
+   * ðŸ”§ MEJORADO: TambiÃ©n verifica que no haya headers vacÃ­os
    */
   isValid(): boolean {
-    // Verificar que no haya headers vacíos
+    // Verificar que no haya headers vacÃ­os
     const hasEmptyHeaders = this.headers.some((h) => h.trim().length === 0);
     if (hasEmptyHeaders) {
       return false;
     }
 
-    // Verificar que todas las filas tengan el mismo número de columnas
+    // Verificar que todas las filas tengan el mismo nÃºmero de columnas
     return this.sampleRows.every((row) => row.length === this.headers.length);
   }
 
   /**
-   * Obtiene estadísticas básicas del CSV
+   * Obtiene estadÃ­sticas bÃ¡sicas del CSV
    */
   getStats(): {
     totalRows: number;
@@ -112,7 +112,7 @@ export class CsvPreview {
 
   /**
    * Crea un CsvPreview desde datos parseados
-   * 🔧 MEJORADO: Limpia y valida los datos antes de crear el preview
+   * ðŸ”§ MEJORADO: Limpia y valida los datos antes de crear el preview
    */
   static create(
     headers: string[],
@@ -120,16 +120,16 @@ export class CsvPreview {
     totalRows: number,
     delimiter: string = ";"
   ): CsvPreview {
-    // 🔧 FIX: Asegurar que los headers estén limpios (ya viene filtrado del parser)
+    // ðŸ”§ FIX: Asegurar que los headers estÃ©n limpios (ya viene filtrado del parser)
     const cleanHeaders = headers.filter((h) => h.trim().length > 0);
 
-    // 🔧 FIX: Normalizar filas para que coincidan con el número de headers
+    // ðŸ”§ FIX: Normalizar filas para que coincidan con el nÃºmero de headers
     const normalizedRows = sampleRows.map((row) => {
-      // Si la fila tiene menos columnas, rellenar con vacíos
+      // Si la fila tiene menos columnas, rellenar con vacÃ­os
       if (row.length < cleanHeaders.length) {
         return [...row, ...Array(cleanHeaders.length - row.length).fill("")];
       }
-      // Si tiene más, truncar
+      // Si tiene mÃ¡s, truncar
       return row.slice(0, cleanHeaders.length);
     });
 
@@ -137,7 +137,7 @@ export class CsvPreview {
   }
 
   /**
-   * Convierte a objeto plano para serialización
+   * Convierte a objeto plano para serializaciÃ³n
    */
   toJSON(): {
     headers: string[];

@@ -1,8 +1,8 @@
 /**
  * Validation Result Value Object
  *
- * Representa el resultado de una validación de importación.
- * Contiene estadísticas, errores y advertencias.
+ * Representa el resultado de una validaciÃ³n de importaciÃ³n.
+ * Contiene estadÃ­sticas, errores y advertencias.
  */
 
 import {
@@ -290,7 +290,7 @@ export class ValidationResult {
   }
 
   /**
-   * Verifica si hay errores críticos
+   * Verifica si hay errores crÃ­ticos
    * (Compatibilidad con IDataSourceAdapter)
    */
   hasCriticalErrors(): boolean {
@@ -298,7 +298,7 @@ export class ValidationResult {
   }
 
   /**
-   * Obtiene los errores críticos
+   * Obtiene los errores crÃ­ticos
    * (Compatibilidad con IDataSourceAdapter)
    */
   get criticalErrors(): Array<{ message: string }> {

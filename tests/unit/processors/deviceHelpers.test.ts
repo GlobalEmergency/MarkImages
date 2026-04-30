@@ -4,6 +4,7 @@ import {
   createOrUpdateDevice,
 } from "@/import/infrastructure/processors/deviceHelpers";
 import { createMockPrisma } from "./helpers/mockPrisma";
+import type { PrismaClient } from "@/generated/client/client";
 
 describe("deviceHelpers", () => {
   // ----------------------------------------------------------
@@ -68,7 +69,7 @@ describe("deviceHelpers", () => {
     });
 
     it("does nothing when record has no device data", async () => {
-      await createOrUpdateDevice(prisma as any, "aed-1", { name: "Test" });
+      await createOrUpdateDevice(prisma as unknown as PrismaClient, "aed-1", { name: "Test" });
 
       expect(prisma.aedDevice.create).not.toHaveBeenCalled();
       expect(prisma.aedDevice.update).not.toHaveBeenCalled();
@@ -78,7 +79,7 @@ describe("deviceHelpers", () => {
     it("creates a new device when no current device exists", async () => {
       prisma.aedDevice.findFirst.mockResolvedValue(null);
 
-      await createOrUpdateDevice(prisma as any, "aed-1", {
+      await createOrUpdateDevice(prisma as unknown as PrismaClient, "aed-1", {
         deviceBrand: "Philips",
         deviceModel: "FRx",
         deviceSerialNumber: "SN-001",
@@ -103,7 +104,7 @@ describe("deviceHelpers", () => {
     it("updates existing device when current device exists", async () => {
       prisma.aedDevice.findFirst.mockResolvedValue({ id: "device-existing" });
 
-      await createOrUpdateDevice(prisma as any, "aed-1", {
+      await createOrUpdateDevice(prisma as unknown as PrismaClient, "aed-1", {
         deviceBrand: "Zoll",
         deviceModel: "AED Plus",
       });
@@ -123,7 +124,7 @@ describe("deviceHelpers", () => {
         prisma.aedDevice.findFirst.mockResolvedValue(null);
         prisma.aedDevice.create.mockClear();
 
-        await createOrUpdateDevice(prisma as any, "aed-1", {
+        await createOrUpdateDevice(prisma as unknown as PrismaClient, "aed-1", {
           deviceBrand: "Test",
           isMobileUnit: val,
         });
@@ -137,7 +138,7 @@ describe("deviceHelpers", () => {
     it("parses isMobileUnit as false for non-truthy values", async () => {
       prisma.aedDevice.findFirst.mockResolvedValue(null);
 
-      await createOrUpdateDevice(prisma as any, "aed-1", {
+      await createOrUpdateDevice(prisma as unknown as PrismaClient, "aed-1", {
         deviceBrand: "Test",
         isMobileUnit: "no",
       });
@@ -150,7 +151,7 @@ describe("deviceHelpers", () => {
     it("parses dates correctly", async () => {
       prisma.aedDevice.findFirst.mockResolvedValue(null);
 
-      await createOrUpdateDevice(prisma as any, "aed-1", {
+      await createOrUpdateDevice(prisma as unknown as PrismaClient, "aed-1", {
         deviceBrand: "Test",
         deviceManufacturingDate: "2023-01-15",
         deviceInstallationDate: "2024-06-01",
@@ -168,7 +169,7 @@ describe("deviceHelpers", () => {
     it("returns null for invalid date strings", async () => {
       prisma.aedDevice.findFirst.mockResolvedValue(null);
 
-      await createOrUpdateDevice(prisma as any, "aed-1", {
+      await createOrUpdateDevice(prisma as unknown as PrismaClient, "aed-1", {
         deviceBrand: "Test",
         deviceManufacturingDate: "not-a-date",
         deviceExpirationDate: "",
@@ -181,7 +182,7 @@ describe("deviceHelpers", () => {
 
     // Corner cases
     it("handles whitespace-only device fields as no data", async () => {
-      await createOrUpdateDevice(prisma as any, "aed-1", {
+      await createOrUpdateDevice(prisma as unknown as PrismaClient, "aed-1", {
         deviceBrand: "   ",
         deviceModel: "  ",
         deviceSerialNumber: "\t",
@@ -194,7 +195,7 @@ describe("deviceHelpers", () => {
     it("handles null values for all string fields gracefully", async () => {
       prisma.aedDevice.findFirst.mockResolvedValue(null);
 
-      await createOrUpdateDevice(prisma as any, "aed-1", {
+      await createOrUpdateDevice(prisma as unknown as PrismaClient, "aed-1", {
         deviceBrand: null,
         deviceModel: null,
         deviceSerialNumber: "SN-ONLY", // one real value triggers creation
@@ -209,7 +210,7 @@ describe("deviceHelpers", () => {
     it("handles isMobileUnit as undefined (falsy)", async () => {
       prisma.aedDevice.findFirst.mockResolvedValue(null);
 
-      await createOrUpdateDevice(prisma as any, "aed-1", {
+      await createOrUpdateDevice(prisma as unknown as PrismaClient, "aed-1", {
         deviceBrand: "Test",
         // isMobileUnit not set at all
       });
@@ -221,7 +222,7 @@ describe("deviceHelpers", () => {
     it("handles ISO date with time component", async () => {
       prisma.aedDevice.findFirst.mockResolvedValue(null);
 
-      await createOrUpdateDevice(prisma as any, "aed-1", {
+      await createOrUpdateDevice(prisma as unknown as PrismaClient, "aed-1", {
         deviceBrand: "Test",
         deviceInstallationDate: "2024-06-15T14:30:00Z",
       });
@@ -234,7 +235,7 @@ describe("deviceHelpers", () => {
       prisma.aedDevice.findFirst.mockResolvedValue(null);
 
       // "15/06/2024" → Date() interprets as invalid or MM/DD depending on engine
-      await createOrUpdateDevice(prisma as any, "aed-1", {
+      await createOrUpdateDevice(prisma as unknown as PrismaClient, "aed-1", {
         deviceBrand: "Test",
         deviceManufacturingDate: "2024-06-15", // ISO format is unambiguous
       });

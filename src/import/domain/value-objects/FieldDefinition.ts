@@ -1,6 +1,6 @@
 /**
- * Value Object: Definición de un campo del sistema
- * Define qué campos se pueden mapear desde el CSV
+ * Value Object: DefiniciÃ³n de un campo del sistema
+ * Define quÃ© campos se pueden mapear desde el CSV
  * Capa de Dominio
  */
 
@@ -19,7 +19,7 @@ export interface FieldDefinition {
 
 /**
  * Campos requeridos del sistema
- * Estos DEBEN ser mapeados para una importación válida
+ * Estos DEBEN ser mapeados para una importaciÃ³n vÃ¡lida
  */
 export const REQUIRED_FIELDS: FieldDefinition[] = [
   {
@@ -27,30 +27,30 @@ export const REQUIRED_FIELDS: FieldDefinition[] = [
     label: "Nombre propuesto",
     required: true,
     type: "string",
-    description: "Nombre del establecimiento donde está el DEA",
+    description: "Nombre del establecimiento donde estÃ¡ el DEA",
     examples: ["Hospital General", "Centro Comercial Plaza", "Ayuntamiento"],
     keywords: [
-      "proposedName", // Nombre técnico exacto
+      "proposedName", // Nombre tÃ©cnico exacto
       "denominacion",
       "propuesta",
       "nombre",
       "establecimiento",
       "name",
       "propuesta de denominacion",
-      "proposed name", // Inglés
-      "establishment name", // Inglés
-      "facility name", // Inglés
+      "proposed name", // InglÃ©s
+      "establishment name", // InglÃ©s
+      "facility name", // InglÃ©s
     ],
   },
   {
     key: "streetName",
-    label: "Nombre de la vía",
+    label: "Nombre de la vÃ­a",
     required: true,
     type: "string",
-    description: "Nombre de la calle o vía",
-    examples: ["Gran Vía", "Calle Mayor", "Paseo de la Castellana"],
+    description: "Nombre de la calle o vÃ­a",
+    examples: ["Gran VÃ­a", "Calle Mayor", "Paseo de la Castellana"],
     keywords: [
-      "streetName", // Nombre técnico exacto
+      "streetName", // Nombre tÃ©cnico exacto
       "calle",
       "via",
       "nombre de la via",
@@ -58,52 +58,52 @@ export const REQUIRED_FIELDS: FieldDefinition[] = [
       "avenida",
       "paseo",
       "plaza",
-      "street name", // Inglés
-      "road name", // Inglés
-      "avenue", // Inglés
+      "street name", // InglÃ©s
+      "road name", // InglÃ©s
+      "avenue", // InglÃ©s
     ],
   },
   {
     key: "streetNumber",
-    label: "Número de la vía",
+    label: "NÃºmero de la vÃ­a",
     required: true,
     type: "string",
-    description: "Número del portal",
+    description: "NÃºmero del portal",
     examples: ["1", "25", "123 bis"],
     keywords: [
-      "streetNumber", // Nombre técnico exacto
+      "streetNumber", // Nombre tÃ©cnico exacto
       "numero",
       "num",
       "portal",
       "numero de la via",
       "street number",
-      "nº",
-      "number", // Inglés
-      "building number", // Inglés
+      "nÂº",
+      "number", // InglÃ©s
+      "building number", // InglÃ©s
     ],
   },
 ];
 
 /**
  * Campos opcionales del sistema
- * Mejoran la información pero no son obligatorios
+ * Mejoran la informaciÃ³n pero no son obligatorios
  */
 export const OPTIONAL_FIELDS: FieldDefinition[] = [
   // === AED MAIN INFO ===
   {
     key: "code",
-    label: "Código DEA",
+    label: "CÃ³digo DEA",
     required: false,
     type: "string",
-    description: "Código único asignado al DEA",
+    description: "CÃ³digo Ãºnico asignado al DEA",
     keywords: ["code", "codigo", "identificador", "id", "aed code", "defibrillator code"],
   },
   {
     key: "provisionalNumber",
-    label: "Número provisional DEA",
+    label: "NÃºmero provisional DEA",
     required: false,
     type: "string",
-    description: "Número provisional asignado",
+    description: "NÃºmero provisional asignado",
     keywords: [
       "provisionalNumber",
       "provisional",
@@ -153,7 +153,7 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
     label: "Detalles del origen",
     required: false,
     type: "string",
-    description: "Información adicional del origen",
+    description: "InformaciÃ³n adicional del origen",
     keywords: [
       "sourceDetails",
       "detalles",
@@ -192,19 +192,19 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "streetType",
-    label: "Tipo de vía",
+    label: "Tipo de vÃ­a",
     required: false,
     type: "string",
-    description: "Tipo de vía (calle, avenida, plaza, etc.)",
+    description: "Tipo de vÃ­a (calle, avenida, plaza, etc.)",
     examples: ["Calle", "Avenida", "Plaza", "Paseo"],
     keywords: ["streetType", "tipo de via", "tipo via", "street type", "road type"],
   },
   {
     key: "additionalInfo",
-    label: "Complemento de dirección",
+    label: "Complemento de direcciÃ³n",
     required: false,
     type: "string",
-    description: "Información adicional de la dirección",
+    description: "InformaciÃ³n adicional de la direcciÃ³n",
     examples: ["Edificio A", "Local 3", "Planta 2"],
     keywords: [
       "additionalInfo",
@@ -219,10 +219,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "postalCode",
-    label: "Código postal",
+    label: "CÃ³digo postal",
     required: false,
     type: "string",
-    description: "Código postal de 5 dígitos",
+    description: "CÃ³digo postal de 5 dÃ­gitos",
     examples: ["28001", "28013", "28080"],
     keywords: ["postalCode", "cp", "postal", "codigo postal", "zip", "zip code", "postcode"],
   },
@@ -265,10 +265,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "coordinatesPrecision",
-    label: "Precisión de coordenadas",
+    label: "PrecisiÃ³n de coordenadas",
     required: false,
     type: "string",
-    description: "Nivel de precisión de las coordenadas",
+    description: "Nivel de precisiÃ³n de las coordenadas",
     keywords: [
       "coordinatesPrecision",
       "precision",
@@ -289,18 +289,18 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "cityCode",
-    label: "Código de ciudad",
+    label: "CÃ³digo de ciudad",
     required: false,
     type: "string",
-    description: "Código de la ciudad",
+    description: "CÃ³digo de la ciudad",
     keywords: ["cityCode", "codigo ciudad", "city code", "municipality code"],
   },
   {
     key: "districtCode",
-    label: "Código de distrito",
+    label: "CÃ³digo de distrito",
     required: false,
     type: "string",
-    description: "Código del distrito",
+    description: "CÃ³digo del distrito",
     keywords: ["districtCode", "codigo distrito", "district code", "cod distrito"],
   },
   {
@@ -313,10 +313,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "neighborhoodCode",
-    label: "Código de barrio",
+    label: "CÃ³digo de barrio",
     required: false,
     type: "string",
-    description: "Código del barrio",
+    description: "CÃ³digo del barrio",
     keywords: [
       "neighborhoodCode",
       "codigo barrio",
@@ -343,10 +343,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "accessDescription",
-    label: "Descripción del acceso",
+    label: "DescripciÃ³n del acceso",
     required: false,
     type: "string",
-    description: "Cómo acceder al DEA",
+    description: "CÃ³mo acceder al DEA",
     keywords: [
       "accessDescription",
       "acceso",
@@ -377,16 +377,16 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
     label: "Planta",
     required: false,
     type: "string",
-    description: "Número de planta",
+    description: "NÃºmero de planta",
     examples: ["0", "1", "2", "Baja"],
     keywords: ["floor", "planta", "nivel", "piso", "level", "storey", "story"],
   },
   {
     key: "specificLocation",
-    label: "Ubicación específica",
+    label: "UbicaciÃ³n especÃ­fica",
     required: false,
     type: "string",
-    description: "Ubicación exacta dentro del edificio",
+    description: "UbicaciÃ³n exacta dentro del edificio",
     keywords: [
       "specificLocation",
       "ubicacion",
@@ -400,10 +400,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "locationObservations",
-    label: "Observaciones de ubicación",
+    label: "Observaciones de ubicaciÃ³n",
     required: false,
     type: "string",
-    description: "Observaciones adicionales sobre la ubicación",
+    description: "Observaciones adicionales sobre la ubicaciÃ³n",
     keywords: [
       "locationObservations",
       "observaciones ubicacion",
@@ -431,7 +431,7 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   // === RESPONSIBLE ===
   {
     key: "submitterEmail",
-    label: "Correo electrónico",
+    label: "Correo electrÃ³nico",
     required: false,
     type: "email",
     description: "Email del responsable",
@@ -466,10 +466,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "submitterPhone",
-    label: "Teléfono del responsable",
+    label: "TelÃ©fono del responsable",
     required: false,
     type: "string",
-    description: "Teléfono de contacto",
+    description: "TelÃ©fono de contacto",
     examples: ["+34 600 000 000", "912345678"],
     keywords: [
       "submitterPhone",
@@ -485,10 +485,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "alternativePhone",
-    label: "Teléfono alternativo",
+    label: "TelÃ©fono alternativo",
     required: false,
     type: "string",
-    description: "Teléfono alternativo de contacto",
+    description: "TelÃ©fono alternativo de contacto",
     keywords: [
       "alternativePhone",
       "telefono alternativo",
@@ -540,10 +540,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "organization",
-    label: "Organización",
+    label: "OrganizaciÃ³n",
     required: false,
     type: "string",
-    description: "Organización responsable",
+    description: "OrganizaciÃ³n responsable",
     keywords: [
       "organization",
       "organizacion",
@@ -588,10 +588,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   // === SCHEDULE ===
   {
     key: "scheduleDescription",
-    label: "Descripción del horario",
+    label: "DescripciÃ³n del horario",
     required: false,
     type: "string",
-    description: "Descripción general del horario",
+    description: "DescripciÃ³n general del horario",
     keywords: [
       "scheduleDescription",
       "horario",
@@ -645,10 +645,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "saturdayOpening",
-    label: "Hora apertura sábados",
+    label: "Hora apertura sÃ¡bados",
     required: false,
     type: "string",
-    description: "Hora de apertura los sábados (HH:MM)",
+    description: "Hora de apertura los sÃ¡bados (HH:MM)",
     keywords: [
       "saturdayOpening",
       "sabado",
@@ -661,10 +661,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "saturdayClosing",
-    label: "Hora cierre sábados",
+    label: "Hora cierre sÃ¡bados",
     required: false,
     type: "string",
-    description: "Hora de cierre los sábados (HH:MM)",
+    description: "Hora de cierre los sÃ¡bados (HH:MM)",
     keywords: [
       "saturdayClosing",
       "sabado",
@@ -709,11 +709,11 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "has24hSurveillance",
-    label: "¿Vigilancia 24h?",
+    label: "Â¿Vigilancia 24h?",
     required: false,
     type: "boolean",
     description: "Si tiene vigilancia 24 horas",
-    examples: ["Sí", "No", "Si", "true", "false"],
+    examples: ["SÃ­", "No", "Si", "true", "false"],
     keywords: [
       "has24hSurveillance",
       "vigilancia",
@@ -729,10 +729,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "hasRestrictedAccess",
-    label: "¿Acceso restringido?",
+    label: "Â¿Acceso restringido?",
     required: false,
     type: "boolean",
-    description: "Si el acceso está restringido",
+    description: "Si el acceso estÃ¡ restringido",
     keywords: [
       "hasRestrictedAccess",
       "acceso restringido",
@@ -744,7 +744,7 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "holidaysAsWeekday",
-    label: "¿Festivos como entre semana?",
+    label: "Â¿Festivos como entre semana?",
     required: false,
     type: "boolean",
     description: "Si en festivos tiene el horario de entre semana",
@@ -759,10 +759,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "closedOnHolidays",
-    label: "¿Cerrado en festivos?",
+    label: "Â¿Cerrado en festivos?",
     required: false,
     type: "boolean",
-    description: "Si cierra en días festivos",
+    description: "Si cierra en dÃ­as festivos",
     keywords: [
       "closedOnHolidays",
       "cerrado festivos",
@@ -772,7 +772,7 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "closedInAugust",
-    label: "¿Cerrado en agosto?",
+    label: "Â¿Cerrado en agosto?",
     required: false,
     type: "boolean",
     description: "Si cierra en agosto",
@@ -874,10 +874,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "photoLocationUrl",
-    label: "Foto ubicación (URL)",
+    label: "Foto ubicaciÃ³n (URL)",
     required: false,
     type: "url",
-    description: "URL de la foto de ubicación",
+    description: "URL de la foto de ubicaciÃ³n",
     keywords: [
       "photoLocationUrl",
       "foto ubicacion",
@@ -922,10 +922,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "validationObservations",
-    label: "Observaciones de validación",
+    label: "Observaciones de validaciÃ³n",
     required: false,
     type: "string",
-    description: "Observaciones del proceso de validación",
+    description: "Observaciones del proceso de validaciÃ³n",
     keywords: [
       "validationObservations",
       "observaciones validacion",
@@ -981,10 +981,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "requiresAttention",
-    label: "¿Requiere atención?",
+    label: "Â¿Requiere atenciÃ³n?",
     required: false,
     type: "boolean",
-    description: "Si el registro requiere revisión",
+    description: "Si el registro requiere revisiÃ³n",
     keywords: [
       "requiresAttention",
       "atencion",
@@ -996,10 +996,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "attentionReason",
-    label: "Motivo de atención",
+    label: "Motivo de atenciÃ³n",
     required: false,
     type: "string",
-    description: "Motivo por el que requiere atención",
+    description: "Motivo por el que requiere atenciÃ³n",
     keywords: [
       "attentionReason",
       "motivo atencion",
@@ -1027,10 +1027,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   // === DATES ===
   {
     key: "publishedAt",
-    label: "Fecha de publicación",
+    label: "Fecha de publicaciÃ³n",
     required: false,
     type: "date",
-    description: "Fecha en que se publicó el registro",
+    description: "Fecha en que se publicÃ³ el registro",
     keywords: [
       "publishedAt",
       "fecha publicacion",
@@ -1042,18 +1042,18 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "createdAt",
-    label: "Fecha de creación",
+    label: "Fecha de creaciÃ³n",
     required: false,
     type: "date",
-    description: "Fecha de creación del registro",
+    description: "Fecha de creaciÃ³n del registro",
     keywords: ["createdAt", "fecha creacion", "created", "creado", "creation date", "created date"],
   },
   {
     key: "updatedAt",
-    label: "Fecha de actualización",
+    label: "Fecha de actualizaciÃ³n",
     required: false,
     type: "date",
-    description: "Fecha de última actualización",
+    description: "Fecha de Ãºltima actualizaciÃ³n",
     keywords: [
       "updatedAt",
       "fecha actualizacion",
@@ -1105,10 +1105,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "deviceSerialNumber",
-    label: "Número de serie",
+    label: "NÃºmero de serie",
     required: false,
     type: "string",
-    description: "Número de serie del desfibrilador",
+    description: "NÃºmero de serie del desfibrilador",
     examples: ["SN12345678", "A123-B456"],
     keywords: [
       "deviceSerialNumber",
@@ -1119,30 +1119,30 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
       "serial",
       "serial number",
       "serie",
-      "nº serie",
+      "nÂº serie",
     ],
   },
   {
     key: "deviceManufacturingDate",
-    label: "Fecha de fabricación",
+    label: "Fecha de fabricaciÃ³n",
     required: false,
     type: "date",
-    description: "Fecha de fabricación del dispositivo",
+    description: "Fecha de fabricaciÃ³n del dispositivo",
     keywords: [
       "deviceManufacturingDate",
       "fecha fabricacion",
       "fecha de fabricacion",
       "manufacturing date",
       "fabricado",
-      "fecha fabricación",
+      "fecha fabricaciÃ³n",
     ],
   },
   {
     key: "deviceInstallationDate",
-    label: "Fecha de instalación del dispositivo",
+    label: "Fecha de instalaciÃ³n del dispositivo",
     required: false,
     type: "date",
-    description: "Fecha en que el dispositivo fue instalado en esta ubicación",
+    description: "Fecha en que el dispositivo fue instalado en esta ubicaciÃ³n",
     keywords: [
       "deviceInstallationDate",
       "fecha instalacion dispositivo",
@@ -1150,7 +1150,7 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
       "installation date",
       "instalado",
       "fecha alta",
-      "fecha instalación",
+      "fecha instalaciÃ³n",
     ],
   },
   {
@@ -1158,7 +1158,7 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
     label: "Fecha de caducidad del dispositivo",
     required: false,
     type: "date",
-    description: "Fecha de caducidad de parches/batería o fin de vida útil",
+    description: "Fecha de caducidad de parches/baterÃ­a o fin de vida Ãºtil",
     keywords: [
       "deviceExpirationDate",
       "fecha caducidad",
@@ -1181,10 +1181,10 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "endTime",
-    label: "Hora de finalización",
+    label: "Hora de finalizaciÃ³n",
     required: false,
     type: "string",
-    description: "Hora de finalización del registro",
+    description: "Hora de finalizaciÃ³n del registro",
     keywords: [
       "endTime",
       "hora finalizacion",

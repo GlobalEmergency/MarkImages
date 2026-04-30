@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createAedRecordProcessor } from "@/import/infrastructure/processors/aedRecordProcessor";
 import { createMockPrisma, createMockContext } from "./helpers/mockPrisma";
+import type { PrismaClient } from "@/generated/client/client";
 
 describe("createAedRecordProcessor", () => {
   let prisma: ReturnType<typeof createMockPrisma>;
@@ -14,7 +15,10 @@ describe("createAedRecordProcessor", () => {
   // Use case: minimal AED creation (location only)
   // ----------------------------------------------------------
   it("creates AED with location when given minimal data", async () => {
-    const processor = createAedRecordProcessor({ prisma: prisma as any, fileName: "test.csv" });
+    const processor = createAedRecordProcessor({
+      prisma: prisma as unknown as PrismaClient,
+      fileName: "test.csv",
+    });
 
     await processor(
       {
@@ -59,7 +63,7 @@ describe("createAedRecordProcessor", () => {
   // Use case: AED with schedule
   // ----------------------------------------------------------
   it("creates schedule when schedule data is present", async () => {
-    const processor = createAedRecordProcessor({ prisma: prisma as any });
+    const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
 
     await processor(
       {
@@ -95,7 +99,7 @@ describe("createAedRecordProcessor", () => {
   // Use case: accessRestriction fallback
   // ----------------------------------------------------------
   it("sets has_restricted_access from accessRestriction when hasRestrictedAccess is absent", async () => {
-    const processor = createAedRecordProcessor({ prisma: prisma as any });
+    const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
 
     await processor(
       {
@@ -118,7 +122,7 @@ describe("createAedRecordProcessor", () => {
   // Use case: isPmrAccessible is nullable
   // ----------------------------------------------------------
   it("sets is_pmr_accessible to null when value is unknown", async () => {
-    const processor = createAedRecordProcessor({ prisma: prisma as any });
+    const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
 
     await processor(
       {
@@ -141,7 +145,7 @@ describe("createAedRecordProcessor", () => {
   // Use case: AED with responsible
   // ----------------------------------------------------------
   it("creates responsible when responsible data is present", async () => {
-    const processor = createAedRecordProcessor({ prisma: prisma as any });
+    const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
 
     await processor(
       {
@@ -171,7 +175,7 @@ describe("createAedRecordProcessor", () => {
   // Use case: responsible defaults to "Sin especificar"
   // ----------------------------------------------------------
   it("defaults responsible name to 'Sin especificar' when only email is present", async () => {
-    const processor = createAedRecordProcessor({ prisma: prisma as any });
+    const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
 
     await processor(
       {
@@ -195,7 +199,7 @@ describe("createAedRecordProcessor", () => {
   // Use case: AED with device data
   // ----------------------------------------------------------
   it("creates device when device data is present", async () => {
-    const processor = createAedRecordProcessor({ prisma: prisma as any });
+    const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
     prisma.aedDevice.findFirst.mockResolvedValue(null);
 
     await processor(
@@ -227,7 +231,7 @@ describe("createAedRecordProcessor", () => {
   // ----------------------------------------------------------
   it("creates org assignment when organizationId is provided", async () => {
     const processor = createAedRecordProcessor({
-      prisma: prisma as any,
+      prisma: prisma as unknown as PrismaClient,
       organizationId: "org-1",
       assignmentType: "MAINTENANCE",
       userId: "user-1",
@@ -246,7 +250,7 @@ describe("createAedRecordProcessor", () => {
   });
 
   it("does not create org assignment when organizationId is absent", async () => {
-    const processor = createAedRecordProcessor({ prisma: prisma as any });
+    const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
 
     await processor({ proposedName: "Test", streetName: "Test", streetNumber: "1" }, context);
 
@@ -257,7 +261,7 @@ describe("createAedRecordProcessor", () => {
   // Use case: coordinate parsing with comma (Spanish format)
   // ----------------------------------------------------------
   it("parses Spanish comma-notation coordinates", async () => {
-    const processor = createAedRecordProcessor({ prisma: prisma as any });
+    const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
 
     await processor(
       {
@@ -279,7 +283,7 @@ describe("createAedRecordProcessor", () => {
   // Use case: boolean parsing (multilingual)
   // ----------------------------------------------------------
   it("parses French 'oui' as true for has_24h_surveillance", async () => {
-    const processor = createAedRecordProcessor({ prisma: prisma as any });
+    const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
 
     await processor(
       {
@@ -303,7 +307,7 @@ describe("createAedRecordProcessor", () => {
   // ----------------------------------------------------------
   it("creates all entities in a single transaction for complete record", async () => {
     const processor = createAedRecordProcessor({
-      prisma: prisma as any,
+      prisma: prisma as unknown as PrismaClient,
       fileName: "import_2025.csv",
       organizationId: "org-1",
     });
@@ -365,7 +369,7 @@ describe("createAedRecordProcessor", () => {
   // ----------------------------------------------------------
   describe("corner cases", () => {
     it("generates UUID when _aedId is not provided", async () => {
-      const processor = createAedRecordProcessor({ prisma: prisma as any });
+      const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
 
       await processor({ proposedName: "Test", streetName: "Calle", streetNumber: "1" }, context);
 
@@ -375,7 +379,7 @@ describe("createAedRecordProcessor", () => {
     });
 
     it("handles null/undefined coordinates gracefully", async () => {
-      const processor = createAedRecordProcessor({ prisma: prisma as any });
+      const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
 
       await processor(
         { proposedName: "No coords", streetName: "Test", streetNumber: "1" },
@@ -388,7 +392,7 @@ describe("createAedRecordProcessor", () => {
     });
 
     it("handles empty string name (trims to empty)", async () => {
-      const processor = createAedRecordProcessor({ prisma: prisma as any });
+      const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
 
       await processor({ proposedName: "   ", streetName: "Test", streetNumber: "1" }, context);
 
@@ -397,7 +401,7 @@ describe("createAedRecordProcessor", () => {
     });
 
     it("handles coordinate value '0' (valid, Gulf of Guinea)", async () => {
-      const processor = createAedRecordProcessor({ prisma: prisma as any });
+      const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
 
       await processor(
         {
@@ -416,7 +420,7 @@ describe("createAedRecordProcessor", () => {
     });
 
     it("does NOT create schedule when only empty schedule fields exist", async () => {
-      const processor = createAedRecordProcessor({ prisma: prisma as any });
+      const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
 
       await processor(
         {
@@ -435,7 +439,7 @@ describe("createAedRecordProcessor", () => {
     });
 
     it("creates schedule when only isPmrAccessible is set", async () => {
-      const processor = createAedRecordProcessor({ prisma: prisma as any });
+      const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
 
       await processor(
         {
@@ -454,7 +458,7 @@ describe("createAedRecordProcessor", () => {
     });
 
     it("toStringOrNull trims and returns null for whitespace-only", async () => {
-      const processor = createAedRecordProcessor({ prisma: prisma as any });
+      const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
 
       await processor(
         {
@@ -475,7 +479,7 @@ describe("createAedRecordProcessor", () => {
     });
 
     it("parseBooleanOrNull returns false for 'non' (French no)", async () => {
-      const processor = createAedRecordProcessor({ prisma: prisma as any });
+      const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
 
       await processor(
         {
@@ -492,7 +496,7 @@ describe("createAedRecordProcessor", () => {
     });
 
     it("handles multiple Spanish boolean formats", async () => {
-      const processor = createAedRecordProcessor({ prisma: prisma as any });
+      const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
 
       // "verdadero" for has24hSurveillance, "s" for hasRestrictedAccess
       await processor(
@@ -512,7 +516,7 @@ describe("createAedRecordProcessor", () => {
     });
 
     it("uses context.jobId for batch_job_id reference", async () => {
-      const processor = createAedRecordProcessor({ prisma: prisma as any });
+      const processor = createAedRecordProcessor({ prisma: prisma as unknown as PrismaClient });
       const ctx = createMockContext({ jobId: "my-job-123" });
 
       await processor({ proposedName: "Test", streetName: "Test", streetNumber: "1" }, ctx);
