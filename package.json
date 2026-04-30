@@ -1,6 +1,6 @@
 {
   "name": "deamap",
-  "version": "2.0.0",
+  "version": "2.1.1",
   "private": true,
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -68,6 +68,7 @@
     "canvas": "^3.2.1",
     "csv-parse": "^6.1.0",
     "dotenv": "^17.3.1",
+    "focus-trap-react": "^12.0.1",
     "jose": "^6.1.2",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",

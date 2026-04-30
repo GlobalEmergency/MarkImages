@@ -10,6 +10,8 @@ import {
   Phone,
   X,
 } from "lucide-react";
+import FocusTrap from "focus-trap-react";
+import { useRef } from "react"; // added useRef for focus return
 import { useState, useEffect, useCallback } from "react";
 
 import { useAnalytics } from "@/hooks/useAnalytics";
@@ -30,6 +32,9 @@ export default function AedDetailModal({
   onDirectionsClick,
   onViewDuration,
 }: AedDetailModalProps) {
+  // Ref to store the element that opened the modal for focus return
+  const triggerElementRef = useRef<HTMLElement | null>(null);
+
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const { trackDeaImageView, trackDeaPhoneClick, trackExternalLink, trackButtonClick } =
     useAnalytics();
@@ -46,6 +51,13 @@ export default function AedDetailModal({
     const timer = setTimeout(onViewDuration, 5000);
     return () => clearTimeout(timer);
   }, [isOpen, aedId, onViewDuration]);
+
+  // Capture the element that opened the modal to restore focus later
+  useEffect(() => {
+    if (isOpen) {
+      triggerElementRef.current = document.activeElement as HTMLElement;
+    }
+  }, [isOpen]);
 
   const handleImageChange = useCallback(
     (index: number) => {
@@ -88,6 +100,15 @@ export default function AedDetailModal({
 
   if (!isOpen || !aed) return null;
 
+  // Close modal and restore focus
+  const closeModal = () => {
+    onClose();
+    // Restore focus to the element that opened the modal
+    setTimeout(() => {
+      triggerElementRef.current?.focus();
+    }, 0);
+  };
+
   // Safely calculate the image index within bounds
   const safeImageIndex =
     aed.images && aed.images.length > 0 ? Math.min(selectedImageIndex, aed.images.length - 1) : 0;
@@ -99,222 +120,241 @@ export default function AedDetailModal({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="aed-detail-title"
       className="fixed inset-0 z-[1500] flex items-center justify-center p-4"
       style={{
         background:
           "radial-gradient(circle at center, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.9) 100%)",
         backdropFilter: "blur(8px)",
       }}
-      onClick={onClose}
+      onClick={closeModal}
     >
-      <div
-        className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl"
-        style={{
-          background: "linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 rounded-full text-white hover:bg-white/20 transition-all"
-          style={{
-            background: "rgba(0, 0, 0, 0.5)",
-            backdropFilter: "blur(10px)",
-          }}
+      <FocusTrap onDeactivate={closeModal}>
+        <div
+          className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl"
+          style={{ background: "linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)" }}
+          onClick={(e) => e.stopPropagation()}
         >
-          <X className="w-6 h-6" />
-        </button>
+          {/* Close Button */}
+          <button
+            onClick={closeModal}
+            aria-label="Cerrar"
+            className="absolute top-4 right-4 z-10 p-2 rounded-full text-white hover:bg-white/20 transition-all"
+            style={{
+              background: "rgba(0, 0, 0, 0.5)",
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            <X className="w-6 h-6" />
+          </button>
 
-        {/* Image Gallery */}
-        {displayImage && (
-          <div className="relative w-full aspect-square max-h-[500px] mx-auto bg-gray-900 flex items-center justify-center">
-            <img
-              src={displayImage}
-              alt={aed.name}
-              className="max-w-full max-h-full object-contain"
-            />
+          {/* Image Gallery */}
+          {displayImage && (
+            <div className="relative w-full aspect-square max-h-[500px] mx-auto bg-gray-900 flex items-center justify-center">
+              <img
+                src={displayImage}
+                alt={aed.name}
+                className="max-w-full max-h-full object-contain"
+              />
 
-            {/* Image Counter */}
-            {aed.images && aed.images.length > 1 && (
-              <div
-                className="absolute bottom-4 right-4 px-3 py-1.5 rounded-full text-white text-sm font-medium"
-                style={{
-                  background: "rgba(0, 0, 0, 0.6)",
-                  backdropFilter: "blur(10px)",
-                }}
-              >
-                {selectedImageIndex + 1} / {aed.images.length}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Thumbnail Gallery */}
-        {aed.images && aed.images.length > 1 && (
-          <div className="flex gap-2 p-4 overflow-x-auto bg-gray-50">
-            {aed.images.map((image, index) => (
-              <button
-                key={image.id}
-                onClick={() => handleImageChange(index)}
-                className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                  index === selectedImageIndex
-                    ? "border-blue-500 shadow-lg"
-                    : "border-gray-300 hover:border-blue-300"
-                }`}
-              >
-                <img
-                  src={image.thumbnail_url || image.processed_url || image.original_url}
-                  alt={`${aed.name} - ${image.type}`}
-                  className="w-full h-full object-contain bg-gray-100"
-                />
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Content */}
-        <div className="p-6 sm:p-8">
-          {/* Header */}
-          <div className="mb-6">
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex-1">
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{aed.name}</h2>
-                <p className="text-sm text-gray-500">{aed.code}</p>
-              </div>
-              <div
-                className="p-3 rounded-full"
-                style={{
-                  background: "linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)",
-                }}
-              >
-                <Heart className="w-6 h-6 text-white" />
-              </div>
+              {/* Image Counter */}
+              {aed.images && aed.images.length > 1 && (
+                <div
+                  className="absolute bottom-4 right-4 px-3 py-1.5 rounded-full text-white text-sm font-medium"
+                  style={{
+                    background: "rgba(0, 0, 0, 0.6)",
+                    backdropFilter: "blur(10px)",
+                  }}
+                >
+                  {selectedImageIndex + 1} / {aed.images.length}
+                </div>
+              )}
             </div>
+          )}
 
-            <span className="inline-block px-4 py-2 bg-blue-100 text-blue-800 text-sm rounded-full font-medium">
-              {aed.establishment_type}
-            </span>
-          </div>
-
-          {/* Details Grid */}
-          <div className="grid gap-4 sm:gap-6">
-            {/* Location */}
-            <div className="flex items-start space-x-3 p-4 rounded-xl bg-gray-50">
-              <MapPin className="w-6 h-6 text-blue-500 flex-shrink-0 mt-1" />
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 mb-1">Ubicación</h3>
-                <p className="text-gray-700">
-                  {aed.location.street_type} {aed.location.street_name} {aed.location.street_number}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">
-                  {aed.location.postal_code}
-                  {aed.location.district_name && ` - ${aed.location.district_name}`}
-                </p>
-                {aed.location.access_instructions && (
-                  <p className="text-sm text-gray-600 mt-2 italic">
-                    📍 {aed.location.access_instructions}
-                  </p>
-                )}
-                <p className="text-xs text-gray-400 mt-2">
-                  Coordenadas: {aed.latitude.toFixed(6)}, {aed.longitude.toFixed(6)}
-                </p>
-              </div>
+          {/* Thumbnail Gallery */}
+          {aed.images && aed.images.length > 1 && (
+            <div className="flex gap-2 p-4 overflow-x-auto bg-gray-50">
+              {aed.images.map((image, index) => (
+                <button
+                  key={image.id}
+                  onClick={() => handleImageChange(index)}
+                  aria-label={`Ver miniatura ${index + 1}`}
+                  aria-current={index === selectedImageIndex ? "true" : undefined}
+                  className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                    index === selectedImageIndex
+                      ? "border-blue-500 shadow-lg"
+                      : "border-gray-300 hover:border-blue-300"
+                  }`}
+                >
+                  <img
+                    src={image.thumbnail_url || image.processed_url || image.original_url}
+                    alt={`${aed.name} - ${image.type}`}
+                    className="w-full h-full object-contain bg-gray-100"
+                  />
+                </button>
+              ))}
             </div>
+          )}
 
-            {/* Schedule */}
-            {aed.schedule && (
-              <div className="flex items-start space-x-3 p-4 rounded-xl bg-purple-50">
-                <Clock className="w-6 h-6 text-purple-500 flex-shrink-0 mt-1" />
+          {/* Content */}
+          <div className="p-6 sm:p-8">
+            {/* Header */}
+            <div className="mb-6">
+              <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1">Horario</h3>
-                  {aed.schedule.has_24h_surveillance ? (
-                    <p className="text-gray-700">✅ Vigilancia 24 horas</p>
-                  ) : aed.schedule.weekday_opening && aed.schedule.weekday_closing ? (
-                    <div className="space-y-0.5">
-                      <p className="text-gray-700">
-                        L-V: {aed.schedule.weekday_opening} - {aed.schedule.weekday_closing}
-                      </p>
-                      {aed.schedule.saturday_opening && aed.schedule.saturday_closing && (
-                        <p className="text-gray-500 text-sm">
-                          Sáb: {aed.schedule.saturday_opening} - {aed.schedule.saturday_closing}
-                        </p>
-                      )}
-                      {aed.schedule.sunday_opening && aed.schedule.sunday_closing && (
-                        <p className="text-gray-500 text-sm">
-                          Dom: {aed.schedule.sunday_opening} - {aed.schedule.sunday_closing}
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-gray-700">Horario no especificado</p>
-                  )}
+                  <h2
+                    id="aed-detail-title"
+                    className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2"
+                  >
+                    {aed.name}
+                  </h2>
+                  <p className="text-sm text-gray-500">{aed.code}</p>
+                </div>
+                <div
+                  className="p-3 rounded-full"
+                  style={{
+                    background: "linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)",
+                  }}
+                >
+                  <Heart className="w-6 h-6 text-white" aria-hidden="true" />
                 </div>
               </div>
-            )}
 
-            {/* Responsible - Only shown if data is available */}
-            {aed.responsible && (
-              <div className="flex items-start space-x-3 p-4 rounded-xl bg-green-50">
-                <Building className="w-6 h-6 text-green-500 flex-shrink-0 mt-1" />
+              <span className="inline-block px-4 py-2 bg-blue-100 text-blue-800 text-sm rounded-full font-medium">
+                {aed.establishment_type}
+              </span>
+            </div>
+
+            {/* Details Grid */}
+            <div className="grid gap-4 sm:gap-6">
+              {/* Location */}
+              <div className="flex items-start space-x-3 p-4 rounded-xl bg-gray-50">
+                <MapPin className="w-6 h-6 text-blue-500 flex-shrink-0 mt-1" aria-hidden="true" />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-2">Responsable</h3>
-                  <p className="text-gray-700 font-medium mb-2">{aed.responsible.name}</p>
+                  <h3 className="font-semibold text-gray-900 mb-1">Ubicación</h3>
+                  <p className="text-gray-700">
+                    {aed.location.street_type} {aed.location.street_name}{" "}
+                    {aed.location.street_number}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {aed.location.postal_code}
+                    {aed.location.district_name && ` - ${aed.location.district_name}`}
+                  </p>
+                  {aed.location.access_instructions && (
+                    <p className="text-sm text-gray-600 mt-2 italic">
+                      📍 {aed.location.access_instructions}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-400 mt-2">
+                    Coordenadas: {aed.latitude.toFixed(6)}, {aed.longitude.toFixed(6)}
+                  </p>
+                </div>
+              </div>
 
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Mail className="w-4 h-4" />
-                      <a
-                        href={`mailto:${aed.responsible.email}`}
-                        className="hover:text-blue-600"
-                        onClick={() => handleEmailClick(aed.responsible!.email)}
-                      >
-                        {aed.responsible.email}
-                      </a>
-                    </div>
-
-                    {aed.responsible.phone && (
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <Phone className="w-4 h-4" />
-                        <a
-                          href={`tel:${aed.responsible.phone}`}
-                          className="hover:text-blue-600"
-                          onClick={() => handlePhoneClick(aed.responsible!.phone!)}
-                        >
-                          {aed.responsible.phone}
-                        </a>
+              {/* Schedule */}
+              {aed.schedule && (
+                <div className="flex items-start space-x-3 p-4 rounded-xl bg-purple-50">
+                  <Clock
+                    className="w-6 h-6 text-purple-500 flex-shrink-0 mt-1"
+                    aria-hidden="true"
+                  />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 mb-1">Horario</h3>
+                    {aed.schedule.has_24h_surveillance ? (
+                      <p className="text-gray-700">✅ Vigilancia 24 horas</p>
+                    ) : aed.schedule.weekday_opening && aed.schedule.weekday_closing ? (
+                      <div className="space-y-0.5">
+                        <p className="text-gray-700">
+                          L-V: {aed.schedule.weekday_opening} - {aed.schedule.weekday_closing}
+                        </p>
+                        {aed.schedule.saturday_opening && aed.schedule.saturday_closing && (
+                          <p className="text-gray-500 text-sm">
+                            Sáb: {aed.schedule.saturday_opening} - {aed.schedule.saturday_closing}
+                          </p>
+                        )}
+                        {aed.schedule.sunday_opening && aed.schedule.sunday_closing && (
+                          <p className="text-gray-500 text-sm">
+                            Dom: {aed.schedule.sunday_opening} - {aed.schedule.sunday_closing}
+                          </p>
+                        )}
                       </div>
+                    ) : (
+                      <p className="text-gray-700">Horario no especificado</p>
                     )}
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
 
-          {/* Action Buttons */}
-          <div className="mt-6 flex flex-col sm:flex-row gap-3">
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${aed.latitude},${aed.longitude}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all active:scale-95"
-              style={{ minHeight: "48px" }}
-              onClick={handleDirectionsClick}
-            >
-              <NavigationIcon className="w-5 h-5" />
-              <span>Cómo llegar</span>
-            </a>
+              {/* Responsible - Only shown if data is available */}
+              {aed.responsible && (
+                <div className="flex items-start space-x-3 p-4 rounded-xl bg-green-50">
+                  <Building
+                    className="w-6 h-6 text-green-500 flex-shrink-0 mt-1"
+                    aria-hidden="true"
+                  />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 mb-2">Responsable</h3>
+                    <p className="text-gray-700 font-medium mb-2">{aed.responsible.name}</p>
 
-            <button
-              onClick={onClose}
-              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all active:scale-95"
-              style={{ minHeight: "48px" }}
-            >
-              Cerrar
-            </button>
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <Mail className="w-4 h-4" aria-hidden="true" />
+                        <a
+                          href={`mailto:${aed.responsible.email}`}
+                          className="hover:text-blue-600"
+                          onClick={() => handleEmailClick(aed.responsible!.email)}
+                        >
+                          {aed.responsible.email}
+                        </a>
+                      </div>
+
+                      {aed.responsible.phone && (
+                        <div className="flex items-center space-x-2 text-sm text-gray-600">
+                          <Phone className="w-4 h-4" aria-hidden="true" />
+                          <a
+                            href={`tel:${aed.responsible.phone}`}
+                            className="hover:text-blue-600"
+                            onClick={() => handlePhoneClick(aed.responsible!.phone!)}
+                          >
+                            {aed.responsible.phone}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${aed.latitude},${aed.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Cómo llegar (abre en nueva ventana)"
+                className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all active:scale-95"
+                style={{ minHeight: "48px" }}
+                onClick={handleDirectionsClick}
+              >
+                <NavigationIcon className="w-5 h-5" aria-hidden="true" />
+                <span>Cómo llegar</span>
+              </a>
+
+              <button
+                onClick={closeModal}
+                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all active:scale-95"
+                style={{ minHeight: "48px" }}
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </FocusTrap>
     </div>
   );
 }
