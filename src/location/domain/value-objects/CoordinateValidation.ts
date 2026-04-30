@@ -6,7 +6,7 @@
 
 export enum CoordinateValidationStatus {
   VALID = "VALID", // < 50m - Usar coordenadas geocoded
-  NEEDS_VERIFICATION = "NEEDS_VERIFICATION", // 50-100m - Revisión manual
+  NEEDS_VERIFICATION = "NEEDS_VERIFICATION", // 50-100m - RevisiÃ³n manual
   INVALID = "INVALID", // > 100m - Coordenadas sospechosas
   NO_COMPARISON = "NO_COMPARISON", // Sin coordenadas originales para comparar
 }
@@ -54,7 +54,7 @@ export class CoordinateValidation {
       distance_meters: distanceMeters,
       original_coords: originalCoords,
       geocoded_coords: geocodedCoords,
-      reason: `Coordenadas difieren en ${distanceMeters.toFixed(1)}m. Requiere verificación manual.`,
+      reason: `Coordenadas difieren en ${distanceMeters.toFixed(1)}m. Requiere verificaciÃ³n manual.`,
       validated_at: new Date(),
     });
   }
@@ -112,7 +112,7 @@ export class CoordinateValidation {
   }
 
   shouldBlockPublication(): boolean {
-    // Bloquear publicación si es INVALID (> 100m)
+    // Bloquear publicaciÃ³n si es INVALID (> 100m)
     return this.data.status === CoordinateValidationStatus.INVALID;
   }
 

@@ -1,13 +1,13 @@
 /**
  * Enrich Location With Geocoding Use Case
  *
- * Responsabilidad única: Enriquecer ubicación con datos de geocoding
+ * Responsabilidad Ãºnica: Enriquecer ubicaciÃ³n con datos de geocoding
  * y validar coordenadas.
  *
  * Casos de uso:
  * 1. Sincronizaciones externas con datos incompletos
  * 2. Importaciones CSV con direcciones sin estructura
- * 3. Admin panel para validación manual
+ * 3. Admin panel para validaciÃ³n manual
  */
 
 import { PrismaClient } from "@/generated/client/client";
@@ -35,7 +35,7 @@ type LocationUpdateData = Record<string, unknown>;
 
 export interface EnrichLocationInput {
   locationId: string;
-  rawAddress?: string; // Dirección sin estructura (ej: "C/ PALOMA 43, 28981, PARLA")
+  rawAddress?: string; // DirecciÃ³n sin estructura (ej: "C/ PALOMA 43, 28981, PARLA")
   originalCoords?: {
     latitude: number;
     longitude: number;
@@ -58,9 +58,7 @@ export class EnrichLocationWithGeocodingUseCase {
   ) {}
 
   async execute(input: EnrichLocationInput): Promise<EnrichLocationOutput> {
-    console.log(`[EnrichLocationUseCase] Starting enrichment for location: ${input.locationId}`);
-
-    // 1. Leer ubicación actual
+    // 1. Leer ubicaciÃ³n actual
     const location = await this.prisma.aedLocation.findUnique({
       where: { id: input.locationId },
     });
@@ -74,9 +72,6 @@ export class EnrichLocationWithGeocodingUseCase {
       input.forceEnrich || !location.postal_code || !location.city_name || !location.district_name;
 
     if (!needsEnrichment) {
-      console.log(
-        `[EnrichLocationUseCase] Location ${input.locationId} already has complete data. Skipping.`
-      );
       return {
         locationId: input.locationId,
         enriched: false,
@@ -88,29 +83,22 @@ export class EnrichLocationWithGeocodingUseCase {
     // 3. Decidir estrategia de geocoding
     let geocodingResult;
 
-    // Priorizar dirección sobre coordenadas porque:
-    // 1. Las direcciones de fuentes oficiales son más confiables
+    // Priorizar direcciÃ³n sobre coordenadas porque:
+    // 1. Las direcciones de fuentes oficiales son mÃ¡s confiables
     // 2. Nos da coordenadas validadas por Google
     // 3. Las coordenadas originales pueden tener formato incorrecto
     if (input.rawAddress) {
-      // Estrategia 1: Forward geocoding desde dirección (más confiable)
-      console.log(
-        `[EnrichLocationUseCase] Using forward geocoding with address: ${input.rawAddress}`
-      );
+      // Estrategia 1: Forward geocoding desde direcciÃ³n (mÃ¡s confiable)
+
       geocodingResult = await this.geocodingService.geocodeAddress(input.rawAddress);
     } else if (input.originalCoords) {
       // Estrategia 2: Reverse geocoding como fallback
-      console.log(
-        `[EnrichLocationUseCase] Using reverse geocoding with coords: ${input.originalCoords.latitude}, ${input.originalCoords.longitude}`
-      );
+
       geocodingResult = await this.geocodingService.reverseGeocode(
         input.originalCoords.latitude,
         input.originalCoords.longitude
       );
     } else {
-      console.warn(
-        `[EnrichLocationUseCase] No coordinates or address provided for location ${input.locationId}`
-      );
       return {
         locationId: input.locationId,
         enriched: false,
@@ -120,7 +108,6 @@ export class EnrichLocationWithGeocodingUseCase {
     }
 
     if (!geocodingResult) {
-      console.warn(`[EnrichLocationUseCase] No geocoding results for location ${input.locationId}`);
       return {
         locationId: input.locationId,
         enriched: false,
@@ -135,20 +122,12 @@ export class EnrichLocationWithGeocodingUseCase {
       geocodingResult.coordinates
     );
 
-    console.log(
-      `[EnrichLocationUseCase] Coordinate validation: ${coordinateValidation.status} (${coordinateValidation.reason})`
-    );
-
-    // 5. Actualizar ubicación con datos enriquecidos
+    // 5. Actualizar ubicaciÃ³n con datos enriquecidos
     const fieldsUpdated = await this.updateLocation(
       input.locationId,
       location,
       geocodingResult,
       coordinateValidation
-    );
-
-    console.log(
-      `[EnrichLocationUseCase] Location ${input.locationId} enriched. Fields updated: ${fieldsUpdated.join(", ")}`
     );
 
     return {
@@ -175,7 +154,7 @@ export class EnrichLocationWithGeocodingUseCase {
       geocodedCoords.longitude
     );
 
-    // Umbrales de validación
+    // Umbrales de validaciÃ³n
     const VALID_THRESHOLD_METERS = 50;
     const VERIFICATION_THRESHOLD_METERS = 100;
 
@@ -201,7 +180,7 @@ export class EnrichLocationWithGeocodingUseCase {
     const fieldsUpdated: string[] = [];
     const updateData: LocationUpdateData = {};
 
-    // Solo actualizar campos vacíos (conservador)
+    // Solo actualizar campos vacÃ­os (conservador)
     if (!currentLocation.postal_code && geocodingResult.address.postal_code) {
       updateData.postal_code = geocodingResult.address.postal_code;
       fieldsUpdated.push("postal_code");
@@ -222,13 +201,13 @@ export class EnrichLocationWithGeocodingUseCase {
       fieldsUpdated.push("neighborhood_name");
     }
 
-    // Actualizar street_number si está vacío
+    // Actualizar street_number si estÃ¡ vacÃ­o
     if (!currentLocation.street_number && geocodingResult.address.street_number) {
       updateData.street_number = geocodingResult.address.street_number;
       fieldsUpdated.push("street_number");
     }
 
-    // Guardar validación de coordenadas en JSON
+    // Guardar validaciÃ³n de coordenadas en JSON
     updateData.geocoding_validation = coordinateValidation.toJSON();
     fieldsUpdated.push("geocoding_validation");
 
