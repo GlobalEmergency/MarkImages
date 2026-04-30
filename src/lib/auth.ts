@@ -19,7 +19,7 @@ export class AuthError extends Error {
 
 /**
  * Get the current user from the request without requiring authentication.
- * Returns null if not authenticated â€” suitable for optional auth checks.
+ * Returns null if not authenticated — suitable for optional auth checks.
  */
 export async function getUserFromRequest(request: NextRequest): Promise<JWTPayload | null> {
   return getCurrentUserFromRequest(request);
@@ -45,7 +45,7 @@ export async function requireRole(
 ): Promise<JWTPayload> {
   const user = await requireAuth(request);
   if (!allowedRoles.includes(user.role)) {
-    throw new AuthError("No tienes permisos para esta acciÃ³n", 403);
+    throw new AuthError("No tienes permisos para esta acción", 403);
   }
   return user;
 }
@@ -93,7 +93,7 @@ export async function requireAdminOrAedPermission(
   // Check org-level permissions for this specific AED
   const permissions = await getUserPermissionsForAed(user.userId, aedId);
   if (!permissions[requiredPermission]) {
-    throw new AuthError("No tienes permisos para esta acciÃ³n", 403);
+    throw new AuthError("No tienes permisos para esta acción", 403);
   }
 
   return { user, isGlobalAdmin: false, permissions };
@@ -129,7 +129,7 @@ export async function requireImportPermission(
 
   // Non-admin: organizationId is required
   if (!organizationId) {
-    throw new AuthError("Debes seleccionar una organizaciÃ³n para importar", 400);
+    throw new AuthError("Debes seleccionar una organización para importar", 400);
   }
 
   // Verify user belongs to this org with can_edit permission
@@ -144,7 +144,7 @@ export async function requireImportPermission(
   });
 
   if (!membership || !membership.can_edit) {
-    throw new AuthError("No tienes permisos de ediciÃ³n en esta organizaciÃ³n", 403);
+    throw new AuthError("No tienes permisos de edición en esta organización", 403);
   }
 
   return {

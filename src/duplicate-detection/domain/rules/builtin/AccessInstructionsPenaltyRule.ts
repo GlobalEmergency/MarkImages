@@ -1,5 +1,5 @@
 /**
- * AccessInstructionsPenaltyRule â€” Penalty when access instructions differ
+ * AccessInstructionsPenaltyRule — Penalty when access instructions differ
  */
 
 import type {
@@ -48,10 +48,10 @@ export class AccessInstructionsPenaltyRule implements ScoringRule {
       maxPoints: this.maxPoints,
       matched: different,
       reason: !bothPresent
-        ? "One or both access instructions empty â†’ no penalty"
+        ? "One or both access instructions empty → no penalty"
         : different
-          ? `Access instructions differ â†’ ${this.maxPoints}pts`
-          : `Access instructions match â†’ no penalty`,
+          ? `Access instructions differ → ${this.maxPoints}pts`
+          : `Access instructions match → no penalty`,
       inputValue: input.normalizedAccessInstructions || "(empty)",
       candidateValue: candidate.normalized_access_instructions || "(empty)",
     };

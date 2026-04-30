@@ -1,5 +1,5 @@
 /**
- * Botones de acciÃ³n para gestionar importaciones
+ * Botones de acción para gestionar importaciones
  * Permite reanudar, pausar y cancelar importaciones
  */
 
@@ -45,7 +45,7 @@ export default function ImportActionButtons({
     }
   };
 
-  // Determinar quÃ© botones mostrar segÃºn el estado
+  // Determinar qué botones mostrar según el estado
   const canResume = status === "INTERRUPTED";
   const canCancel = ["IN_PROGRESS", "INTERRUPTED", "RESUMING"].includes(status);
 
@@ -55,13 +55,13 @@ export default function ImportActionButtons({
 
   return (
     <div className="flex items-center gap-2">
-      {/* BotÃ³n Reanudar */}
+      {/* Botón Reanudar */}
       {canResume && (
         <button
           onClick={handleResume}
           disabled={resuming.loading}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Reanudar importaciÃ³n"
+          title="Reanudar importación"
         >
           {resuming.loading ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -72,7 +72,7 @@ export default function ImportActionButtons({
         </button>
       )}
 
-      {/* BotÃ³n Cancelar */}
+      {/* Botón Cancelar */}
       {canCancel && (
         <>
           {!showCancelConfirm ? (
@@ -80,7 +80,7 @@ export default function ImportActionButtons({
               onClick={() => setShowCancelConfirm(true)}
               disabled={cancelling.loading}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Cancelar importaciÃ³n"
+              title="Cancelar importación"
             >
               {cancelling.loading ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -98,7 +98,7 @@ export default function ImportActionButtons({
                   disabled={cancelling.loading}
                   className="px-2 py-1 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded transition-colors disabled:opacity-50"
                 >
-                  SÃ­
+                  Sí
                 </button>
                 <button
                   onClick={() => setShowCancelConfirm(false)}

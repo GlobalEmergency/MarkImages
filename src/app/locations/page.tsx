@@ -9,19 +9,19 @@ import { safeJsonLd } from "@/lib/json-ld";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Desfibriladores en el mundo - Directorio por paÃ­s",
+  title: "Desfibriladores en el mundo - Directorio por país",
   description:
-    "Directorio mundial de desfibriladores (DEA/AED). Encuentra el desfibrilador mÃ¡s cercano por paÃ­s, regiÃ³n y ciudad con DeaMap.",
+    "Directorio mundial de desfibriladores (DEA/AED). Encuentra el desfibrilador más cercano por país, región y ciudad con DeaMap.",
   alternates: { canonical: "/locations" },
   openGraph: {
-    title: "Desfibriladores en el mundo - Directorio por paÃ­s",
-    description: "Directorio mundial de desfibriladores (DEA/AED). Encuentra el mÃ¡s cercano.",
+    title: "Desfibriladores en el mundo - Directorio por país",
+    description: "Directorio mundial de desfibriladores (DEA/AED). Encuentra el más cercano.",
     url: "/locations",
     images: [{ url: "/og-image.png" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Desfibriladores en el mundo - Directorio por paÃ­s",
+    title: "Desfibriladores en el mundo - Directorio por país",
     description: "Directorio mundial de desfibriladores (DEA/AED).",
     images: ["/og-image.png"],
   },
@@ -60,7 +60,7 @@ export default async function LocationsIndexPage() {
   const itemListLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "Desfibriladores por paÃ­s",
+    name: "Desfibriladores por país",
     numberOfItems: stats.length,
     itemListElement: stats
       .filter((s) => s.country_code)
@@ -87,7 +87,7 @@ export default async function LocationsIndexPage() {
         <div className="container mx-auto px-4 max-w-5xl">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Directorio de desfibriladores</h1>
           <p className="text-xl text-blue-100 mb-6 max-w-2xl">
-            Encuentra desfibriladores (DEA) en todo el mundo. Navega por paÃ­s, regiÃ³n y ciudad.
+            Encuentra desfibriladores (DEA) en todo el mundo. Navega por país, región y ciudad.
           </p>
           <div className="flex flex-wrap gap-4">
             <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3 flex items-center gap-2">
@@ -103,7 +103,7 @@ export default async function LocationsIndexPage() {
             <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3 flex items-center gap-2">
               <Globe className="w-5 h-5 text-yellow-300" />
               <span className="font-semibold text-lg">{stats.length}</span>
-              <span className="text-blue-200">paÃ­s{stats.length !== 1 ? "es" : ""}</span>
+              <span className="text-blue-200">país{stats.length !== 1 ? "es" : ""}</span>
             </div>
           </div>
         </div>
@@ -113,7 +113,7 @@ export default async function LocationsIndexPage() {
       <div className="container mx-auto px-4 max-w-5xl py-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
           <Globe className="w-6 h-6 text-blue-600" />
-          PaÃ­ses con desfibriladores
+          Países con desfibriladores
         </h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {stats
@@ -152,27 +152,27 @@ export default async function LocationsIndexPage() {
           <div className="prose prose-gray max-w-none">
             <h2>Mapa mundial de desfibriladores</h2>
             <p>
-              DeaMap es el directorio colaborativo de desfibriladores mÃ¡s completo, con{" "}
+              DeaMap es el directorio colaborativo de desfibriladores más completo, con{" "}
               <strong>{totalAeds.toLocaleString("es-ES")} DEAs</strong> registrados en{" "}
               <strong>{totalCities.toLocaleString("es-ES")} ciudades</strong> de{" "}
               <strong>
-                {stats.length} paÃ­s{stats.length !== 1 ? "es" : ""}
+                {stats.length} país{stats.length !== 1 ? "es" : ""}
               </strong>
-              . Nuestra misiÃ³n es que cualquier persona pueda localizar el desfibrilador mÃ¡s
-              cercano en segundos durante una emergencia cardÃ­aca.
+              . Nuestra misión es que cualquier persona pueda localizar el desfibrilador más cercano
+              en segundos durante una emergencia cardíaca.
             </p>
             <p>
-              Un desfibrilador externo automÃ¡tico (DEA) es un dispositivo que puede salvar vidas
-              durante una parada cardÃ­aca. Por cada minuto que pasa sin desfibrilaciÃ³n, las
+              Un desfibrilador externo automático (DEA) es un dispositivo que puede salvar vidas
+              durante una parada cardíaca. Por cada minuto que pasa sin desfibrilación, las
               posibilidades de supervivencia disminuyen un 10%.{" "}
               <Link href="/" className="text-blue-600 hover:underline">
                 Usa nuestro mapa interactivo
               </Link>{" "}
               para encontrar desfibriladores cerca de ti, o{" "}
               <Link href="/dea/new-simple" className="text-blue-600 hover:underline">
-                colabora aÃ±adiendo un DEA
+                colabora añadiendo un DEA
               </Link>{" "}
-              que no estÃ© registrado.
+              que no esté registrado.
             </p>
           </div>
         </section>

@@ -268,7 +268,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Preparar auth SharePoint si se proporcionÃ³
+    // Preparar auth SharePoint si se proporcionó
     const sharePointAuth = sharepointCookies
       ? {
           fedAuth: sharepointCookies.FedAuth || "",
@@ -276,7 +276,7 @@ export async function POST(request: NextRequest) {
         }
       : undefined;
 
-    // Iniciar importaciÃ³n con @batchactions/import â€” procesa primer chunk inline
+    // Iniciar importación con @batchactions/import — procesa primer chunk inline
 
     const service = getBulkImportService();
     const result = await service.startImport({
@@ -327,14 +327,14 @@ export async function POST(request: NextRequest) {
         hasMore,
       },
       message: hasMore
-        ? "Primer lote procesado. Los siguientes se procesarÃ¡n automÃ¡ticamente."
-        : "ImportaciÃ³n completada.",
+        ? "Primer lote procesado. Los siguientes se procesarán automáticamente."
+        : "Importación completada.",
     });
   } catch (error) {
     console.error("Error creating import batch:", error);
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Error al crear la importaciÃ³n",
+        error: error instanceof Error ? error.message : "Error al crear la importación",
       },
       { status: 500 }
     );

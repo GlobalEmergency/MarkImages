@@ -1,5 +1,5 @@
 /**
- * Badge para mostrar el estado de una exportaciÃ³n
+ * Badge para mostrar el estado de una exportación
  */
 
 import { Clock, Loader2, CheckCircle2, XCircle, Ban } from "lucide-react";

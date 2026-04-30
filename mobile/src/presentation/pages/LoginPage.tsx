@@ -32,7 +32,7 @@ const LoginPage: React.FC = () => {
       await login(email, password);
       await promptSaveCredentials(email, password);
       history.replace("/tabs/profile");
-    } catch (_error) {
+    } catch (error) {
       const message = error instanceof Error ? error.message : "Error al iniciar sesión";
       presentToast({ message, duration: 3000, color: "danger", position: "top" });
     } finally {

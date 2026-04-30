@@ -1,6 +1,6 @@
 /**
  * Use Case: Descargar imagen desde URL externa y subirla a S3
- * Capa de AplicaciÃ³n - Orquesta la lÃ³gica de negocio
+ * Capa de Aplicación - Orquesta la lógica de negocio
  */
 
 import { IImageDownloader, SharePointAuthConfig } from "@/storage/domain/ports/IImageDownloader";

@@ -1,5 +1,5 @@
 /**
- * Hook para gestionar lista de importaciones con polling automÃ¡tico
+ * Hook para gestionar lista de importaciones con polling automático
  */
 
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -74,7 +74,7 @@ export function useImportBatches(options: UseImportBatchesOptions = {}): UseImpo
 
       if (!previousBatch) return; // Nuevo batch, ignorar
 
-      // Detectar si cambiÃ³ de IN_PROGRESS a COMPLETED/ERRORS/FAILED
+      // Detectar si cambió de IN_PROGRESS a COMPLETED/ERRORS/FAILED
       const wasInProgress = previousBatch.status === "IN_PROGRESS";
       const isNowFinished =
         currentBatch.status === "COMPLETED" ||
@@ -82,23 +82,23 @@ export function useImportBatches(options: UseImportBatchesOptions = {}): UseImpo
         currentBatch.status === "FAILED";
 
       if (wasInProgress && isNowFinished) {
-        // Mostrar notificaciÃ³n segÃºn el resultado
+        // Mostrar notificación según el resultado
         if (currentBatch.status === "COMPLETED") {
           toast.success(
-            `âœ… ImportaciÃ³n "${currentBatch.name}" completada: ${currentBatch.successful_records} registros exitosos`,
+            `✅ Importación "${currentBatch.name}" completada: ${currentBatch.successful_records} registros exitosos`,
             {
               duration: 5000,
             }
           );
         } else if (currentBatch.status === "COMPLETED_WITH_ERRORS") {
           toast.error(
-            `âš ï¸ ImportaciÃ³n "${currentBatch.name}" completada con ${currentBatch.failed_records} errores`,
+            `âš ï¸ Importación "${currentBatch.name}" completada con ${currentBatch.failed_records} errores`,
             {
               duration: 6000,
             }
           );
         } else if (currentBatch.status === "FAILED") {
-          toast.error(`âŒ ImportaciÃ³n "${currentBatch.name}" fallÃ³ completamente`, {
+          toast.error(`âŒ Importación "${currentBatch.name}" falló completamente`, {
             duration: 6000,
           });
         }

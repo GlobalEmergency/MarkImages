@@ -33,7 +33,7 @@ export function useGeolocation(): UseGeolocationResult {
       const coords = await geolocationService.getCurrentPosition();
       setPosition(coords);
       return coords;
-    } catch (_err) {
+    } catch (err) {
       const message = err instanceof Error ? err.message : "Error obteniendo ubicación";
       setError(message);
       return null;

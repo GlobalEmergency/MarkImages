@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File;
 
     if (!file) {
-      return NextResponse.json({ error: "No se proporcionÃ³ ningÃºn archivo" }, { status: 400 });
+      return NextResponse.json({ error: "No se proporcionó ningún archivo" }, { status: 400 });
     }
 
     // Validar que sea CSV

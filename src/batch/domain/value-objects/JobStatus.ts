@@ -48,7 +48,7 @@ export const JOB_STATUS_METADATA: Record<JobStatus, JobStatusMetadata> = {
   [JobStatus.PENDING]: {
     status: JobStatus.PENDING,
     label: "Pendiente",
-    description: "El trabajo estÃ¡ pendiente de iniciar",
+    description: "El trabajo está pendiente de iniciar",
     isTerminal: false,
     isActive: false,
     canResume: false,
@@ -58,7 +58,7 @@ export const JOB_STATUS_METADATA: Record<JobStatus, JobStatusMetadata> = {
   [JobStatus.QUEUED]: {
     status: JobStatus.QUEUED,
     label: "En cola",
-    description: "El trabajo estÃ¡ en cola esperando procesamiento",
+    description: "El trabajo está en cola esperando procesamiento",
     isTerminal: false,
     isActive: false,
     canResume: false,
@@ -68,7 +68,7 @@ export const JOB_STATUS_METADATA: Record<JobStatus, JobStatusMetadata> = {
   [JobStatus.IN_PROGRESS]: {
     status: JobStatus.IN_PROGRESS,
     label: "En progreso",
-    description: "El trabajo se estÃ¡ procesando actualmente",
+    description: "El trabajo se está procesando actualmente",
     isTerminal: false,
     isActive: true,
     canResume: false,
@@ -78,7 +78,7 @@ export const JOB_STATUS_METADATA: Record<JobStatus, JobStatusMetadata> = {
   [JobStatus.PAUSED]: {
     status: JobStatus.PAUSED,
     label: "Pausado",
-    description: "El trabajo estÃ¡ pausado por el usuario",
+    description: "El trabajo está pausado por el usuario",
     isTerminal: false,
     isActive: false,
     canResume: true,
@@ -88,7 +88,7 @@ export const JOB_STATUS_METADATA: Record<JobStatus, JobStatusMetadata> = {
   [JobStatus.WAITING]: {
     status: JobStatus.WAITING,
     label: "Esperando",
-    description: "El trabajo espera la siguiente invocaciÃ³n",
+    description: "El trabajo espera la siguiente invocación",
     isTerminal: false,
     isActive: false,
     canResume: true,
@@ -98,7 +98,7 @@ export const JOB_STATUS_METADATA: Record<JobStatus, JobStatusMetadata> = {
   [JobStatus.COMPLETED]: {
     status: JobStatus.COMPLETED,
     label: "Completado",
-    description: "El trabajo se completÃ³ exitosamente",
+    description: "El trabajo se completó exitosamente",
     isTerminal: true,
     isActive: false,
     canResume: false,
@@ -108,7 +108,7 @@ export const JOB_STATUS_METADATA: Record<JobStatus, JobStatusMetadata> = {
   [JobStatus.COMPLETED_WITH_WARNINGS]: {
     status: JobStatus.COMPLETED_WITH_WARNINGS,
     label: "Completado con advertencias",
-    description: "El trabajo se completÃ³ pero con algunas advertencias",
+    description: "El trabajo se completó pero con algunas advertencias",
     isTerminal: true,
     isActive: false,
     canResume: false,
@@ -118,7 +118,7 @@ export const JOB_STATUS_METADATA: Record<JobStatus, JobStatusMetadata> = {
   [JobStatus.FAILED]: {
     status: JobStatus.FAILED,
     label: "Fallido",
-    description: "El trabajo fallÃ³",
+    description: "El trabajo falló",
     isTerminal: true,
     isActive: false,
     canResume: false,
@@ -148,7 +148,7 @@ export const JOB_STATUS_METADATA: Record<JobStatus, JobStatusMetadata> = {
   [JobStatus.RESUMING]: {
     status: JobStatus.RESUMING,
     label: "Reanudando",
-    description: "El trabajo se estÃ¡ reanudando",
+    description: "El trabajo se está reanudando",
     isTerminal: false,
     isActive: true,
     canResume: false,

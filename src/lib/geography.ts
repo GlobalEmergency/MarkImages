@@ -1,5 +1,5 @@
 /**
- * Geographic hierarchy: Country â†’ Community â†’ Province â†’ City
+ * Geographic hierarchy: Country → Community → Province → City
  * Used for /locations URL structure and SEO pages.
  */
 
@@ -15,33 +15,33 @@ export interface Country {
   code: string; // ISO 3166-1 alpha-2
 }
 
-export const COUNTRIES: Country[] = [{ name: "EspaÃ±a", slug: "spain", code: "ES" }];
+export const COUNTRIES: Country[] = [{ name: "España", slug: "spain", code: "ES" }];
 
 export const COUNTRY_BY_SLUG = new Map(COUNTRIES.map((c) => [c.slug, c]));
 export const COUNTRY_BY_CODE = new Map(COUNTRIES.map((c) => [c.code, c]));
 
 /** Display names for countries by ISO code. Extends the static COUNTRIES list. */
 const COUNTRY_DISPLAY_NAMES: Record<string, string> = {
-  ES: "EspaÃ±a",
+  ES: "España",
   FR: "Francia",
   DE: "Alemania",
   IT: "Italia",
   PT: "Portugal",
   GB: "Reino Unido",
   AT: "Austria",
-  BE: "BÃ©lgica",
-  NL: "PaÃ­ses Bajos",
+  BE: "Bélgica",
+  NL: "Países Bajos",
   CH: "Suiza",
   PL: "Polonia",
-  CZ: "RepÃºblica Checa",
+  CZ: "República Checa",
   SE: "Suecia",
   NO: "Noruega",
   DK: "Dinamarca",
   FI: "Finlandia",
   IE: "Irlanda",
   GR: "Grecia",
-  RO: "RumanÃ­a",
-  HU: "HungrÃ­a",
+  RO: "Rumanía",
+  HU: "Hungría",
   HR: "Croacia",
   SK: "Eslovaquia",
   SI: "Eslovenia",
@@ -53,26 +53,26 @@ const COUNTRY_DISPLAY_NAMES: Record<string, string> = {
   MT: "Malta",
   CY: "Chipre",
   US: "Estados Unidos",
-  CA: "CanadÃ¡",
-  MX: "MÃ©xico",
+  CA: "Canadá",
+  MX: "México",
   BR: "Brasil",
   AR: "Argentina",
   CL: "Chile",
   CO: "Colombia",
-  PE: "PerÃº",
+  PE: "Perú",
   UY: "Uruguay",
   VE: "Venezuela",
   EC: "Ecuador",
-  JP: "JapÃ³n",
+  JP: "Japón",
   KR: "Corea del Sur",
   CN: "China",
   AU: "Australia",
   NZ: "Nueva Zelanda",
   IN: "India",
-  ZA: "SudÃ¡frica",
+  ZA: "Sudáfrica",
   MA: "Marruecos",
   IL: "Israel",
-  TR: "TurquÃ­a",
+  TR: "Turquía",
   RU: "Rusia",
   UA: "Ucrania",
 };
@@ -200,28 +200,28 @@ function normalizeForMatch(s: string): string {
 }
 
 /**
- * Map of normalized community names â†’ Community for fuzzy lookup.
+ * Map of normalized community names → Community for fuzzy lookup.
  * Supports accent-insensitive matching so Nominatim results like
- * "Comunidad de Madrid" or "CataluÃ±a" match correctly.
+ * "Comunidad de Madrid" or "Cataluña" match correctly.
  *
  * Also includes English aliases that Nominatim may return depending
  * on the accept-language header or data quality.
  */
 const COMMUNITY_ALIASES: Record<string, string> = {
   "community of madrid": "Comunidad de Madrid",
-  catalonia: "CataluÃ±a",
+  catalonia: "Cataluña",
   "valencian community": "Comunitat Valenciana",
-  "basque country": "PaÃ­s Vasco",
+  "basque country": "País Vasco",
   "balearic islands": "Illes Balears",
   "canary islands": "Canarias",
-  "region of murcia": "RegiÃ³n de Murcia",
-  "castile and leon": "Castilla y LeÃ³n",
+  "region of murcia": "Región de Murcia",
+  "castile and leon": "Castilla y León",
   "castile-la mancha": "Castilla-La Mancha",
   "principality of asturias": "Asturias",
   "chartered community of navarre": "Navarra",
   navarre: "Navarra",
-  aragon: "AragÃ³n",
-  andalusia: "AndalucÃ­a",
+  aragon: "Aragón",
+  andalusia: "Andalucía",
   extremadura: "Extremadura",
   galicia: "Galicia",
   cantabria: "Cantabria",
@@ -239,7 +239,7 @@ for (const [alias, canonical] of Object.entries(COMMUNITY_ALIASES)) {
   if (community) COMMUNITY_BY_NAME.set(normalizeForMatch(alias), community);
 }
 
-/** O(1) lookup: INE province code â†’ Community */
+/** O(1) lookup: INE province code → Community */
 const COMMUNITY_BY_INE_CODE = new Map<string, Community>();
 for (const c of COMMUNITIES) {
   for (const ineCode of c.provinceIneCodes) {
@@ -273,7 +273,7 @@ export function regionSlugFromAdminLevel1(adminLevel1: string): string {
  * Resolve a region slug from admin_level_1 OR ine_code, with fallback chain.
  * This is the primary function for determining the region in geographic queries.
  *
- * Priority: admin_level_1 â†’ ine_code â†’ null
+ * Priority: admin_level_1 → ine_code → null
  */
 export function resolveRegionSlug(
   adminLevel1: string | null,
@@ -320,7 +320,7 @@ export function cityPathFromIne(ineCode: string, cityName: string): string {
 
 /**
  * Best-effort reverse of `toSlug()` for city names.
- * Since `toSlug()` strips accents (NFD normalization), this is lossy â€”
+ * Since `toSlug()` strips accents (NFD normalization), this is lossy —
  * use it as a hint for DB lookups, never as the canonical name.
  */
 export function slugToApproxCityName(slug: string): string {

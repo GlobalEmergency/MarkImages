@@ -1,7 +1,7 @@
 /**
  * AED Import Data Value Object
  *
- * Representa los datos mapeados de un registro de importaciÃ³n de AED.
+ * Representa los datos mapeados de un registro de importación de AED.
  * Inmutable y con datos ya normalizados del CSV.
  */
 
@@ -11,14 +11,14 @@ export interface AedImportDataProps {
   code?: string;
   externalReference?: string;
 
-  // Datos bÃ¡sicos
+  // Datos básicos
   proposedName: string;
   establishmentType?: string;
   localOwnership?: string;
   ownership?: string;
   function?: string;
 
-  // UbicaciÃ³n
+  // Ubicación
   streetType?: string;
   streetName?: string;
   streetNumber?: string;
@@ -77,7 +77,7 @@ export class AedImportData {
     return this.props.externalReference;
   }
 
-  // Datos bÃ¡sicos
+  // Datos básicos
   get proposedName(): string {
     return this.props.proposedName;
   }
@@ -98,7 +98,7 @@ export class AedImportData {
     return this.props.function;
   }
 
-  // UbicaciÃ³n
+  // Ubicación
   get streetType(): string | undefined {
     return this.props.streetType;
   }

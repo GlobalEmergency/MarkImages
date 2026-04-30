@@ -1,5 +1,5 @@
 /**
- * Adapter para descarga de imÃ¡genes desde SharePoint
+ * Adapter para descarga de imágenes desde SharePoint
  * Capa de Infraestructura - Implementa IImageDownloader
  */
 
@@ -14,7 +14,7 @@ import {
 import { isSharePointUrl } from "@/shared/utils/sharepoint";
 
 export class SharePointImageDownloader implements IImageDownloader {
-  private readonly MIN_IMAGE_SIZE = 1024; // 1KB - tamaÃ±o mÃ­nimo esperado para una imagen
+  private readonly MIN_IMAGE_SIZE = 1024; // 1KB - tamaño mínimo esperado para una imagen
   private readonly LOGIN_INDICATORS = [
     "login",
     "signin",
@@ -52,12 +52,12 @@ export class SharePointImageDownloader implements IImageDownloader {
           validateStatus: (status) => status >= 200 && status < 400, // Aceptar redirects
         });
 
-        // ðŸ” VALIDACIÃ“N 1: Detectar redirecciones a pÃ¡ginas de login
+        // ðŸ” VALIDACIÃ“N 1: Detectar redirecciones a páginas de login
         const finalUrl = response.request?.res?.responseUrl || response.config.url || url;
         if (this.isLoginPage(finalUrl)) {
           throw new Error(
-            `AutenticaciÃ³n invÃ¡lida: SharePoint redirigiÃ³ a pÃ¡gina de login. ` +
-              `Verifica que las cookies (FedAuth, rtFa) sean vÃ¡lidas y no hayan expirado.`
+            `Autenticación inválida: SharePoint redirigió a página de login. ` +
+              `Verifica que las cookies (FedAuth, rtFa) sean válidas y no hayan expirado.`
           );
         }
 
@@ -67,15 +67,15 @@ export class SharePointImageDownloader implements IImageDownloader {
         // ðŸ” VALIDACIÃ“N 2: Verificar que el Content-Type sea de imagen
         if (!this.isImageContentType(contentType)) {
           throw new Error(
-            `Respuesta invÃ¡lida de SharePoint: Content-Type="${contentType}" (esperado: image/*). ` +
-              `Posible causa: cookies invÃ¡lidas o archivo no es una imagen.`
+            `Respuesta inválida de SharePoint: Content-Type="${contentType}" (esperado: image/*). ` +
+              `Posible causa: cookies inválidas o archivo no es una imagen.`
           );
         }
 
-        // ðŸ” VALIDACIÃ“N 3: Verificar tamaÃ±o mÃ­nimo (evitar respuestas HTML pequeÃ±as)
+        // ðŸ” VALIDACIÃ“N 3: Verificar tamaño mínimo (evitar respuestas HTML pequeñas)
         if (buffer.length < this.MIN_IMAGE_SIZE) {
           throw new Error(
-            `Imagen demasiado pequeÃ±a (${buffer.length} bytes). ` +
+            `Imagen demasiado pequeña (${buffer.length} bytes). ` +
               `Posible causa: respuesta HTML en lugar de imagen.`
           );
         }
@@ -84,7 +84,7 @@ export class SharePointImageDownloader implements IImageDownloader {
         if (!this.hasValidImageSignature(buffer)) {
           const preview = buffer.slice(0, 100).toString("utf-8", 0, 50).trim();
           throw new Error(
-            `Archivo no es una imagen vÃ¡lida. Posible respuesta HTML. ` +
+            `Archivo no es una imagen válida. Posible respuesta HTML. ` +
               `Primeros bytes: "${preview}..."`
           );
         }
@@ -101,10 +101,10 @@ export class SharePointImageDownloader implements IImageDownloader {
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
 
-        // Si es error de autenticaciÃ³n, no reintentar
+        // Si es error de autenticación, no reintentar
         if (
-          lastError.message.includes("AutenticaciÃ³n invÃ¡lida") ||
-          lastError.message.includes("cookies invÃ¡lidas")
+          lastError.message.includes("Autenticación inválida") ||
+          lastError.message.includes("cookies inválidas")
         ) {
           throw lastError;
         }
@@ -173,7 +173,7 @@ export class SharePointImageDownloader implements IImageDownloader {
   }
 
   /**
-   * Detecta si una URL parece ser una pÃ¡gina de login
+   * Detecta si una URL parece ser una página de login
    */
   private isLoginPage(url: string): boolean {
     const lowerUrl = url.toLowerCase();
@@ -197,7 +197,7 @@ export class SharePointImageDownloader implements IImageDownloader {
   }
 
   /**
-   * Verifica la firma mÃ¡gica (magic bytes) del archivo
+   * Verifica la firma mágica (magic bytes) del archivo
    * Los primeros bytes identifican el tipo de archivo
    */
   private hasValidImageSignature(buffer: Buffer): boolean {
@@ -248,8 +248,8 @@ export class SharePointImageDownloader implements IImageDownloader {
   }
 
   /**
-   * Valida que las credenciales de SharePoint son vÃ¡lidas
-   * Intenta descargar una imagen de prueba para verificar autenticaciÃ³n
+   * Valida que las credenciales de SharePoint son válidas
+   * Intenta descargar una imagen de prueba para verificar autenticación
    */
   async validateAuthentication(
     testImageUrl: string,
@@ -272,14 +272,14 @@ export class SharePointImageDownloader implements IImageDownloader {
           valid: false,
           message: "La URL proporcionada no es de SharePoint",
           details: {
-            error: "URL invÃ¡lida",
+            error: "URL inválida",
           },
         };
       }
 
       const config = this.buildRequestConfig(auth, 10000); // 10 segundos timeout
 
-      // Primero intentar HEAD request (mÃ¡s ligero)
+      // Primero intentar HEAD request (más ligero)
       try {
         const headResponse = await axios.head(testImageUrl, {
           ...config,
@@ -291,12 +291,12 @@ export class SharePointImageDownloader implements IImageDownloader {
           headResponse.request?.res?.responseUrl || headResponse.config.url || testImageUrl;
         const contentType = headResponse.headers["content-type"] || "";
 
-        // Verificar redirecciÃ³n a login
+        // Verificar redirección a login
         if (this.isLoginPage(finalUrl)) {
           return {
             valid: false,
             message:
-              "Las cookies de SharePoint son invÃ¡lidas o han expirado. Redirige a pÃ¡gina de login.",
+              "Las cookies de SharePoint son inválidas o han expirado. Redirige a página de login.",
             details: {
               statusCode: headResponse.status,
               redirectedToLogin: true,
@@ -309,7 +309,7 @@ export class SharePointImageDownloader implements IImageDownloader {
         if (!this.isImageContentType(contentType)) {
           return {
             valid: false,
-            message: `Respuesta invÃ¡lida: Content-Type="${contentType}" (esperado: image/*)`,
+            message: `Respuesta inválida: Content-Type="${contentType}" (esperado: image/*)`,
             details: {
               statusCode: headResponse.status,
               redirectedToLogin: false,
@@ -321,8 +321,7 @@ export class SharePointImageDownloader implements IImageDownloader {
         // HEAD exitoso y Content-Type correcto
         return {
           valid: true,
-          message:
-            "âœ… Cookies de SharePoint vÃ¡lidas. Las imÃ¡genes se importarÃ¡n correctamente.",
+          message: "✅ Cookies de SharePoint válidas. Las imágenes se importarán correctamente.",
           details: {
             statusCode: headResponse.status,
             redirectedToLogin: false,
@@ -343,12 +342,12 @@ export class SharePointImageDownloader implements IImageDownloader {
         const buffer = Buffer.from(getResponse.data);
         const contentType = getResponse.headers["content-type"] || "";
 
-        // Verificar redirecciÃ³n a login
+        // Verificar redirección a login
         if (this.isLoginPage(finalUrl)) {
           return {
             valid: false,
             message:
-              "Las cookies de SharePoint son invÃ¡lidas o han expirado. Redirige a pÃ¡gina de login.",
+              "Las cookies de SharePoint son inválidas o han expirado. Redirige a página de login.",
             details: {
               statusCode: getResponse.status,
               redirectedToLogin: true,
@@ -362,7 +361,7 @@ export class SharePointImageDownloader implements IImageDownloader {
         if (!this.isImageContentType(contentType)) {
           return {
             valid: false,
-            message: `Respuesta invÃ¡lida: Content-Type="${contentType}" (esperado: image/*)`,
+            message: `Respuesta inválida: Content-Type="${contentType}" (esperado: image/*)`,
             details: {
               statusCode: getResponse.status,
               redirectedToLogin: false,
@@ -372,11 +371,11 @@ export class SharePointImageDownloader implements IImageDownloader {
           };
         }
 
-        // Verificar tamaÃ±o mÃ­nimo
+        // Verificar tamaño mínimo
         if (buffer.length < this.MIN_IMAGE_SIZE) {
           return {
             valid: false,
-            message: `Respuesta muy pequeÃ±a (${buffer.length} bytes). Posible HTML en lugar de imagen.`,
+            message: `Respuesta muy pequeña (${buffer.length} bytes). Posible HTML en lugar de imagen.`,
             details: {
               statusCode: getResponse.status,
               redirectedToLogin: false,
@@ -390,7 +389,7 @@ export class SharePointImageDownloader implements IImageDownloader {
         if (!this.hasValidImageSignature(buffer)) {
           return {
             valid: false,
-            message: "El archivo descargado no es una imagen vÃ¡lida. Posible respuesta HTML.",
+            message: "El archivo descargado no es una imagen válida. Posible respuesta HTML.",
             details: {
               statusCode: getResponse.status,
               redirectedToLogin: false,
@@ -400,11 +399,10 @@ export class SharePointImageDownloader implements IImageDownloader {
           };
         }
 
-        // GET exitoso y archivo vÃ¡lido
+        // GET exitoso y archivo válido
         return {
           valid: true,
-          message:
-            "âœ… Cookies de SharePoint vÃ¡lidas. Las imÃ¡genes se importarÃ¡n correctamente.",
+          message: "✅ Cookies de SharePoint válidas. Las imágenes se importarán correctamente.",
           details: {
             statusCode: getResponse.status,
             redirectedToLogin: false,
@@ -421,7 +419,7 @@ export class SharePointImageDownloader implements IImageDownloader {
       if (statusCode === 401 || statusCode === 403) {
         return {
           valid: false,
-          message: "Acceso denegado. Las cookies de SharePoint son invÃ¡lidas o han expirado.",
+          message: "Acceso denegado. Las cookies de SharePoint son inválidas o han expirado.",
           details: {
             statusCode,
             error: "Unauthorized/Forbidden",

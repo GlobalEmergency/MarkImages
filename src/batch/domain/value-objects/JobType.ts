@@ -49,7 +49,7 @@ export interface JobTypeMetadata {
 export const JOB_TYPE_METADATA: Record<JobType, JobTypeMetadata> = {
   [JobType.AED_CSV_IMPORT]: {
     type: JobType.AED_CSV_IMPORT,
-    label: "ImportaciÃ³n CSV de DEAs",
+    label: "Importación CSV de DEAs",
     description: "Importa desfibriladores desde un archivo CSV",
     category: "import",
     requiresFile: true,
@@ -58,7 +58,7 @@ export const JOB_TYPE_METADATA: Record<JobType, JobTypeMetadata> = {
   },
   [JobType.AED_EXTERNAL_SYNC]: {
     type: JobType.AED_EXTERNAL_SYNC,
-    label: "SincronizaciÃ³n Externa",
+    label: "Sincronización Externa",
     description: "Sincroniza DEAs desde una fuente de datos externa",
     category: "import",
     requiresFile: false,
@@ -67,7 +67,7 @@ export const JOB_TYPE_METADATA: Record<JobType, JobTypeMetadata> = {
   },
   [JobType.AED_CSV_EXPORT]: {
     type: JobType.AED_CSV_EXPORT,
-    label: "ExportaciÃ³n CSV de DEAs",
+    label: "Exportación CSV de DEAs",
     description: "Exporta desfibriladores a un archivo CSV",
     category: "export",
     requiresFile: false,
@@ -76,7 +76,7 @@ export const JOB_TYPE_METADATA: Record<JobType, JobTypeMetadata> = {
   },
   [JobType.AED_JSON_EXPORT]: {
     type: JobType.AED_JSON_EXPORT,
-    label: "ExportaciÃ³n JSON de DEAs",
+    label: "Exportación JSON de DEAs",
     description: "Exporta desfibriladores a un archivo JSON",
     category: "export",
     requiresFile: false,
@@ -85,8 +85,8 @@ export const JOB_TYPE_METADATA: Record<JobType, JobTypeMetadata> = {
   },
   [JobType.BULK_AED_UPDATE]: {
     type: JobType.BULK_AED_UPDATE,
-    label: "ActualizaciÃ³n Masiva de DEAs",
-    description: "Actualiza mÃºltiples campos en varios DEAs",
+    label: "Actualización Masiva de DEAs",
+    description: "Actualiza múltiples campos en varios DEAs",
     category: "bulk",
     requiresFile: false,
     supportsChunking: true,
@@ -94,8 +94,8 @@ export const JOB_TYPE_METADATA: Record<JobType, JobTypeMetadata> = {
   },
   [JobType.BULK_AED_DELETE]: {
     type: JobType.BULK_AED_DELETE,
-    label: "EliminaciÃ³n Masiva de DEAs",
-    description: "Elimina mÃºltiples DEAs del sistema",
+    label: "Eliminación Masiva de DEAs",
+    description: "Elimina múltiples DEAs del sistema",
     category: "bulk",
     requiresFile: false,
     supportsChunking: true,
@@ -104,7 +104,7 @@ export const JOB_TYPE_METADATA: Record<JobType, JobTypeMetadata> = {
   [JobType.BULK_STATUS_CHANGE]: {
     type: JobType.BULK_STATUS_CHANGE,
     label: "Cambio Masivo de Estado",
-    description: "Cambia el estado de mÃºltiples DEAs",
+    description: "Cambia el estado de múltiples DEAs",
     category: "bulk",
     requiresFile: false,
     supportsChunking: true,
@@ -112,8 +112,8 @@ export const JOB_TYPE_METADATA: Record<JobType, JobTypeMetadata> = {
   },
   [JobType.BULK_VERIFICATION]: {
     type: JobType.BULK_VERIFICATION,
-    label: "VerificaciÃ³n Masiva",
-    description: "Verifica mÃºltiples DEAs en lote",
+    label: "Verificación Masiva",
+    description: "Verifica múltiples DEAs en lote",
     category: "verification",
     requiresFile: false,
     supportsChunking: true,
@@ -122,7 +122,7 @@ export const JOB_TYPE_METADATA: Record<JobType, JobTypeMetadata> = {
   [JobType.DATA_CLEANUP]: {
     type: JobType.DATA_CLEANUP,
     label: "Limpieza de Datos",
-    description: "Limpia datos huÃ©rfanos y corrige inconsistencias",
+    description: "Limpia datos huérfanos y corrige inconsistencias",
     category: "maintenance",
     requiresFile: false,
     supportsChunking: true,
@@ -130,8 +130,8 @@ export const JOB_TYPE_METADATA: Record<JobType, JobTypeMetadata> = {
   },
   [JobType.IMAGE_OPTIMIZATION]: {
     type: JobType.IMAGE_OPTIMIZATION,
-    label: "OptimizaciÃ³n de ImÃ¡genes",
-    description: "Optimiza y redimensiona imÃ¡genes de DEAs",
+    label: "Optimización de Imágenes",
+    description: "Optimiza y redimensiona imágenes de DEAs",
     category: "maintenance",
     requiresFile: false,
     supportsChunking: true,
@@ -139,8 +139,8 @@ export const JOB_TYPE_METADATA: Record<JobType, JobTypeMetadata> = {
   },
   [JobType.REPORT_GENERATION]: {
     type: JobType.REPORT_GENERATION,
-    label: "GeneraciÃ³n de Reportes",
-    description: "Genera reportes estadÃ­sticos",
+    label: "Generación de Reportes",
+    description: "Genera reportes estadísticos",
     category: "report",
     requiresFile: false,
     supportsChunking: false,

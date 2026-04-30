@@ -1,7 +1,7 @@
 /**
  * Use Case: Parsear preview de CSV
  * Lee un archivo CSV y genera un preview con headers y datos de muestra
- * Capa de AplicaciÃ³n
+ * Capa de Aplicación
  */
 
 import { CsvPreview } from "@/import/domain/value-objects/CsvPreview";
@@ -37,15 +37,15 @@ export class ParseCsvPreviewUseCase {
         return {
           preview: null as unknown as CsvPreview,
           success: false,
-          error: "El archivo CSV estÃ¡ vacÃ­o",
+          error: "El archivo CSV está vacío",
         };
       }
 
-      // Obtener headers (primera lÃ­nea)
+      // Obtener headers (primera línea)
       const headerLine = lines[0]!;
       const rawHeaders = this.parseRow(headerLine, delimiter);
 
-      // ðŸ”§ FIX: Filtrar headers vacÃ­os y limpiar espacios
+      // ðŸ”§ FIX: Filtrar headers vacíos y limpiar espacios
       const headers = rawHeaders.map((h) => h.trim()).filter((h) => h.length > 0);
 
       if (headers.length === 0) {
@@ -61,14 +61,14 @@ export class ParseCsvPreviewUseCase {
       const totalRows = dataLines.length;
       const sampleLines = dataLines.slice(0, sampleSize);
 
-      // ðŸ”§ FIX: Normalizar filas al mismo nÃºmero de columnas que headers vÃ¡lidos
+      // ðŸ”§ FIX: Normalizar filas al mismo número de columnas que headers válidos
       const sampleRows = sampleLines.map((line) => {
         const rawRow = this.parseRow(line, delimiter);
-        // Tomar solo las mismas columnas que headers vÃ¡lidos
+        // Tomar solo las mismas columnas que headers válidos
         return rawRow.slice(0, headers.length).map((cell) => cell.trim());
       });
 
-      // Validar que todas las filas tengan el mismo nÃºmero de columnas
+      // Validar que todas las filas tengan el mismo número de columnas
       const invalidRows = sampleRows.filter((row) => row.length !== headers.length);
       if (invalidRows.length > 0) {
         // Log or handle inconsistent rows (no action)
@@ -92,8 +92,8 @@ export class ParseCsvPreviewUseCase {
   }
 
   /**
-   * Parsea una lÃ­nea del CSV respetando comillas y delimitadores
-   * ðŸ”§ MEJORADO: Maneja correctamente delimitadores finales y columnas vacÃ­as
+   * Parsea una línea del CSV respetando comillas y delimitadores
+   * ðŸ”§ MEJORADO: Maneja correctamente delimitadores finales y columnas vacías
    */
   private parseRow(line: string, delimiter: string): string[] {
     const result: string[] = [];
@@ -125,7 +125,7 @@ export class ParseCsvPreviewUseCase {
       }
     }
 
-    // ðŸ”§ FIX: Solo agregar el Ãºltimo campo si tiene contenido o si se iniciÃ³ un campo
+    // ðŸ”§ FIX: Solo agregar el último campo si tiene contenido o si se inició un campo
     const trimmedLast = current.trim();
     if (trimmedLast.length > 0 || fieldStarted) {
       result.push(trimmedLast);
@@ -135,7 +135,7 @@ export class ParseCsvPreviewUseCase {
   }
 
   /**
-   * Detecta automÃ¡ticamente el delimitador del CSV
+   * Detecta automáticamente el delimitador del CSV
    */
   private detectDelimiter(content: string): string {
     const possibleDelimiters = [";", ",", "\t", "|"];

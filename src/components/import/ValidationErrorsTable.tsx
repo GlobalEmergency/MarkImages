@@ -1,6 +1,6 @@
 /**
- * ValidationErrorsTable: Muestra errores de validaciÃ³n de forma detallada
- * Con filtros, bÃºsqueda y sugerencias de correcciÃ³n
+ * ValidationErrorsTable: Muestra errores de validación de forma detallada
+ * Con filtros, búsqueda y sugerencias de corrección
  */
 
 "use client";
@@ -40,7 +40,7 @@ export default function ValidationErrorsTable({
   // Filtrar errores
   const filteredErrors = useMemo(() => {
     return errors.filter((error) => {
-      // Filtro de bÃºsqueda
+      // Filtro de búsqueda
       if (searchTerm) {
         const search = searchTerm.toLowerCase();
         const matchesSearch =
@@ -125,10 +125,10 @@ export default function ValidationErrorsTable({
         </div>
       )}
 
-      {/* Filtros y bÃºsqueda */}
+      {/* Filtros y búsqueda */}
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* BÃºsqueda */}
+          {/* Búsqueda */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -185,10 +185,10 @@ export default function ValidationErrorsTable({
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
             >
               <option value="all">Todas las severidades</option>
-              <option value="critical">CrÃ­tico</option>
+              <option value="critical">Crítico</option>
               <option value="error">Error</option>
               <option value="warning">Advertencia</option>
-              <option value="info">InformaciÃ³n</option>
+              <option value="info">Información</option>
             </select>
           </div>
         </div>
@@ -259,7 +259,7 @@ export default function ValidationErrorsTable({
                         {error.value ? (
                           `"${error.value}"`
                         ) : (
-                          <span className="text-gray-400">vacÃ­o</span>
+                          <span className="text-gray-400">vacío</span>
                         )}
                       </div>
                     </td>
@@ -287,7 +287,7 @@ export default function ValidationErrorsTable({
         <span className="text-gray-600 font-medium">Severidad:</span>
         <div className="flex items-center space-x-2">
           <AlertCircle className="w-4 h-4 text-red-500" />
-          <span className="text-gray-600">CrÃ­tico/Error</span>
+          <span className="text-gray-600">Crítico/Error</span>
         </div>
         <div className="flex items-center space-x-2">
           <AlertTriangle className="w-4 h-4 text-yellow-500" />
@@ -295,7 +295,7 @@ export default function ValidationErrorsTable({
         </div>
         <div className="flex items-center space-x-2">
           <Info className="w-4 h-4 text-blue-500" />
-          <span className="text-gray-600">InformaciÃ³n</span>
+          <span className="text-gray-600">Información</span>
         </div>
       </div>
     </div>

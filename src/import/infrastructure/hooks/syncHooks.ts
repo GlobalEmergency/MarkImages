@@ -1,5 +1,5 @@
 /**
- * Sync Hooks â€” @batchactions/core JobHooks
+ * Sync Hooks — @batchactions/core JobHooks
  *
  * Lifecycle hooks for external sync processing.
  * The key optimization is the beforeProcess hook that pre-loads
@@ -33,7 +33,7 @@ import { createHash } from "crypto";
  * Prefixed with "syn:" to distinguish from real external IDs.
  *
  * This ensures:
- * - Same record in subsequent syncs â†’ same synthetic ID â†’ matches existing AED
+ * - Same record in subsequent syncs → same synthetic ID → matches existing AED
  * - Reviewer decisions (duplicate/not duplicate) are preserved across re-imports
  * - Two DEAs at the same location with different names get different IDs
  */
@@ -77,7 +77,7 @@ const MAX_EXTREF_DISTANCE_M = 500;
 
 export interface SyncHooksOptions {
   prisma: PrismaClient;
-  /** Data source ID â€” used to pre-load all existing AEDs for this source */
+  /** Data source ID — used to pre-load all existing AEDs for this source */
   dataSourceId: string;
 }
 
@@ -123,7 +123,7 @@ class AedLookupCache {
     if (this.loaded) return;
 
     // Load all AEDs owned by this data source (by external_reference index).
-    // Exclude REJECTED/INACTIVE â€” these should not block new entries.
+    // Exclude REJECTED/INACTIVE — these should not block new entries.
     const owned = await this.prisma.aed.findMany({
       where: {
         data_source_id: this.dataSourceId,
@@ -326,7 +326,7 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
       let externalId = record.externalId as string | null;
       let existingAed: ExistingAedRow | undefined;
 
-      // Parse coordinates early â€” needed for synthetic ID and spatial matching
+      // Parse coordinates early — needed for synthetic ID and spatial matching
       const latStr = record.latitude as string | null;
       const lngStr = record.longitude as string | null;
       const lat = latStr ? parseFloat(String(latStr).replace(",", ".")) : NaN;
@@ -344,7 +344,7 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
 
       // Strategy 1: by external reference (includes synthetic IDs)
       // Safety: if coordinates are far apart (>500m), the source likely reused the
-      // code for a different record â†’ don't auto-merge, flag for review instead.
+      // code for a different record → don't auto-merge, flag for review instead.
       if (externalId) {
         const extRefMatch = cache.findByExternalRef(externalId);
         if (extRefMatch) {
@@ -360,7 +360,7 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
           const distance = canCheckDistance ? haversineMeters(lat, lng, matchLat, matchLng) : 0;
 
           if (canCheckDistance && distance > MAX_EXTREF_DISTANCE_M) {
-            // Same external_reference but different location â†’ source reused the code
+            // Same external_reference but different location → source reused the code
 
             return {
               ...record,
@@ -387,7 +387,7 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
         const coordMatch = cache.findByCoordinates(lat, lng);
 
         if (coordMatch) {
-          // Same coords but different externalIds (real or synthetic) â†’ distinct devices
+          // Same coords but different externalIds (real or synthetic) → distinct devices
           if (
             externalId &&
             coordMatch.external_reference &&
@@ -396,7 +396,7 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
           ) {
             // Same source, same coords, different ID -> distinct devices (no action)
           } else if (!externalId) {
-            // No coords + no externalId â†’ flag as suspected duplicate
+            // No coords + no externalId → flag as suspected duplicate
 
             return {
               ...record,
@@ -413,7 +413,7 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
         if (!existingAed) {
           const globalMatch = await cache.findByGlobalDuplicateDetector(record, lat, lng);
           if (globalMatch) {
-            // Cross-source match â†’ always flag for manual review, never auto-merge
+            // Cross-source match → always flag for manual review, never auto-merge
             const isCrossSource = !!(
               globalMatch.data_source_id && globalMatch.data_source_id !== dataSourceId
             );
@@ -452,7 +452,7 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
 
     afterProcess: async (record: ProcessedRecord, _context: HookContext): Promise<void> => {
       // Register newly created AEDs in the cache to prevent intra-chunk duplicates.
-      // If the record didn't have _existingAed, it was a create â€” register it.
+      // If the record didn't have _existingAed, it was a create — register it.
       const data = record as unknown as Record<string, unknown>;
       if (!data._existingAed && data.externalId) {
         const externalId = String(data.externalId);

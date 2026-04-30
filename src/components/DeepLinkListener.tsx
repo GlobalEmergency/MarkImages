@@ -21,7 +21,7 @@ export default function DeepLinkListener() {
 
     async function init() {
       try {
-        // Dynamic import â€” these packages only exist in the Capacitor mobile
+        // Dynamic import — these packages only exist in the Capacitor mobile
         // build, not in the Next.js web project.  The catch block handles the
         // "module not found" error on web gracefully.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,7 +56,7 @@ export default function DeepLinkListener() {
           listener.remove();
         };
       } catch {
-        // @capacitor/app not available (pure web) â€” silently ignore
+        // @capacitor/app not available (pure web) — silently ignore
       }
     }
 
@@ -86,7 +86,7 @@ function trackDeepLinkOpen(url: string) {
       deep_link_source: source,
     });
   } catch {
-    // Malformed URL â€” still track with raw value
+    // Malformed URL — still track with raw value
     trackEventDirect({
       action: "app_open_deeplink",
       category: AnalyticsCategory.NAVIGATION,

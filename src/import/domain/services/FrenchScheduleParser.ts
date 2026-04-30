@@ -1,18 +1,18 @@
 /**
- * Domain Service: Parser de horarios en formato francÃ©s (GeoDAE)
+ * Domain Service: Parser de horarios en formato francés (GeoDAE)
  * Implementa IFieldTransformer
  *
  * La base GeoDAE tiene dos campos complementarios:
- * - c_disp_j: dÃ­as de disponibilidad como Postgres array literal
+ * - c_disp_j: días de disponibilidad como Postgres array literal
  *   Ej: "{lundi,mardi,mercredi,jeudi,vendredi,samedi}"
  * - c_disp_h: horario como Postgres array literal
  *   Ej: "{24h/24}", "{heures ouvrables}", "{08h00-18h00}"
  *
  * Este transformer recibe c_disp_j como value y lee c_disp_h
- * del context (mapeado previamente vÃ­a fieldMappings).
+ * del context (mapeado previamente vía fieldMappings).
  *
  * Patrones soportados:
- * - DÃ­as: lundi..dimanche en array Postgres
+ * - Días: lundi..dimanche en array Postgres
  * - Horas: "24h/24", "heures ouvrables", "HHhMM-HHhMM", "HH:MM-HH:MM"
  * - Combinaciones parciales (solo L-V, solo weekends, etc.)
  */
@@ -56,7 +56,7 @@ export class FrenchScheduleParser implements IFieldTransformer {
     const dayLabels = days.map((d) => d.charAt(0).toUpperCase() + d.slice(1));
     const descParts = [dayLabels.join(", ")];
     if (hoursStr) descParts.push(hoursStr);
-    fields.scheduleDescription = descParts.join(" â€” ");
+    fields.scheduleDescription = descParts.join(" — ");
 
     // Detect 24h
     const is24h = hours.some((h) => /24\s*h?\s*\/?\s*24/i.test(h) || /24\s*heures/i.test(h));
@@ -76,7 +76,7 @@ export class FrenchScheduleParser implements IFieldTransformer {
     let opening: string | null = null;
     let closing: string | null = null;
 
-    // Check for "heures ouvrables" (business hours â†’ default 08:00-18:00)
+    // Check for "heures ouvrables" (business hours → default 08:00-18:00)
     const isBusinessHours = hours.some((h) => /heures?\s+ouvrables?/i.test(h));
 
     if (isBusinessHours) {
@@ -125,7 +125,7 @@ export class FrenchScheduleParser implements IFieldTransformer {
   }
 
   /**
-   * Parse Postgres array literal: "{val1,val2,val3}" â†’ ["val1", "val2", "val3"]
+   * Parse Postgres array literal: "{val1,val2,val3}" → ["val1", "val2", "val3"]
    * Also handles quoted values: "{\"val 1\",\"val 2\"}"
    */
   private parsePostgresArray(raw: string): string[] {

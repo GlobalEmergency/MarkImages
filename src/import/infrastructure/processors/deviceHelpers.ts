@@ -1,5 +1,5 @@
 /**
- * Device Helpers â€” Shared logic for creating/updating AedDevice records
+ * Device Helpers — Shared logic for creating/updating AedDevice records
  *
  * Used by both syncRecordProcessor (external API sync) and
  * aedRecordProcessor (CSV import) to avoid duplicating device logic.
@@ -51,8 +51,8 @@ function toStringOrNull(value: unknown): string | null {
 /**
  * Creates or updates the current device for an AED.
  *
- * - If the AED already has a current device â†’ updates it.
- * - If no current device exists â†’ creates one with is_current = true.
+ * - If the AED already has a current device → updates it.
+ * - If no current device exists → creates one with is_current = true.
  * - Only executes if the record contains device data (brand, model, serial, etc.).
  *
  * This is a no-op if hasDeviceData() returns false.

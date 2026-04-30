@@ -59,7 +59,7 @@ export function DeaListItem({ dea, adminMode = false }: DeaListItemProps) {
             </div>
           )}
         </div>
-        {dea.code && <p className="text-xs text-gray-500 mb-1">CÃ³digo: {dea.code}</p>}
+        {dea.code && <p className="text-xs text-gray-500 mb-1">Código: {dea.code}</p>}
       </div>
 
       {/* Address - full width on mobile, grid column on desktop */}
@@ -94,7 +94,7 @@ export function DeaListItem({ dea, adminMode = false }: DeaListItemProps) {
         {requiresVerification && (
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-orange-100 text-orange-700">
             <Clock className="w-3 h-3" />
-            <span className="hidden sm:inline">Requiere verificaciÃ³n</span>
+            <span className="hidden sm:inline">Requiere verificación</span>
             <span className="sm:hidden">Verificar</span>
           </span>
         )}
@@ -110,7 +110,7 @@ export function DeaListItem({ dea, adminMode = false }: DeaListItemProps) {
             }
           >
             <AlertTriangle className="w-3 h-3" />
-            <span className="hidden sm:inline">Coords. invÃ¡lidas</span>
+            <span className="hidden sm:inline">Coords. inválidas</span>
             <span className="sm:hidden">GPS!</span>
           </span>
         )}
@@ -145,11 +145,11 @@ export function DeaListItem({ dea, adminMode = false }: DeaListItemProps) {
 
 function getAssignmentTypeLabel(type: string): string {
   const labels: Record<string, string> = {
-    CIVIL_PROTECTION: "ProtecciÃ³n Civil",
+    CIVIL_PROTECTION: "Protección Civil",
     CERTIFIED_COMPANY: "Empresa Certificada",
     OWNERSHIP: "Propiedad",
     MAINTENANCE: "Mantenimiento",
-    VERIFICATION: "VerificaciÃ³n",
+    VERIFICATION: "Verificación",
   };
   return labels[type] || type;
 }

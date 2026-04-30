@@ -1,8 +1,8 @@
 /**
  * Use Case: Get Batch Job Details
  *
- * Obtiene los detalles completos de un batch job especÃ­fico,
- * incluyendo estadÃ­sticas de progreso y duraciÃ³n.
+ * Obtiene los detalles completos de un batch job específico,
+ * incluyendo estadísticas de progreso y duración.
  */
 
 import type { PrismaClient } from "@/generated/client/client";

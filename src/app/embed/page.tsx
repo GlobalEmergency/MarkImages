@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * /embed â€” Iframe snippet generator.
+ * /embed — Iframe snippet generator.
  *
  * Allows organizations, municipalities, and any third-party to
  * configure the embed options and copy the ready-to-use <iframe>
@@ -61,7 +61,7 @@ function buildSnippet(config: EmbedConfig): string {
   frameborder="0"
   allow="geolocation"
   style="border:none;border-radius:8px;"
-  title="Mapa de Desfibriladores (DEA) â€” ${city} | DeaMap"
+  title="Mapa de Desfibriladores (DEA) — ${city} | DeaMap"
   loading="lazy"
 ></iframe>`;
 }
@@ -131,7 +131,7 @@ export default function EmbedGeneratorPage() {
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Generador de Mapa Integrable</h1>
           <p className="text-gray-600 max-w-xl mx-auto">
-            Configura las opciones y copia el cÃ³digo&nbsp;
+            Configura las opciones y copia el código&nbsp;
             <code className="bg-gray-200 px-1.5 py-0.5 rounded text-sm">&lt;iframe&gt;</code> para
             incrustar un mapa de desfibriladores en tu web.
           </p>
@@ -140,7 +140,7 @@ export default function EmbedGeneratorPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* â”€â”€ Configuration panel â”€â”€ */}
           <section className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-5">
-            <h2 className="font-semibold text-gray-900 text-lg">ConfiguraciÃ³n</h2>
+            <h2 className="font-semibold text-gray-900 text-lg">Configuración</h2>
 
             {/* Filter mode */}
             <fieldset>
@@ -312,7 +312,7 @@ export default function EmbedGeneratorPage() {
             {/* Snippet */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold text-gray-900">CÃ³digo HTML</h2>
+                <h2 className="text-sm font-semibold text-gray-900">Código HTML</h2>
                 <button
                   id="embed-copy-button"
                   onClick={handleCopy}
@@ -350,7 +350,7 @@ export default function EmbedGeneratorPage() {
                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                       </svg>
-                      Copiar cÃ³digo
+                      Copiar código
                     </>
                   )}
                 </button>
@@ -370,7 +370,7 @@ export default function EmbedGeneratorPage() {
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline font-medium"
               >
-                MÃ¡s informaciÃ³n en deamap.es
+                Más información en deamap.es
               </a>
             </p>
           </section>

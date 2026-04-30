@@ -38,7 +38,7 @@ export default function RegisterForm() {
     setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      const errorMessage = "Las contraseÃ±as no coinciden";
+      const errorMessage = "Las contraseñas no coinciden";
       trackFormSubmit("register", false, errorMessage);
       setError(errorMessage);
       return;
@@ -108,7 +108,7 @@ export default function RegisterForm() {
 
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            ContraseÃ±a
+            Contraseña
           </label>
           <input
             id="password"
@@ -121,13 +121,13 @@ export default function RegisterForm() {
             placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
           />
           <p className="mt-1 text-xs text-gray-500">
-            MÃ­nimo 8 caracteres, incluye mayÃºsculas, minÃºsculas y nÃºmeros
+            Mínimo 8 caracteres, incluye mayúsculas, minúsculas y números
           </p>
         </div>
 
         <div>
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-            Confirmar ContraseÃ±a
+            Confirmar Contraseña
           </label>
           <input
             id="confirmPassword"
@@ -157,7 +157,7 @@ export default function RegisterForm() {
           className="text-blue-600 hover:text-blue-800 font-medium"
           onClick={() => trackAuthClick("login")}
         >
-          Inicia sesiÃ³n aquÃ­
+          Inicia sesión aquí
         </Link>
       </p>
     </div>

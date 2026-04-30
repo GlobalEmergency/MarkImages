@@ -404,7 +404,7 @@ export interface AedWithOrganizations {
 // ============================================
 
 export const ORGANIZATION_TYPE_LABELS: Record<OrganizationType, string> = {
-  CIVIL_PROTECTION: "ProtecciÃ³n Civil",
+  CIVIL_PROTECTION: "Protección Civil",
   CERTIFIED_COMPANY: "Empresa Certificada",
   VOLUNTEER_GROUP: "Grupo de Voluntarios",
   MUNICIPALITY: "Ayuntamiento",
@@ -429,23 +429,23 @@ export const MEMBER_ROLE_LABELS: Record<OrgMemberRole, string> = {
 };
 
 export const ASSIGNMENT_TYPE_LABELS: Record<AssignmentType, string> = {
-  CIVIL_PROTECTION: "ProtecciÃ³n Civil",
+  CIVIL_PROTECTION: "Protección Civil",
   CERTIFIED_COMPANY: "Empresa Certificada",
   OWNERSHIP: "Propiedad",
   MAINTENANCE: "Mantenimiento",
-  VERIFICATION: "VerificaciÃ³n",
+  VERIFICATION: "Verificación",
 };
 
 export const VERIFICATION_TYPE_LABELS: Record<VerificationType, string> = {
-  INFORMAL: "VerificaciÃ³n Informal",
-  OFFICIAL: "CertificaciÃ³n Oficial",
+  INFORMAL: "Verificación Informal",
+  OFFICIAL: "Certificación Oficial",
   SELF_REPORTED: "Auto-reportado",
-  FIELD_INSPECTION: "InspecciÃ³n de Campo",
+  FIELD_INSPECTION: "Inspección de Campo",
 };
 
 export const PROPOSAL_CHANGE_TYPE_LABELS: Record<ProposalChangeType, string> = {
   UPDATE_SCHEDULE: "Actualizar Horarios",
-  UPDATE_LOCATION: "Corregir UbicaciÃ³n",
+  UPDATE_LOCATION: "Corregir Ubicación",
   ADD_PHOTOS: "Agregar Fotos",
   UPDATE_ACCESS: "Actualizar Acceso",
   REPORT_ISSUE: "Reportar Problema",

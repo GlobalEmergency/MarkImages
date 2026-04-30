@@ -104,7 +104,7 @@ export function ClusterMarker({ cluster, onClusterClick }: ClusterMarkerProps) {
       position={[cluster.center.lat, cluster.center.lng]}
       icon={getClusterIcon(cluster.count)}
       alt={`Grupo de ${cluster.count} desfibriladores`}
-      title={`${cluster.count} desfibriladores â€” clic para ampliar`}
+      title={`${cluster.count} desfibriladores — clic para ampliar`}
       eventHandlers={{
         click: () => onClusterClick?.(cluster),
       }}

@@ -31,7 +31,7 @@ export class ColumnMapping {
 
   /**
    * Determina si el mapeo es suficientemente confiable
-   * para sugerirlo automÃ¡ticamente
+   * para sugerirlo automáticamente
    */
   isConfident(): boolean {
     return this.confidence >= 0.7;
@@ -52,7 +52,7 @@ export class ColumnMapping {
   }
 
   /**
-   * Intenta sugerir un mapeo automÃ¡tico basado en similitud de nombres
+   * Intenta sugerir un mapeo automático basado en similitud de nombres
    * ALGORITMO MEJORADO con keywords expandidas y pattern matching
    */
   static autoSuggest(
@@ -111,7 +111,7 @@ export class ColumnMapping {
     // Calcular similitud con key
     const keyScore = this.calculateSimilarity(normalizedCsvColumn, normalizedFieldKey);
 
-    // Retornar la mejor puntuaciÃ³n
+    // Retornar la mejor puntuación
     return Math.max(labelScore, keyScore);
   }
 
@@ -147,7 +147,7 @@ export class ColumnMapping {
       // La keyword contiene la columna
       if (normalizedKeyword.includes(normalizedCsvColumn)) {
         const score = normalizedCsvColumn.length / normalizedKeyword.length;
-        maxScore = Math.max(maxScore, score * 0.85); // 85% si estÃ¡ contenida
+        maxScore = Math.max(maxScore, score * 0.85); // 85% si está contenida
         continue;
       }
 
@@ -162,7 +162,7 @@ export class ColumnMapping {
   }
 
   /**
-   * Calcula score basÃ¡ndose en patrones de datos (NUEVO)
+   * Calcula score basándose en patrones de datos (NUEVO)
    * Analiza una muestra de datos para inferir el tipo de campo
    */
   private static calculateDataPatternScore(sampleData: string[], field: FieldDefinition): number {
@@ -170,7 +170,7 @@ export class ColumnMapping {
       return 0;
     }
 
-    // Filtrar valores vacÃ­os
+    // Filtrar valores vacíos
     const validSamples = sampleData.filter((val) => val && val.trim().length > 0);
     if (validSamples.length === 0) {
       return 0;
@@ -213,7 +213,7 @@ export class ColumnMapping {
           break;
 
         case "string":
-          // Para strings, verificar patrones especÃ­ficos basados en el key
+          // Para strings, verificar patrones específicos basados en el key
           if (this.isStringPatternMatch(trimmedSample, field.key)) {
             matchCount++;
           }
@@ -226,7 +226,7 @@ export class ColumnMapping {
   }
 
   /**
-   * Patrones de validaciÃ³n por tipo
+   * Patrones de validación por tipo
    */
   private static isEmailPattern(value: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -243,14 +243,14 @@ export class ColumnMapping {
   }
 
   private static isNumberPattern(value: string): boolean {
-    // NÃºmeros decimales con punto o coma
+    // Números decimales con punto o coma
     const numberRegex = /^-?\d+([.,]\d+)?$/;
     return numberRegex.test(value);
   }
 
   private static isBooleanPattern(value: string): boolean {
     const normalized = value.toLowerCase();
-    return ["si", "sÃ­", "no", "yes", "true", "false", "1", "0"].includes(normalized);
+    return ["si", "sí", "no", "yes", "true", "false", "1", "0"].includes(normalized);
   }
 
   private static isDatePattern(value: string): boolean {
@@ -264,9 +264,9 @@ export class ColumnMapping {
   }
 
   private static isStringPatternMatch(value: string, fieldKey: string): boolean {
-    // Patrones especÃ­ficos por campo
+    // Patrones específicos por campo
     if (fieldKey === "postalCode") {
-      return /^\d{5}$/.test(value); // 5 dÃ­gitos
+      return /^\d{5}$/.test(value); // 5 dígitos
     }
 
     if (fieldKey === "latitude" || fieldKey === "longitude") {
@@ -274,7 +274,7 @@ export class ColumnMapping {
     }
 
     if (fieldKey.includes("phone") || fieldKey.includes("Phone")) {
-      return /[\d\s+\-()]{7,}/.test(value); // TelÃ©fonos
+      return /[\d\s+\-()]{7,}/.test(value); // Teléfonos
     }
 
     if (
@@ -287,23 +287,23 @@ export class ColumnMapping {
     }
 
     if (fieldKey === "district" || fieldKey === "districtName") {
-      // Distritos de Madrid suelen tener formatos especÃ­ficos
-      return /^\d{1,2}\.?\s?[A-Za-zÃ-Ãº\s]+$/.test(value) || /^[A-Za-zÃ-Ãº\s]+$/.test(value);
+      // Distritos de Madrid suelen tener formatos específicos
+      return /^\d{1,2}\.?\s?[A-Za-zÁ-ú\s]+$/.test(value) || /^[A-Za-zÁ-ú\s]+$/.test(value);
     }
 
-    // Por defecto, aceptar cualquier string no vacÃ­o
+    // Por defecto, aceptar cualquier string no vacío
     return value.length > 0;
   }
 
   /**
-   * Normaliza un nombre de columna para comparaciÃ³n
+   * Normaliza un nombre de columna para comparación
    */
   private static normalizeColumnName(name: string): string {
     return name
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "") // Eliminar acentos
-      .replace(/[^a-z0-9]/g, "") // Solo letras y nÃºmeros
+      .replace(/[^a-z0-9]/g, "") // Solo letras y números
       .trim();
   }
 
@@ -360,7 +360,7 @@ export class ColumnMapping {
   }
 
   /**
-   * Convierte a objeto plano para serializaciÃ³n
+   * Convierte a objeto plano para serialización
    */
   toJSON(): {
     csvColumn: string;

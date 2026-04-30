@@ -42,7 +42,7 @@ export default function ExportHistoryTable({
     });
   };
 
-  // Formatear tamaÃ±o de archivo
+  // Formatear tamaño de archivo
   const formatFileSize = (bytes?: number | null): string => {
     if (!bytes) return "-";
     if (bytes < 1024) return `${bytes} B`;
@@ -57,9 +57,9 @@ export default function ExportHistoryTable({
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Package className="w-8 h-8 text-gray-400" />
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No hay exportaciones aÃºn</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No hay exportaciones aún</h3>
         <p className="text-sm text-gray-500 max-w-sm mx-auto">
-          Crea tu primera exportaciÃ³n para generar archivos CSV con los datos de los DEAs
+          Crea tu primera exportación para generar archivos CSV con los datos de los DEAs
         </p>
       </div>
     );
@@ -91,7 +91,7 @@ export default function ExportHistoryTable({
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Historial de Exportaciones</h2>
           <p className="text-sm text-gray-500 mt-1">
-            {batches.length} exportaciÃ³n{batches.length !== 1 ? "es" : ""}
+            {batches.length} exportación{batches.length !== 1 ? "es" : ""}
           </p>
         </div>
         <button

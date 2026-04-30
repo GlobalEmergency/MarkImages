@@ -42,7 +42,7 @@ export class GoogleGeocodingService implements IGeocodingService {
     this.apiKey = apiKey || process.env.GOOGLE_MAPS_API_KEY || "";
 
     if (this.apiKey) {
-      // Log que el servicio estÃ¡ configurado (sin mostrar la key completa)
+      // Log que el servicio está configurado (sin mostrar la key completa)
       const maskedKey =
         this.apiKey.substring(0, 8) + "..." + this.apiKey.substring(this.apiKey.length - 4);
       console.log(`[GoogleGeocodingService] Initialized with key: ${maskedKey}`);
@@ -60,7 +60,7 @@ export class GoogleGeocodingService implements IGeocodingService {
 
     try {
       // Validate address
-      if (!address || address.trim() === "" || address.trim() === "EspaÃ±a") {
+      if (!address || address.trim() === "" || address.trim() === "España") {
         return null;
       }
 
@@ -159,13 +159,13 @@ export class GoogleGeocodingService implements IGeocodingService {
     const district = getComponent("administrative_area_level_3");
     const neighborhood = getComponent("neighborhood") || getComponent("sublocality_level_1");
 
-    // Try to extract street type from route (e.g., "Calle de AlcalÃ¡" -> "Calle")
+    // Try to extract street type from route (e.g., "Calle de Alcalá" -> "Calle")
     let streetType: string | undefined;
     let streetName = route;
 
     if (route) {
       const streetTypeMatch = route.match(
-        /^(Calle|Avenida|Plaza|Paseo|Carrera|Camino|TravesÃ­a|Glorieta|Ronda|Costanilla|Carretera)\s+/i
+        /^(Calle|Avenida|Plaza|Paseo|Carrera|Camino|Travesía|Glorieta|Ronda|Costanilla|Carretera)\s+/i
       );
       if (streetTypeMatch) {
         streetType = streetTypeMatch[1];

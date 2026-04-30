@@ -1,9 +1,9 @@
 /**
  * AED Import Orchestrator (Application Service)
  *
- * Orquesta el flujo completo de validaciÃ³n e importaciÃ³n de AEDs.
- * Usa todos los servicios de dominio y aplicaciÃ³n de forma coordinada.
- * Este orchestrador es reutilizable tanto para validaciÃ³n previa como para importaciÃ³n real.
+ * Orquesta el flujo completo de validación e importación de AEDs.
+ * Usa todos los servicios de dominio y aplicación de forma coordinada.
+ * Este orchestrador es reutilizable tanto para validación previa como para importación real.
  */
 
 import {
@@ -43,7 +43,7 @@ export class AedImportOrchestrator {
   }
 
   /**
-   * Valida registros de un archivo CSV (usado para validaciÃ³n previa)
+   * Valida registros de un archivo CSV (usado para validación previa)
    * NO crea nada en BD, solo valida
    */
   async validateRecords(options: ValidationOptions): Promise<ValidationResult> {
@@ -67,7 +67,7 @@ export class AedImportOrchestrator {
             ValidationError.create({
               row: 0,
               errorType: "PROCESSING_ERROR",
-              message: "El archivo CSV estÃ¡ vacÃ­o",
+              message: "El archivo CSV está vacío",
               severity: "error",
             }),
           ],
@@ -105,7 +105,7 @@ export class AedImportOrchestrator {
       let skippedCount = 0;
       let warningCount = 0;
 
-      // LÃ­mites para preview
+      // Límites para preview
       const MAX_VALID_PREVIEW = 5;
       const MAX_INVALID_PREVIEW = 5;
       const MAX_SKIPPED_PREVIEW = 3;
@@ -114,7 +114,7 @@ export class AedImportOrchestrator {
       let skippedPreviewCount = 0;
 
       for (let i = 0; i < mappedRecords.length; i++) {
-        // Check timeout si estÃ¡ configurado
+        // Check timeout si está configurado
         if (checkTimeout && checkTimeout()) {
           break;
         }
@@ -185,7 +185,7 @@ export class AedImportOrchestrator {
           }
         } else if (!hasErrors) {
           validCount++;
-          // Capturar registro vÃ¡lido para preview
+          // Capturar registro válido para preview
           if (validPreviewCount < MAX_VALID_PREVIEW) {
             previewRecords.push({
               rowNumber: row,
@@ -200,7 +200,7 @@ export class AedImportOrchestrator {
         if (hasErrors) {
           invalidCount++;
           recordStatus = "invalid";
-          // Capturar registro invÃ¡lido para preview
+          // Capturar registro inválido para preview
           if (invalidPreviewCount < MAX_INVALID_PREVIEW && recordStatus === "invalid") {
             previewRecords.push({
               rowNumber: row,
@@ -242,7 +242,7 @@ export class AedImportOrchestrator {
           ValidationError.create({
             row: -1,
             errorType: "PROCESSING_ERROR",
-            message: error instanceof Error ? error.message : "Error desconocido en la validaciÃ³n",
+            message: error instanceof Error ? error.message : "Error desconocido en la validación",
             severity: "error",
           }),
         ],

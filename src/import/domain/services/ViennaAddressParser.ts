@@ -12,25 +12,25 @@
  *   "22., Wagramer StraÃŸe 17-19  <br>Donau-City TÃ¼rme"
  *
  * Produce:
- *   - name: parte tras <br> (nombre real de la ubicaciÃ³n)
+ *   - name: parte tras <br> (nombre real de la ubicación)
  *   - streetName: nombre de la calle
- *   - streetNumber: nÃºmero
- *   - district: cÃ³digo de distrito (ya disponible en BEZIRK, pero como fallback)
+ *   - streetNumber: número
+ *   - district: código de distrito (ya disponible en BEZIRK, pero como fallback)
  */
 
 import type { IFieldTransformer, TransformerResult } from "../ports/IFieldTransformer";
 
 /**
  * Regex para parsear el formato Wien ADRESSE:
- * - Grupo 1: distrito (nÃºmero con punto opcional)
+ * - Grupo 1: distrito (número con punto opcional)
  * - Grupo 2: nombre de la calle
- * - Grupo 3: nÃºmero (puede incluir rangos como "17-19" o sufijos como "4a")
+ * - Grupo 3: número (puede incluir rangos como "17-19" o sufijos como "4a")
  * - Grupo 4: nombre del sitio (tras <br>)
  */
 const WIEN_ADDRESS_RE = /^(\d{1,2})\.,\s*(.+?)\s+(\d+[\w/-]*)\s*(?:<br\s*\/?>)\s*(.+)$/i;
 
 /**
- * Fallback: solo distrito + resto <br> nombre (sin nÃºmero claro)
+ * Fallback: solo distrito + resto <br> nombre (sin número claro)
  */
 const WIEN_SIMPLE_RE = /^(\d{1,2})\.,\s*(.+?)\s*(?:<br\s*\/?>)\s*(.+)$/i;
 
@@ -75,13 +75,13 @@ export class ViennaAddressParser implements IFieldTransformer {
       return { fields, confidence: 0.8, rawValue: value };
     }
 
-    // No match â€” just clean HTML and use as name
+    // No match — just clean HTML and use as name
     fields.name = this.cleanHtml(input);
     return { fields, confidence: 0.3, rawValue: value };
   }
 
   private cleanHtml(text: string): string {
-    let cleaned = text.replace(/<br\s*\/?>/gi, " â€” ");
+    let cleaned = text.replace(/<br\s*\/?>/gi, " — ");
     // Loop to handle nested tags like <scr<script>ipt>
     while (/<[^>]+>/.test(cleaned)) {
       cleaned = cleaned.replace(/<[^>]+>/g, "");

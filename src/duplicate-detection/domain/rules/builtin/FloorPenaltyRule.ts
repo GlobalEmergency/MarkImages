@@ -1,5 +1,5 @@
 /**
- * FloorPenaltyRule â€” Penalty when both records have floor info but they differ
+ * FloorPenaltyRule — Penalty when both records have floor info but they differ
  *
  * Critical discriminant: same address + different floor = different unit.
  */
@@ -45,10 +45,10 @@ export class FloorPenaltyRule implements ScoringRule {
       maxPoints: this.maxPoints,
       matched: different,
       reason: !bothPresent
-        ? "One or both floors empty â†’ no penalty"
+        ? "One or both floors empty → no penalty"
         : different
-          ? `Floor "${input.normalizedFloor}" != "${candidate.normalized_floor}" â†’ ${this.maxPoints}pts`
-          : `Floor "${input.normalizedFloor}" matches â†’ no penalty`,
+          ? `Floor "${input.normalizedFloor}" != "${candidate.normalized_floor}" → ${this.maxPoints}pts`
+          : `Floor "${input.normalizedFloor}" matches → no penalty`,
       inputValue: input.normalizedFloor || "(empty)",
       candidateValue: candidate.normalized_floor || "(empty)",
     };

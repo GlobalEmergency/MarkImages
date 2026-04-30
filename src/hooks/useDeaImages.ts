@@ -173,7 +173,7 @@ async function uploadFileLegacy(file: File): Promise<string> {
 /**
  * Hook that manages multi-image selection, preview, and batch upload to S3.
  *
- * SRP: Only responsible for image lifecycle (select â†’ compress â†’ preview â†’ upload â†’ remove).
+ * SRP: Only responsible for image lifecycle (select → compress → preview → upload → remove).
  * Does NOT know about forms or AED creation.
  *
  * Upload strategy:

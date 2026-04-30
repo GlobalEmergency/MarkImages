@@ -2,7 +2,7 @@
  * Simple in-memory rate limiter for API endpoints.
  *
  * Uses a sliding window approach per IP address.
- * Not shared across serverless instances â€” acceptable for basic brute-force protection.
+ * Not shared across serverless instances — acceptable for basic brute-force protection.
  * For production-grade rate limiting, consider Redis-backed solutions.
  */
 
@@ -72,7 +72,7 @@ export function createRateLimiter(name: string, config: RateLimitConfig) {
     if (entry.count >= config.maxRequests) {
       const retryAfterSeconds = Math.ceil((entry.resetAt - now) / 1000);
       return NextResponse.json(
-        { error: "Demasiadas solicitudes. IntÃ©ntelo mÃ¡s tarde." },
+        { error: "Demasiadas solicitudes. Inténtelo más tarde." },
         {
           status: 429,
           headers: {

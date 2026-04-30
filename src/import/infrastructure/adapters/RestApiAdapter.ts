@@ -1,14 +1,14 @@
 /**
- * Adapter: REST API genÃ©rico con paginaciÃ³n configurable
+ * Adapter: REST API genérico con paginación configurable
  * Capa de Infraestructura - Implementa IDataSourceAdapter para APIs REST
  *
- * Soporta tres estrategias de paginaciÃ³n:
+ * Soporta tres estrategias de paginación:
  * - offset: ?offset=100&limit=50 (CKAN, OpenDataSoft)
  * - page: ?page=3&per_page=50 (APIs REST comunes)
  * - cursor: ?cursor=abc123&limit=50 (APIs modernas)
- * - none: sin paginaciÃ³n (respuesta completa en un request)
+ * - none: sin paginación (respuesta completa en un request)
  *
- * Los nombres de parÃ¡metros son configurables para adaptarse a cualquier API.
+ * Los nombres de parámetros son configurables para adaptarse a cualquier API.
  */
 
 import type {
@@ -99,7 +99,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
           field: "apiEndpoint",
           value: config.apiEndpoint,
           severity: "CRITICAL",
-          message: "El endpoint de la API no es una URL vÃ¡lida",
+          message: "El endpoint de la API no es una URL válida",
         });
       }
     }
@@ -112,7 +112,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
           field: "pagination.strategy",
           value: config.pagination.strategy,
           severity: "ERROR",
-          message: `Estrategia de paginaciÃ³n invÃ¡lida. Valores permitidos: ${validStrategies.join(", ")}`,
+          message: `Estrategia de paginación inválida. Valores permitidos: ${validStrategies.join(", ")}`,
         });
       }
 
@@ -122,7 +122,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
           field: "pagination.cursorResponsePath",
           value: "",
           severity: "WARNING",
-          message: "Para paginaciÃ³n por cursor, se recomienda especificar cursorResponsePath",
+          message: "Para paginación por cursor, se recomienda especificar cursorResponsePath",
         });
       }
     }
@@ -166,7 +166,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
       if (validation.hasCriticalErrors()) {
         return {
           success: false,
-          message: validation.criticalErrors[0]?.message || "Error de validaciÃ³n",
+          message: validation.criticalErrors[0]?.message || "Error de validación",
         };
       }
 
@@ -192,7 +192,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
 
       return {
         success: true,
-        message: `ConexiÃ³n exitosa. ${recordCount} registros disponibles.`,
+        message: `Conexión exitosa. ${recordCount} registros disponibles.`,
         recordCount,
         sampleFields,
         responseTimeMs: Date.now() - startTime,
@@ -200,7 +200,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
     } catch (error) {
       return {
         success: false,
-        message: `Error de conexiÃ³n: ${error instanceof Error ? error.message : "Error desconocido"}`,
+        message: `Error de conexión: ${error instanceof Error ? error.message : "Error desconocido"}`,
         responseTimeMs: Date.now() - startTime,
       };
     }
@@ -428,7 +428,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
   }
 
   /**
-   * Extrae registros de la respuesta usando responseDataPath o auto-detecciÃ³n
+   * Extrae registros de la respuesta usando responseDataPath o auto-detección
    */
   private extractRecords(data: unknown, responseDataPath?: string): Record<string, unknown>[] {
     if (Array.isArray(data)) return data;
@@ -495,7 +495,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
   }
 
   /**
-   * Determina si hay mÃ¡s pÃ¡ginas basÃ¡ndose en la config y los datos
+   * Determina si hay más páginas basándose en la config y los datos
    */
   private checkHasMore(
     data: unknown,

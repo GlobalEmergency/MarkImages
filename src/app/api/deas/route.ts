@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
 
       if (organizationId && !allowedOrgIds.includes(organizationId)) {
         return NextResponse.json(
-          { success: false, error: "No tienes acceso a esta organizaciÃ³n" },
+          { success: false, error: "No tienes acceso a esta organización" },
           { status: 403 }
         );
       }
@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
           id: aed.id,
           name: aed.name,
           code: aed.code,
-          address: addressParts.join(" ") || "Sin direcciÃ³n",
+          address: addressParts.join(" ") || "Sin dirección",
           city: loc?.city_name || null,
           district: loc?.district_name || null,
           postal_code: loc?.postal_code || null,
@@ -269,7 +269,7 @@ export async function GET(request: NextRequest) {
           id: assignment.aed.id,
           name: assignment.aed.name,
           code: assignment.aed.code,
-          address: addressParts.join(" ") || "Sin direcciÃ³n",
+          address: addressParts.join(" ") || "Sin dirección",
           city: loc?.city_name || null,
           district: loc?.district_name || null,
           postal_code: loc?.postal_code || null,

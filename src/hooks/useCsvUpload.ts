@@ -1,5 +1,5 @@
 /**
- * Hook para gestionar upload de archivos CSV y creaciÃ³n de batch de importaciÃ³n
+ * Hook para gestionar upload de archivos CSV y creación de batch de importación
  */
 
 import { useState } from "react";
@@ -33,7 +33,7 @@ export function useCsvUpload() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Error al iniciar importaciÃ³n");
+        throw new Error(data.error || "Error al iniciar importación");
       }
 
       setState({ uploading: false, error: null, batchId: data.batchId });

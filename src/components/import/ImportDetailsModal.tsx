@@ -1,5 +1,5 @@
 /**
- * Modal que muestra detalles completos de una importaciÃ³n
+ * Modal que muestra detalles completos de una importación
  */
 
 "use client";
@@ -50,7 +50,7 @@ const severityConfig: Record<ErrorSeverity, { icon: typeof Info; color: string; 
   CRITICAL: {
     icon: AlertTriangle,
     color: "text-purple-600 bg-purple-50",
-    label: "CrÃ­tico",
+    label: "Crítico",
   },
 };
 
@@ -64,7 +64,7 @@ export default function ImportDetailsModal({ batchId, isOpen, onClose }: ImportD
     batch?.batch.status &&
     ["IN_PROGRESS", "PENDING", "INTERRUPTED", "RESUMING"].includes(batch.batch.status);
 
-  // Manejar cancelaciÃ³n
+  // Manejar cancelación
   const handleCancelClick = () => {
     setShowCancelConfirm(true);
   };
@@ -88,7 +88,7 @@ export default function ImportDetailsModal({ batchId, isOpen, onClose }: ImportD
     setShowCancelConfirm(false);
   };
 
-  // FunciÃ³n para descargar errores como CSV
+  // Función para descargar errores como CSV
   const downloadErrorsLog = () => {
     if (errors.length === 0) {
       toast.error("No hay errores para descargar");
@@ -142,7 +142,7 @@ export default function ImportDetailsModal({ batchId, isOpen, onClose }: ImportD
           {/* Header */}
           <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Detalles de ImportaciÃ³n</h2>
+              <h2 className="text-xl font-bold text-gray-900">Detalles de Importación</h2>
               {batch && <p className="text-sm text-gray-500 mt-1">{batch.batch.name}</p>}
             </div>
             <button
@@ -193,7 +193,7 @@ export default function ImportDetailsModal({ batchId, isOpen, onClose }: ImportD
                   </div>
                 </div>
 
-                {/* EstadÃ­sticas */}
+                {/* Estadísticas */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="bg-blue-50 rounded-xl p-4">
                     <p className="text-sm text-blue-600 mb-1">Total</p>
@@ -217,7 +217,7 @@ export default function ImportDetailsModal({ batchId, isOpen, onClose }: ImportD
                   </div>
 
                   <div className="bg-purple-50 rounded-xl p-4">
-                    <p className="text-sm text-purple-600 mb-1">DuraciÃ³n</p>
+                    <p className="text-sm text-purple-600 mb-1">Duración</p>
                     <p className="text-2xl font-bold text-purple-900 flex items-center">
                       <Clock className="w-5 h-5 mr-2" />
                       {batch.stats.durationSeconds
@@ -282,7 +282,7 @@ export default function ImportDetailsModal({ batchId, isOpen, onClose }: ImportD
                     <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                       <CheckCircle className="w-8 h-8 text-green-600" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">ImportaciÃ³n Exitosa</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Importación Exitosa</h3>
                     <p className="text-sm text-gray-500">
                       Todos los registros se importaron correctamente
                     </p>
@@ -294,7 +294,7 @@ export default function ImportDetailsModal({ batchId, isOpen, onClose }: ImportD
 
           {/* Footer */}
           <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-between items-center">
-            {/* BotÃ³n cancelar importaciÃ³n - solo visible si se puede cancelar */}
+            {/* Botón cancelar importación - solo visible si se puede cancelar */}
             {canCancel && (
               <button
                 onClick={handleCancelClick}
@@ -302,11 +302,11 @@ export default function ImportDetailsModal({ batchId, isOpen, onClose }: ImportD
                 className="flex items-center space-x-2 px-6 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Ban className="w-4 h-4" />
-                <span>{cancelling ? "Cancelando..." : "Cancelar ImportaciÃ³n"}</span>
+                <span>{cancelling ? "Cancelando..." : "Cancelar Importación"}</span>
               </button>
             )}
 
-            {/* Espaciador si no hay botÃ³n de cancelar */}
+            {/* Espaciador si no hay botón de cancelar */}
             {!canCancel && <div />}
 
             <button
@@ -319,7 +319,7 @@ export default function ImportDetailsModal({ batchId, isOpen, onClose }: ImportD
         </div>
       </div>
 
-      {/* Modal de confirmaciÃ³n para cancelar */}
+      {/* Modal de confirmación para cancelar */}
       {showCancelConfirm && (
         <div className="fixed inset-0 z-[60] overflow-y-auto">
           <div
@@ -334,11 +334,11 @@ export default function ImportDetailsModal({ batchId, isOpen, onClose }: ImportD
                   <Ban className="w-6 h-6 text-red-600" />
                 </div>
 
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Â¿Cancelar importaciÃ³n?</h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Â¿Cancelar importación?</h3>
 
                 <p className="text-sm text-gray-600 mb-6">
-                  Esta acciÃ³n detendrÃ¡ la importaciÃ³n actual. Los registros ya procesados se
-                  mantendrÃ¡n, pero el resto no se importarÃ¡. Â¿EstÃ¡s seguro?
+                  Esta acción detendrá la importación actual. Los registros ya procesados se
+                  mantendrán, pero el resto no se importará. Â¿Estás seguro?
                 </p>
 
                 <div className="flex space-x-3">
@@ -355,7 +355,7 @@ export default function ImportDetailsModal({ batchId, isOpen, onClose }: ImportD
                     disabled={cancelling}
                     className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
                   >
-                    {cancelling ? "Cancelando..." : "SÃ­, cancelar"}
+                    {cancelling ? "Cancelando..." : "Sí, cancelar"}
                   </button>
                 </div>
               </div>

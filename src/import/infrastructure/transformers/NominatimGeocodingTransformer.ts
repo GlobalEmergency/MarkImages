@@ -1,21 +1,21 @@
 /**
- * Transformer: GeocodificaciÃ³n de direcciones vÃ­a Nominatim (Docker HTTP)
+ * Transformer: Geocodificación de direcciones vía Nominatim (Docker HTTP)
  * Capa de Infraestructura
  *
  * Llama al servicio mediagis/nominatim en Docker para geocodificar direcciones
- * espaÃ±olas en coordenadas (latitude, longitude) y cÃ³digo postal.
+ * españolas en coordenadas (latitude, longitude) y código postal.
  *
- * A diferencia de LibpostalAddressTransformer (que parsea UNA direcciÃ³n en campos),
- * este transformer COMPONE una direcciÃ³n desde campos ya mapeados (vÃ­a context)
+ * A diferencia de LibpostalAddressTransformer (que parsea UNA dirección en campos),
+ * este transformer COMPONE una dirección desde campos ya mapeados (vía context)
  * y la geocodifica.
  *
  * Resiliencia:
- * - Circuit breaker: si el servicio no estÃ¡ disponible, retorna confidence 0
+ * - Circuit breaker: si el servicio no está disponible, retorna confidence 0
  *   durante CIRCUIT_BREAKER_COOLDOWN_MS (fallback a datos sin coordenadas)
  * - Rate limiting: MIN_REQUEST_INTERVAL_MS entre peticiones para no saturar
  * - Dual query: structured query primero, free-form como fallback
  *
- * ConfiguraciÃ³n vÃ­a env vars:
+ * Configuración vía env vars:
  * - NOMINATIM_HOST: hostname del servicio (default: "127.0.0.1")
  * - NOMINATIM_PORT: puerto HTTP (default: "8080")
  */
@@ -24,7 +24,7 @@ import type { IFieldTransformer, TransformerResult } from "@/import/domain/ports
 
 const NOMINATIM_HOST = process.env.NOMINATIM_HOST || "127.0.0.1";
 const NOMINATIM_PORT = process.env.NOMINATIM_PORT || "8080";
-const NOMINATIM_TIMEOUT_MS = 5_000; // Geocoding puede ser mÃ¡s lento que parsing
+const NOMINATIM_TIMEOUT_MS = 5_000; // Geocoding puede ser más lento que parsing
 const CIRCUIT_BREAKER_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutos
 const MIN_REQUEST_INTERVAL_MS = 100; // 10 req/s para self-hosted
 
@@ -61,12 +61,12 @@ export class NominatimGeocodingTransformer implements IFieldTransformer {
     value: string,
     context?: Record<string, string | null>
   ): Promise<TransformerResult> {
-    // Circuit breaker: si el servicio estÃ¡ caÃ­do, no intentar durante el cooldown
+    // Circuit breaker: si el servicio está caído, no intentar durante el cooldown
     if (this.isCircuitOpen()) {
       return { fields: {}, confidence: 0, rawValue: value };
     }
 
-    // Componer direcciÃ³n desde contexto (campos ya mapeados) o valor directo
+    // Componer dirección desde contexto (campos ya mapeados) o valor directo
     const address = this.composeAddress(value, context);
     if (!address) {
       return { fields: {}, confidence: 0, rawValue: value };
@@ -89,7 +89,7 @@ export class NominatimGeocodingTransformer implements IFieldTransformer {
         return { fields: {}, confidence: 0, rawValue: address };
       }
 
-      // Primera llamada exitosa â†’ log disponibilidad
+      // Primera llamada exitosa → log disponibilidad
       if (!this.hasLoggedAvailability) {
         this.hasLoggedAvailability = true;
         this.hasLoggedUnavailability = false;
@@ -97,7 +97,7 @@ export class NominatimGeocodingTransformer implements IFieldTransformer {
 
       return this.buildResult(result, address, context);
     } catch (error) {
-      // Service unavailable â†’ abrir circuit breaker
+      // Service unavailable → abrir circuit breaker
       console.error(
         `âŒ nominatim-geocode: error al geocodificar "${address}":`,
         error instanceof Error ? error.message : error
@@ -112,11 +112,11 @@ export class NominatimGeocodingTransformer implements IFieldTransformer {
   // ============================================================
 
   /**
-   * Compone una direcciÃ³n completa desde los campos del contexto.
+   * Compone una dirección completa desde los campos del contexto.
    * El contexto contiene los valores ya mapeados: streetType, streetName,
    * streetNumber, city, district (provincia).
    *
-   * Ej: "CALLE LAGAR, SAELICES DE MAYORGA, VALLADOLID, EspaÃ±a"
+   * Ej: "CALLE LAGAR, SAELICES DE MAYORGA, VALLADOLID, España"
    */
   private composeAddress(value: string, context?: Record<string, string | null>): string | null {
     if (!context) return value || null;
@@ -134,7 +134,7 @@ export class NominatimGeocodingTransformer implements IFieldTransformer {
 
     const parts: string[] = [];
 
-    // Calle: "CALLE LAGAR 5" o "CALLE LAGAR" (sin nÃºmero)
+    // Calle: "CALLE LAGAR 5" o "CALLE LAGAR" (sin número)
     const streetParts = [streetType, streetName, streetNumber].filter(Boolean);
     if (streetParts.length > 0) {
       parts.push(streetParts.join(" "));
@@ -142,14 +142,14 @@ export class NominatimGeocodingTransformer implements IFieldTransformer {
 
     if (city) parts.push(city);
     if (district) parts.push(district);
-    parts.push("EspaÃ±a");
+    parts.push("España");
 
     return parts.join(", ");
   }
 
   /**
-   * Normaliza el nÃºmero de calle.
-   * CyL usa "0" para sin nÃºmero; lo filtramos para no confundir a Nominatim.
+   * Normaliza el número de calle.
+   * CyL usa "0" para sin número; lo filtramos para no confundir a Nominatim.
    */
   private normalizeStreetNumber(num: string | null | undefined): string {
     if (!num || num === "0" || num === "S/N" || num.toUpperCase() === "SN") {
@@ -163,8 +163,8 @@ export class NominatimGeocodingTransformer implements IFieldTransformer {
   // ============================================================
 
   /**
-   * Query estructurada: usa campos separados para mejor precisiÃ³n.
-   * Ideal para fuentes con campos ya desglosados (CyL, CataluÃ±a).
+   * Query estructurada: usa campos separados para mejor precisión.
+   * Ideal para fuentes con campos ya desglosados (CyL, Cataluña).
    */
   private async callNominatimStructured(
     context?: Record<string, string | null>
@@ -192,7 +192,7 @@ export class NominatimGeocodingTransformer implements IFieldTransformer {
     if (street) params.set("street", street);
     if (city) params.set("city", city);
     if (district) params.set("state", district);
-    params.set("country", "EspaÃ±a");
+    params.set("country", "España");
 
     const url = `http://${NOMINATIM_HOST}:${NOMINATIM_PORT}/search?${params.toString()}`;
 
@@ -209,7 +209,7 @@ export class NominatimGeocodingTransformer implements IFieldTransformer {
   }
 
   /**
-   * Query libre: envÃ­a la direcciÃ³n completa como texto.
+   * Query libre: envía la dirección completa como texto.
    * Fallback cuando la query estructurada no da resultados.
    */
   private async callNominatimFreeForm(address: string): Promise<NominatimResult | null> {
@@ -253,7 +253,7 @@ export class NominatimGeocodingTransformer implements IFieldTransformer {
       longitude: nominatim.lon,
     };
 
-    // Extraer cÃ³digo postal si estÃ¡ disponible y no lo tenemos ya
+    // Extraer código postal si está disponible y no lo tenemos ya
     const postcode = nominatim.address?.postcode;
     if (postcode && !context?.postalCode) {
       fields.postalCode = postcode;
@@ -265,7 +265,7 @@ export class NominatimGeocodingTransformer implements IFieldTransformer {
   }
 
   /**
-   * Calcula la confianza del resultado basÃ¡ndose en la calidad del match.
+   * Calcula la confianza del resultado basándose en la calidad del match.
    */
   private calculateConfidence(
     result: NominatimResult,
@@ -273,7 +273,7 @@ export class NominatimGeocodingTransformer implements IFieldTransformer {
   ): number {
     let confidence = 0.5; // Base: tenemos coordenadas
 
-    // Bonus por cÃ³digo postal
+    // Bonus por código postal
     if (result.address?.postcode) {
       confidence += 0.1;
     }
@@ -325,7 +325,7 @@ export class NominatimGeocodingTransformer implements IFieldTransformer {
 
   /**
    * Comprueba si el circuit breaker sigue abierto.
-   * Se cierra automÃ¡ticamente tras el cooldown para reintentar.
+   * Se cierra automáticamente tras el cooldown para reintentar.
    */
   private isCircuitOpen(): boolean {
     if (!this.circuitOpen) return false;
@@ -346,7 +346,7 @@ export class NominatimGeocodingTransformer implements IFieldTransformer {
 
   /**
    * Throttle: espera hasta que haya pasado MIN_REQUEST_INTERVAL_MS
-   * desde la Ãºltima peticiÃ³n. Evita saturar Nominatim.
+   * desde la última petición. Evita saturar Nominatim.
    */
   private async throttle(): Promise<void> {
     const elapsed = Date.now() - this.lastRequestTime;

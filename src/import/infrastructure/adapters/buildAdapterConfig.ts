@@ -1,20 +1,20 @@
 /**
- * Utilidad para construir configuraciÃ³n de adaptadores de fuentes de datos
+ * Utilidad para construir configuración de adaptadores de fuentes de datos
  * Capa de Infraestructura - Utilidad compartida
  *
- * Esta funciÃ³n normaliza la configuraciÃ³n almacenada en la BD para que sea
+ * Esta función normaliza la configuración almacenada en la BD para que sea
  * compatible con los adaptadores (CkanApiAdapter, JsonFileAdapter, RestApiAdapter, etc.)
  *
  * Soporta:
  * - JSON_FILE: URLs directas de archivos JSON (fileUrl + jsonPath)
  * - CKAN_API: URLs directas de JSON (apiEndpoint) o APIs tradicionales (baseUrl + resourceId)
- * - REST_API: APIs REST genÃ©ricas con paginaciÃ³n configurable (apiEndpoint + pagination)
+ * - REST_API: APIs REST genéricas con paginación configurable (apiEndpoint + pagination)
  */
 
 import type { DataSourceConfig, DataSourceType } from "@/import/domain/ports/IDataSourceAdapter";
 
 /**
- * Construye la configuraciÃ³n del adapter a partir de los datos almacenados
+ * Construye la configuración del adapter a partir de los datos almacenados
  * Mapea los campos del formulario a los esperados por el adapter
  */
 export function buildDataSourceConfig(
@@ -43,7 +43,7 @@ export function buildDataSourceConfig(
       ...baseConfig,
       fileUrl: cfg.fileUrl as string | undefined,
       jsonPath: cfg.jsonPath as string | undefined,
-      // TambiÃ©n soportar apiEndpoint como alternativa a fileUrl
+      // También soportar apiEndpoint como alternativa a fileUrl
       apiEndpoint: cfg.apiEndpoint as string | undefined,
     };
   }
@@ -97,6 +97,6 @@ export function buildDataSourceConfig(
     };
   }
 
-  // Para otros tipos, devolver la configuraciÃ³n base
+  // Para otros tipos, devolver la configuración base
   return baseConfig;
 }

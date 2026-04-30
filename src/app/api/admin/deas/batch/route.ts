@@ -20,14 +20,14 @@ export async function DELETE(request: NextRequest) {
 
     if (!Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json(
-        { success: false, error: "Se requiere un array de IDs no vacÃ­o" },
+        { success: false, error: "Se requiere un array de IDs no vacío" },
         { status: 400 }
       );
     }
 
     if (ids.length > MAX_BATCH_SIZE) {
       return NextResponse.json(
-        { success: false, error: `MÃ¡ximo ${MAX_BATCH_SIZE} DEAs por operaciÃ³n` },
+        { success: false, error: `Máximo ${MAX_BATCH_SIZE} DEAs por operación` },
         { status: 400 }
       );
     }

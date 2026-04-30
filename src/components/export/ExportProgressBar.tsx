@@ -11,7 +11,7 @@ interface ExportProgressBarProps {
 export default function ExportProgressBar({ batch }: ExportProgressBarProps) {
   const { status, totalRecords, successfulRecords } = batch;
 
-  // Si estÃ¡ completado, mostrar 100%
+  // Si está completado, mostrar 100%
   if (status === "COMPLETED") {
     return (
       <div className="w-full">
@@ -29,7 +29,7 @@ export default function ExportProgressBar({ batch }: ExportProgressBarProps) {
     );
   }
 
-  // Si estÃ¡ fallido
+  // Si está fallido
   if (status === "FAILED") {
     return (
       <div className="w-full">
@@ -44,7 +44,7 @@ export default function ExportProgressBar({ batch }: ExportProgressBarProps) {
     );
   }
 
-  // Si estÃ¡ cancelado
+  // Si está cancelado
   if (status === "CANCELLED") {
     return (
       <div className="w-full">

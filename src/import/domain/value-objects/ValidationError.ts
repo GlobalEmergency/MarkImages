@@ -1,7 +1,7 @@
 /**
  * Validation Error Value Object
  *
- * Representa un error de validaciÃ³n durante la importaciÃ³n de AEDs.
+ * Representa un error de validación durante la importación de AEDs.
  * Es inmutable y tipado para facilitar el manejo de errores.
  */
 

@@ -1,12 +1,12 @@
 /**
- * /embed/map â€” embeddable map page.
+ * /embed/map — embeddable map page.
  *
  * Accepted search params:
- *   city   â€” center on a Spanish city (geocoded server-side via Nominatim)
- *   lat    â€” latitude
- *   lng    â€” longitude
- *   zoom   â€” initial zoom level (default: 14)
- *   theme  â€” reserved for future use (light|dark, default: light)
+ *   city   — center on a Spanish city (geocoded server-side via Nominatim)
+ *   lat    — latitude
+ *   lng    — longitude
+ *   zoom   — initial zoom level (default: 14)
+ *   theme  — reserved for future use (light|dark, default: light)
  *
  * The map component is loaded dynamically with ssr:false because
  * Leaflet needs `window` (not available during server rendering).
@@ -70,9 +70,9 @@ async function geocodeCity(city: string): Promise<{ center: [number, number]; la
 
 export async function generateMetadata({ searchParams }: EmbedMapPageProps): Promise<Metadata> {
   const params = await searchParams;
-  const city = params.city ?? "EspaÃ±a";
+  const city = params.city ?? "España";
   return {
-    title: `Mapa de DEAs â€” ${city} | DeaMap`,
+    title: `Mapa de DEAs — ${city} | DeaMap`,
     robots: { index: false, follow: false },
   };
 }

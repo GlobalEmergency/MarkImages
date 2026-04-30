@@ -52,15 +52,15 @@ export class InternalGeocodingService implements IGeocodingService {
 
   constructor(baseUrl?: string) {
     // Permitir inyectar URL para testing (Dependency Injection)
-    // En servidor (batch jobs), usar localhost. En producciÃ³n, usar la URL del entorno.
+    // En servidor (batch jobs), usar localhost. En producción, usar la URL del entorno.
     this.baseUrl =
       baseUrl || process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT || 3000}`;
   }
 
   async geocodeAddress(address: string): Promise<GeocodingResult | null> {
     try {
-      // Validar que la direcciÃ³n no estÃ© vacÃ­a o sea solo "EspaÃ±a"
-      if (!address || address.trim() === "" || address.trim() === "EspaÃ±a") {
+      // Validar que la dirección no esté vacía o sea solo "España"
+      if (!address || address.trim() === "" || address.trim() === "España") {
         return null;
       }
 
@@ -78,7 +78,7 @@ export class InternalGeocodingService implements IGeocodingService {
         return null;
       }
 
-      // Tomar el primer resultado (el mÃ¡s relevante)
+      // Tomar el primer resultado (el más relevante)
       return this.mapToGeocodingResult(results[0]);
     } catch (error: unknown) {
       if (error instanceof Error) {

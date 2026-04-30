@@ -123,7 +123,7 @@ export default function LocationPickerMap({
         }}
       />
       <p style={{ marginTop: "8px", fontSize: "14px", color: "#666" }}>
-        Haz clic en el mapa para seleccionar la ubicaciÃ³n o arrastra el marcador
+        Haz clic en el mapa para seleccionar la ubicación o arrastra el marcador
       </p>
     </div>
   );

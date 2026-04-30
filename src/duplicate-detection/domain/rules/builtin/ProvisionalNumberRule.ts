@@ -1,5 +1,5 @@
 /**
- * ProvisionalNumberRule â€” Exact provisional number match
+ * ProvisionalNumberRule — Exact provisional number match
  */
 
 import type {
@@ -18,7 +18,7 @@ export class ProvisionalNumberRule implements ScoringRule {
   readonly category = "attribute" as const;
 
   toSqlCase(input: NormalizedInput, paramIndex: number): SqlFragment {
-    // Short-circuit when no input â€” avoid sending null param to SQL
+    // Short-circuit when no input — avoid sending null param to SQL
     if (!input.provisionalNumber || input.provisionalNumber <= 0) {
       return { sql: "0", params: [], nextParamIndex: paramIndex };
     }
@@ -51,12 +51,12 @@ export class ProvisionalNumberRule implements ScoringRule {
       maxPoints: this.maxPoints,
       matched,
       reason: !inputPresent
-        ? "Input has no provisional number â†’ 0pts"
+        ? "Input has no provisional number → 0pts"
         : !candidatePresent
-          ? "Candidate has no provisional number â†’ 0pts"
+          ? "Candidate has no provisional number → 0pts"
           : matched
-            ? `Provisional number ${inputVal} matches â†’ +${this.maxPoints}pts`
-            : `Provisional number ${inputVal} != ${candidateVal} â†’ 0pts`,
+            ? `Provisional number ${inputVal} matches → +${this.maxPoints}pts`
+            : `Provisional number ${inputVal} != ${candidateVal} → 0pts`,
       inputValue: inputPresent ? String(inputVal) : "(none)",
       candidateValue: candidatePresent ? String(candidateVal) : "(none)",
     };

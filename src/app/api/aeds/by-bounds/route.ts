@@ -6,7 +6,7 @@
  *
  * Arquitectura:
  * - Capa de Interfaces (este archivo): Recibe requests HTTP
- * - Capa de AplicaciÃ³n: Caso de uso GetAedsWithClustersUseCase
+ * - Capa de Aplicación: Caso de uso GetAedsWithClustersUseCase
  * - Capa de Dominio: Puerto IClusteringService
  * - Capa de Infraestructura: Adapter PostGISClusteringAdapter
  */
@@ -32,7 +32,7 @@ import { PostGISClusteringAdapter } from "@/clustering/infrastructure/adapters/P
  * Response:
  * - clusters[]: Agrupaciones de DEAs con centro, conteo y bounds
  * - markers[]: DEAs individuales con datos completos
- * - stats: EstadÃ­sticas de total, clustered e individual
+ * - stats: Estadísticas de total, clustered e individual
  */
 export async function GET(request: NextRequest) {
   try {
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
       ...getInternalCacheHeaders(request),
     };
 
-    // Server-Timing header: visible in browser DevTools â†’ Network â†’ Timing tab
+    // Server-Timing header: visible in browser DevTools → Network → Timing tab
     if (response.timing) {
       const { total_ms, cache_used } = response.timing;
       headers["Server-Timing"] =

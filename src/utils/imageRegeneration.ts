@@ -3,7 +3,7 @@
 /**
  * Client-side image regeneration utility.
  *
- * Re-applies crop â†’ blur â†’ arrow processing on a canvas from stored
+ * Re-applies crop → blur → arrow processing on a canvas from stored
  * parameters so the REVIEW step can display the processed result even
  * after a page reload (the base64 data URL is NOT persisted on the server
  * to avoid 413 payload errors on Vercel).
@@ -16,7 +16,7 @@ import { loadImageWithRetry } from "@/utils/imageLoader";
 
 /**
  * Regenerate a processed image from its original URL and processing params.
- * Applies crop â†’ blur â†’ arrow in sequence on an off-screen canvas.
+ * Applies crop → blur → arrow in sequence on an off-screen canvas.
  *
  * @returns data URL (image/jpeg) of the processed result
  */

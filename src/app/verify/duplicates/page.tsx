@@ -137,17 +137,17 @@ export default function DuplicatesPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                RevisiÃ³n de Posibles Duplicados
+                Revisión de Posibles Duplicados
               </h1>
               <p className="text-gray-600">
-                DEAs marcados como posibles duplicados durante la importaciÃ³n
+                DEAs marcados como posibles duplicados durante la importación
               </p>
             </div>
             <button
               onClick={() => router.push("/verify")}
               className="text-blue-600 hover:text-blue-700 font-medium"
             >
-              â† Volver a VerificaciÃ³n
+              â† Volver a Verificación
             </button>
           </div>
 
@@ -177,7 +177,7 @@ export default function DuplicatesPage() {
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">PÃ¡gina</p>
+                    <p className="text-sm text-gray-600">Página</p>
                     <p className="text-3xl font-bold text-gray-900">
                       {pagination.currentPage} / {pagination.totalPages}
                     </p>
@@ -216,7 +216,7 @@ export default function DuplicatesPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Score MÃ­nimo
+                    Score Mínimo
                   </label>
                   <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                     <option value="">Todos</option>
@@ -255,7 +255,7 @@ export default function DuplicatesPage() {
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               Â¡No hay posibles duplicados!
             </h3>
-            <p className="text-gray-600">Todos los DEAs estÃ¡n en buen estado</p>
+            <p className="text-gray-600">Todos los DEAs están en buen estado</p>
           </div>
         ) : (
           <>
@@ -295,7 +295,7 @@ export default function DuplicatesPage() {
                                 {dup.code ||
                                   (dup.provisional_number
                                     ? `#${dup.provisional_number}`
-                                    : "Sin cÃ³digo")}
+                                    : "Sin código")}
                               </p>
                             </div>
                             {score && (
@@ -315,7 +315,7 @@ export default function DuplicatesPage() {
                             )}
                             {dup.location && (
                               <p className="text-sm text-gray-700">
-                                <span className="font-medium">DirecciÃ³n:</span>{" "}
+                                <span className="font-medium">Dirección:</span>{" "}
                                 {dup.location.street_type} {dup.location.street_name}{" "}
                                 {dup.location.street_number}
                                 {dup.location.district_name && ` - ${dup.location.district_name}`}
@@ -338,7 +338,7 @@ export default function DuplicatesPage() {
                             onClick={() => router.push(`/verify/duplicates/${dup.id}`)}
                             className="w-full md:w-auto bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
                           >
-                            Revisar ComparaciÃ³n
+                            Revisar Comparación
                           </button>
                         </div>
                       </div>
@@ -361,7 +361,7 @@ export default function DuplicatesPage() {
 
                 <div className="flex items-center px-4 py-2 bg-white rounded-lg shadow-sm">
                   <span className="text-gray-700">
-                    PÃ¡gina {pagination.currentPage} de {pagination.totalPages}
+                    Página {pagination.currentPage} de {pagination.totalPages}
                   </span>
                 </div>
 
@@ -370,7 +370,7 @@ export default function DuplicatesPage() {
                   disabled={!pagination.hasNextPage}
                   className="px-4 py-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 transition-colors"
                 >
-                  Siguiente â†’
+                  Siguiente →
                 </button>
               </div>
             )}

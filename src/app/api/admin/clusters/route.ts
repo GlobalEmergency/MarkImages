@@ -5,9 +5,9 @@
  *
  * GET: Get cache metadata + per-zoom stats
  * POST: Chunked regeneration (each call processes one zoom level, ~3-5s)
- *   - { action: "start" } â†’ Clears cache, returns zoom levels to process
- *   - { action: "process", zoomLevel: N } â†’ Processes one zoom level
- *   - { action: "finalize", totalAeds, totalClusters, totalDurationMs } â†’ Records metadata
+ *   - { action: "start" } → Clears cache, returns zoom levels to process
+ *   - { action: "process", zoomLevel: N } → Processes one zoom level
+ *   - { action: "finalize", totalAeds, totalClusters, totalDurationMs } → Records metadata
  */
 
 import { NextRequest, NextResponse } from "next/server";

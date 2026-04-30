@@ -56,7 +56,7 @@ export interface DataSourceFilters {
 }
 
 /**
- * Opciones de paginaciÃ³n
+ * Opciones de paginación
  */
 export interface PaginationOptions {
   page?: number;
@@ -77,7 +77,7 @@ export interface PaginatedResult<T> {
 }
 
 /**
- * Resumen de estadÃ­sticas de una fuente de datos
+ * Resumen de estadísticas de una fuente de datos
  */
 export interface DataSourceStats {
   totalSyncs: number;
@@ -90,7 +90,7 @@ export interface DataSourceStats {
 
 /**
  * Puerto: Repositorio de fuentes de datos
- * ImplementaciÃ³n: PrismaDataSourceRepository
+ * Implementación: PrismaDataSourceRepository
  */
 export interface IDataSourceRepository {
   /**
@@ -118,10 +118,10 @@ export interface IDataSourceRepository {
   findByName(name: string): Promise<ExternalDataSourceConfig | null>;
 
   /**
-   * Lista fuentes de datos con filtros y paginaciÃ³n
+   * Lista fuentes de datos con filtros y paginación
    *
    * @param filters Filtros opcionales
-   * @param pagination Opciones de paginaciÃ³n
+   * @param pagination Opciones de paginación
    * @returns Resultado paginado
    */
   findAll(
@@ -145,7 +145,7 @@ export interface IDataSourceRepository {
   delete(id: string): Promise<void>;
 
   /**
-   * Actualiza la fecha del Ãºltimo sync
+   * Actualiza la fecha del último sync
    *
    * @param id ID de la fuente
    * @param syncedAt Fecha del sync
@@ -153,10 +153,10 @@ export interface IDataSourceRepository {
   updateLastSync(id: string, syncedAt: Date): Promise<void>;
 
   /**
-   * Actualiza la fecha del prÃ³ximo sync programado
+   * Actualiza la fecha del próximo sync programado
    *
    * @param id ID de la fuente
-   * @param nextSyncAt Fecha del prÃ³ximo sync
+   * @param nextSyncAt Fecha del próximo sync
    */
   updateNextScheduledSync(id: string, nextSyncAt: Date | null): Promise<void>;
 
@@ -169,10 +169,10 @@ export interface IDataSourceRepository {
   findDueForSync(): Promise<ExternalDataSourceConfig[]>;
 
   /**
-   * Obtiene estadÃ­sticas de una fuente de datos
+   * Obtiene estadísticas de una fuente de datos
    *
    * @param id ID de la fuente
-   * @returns EstadÃ­sticas
+   * @returns Estadísticas
    */
   getStats(id: string): Promise<DataSourceStats>;
 

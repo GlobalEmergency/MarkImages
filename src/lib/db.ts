@@ -25,9 +25,9 @@ function branchDbWasCreated(): boolean {
  * when POSTGRES_ADMIN_URL is configured (indicating branch DB feature is enabled).
  *
  * Flow:
- * 1. For main/master branches â†’ use DATABASE_URL as-is
- * 2. For feature branches (claude/*, etc.) â†’ construct branch-specific URL
- * 3. Locally or if feature disabled â†’ use DATABASE_URL as-is
+ * 1. For main/master branches → use DATABASE_URL as-is
+ * 2. For feature branches (claude/*, etc.) → construct branch-specific URL
+ * 3. Locally or if feature disabled → use DATABASE_URL as-is
  *
  * IMPORTANT: This only routes to branch DB if BRANCH_DB_CREATED env var is set,
  * which is set by migrate.js when the DB is successfully created.
@@ -53,7 +53,7 @@ function getDatabaseUrl(): string {
   const productionBranches = ["main", "master"];
   const isProductionBranch = productionBranches.includes(branch);
 
-  // If not in Vercel or production branch â†’ use default
+  // If not in Vercel or production branch → use default
   if (!isVercel || isProductionBranch || !branch) {
     return baseUrl;
   }

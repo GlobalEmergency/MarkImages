@@ -39,7 +39,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Panel de AdministraciÃ³n</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Panel de Administración</h1>
           <p className="mt-2 text-sm text-gray-600">Bienvenido, {user?.name || user?.email}</p>
         </div>
 
@@ -98,7 +98,7 @@ export default function AdminDashboard() {
               <div className="ml-4">
                 <h2 className="text-lg font-semibold text-gray-900">Usuarios</h2>
                 <p className="mt-1 text-sm text-gray-600">
-                  Gestionar usuarios y sus membresÃ­as a organizaciones
+                  Gestionar usuarios y sus membresías a organizaciones
                 </p>
               </div>
             </div>

@@ -1,10 +1,10 @@
 // src/utils/imageLoader.ts
 
 /**
- * Opciones para la carga de imÃ¡genes con reintentos
+ * Opciones para la carga de imágenes con reintentos
  */
 export interface ImageLoadOptions {
-  /** NÃºmero mÃ¡ximo de intentos (default: 3) */
+  /** Número máximo de intentos (default: 3) */
   maxRetries?: number;
   /** Delay inicial entre reintentos en ms (default: 1000) */
   initialDelay?: number;
@@ -39,7 +39,7 @@ function isS3Url(url: string): boolean {
 }
 
 /**
- * Obtiene la URL del proxy de imÃ¡genes
+ * Obtiene la URL del proxy de imágenes
  */
 function getProxiedImageUrl(originalUrl: string): string {
   const proxyUrl = new URL("/api/image-proxy", window.location.origin);
@@ -48,7 +48,7 @@ function getProxiedImageUrl(originalUrl: string): string {
 }
 
 /**
- * AÃ±ade cache-busting a una URL
+ * Añade cache-busting a una URL
  */
 function addCacheBusting(url: string): string {
   const separator = url.includes("?") ? "&" : "?";
@@ -56,7 +56,7 @@ function addCacheBusting(url: string): string {
 }
 
 /**
- * Intenta cargar una imagen con una URL especÃ­fica
+ * Intenta cargar una imagen con una URL específica
  */
 function attemptImageLoad(url: string, useCrossOrigin: boolean = true): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -88,15 +88,15 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
- * Carga una imagen con reintentos automÃ¡ticos y estrategias de fallback
+ * Carga una imagen con reintentos automáticos y estrategias de fallback
  *
- * Esta funciÃ³n implementa mÃºltiples estrategias para cargar imÃ¡genes:
+ * Esta función implementa múltiples estrategias para cargar imágenes:
  * 1. Intento directo con crossOrigin
- * 2. Reintentos con cache-busting (aÃ±ade timestamp)
- * 3. Fallback al proxy de imÃ¡genes si todo falla
+ * 2. Reintentos con cache-busting (añade timestamp)
+ * 3. Fallback al proxy de imágenes si todo falla
  *
  * @param src URL de la imagen a cargar
- * @param options Opciones de configuraciÃ³n
+ * @param options Opciones de configuración
  * @returns Promise con el resultado de la carga
  */
 export async function loadImageWithRetry(
@@ -132,21 +132,21 @@ export async function loadImageWithRetry(
     }
 
     try {
-      // Construir URL con cache-busting si estÃ¡ habilitado
+      // Construir URL con cache-busting si está habilitado
       const url = useCacheBusting ? addCacheBusting(src) : src;
 
       const image = await attemptImageLoad(url, true);
 
       return { image, attempts: attempt, usedProxy: false };
     } catch {
-      // Si es el Ãºltimo intento y no hay fallback, lanzar error
+      // Si es el último intento y no hay fallback, lanzar error
       if (attempt === maxRetries && !useProxyFallback) {
-        throw new Error(`No se pudo cargar la imagen despuÃ©s de ${maxRetries} intentos`);
+        throw new Error(`No se pudo cargar la imagen después de ${maxRetries} intentos`);
       }
     }
   }
 
-  // Fallback: Intentar con el proxy si estÃ¡ habilitado
+  // Fallback: Intentar con el proxy si está habilitado
   if (useProxyFallback && isS3Url(src)) {
     try {
       const proxiedUrl = getProxiedImageUrl(src);
@@ -156,20 +156,20 @@ export async function loadImageWithRetry(
 
       return { image, attempts: maxRetries + 1, usedProxy: true };
     } catch (error) {
-      console.error("âŒ FallÃ³ incluso con el proxy:", error);
+      console.error("âŒ Falló incluso con el proxy:", error);
       throw new Error(
-        `No se pudo cargar la imagen ni con el proxy despuÃ©s de ${maxRetries} intentos`
+        `No se pudo cargar la imagen ni con el proxy después de ${maxRetries} intentos`
       );
     }
   }
 
-  // Si llegamos aquÃ­, todos los intentos fallaron
-  throw new Error(`No se pudo cargar la imagen despuÃ©s de ${maxRetries} intentos`);
+  // Si llegamos aquí, todos los intentos fallaron
+  throw new Error(`No se pudo cargar la imagen después de ${maxRetries} intentos`);
 }
 
 /**
- * Alias de la funciÃ³n anterior para mantener compatibilidad
- * con el cÃ³digo existente que usa loadImageWithProxy
+ * Alias de la función anterior para mantener compatibilidad
+ * con el código existente que usa loadImageWithProxy
  */
 export async function loadImageWithProxy(src: string): Promise<HTMLImageElement> {
   const result = await loadImageWithRetry(src, {

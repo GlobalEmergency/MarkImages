@@ -25,7 +25,7 @@ function useDevicePlatform() {
 }
 
 /* ================================================================
-   Contextual App Download Prompt â€” hook + component
+   Contextual App Download Prompt — hook + component
    ================================================================ */
 
 export type PromptContext = "search_results" | "dea_detail" | "directions" | "geolocation";
@@ -261,7 +261,7 @@ export function AppDownloadPrompt({
 }
 
 /**
- * Sticky smart banner for mobile users â€” appears after 3s with app store styling.
+ * Sticky smart banner for mobile users — appears after 3s with app store styling.
  * Dismissible with localStorage persistence.
  */
 export function AppSmartBanner() {
@@ -365,7 +365,7 @@ export function AppSmartBanner() {
 }
 
 /**
- * Full promotional section with store badges â€” for the home page info area.
+ * Full promotional section with store badges — for the home page info area.
  */
 export function AppDownloadSection() {
   const { trackExternalLink } = useAnalytics();

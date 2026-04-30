@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * EmbedMapClient â€” client-side map component for the embeddable widget.
+ * EmbedMapClient — client-side map component for the embeddable widget.
  *
  * Imported dynamically with ssr: false from the page because Leaflet
  * requires access to `window` and cannot be server-rendered.
@@ -223,7 +223,7 @@ export default function EmbedMapClient({ center, zoom, cityLabel }: EmbedMapClie
                       rel="noopener noreferrer"
                       className="block w-full text-center px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition-colors"
                     >
-                      Ver en DeaMap â†’
+                      Ver en DeaMap →
                     </a>
                   </div>
                 </Popup>

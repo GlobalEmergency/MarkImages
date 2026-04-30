@@ -1,10 +1,10 @@
 /**
- * Factory â€” BulkImportService singleton
+ * Factory — BulkImportService singleton
  *
  * Crea y cachea una instancia de BulkImportService con todas sus dependencias.
- * Evita duplicar la inicializaciÃ³n en cada API route.
+ * Evita duplicar la inicialización en cada API route.
  *
- * Usa el mismo patrÃ³n de inyecciÃ³n manual de dependencias que el resto del
+ * Usa el mismo patrón de inyección manual de dependencias que el resto del
  * sistema (ver batch/application/processors/index.ts).
  */
 
@@ -36,7 +36,7 @@ export function getBulkImportService(): BulkImportService {
     // Repositorio AED para DuplicateChecker
     const aedRepository = new PrismaAedRepository(prisma);
 
-    // Infraestructura de imÃ¡genes
+    // Infraestructura de imágenes
     const imageDownloader = new HttpImageDownloader();
     const imageStorage = new S3ImageStorageAdapter();
     const downloadAndUploadImageUseCase = new DownloadAndUploadImageUseCase(

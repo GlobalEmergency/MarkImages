@@ -1,10 +1,10 @@
 /**
  * Application Use Case: GetAedsWithClustersUseCase
  *
- * Caso de uso que orquesta la obtenciÃ³n de DEAs con clustering.
+ * Caso de uso que orquesta la obtención de DEAs con clustering.
  * Siguiendo SOLID:
- * - Single Responsibility: Orquestar la lÃ³gica de negocio para obtener DEAs
- * - Open/Closed: Extensible mediante inyecciÃ³n de dependencias
+ * - Single Responsibility: Orquestar la lógica de negocio para obtener DEAs
+ * - Open/Closed: Extensible mediante inyección de dependencias
  * - Dependency Inversion: Depende de abstracciones (IClusteringService)
  */
 
@@ -18,12 +18,12 @@ export interface GetAedsWithClustersRequest {
 }
 
 /**
- * Caso de uso para obtener DEAs con clustering segÃºn estrategia de zoom
+ * Caso de uso para obtener DEAs con clustering según estrategia de zoom
  *
  * Responsabilidades:
  * - Decidir si aplicar clustering o devolver marcadores individuales
- * - Invocar el servicio de clustering con los parÃ¡metros correctos
- * - Formatear la respuesta segÃºn el contrato de la API
+ * - Invocar el servicio de clustering con los parámetros correctos
+ * - Formatear la respuesta según el contrato de la API
  */
 export class GetAedsWithClustersUseCase {
   constructor(private readonly clusteringService: IClusteringService) {}
@@ -31,7 +31,7 @@ export class GetAedsWithClustersUseCase {
   async execute(request: GetAedsWithClustersRequest): Promise<ClusteredAedsResponse> {
     const { bounds, zoom, strategy } = request;
 
-    // DecisiÃ³n: Â¿Aplicar clustering o devolver individuales?
+    // Decisión: Â¿Aplicar clustering o devolver individuales?
     if (strategy.clusteringEnabled && strategy.clusterGridSize !== null) {
       // Obtener clusters + marcadores individuales
       const result = await this.clusteringService.calculateClusters({
@@ -74,14 +74,14 @@ export class GetAedsWithClustersUseCase {
   }
 
   /**
-   * Genera una descripciÃ³n legible de la estrategia aplicada
+   * Genera una descripción legible de la estrategia aplicada
    */
   private getStrategyDescription(strategy: ZoomStrategy): string {
     if (!strategy.clusteringEnabled) {
       return "individual markers";
     }
 
-    const gridKm = (strategy.clusterGridSize || 0) * 111; // AproximaciÃ³n 1Â° â‰ˆ 111km
+    const gridKm = (strategy.clusterGridSize || 0) * 111; // Aproximación 1Â° â‰ˆ 111km
     return `clustered (grid ~${gridKm.toFixed(1)}km, min ${strategy.minClusterSize} DEAs)`;
   }
 }

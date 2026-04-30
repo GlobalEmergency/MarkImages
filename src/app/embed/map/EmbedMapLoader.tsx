@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * EmbedMapLoader â€” client boundary for the dynamic Leaflet import.
+ * EmbedMapLoader — client boundary for the dynamic Leaflet import.
  *
  * `ssr: false` is only allowed inside Client Components with Next.js 15+
  * Turbopack. This thin wrapper satisfies that constraint while keeping

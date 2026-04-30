@@ -1,15 +1,15 @@
 /**
- * ProximityRule â€” Graduated spatial proximity via PostGIS ST_Distance
+ * ProximityRule — Graduated spatial proximity via PostGIS ST_Distance
  *
  * Awards points based on distance tiers: closer AEDs get more points.
  * This handles cross-source detection where coordinates may differ slightly
  * due to geocoding precision differences between data sources.
  *
  * Default tiers (configurable):
- *   < 5m  â†’ 30pts (same device, coordinate rounding)
- *   < 15m â†’ 25pts (same building, different geocoding)
- *   < 30m â†’ 15pts (adjacent, likely same place)
- *   < 50m â†’ 5pts  (nearby, weak signal)
+ *   < 5m  → 30pts (same device, coordinate rounding)
+ *   < 15m → 25pts (same building, different geocoding)
+ *   < 30m → 15pts (adjacent, likely same place)
+ *   < 50m → 5pts  (nearby, weak signal)
  */
 
 import type {
@@ -39,7 +39,7 @@ const DEFAULT_TIERS: readonly ProximityTier[] = [
 export class ProximityRule implements ScoringRule {
   readonly id = "proximity";
   readonly name = "Proximity";
-  readonly description = "Graduated spatial proximity â€” more points for closer distance";
+  readonly description = "Graduated spatial proximity — more points for closer distance";
   readonly maxPoints: number;
   readonly category = "spatial" as const;
 
@@ -112,10 +112,10 @@ export class ProximityRule implements ScoringRule {
       maxPoints: this.maxPoints,
       matched,
       reason: !hasDistance
-        ? "No distance data available â†’ 0pts"
+        ? "No distance data available → 0pts"
         : matched
-          ? `Distance ${distance!.toFixed(1)}m (${tierLabel}) â†’ +${points}pts`
-          : `Distance ${distance!.toFixed(1)}m >= ${outerThreshold}m â†’ 0pts`,
+          ? `Distance ${distance!.toFixed(1)}m (${tierLabel}) → +${points}pts`
+          : `Distance ${distance!.toFixed(1)}m >= ${outerThreshold}m → 0pts`,
       inputValue: hasCoords ? `(${input.latitude}, ${input.longitude})` : "(no coords)",
       candidateValue: hasDistance ? `${distance!.toFixed(1)}m away` : "(no distance)",
     };

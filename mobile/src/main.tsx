@@ -16,4 +16,4 @@ root.render(
 setupGlobalErrorHandlers(crashReporter);
 
 // Initialize crash reporting (fire-and-forget, non-blocking)
-crashReporter.initialize().catch((err) => {});
+crashReporter.initialize().catch(() => {});

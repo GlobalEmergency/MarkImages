@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 
 /**
  * DELETE /api/admin/cleanup/rejected-aeds
- * Elimina DEAs rechazados/inactivos que nunca fueron publicados y tienen mÃ¡s de X dÃ­as.
+ * Elimina DEAs rechazados/inactivos que nunca fueron publicados y tienen más de X días.
  *
  * Targets:
  * - INACTIVE AEDs with status_metadata.reason = REJECTED_VERIFICATION or DUPLICATE
@@ -18,7 +18,7 @@ export async function DELETE(request: NextRequest) {
   try {
     await requireAdmin(request);
 
-    // Obtener parÃ¡metros de la URL
+    // Obtener parámetros de la URL
     const { searchParams } = new URL(request.url);
     const daysOld = parseInt(searchParams.get("days") || "30", 10);
     const dryRun = searchParams.get("dryRun") === "true";
@@ -33,9 +33,9 @@ export async function DELETE(request: NextRequest) {
         published_at: null, // Solo los que nunca fueron publicados
         created_at: { lt: cutoffDate },
         OR: [
-          // REJECTED AEDs â€” any reason
+          // REJECTED AEDs — any reason
           { status: "REJECTED" },
-          // INACTIVE AEDs â€” only with specific rejection/duplicate metadata
+          // INACTIVE AEDs — only with specific rejection/duplicate metadata
           {
             status: "INACTIVE",
             OR: [
@@ -57,10 +57,10 @@ export async function DELETE(request: NextRequest) {
       },
     });
 
-    // Si es dry run, solo devolver lo que se eliminarÃ­a
+    // Si es dry run, solo devolver lo que se eliminaría
     if (dryRun) {
       return NextResponse.json({
-        message: "SimulaciÃ³n de limpieza",
+        message: "Simulación de limpieza",
         wouldDelete: deassToDelete.length,
         details: deassToDelete.map((d) => ({
           id: d.id,
@@ -73,8 +73,8 @@ export async function DELETE(request: NextRequest) {
       });
     }
 
-    // Eliminar DEAs en una transacciÃ³n
-    // Using cascade deletes (configured in schema) â€” no need to manually
+    // Eliminar DEAs en una transacción
+    // Using cascade deletes (configured in schema) — no need to manually
     // delete images, validations, etc.
     const deletedIds = deassToDelete.map((d) => d.id);
     const locationIds = [

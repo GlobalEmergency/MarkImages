@@ -68,7 +68,7 @@ export default function OrganizationsPage() {
 
   const getTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      CIVIL_PROTECTION: "ProtecciÃ³n Civil",
+      CIVIL_PROTECTION: "Protección Civil",
       CERTIFIED_COMPANY: "Empresa Certificada",
       VOLUNTEER_GROUP: "Grupo de Voluntarios",
       MUNICIPALITY: "Ayuntamiento",
@@ -111,7 +111,7 @@ export default function OrganizationsPage() {
               >
                 â† Volver al panel
               </Link>
-              <h1 className="text-3xl font-bold text-gray-900">GestiÃ³n de Organizaciones</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Gestión de Organizaciones</h1>
               <p className="mt-2 text-sm text-gray-600">
                 Administra protecciones civiles, empresas certificadas y grupos de voluntarios
               </p>
@@ -128,7 +128,7 @@ export default function OrganizationsPage() {
                   d="M12 4v16m8-8H4"
                 />
               </svg>
-              Nueva OrganizaciÃ³n
+              Nueva Organización
             </Link>
           </div>
         </div>
@@ -147,7 +147,7 @@ export default function OrganizationsPage() {
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
               >
                 <option value="">Todos los tipos</option>
-                <option value="CIVIL_PROTECTION">ProtecciÃ³n Civil</option>
+                <option value="CIVIL_PROTECTION">Protección Civil</option>
                 <option value="CERTIFIED_COMPANY">Empresa Certificada</option>
                 <option value="VOLUNTEER_GROUP">Grupo de Voluntarios</option>
                 <option value="MUNICIPALITY">Ayuntamiento</option>
@@ -174,7 +174,7 @@ export default function OrganizationsPage() {
 
             <div>
               <label htmlFor="city-filter" className="block text-sm font-medium text-gray-700">
-                CÃ³digo de ciudad
+                Código de ciudad
               </label>
               <input
                 type="text"

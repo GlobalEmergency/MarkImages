@@ -1,5 +1,5 @@
 /**
- * PÃ¡gina principal de importaciÃ³n/exportaciÃ³n de DEA
+ * Página principal de importación/exportación de DEA
  * Permite subir archivos CSV y exportar datos
  */
 
@@ -103,7 +103,7 @@ export default function ImportPage() {
 
     if (!response.ok) {
       const data = await response.json();
-      throw new Error(data.error || "Error al crear exportaciÃ³n");
+      throw new Error(data.error || "Error al crear exportación");
     }
 
     // Refrescar la lista de exportaciones
@@ -229,7 +229,7 @@ export default function ImportPage() {
       {/* Main Content */}
       <main className="container mx-auto px-3 sm:px-4 md:px-6 py-4 pb-12 space-y-6">
         {showWizard ? (
-          /* Wizard de importaciÃ³n */
+          /* Wizard de importación */
           <div
             className="rounded-xl shadow-lg p-4 sm:p-6"
             style={{
@@ -248,7 +248,7 @@ export default function ImportPage() {
           </div>
         ) : activeTab === "imports" ? (
           <>
-            {/* BotÃ³n para nueva importaciÃ³n */}
+            {/* Botón para nueva importación */}
             <div
               className="rounded-xl shadow-lg p-4 sm:p-6"
               style={{
@@ -256,16 +256,16 @@ export default function ImportPage() {
                 backdropFilter: "blur(20px)",
               }}
             >
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Nueva ImportaciÃ³n</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Nueva Importación</h2>
               <p className="text-sm text-gray-600 mb-4">
-                Importa datos desde archivos CSV con mapeo de columnas y validaciÃ³n
+                Importa datos desde archivos CSV con mapeo de columnas y validación
               </p>
               <button
                 onClick={() => setShowWizard(true)}
                 className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center space-x-2"
               >
                 <Upload className="w-5 h-5" />
-                <span>Iniciar Nueva ImportaciÃ³n</span>
+                <span>Iniciar Nueva Importación</span>
               </button>
             </div>
 
@@ -300,7 +300,7 @@ export default function ImportPage() {
               {pagination && pagination.totalPages > 1 && (
                 <div className="border-t border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between">
                   <div className="text-sm text-gray-700">
-                    PÃ¡gina {importPage} de {pagination.totalPages}
+                    Página {importPage} de {pagination.totalPages}
                     <span className="hidden sm:inline"> ({pagination.total} total)</span>
                   </div>
 
@@ -329,7 +329,7 @@ export default function ImportPage() {
           </>
         ) : (
           <>
-            {/* BotÃ³n para nueva exportaciÃ³n */}
+            {/* Botón para nueva exportación */}
             <div
               className="rounded-xl shadow-lg p-4 sm:p-6"
               style={{
@@ -337,7 +337,7 @@ export default function ImportPage() {
                 backdropFilter: "blur(20px)",
               }}
             >
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Nueva ExportaciÃ³n</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Nueva Exportación</h2>
               <p className="text-sm text-gray-600 mb-4">
                 Exporta datos de DEAs a CSV con filtros personalizados (estado, ciudad, origen)
               </p>
@@ -346,7 +346,7 @@ export default function ImportPage() {
                 className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center space-x-2"
               >
                 <Download className="w-5 h-5" />
-                <span>Iniciar Nueva ExportaciÃ³n</span>
+                <span>Iniciar Nueva Exportación</span>
               </button>
             </div>
 
@@ -380,7 +380,7 @@ export default function ImportPage() {
               {exportPagination && exportPagination.totalPages > 1 && (
                 <div className="border-t border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between">
                   <div className="text-sm text-gray-700">
-                    PÃ¡gina {exportPage} de {exportPagination.totalPages}
+                    Página {exportPage} de {exportPagination.totalPages}
                     <span className="hidden sm:inline"> ({exportPagination.total} total)</span>
                   </div>
 

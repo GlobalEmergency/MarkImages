@@ -55,7 +55,7 @@ export async function sendPasswordResetEmail({
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>RecuperaciÃ³n de contraseÃ±a</title>
+        <title>Recuperación de contraseña</title>
       </head>
       <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
         <table role="presentation" style="width: 100%; border-collapse: collapse;">
@@ -65,22 +65,22 @@ export async function sendPasswordResetEmail({
                 <tr>
                   <td style="padding: 40px 30px;">
                     <h1 style="margin: 0 0 20px 0; color: #333333; font-size: 24px; font-weight: bold;">
-                      RecuperaciÃ³n de contraseÃ±a
+                      Recuperación de contraseña
                     </h1>
                     <p style="margin: 0 0 20px 0; color: #666666; font-size: 16px; line-height: 1.5;">
                       Hola ${userName},
                     </p>
                     <p style="margin: 0 0 20px 0; color: #666666; font-size: 16px; line-height: 1.5;">
-                      Recibimos una solicitud para restablecer tu contraseÃ±a en DeaMap. Si no fuiste tÃº quien hizo esta solicitud, puedes ignorar este correo.
+                      Recibimos una solicitud para restablecer tu contraseña en DeaMap. Si no fuiste tú quien hizo esta solicitud, puedes ignorar este correo.
                     </p>
                     <p style="margin: 0 0 30px 0; color: #666666; font-size: 16px; line-height: 1.5;">
-                      Para restablecer tu contraseÃ±a, haz clic en el siguiente botÃ³n:
+                      Para restablecer tu contraseña, haz clic en el siguiente botón:
                     </p>
                     <table role="presentation" style="border-collapse: collapse; margin: 0 0 30px 0;">
                       <tr>
                         <td style="border-radius: 4px; background-color: #007bff;">
                           <a href="${resetUrl}" target="_blank" style="display: inline-block; padding: 14px 30px; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: bold;">
-                            Restablecer contraseÃ±a
+                            Restablecer contraseña
                           </a>
                         </td>
                       </tr>
@@ -92,10 +92,10 @@ export async function sendPasswordResetEmail({
                       ${resetUrl}
                     </p>
                     <p style="margin: 0 0 10px 0; color: #999999; font-size: 14px; line-height: 1.5;">
-                      Este enlace expirarÃ¡ en 1 hora por razones de seguridad.
+                      Este enlace expirará en 1 hora por razones de seguridad.
                     </p>
                     <p style="margin: 0; color: #999999; font-size: 14px; line-height: 1.5;">
-                      Si no solicitaste restablecer tu contraseÃ±a, por favor ignora este correo.
+                      Si no solicitaste restablecer tu contraseña, por favor ignora este correo.
                     </p>
                   </td>
                 </tr>
@@ -117,15 +117,15 @@ export async function sendPasswordResetEmail({
   const textBody = `
 Hola ${userName},
 
-Recibimos una solicitud para restablecer tu contraseÃ±a en DeaMap. Si no fuiste tÃº quien hizo esta solicitud, puedes ignorar este correo.
+Recibimos una solicitud para restablecer tu contraseña en DeaMap. Si no fuiste tú quien hizo esta solicitud, puedes ignorar este correo.
 
-Para restablecer tu contraseÃ±a, copia y pega el siguiente enlace en tu navegador:
+Para restablecer tu contraseña, copia y pega el siguiente enlace en tu navegador:
 
 ${resetUrl}
 
-Este enlace expirarÃ¡ en 1 hora por razones de seguridad.
+Este enlace expirará en 1 hora por razones de seguridad.
 
-Si no solicitaste restablecer tu contraseÃ±a, por favor ignora este correo.
+Si no solicitaste restablecer tu contraseña, por favor ignora este correo.
 
 Â© ${new Date().getFullYear()} DeaMap. Todos los derechos reservados.
   `;
@@ -137,7 +137,7 @@ Si no solicitaste restablecer tu contraseÃ±a, por favor ignora este correo.
     },
     Message: {
       Subject: {
-        Data: "RecuperaciÃ³n de contraseÃ±a - DeaMap",
+        Data: "Recuperación de contraseña - DeaMap",
         Charset: "UTF-8",
       },
       Body: {

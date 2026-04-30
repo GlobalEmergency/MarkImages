@@ -64,7 +64,7 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
 
         const img = result.image;
 
-        // Aplicar orientaciÃ³n EXIF
+        // Aplicar orientación EXIF
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
 
@@ -159,7 +159,7 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
     loadModels();
   }, []);
 
-  // Detectar caras automÃ¡ticamente
+  // Detectar caras automáticamente
   const detectFaces = async () => {
     if (!imageRef.current || !imageLoaded) {
       console.error("âŒ Imagen no cargada");
@@ -167,7 +167,7 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
     }
 
     if (!modelsLoaded) {
-      setFaceDetectionStatus("Error: Modelos de detecciÃ³n no disponibles");
+      setFaceDetectionStatus("Error: Modelos de detección no disponibles");
       return;
     }
 
@@ -175,7 +175,7 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
     setFaceDetectionStatus("Detectando caras...");
 
     try {
-      // Detectar caras con TinyFaceDetector (mÃ¡s rÃ¡pido)
+      // Detectar caras con TinyFaceDetector (más rápido)
       const detections = await faceapi
         .detectAllFaces(
           imageRef.current,
@@ -192,11 +192,11 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
         return;
       }
 
-      // Crear Ã¡reas de blur para cada cara detectada
+      // Crear áreas de blur para cada cara detectada
       const newBlurAreas: BlurArea[] = detections.map((detection, index) => {
         const box = detection.detection.box;
 
-        // Expandir un poco el Ã¡rea para cubrir mejor la cara
+        // Expandir un poco el área para cubrir mejor la cara
         const padding = Math.max(box.width, box.height) * 0.3;
 
         return {
@@ -209,12 +209,12 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
         };
       });
 
-      // AÃ±adir las nuevas Ã¡reas a las existentes
+      // Añadir las nuevas áreas a las existentes
       setBlurAreas([...blurAreas, ...newBlurAreas]);
-      setFaceDetectionStatus(`âœ… ${detections.length} cara(s) detectada(s) y marcadas`);
+      setFaceDetectionStatus(`✅ ${detections.length} cara(s) detectada(s) y marcadas`);
       setTimeout(() => setFaceDetectionStatus(""), 3000);
     } catch (error) {
-      console.error("âŒ Error en detecciÃ³n de caras:", error);
+      console.error("âŒ Error en detección de caras:", error);
       setFaceDetectionStatus("Error al detectar caras. Puedes marcar manualmente.");
       setTimeout(() => setFaceDetectionStatus(""), 3000);
     } finally {
@@ -257,7 +257,7 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
     // Dibujar imagen original
     ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
 
-    // Aplicar blur a las Ã¡reas guardadas
+    // Aplicar blur a las áreas guardadas
     blurAreas.forEach((area) => {
       const scaledArea = {
         x: area.x * scale,
@@ -269,7 +269,7 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
       // Guardar contexto
       ctx.save();
 
-      // Aplicar blur (simulaciÃ³n simple con pixelaciÃ³n)
+      // Aplicar blur (simulación simple con pixelación)
       ctx.filter = `blur(${blurIntensity}px)`;
       ctx.drawImage(
         canvas,
@@ -286,7 +286,7 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
       // Restaurar contexto
       ctx.restore();
 
-      // Dibujar borde del Ã¡rea difuminada
+      // Dibujar borde del área difuminada
       ctx.strokeStyle = "#ef4444";
       ctx.lineWidth = 2;
       ctx.setLineDash([5, 5]);
@@ -294,7 +294,7 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
       ctx.setLineDash([]);
     });
 
-    // Dibujar Ã¡rea de dibujo actual
+    // Dibujar área de dibujo actual
     if (isDrawing && drawingArea) {
       const x = Math.min(drawingArea.startX, drawingArea.currentX);
       const y = Math.min(drawingArea.startY, drawingArea.currentY);
@@ -308,7 +308,7 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
         height: height * scale,
       };
 
-      // Borde de selecciÃ³n
+      // Borde de selección
       ctx.strokeStyle = "#3b82f6";
       ctx.lineWidth = 2;
       ctx.setLineDash([5, 5]);
@@ -388,7 +388,7 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
     const width = Math.abs(drawingArea.currentX - drawingArea.startX);
     const height = Math.abs(drawingArea.currentY - drawingArea.startY);
 
-    // Solo agregar si el Ã¡rea tiene un tamaÃ±o mÃ­nimo
+    // Solo agregar si el área tiene un tamaño mínimo
     if (width > 20 && height > 20) {
       const newBlurArea: BlurArea = {
         id: `blur_${Date.now()}`,
@@ -467,12 +467,12 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
       // Dibujar imagen original
       ctx.drawImage(imageRef.current, 0, 0, imageDimensions.width, imageDimensions.height);
 
-      // Aplicar blur a cada Ã¡rea
+      // Aplicar blur a cada área
       blurAreas.forEach((area) => {
-        // Extraer el Ã¡rea a difuminar
+        // Extraer el área a difuminar
         const imageData = ctx.getImageData(area.x, area.y, area.width, area.height);
 
-        // Crear canvas temporal para el Ã¡rea
+        // Crear canvas temporal para el área
         const tempCanvas = document.createElement("canvas");
         tempCanvas.width = area.width;
         tempCanvas.height = area.height;
@@ -480,7 +480,7 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
 
         if (!tempCtx) return;
 
-        // Dibujar el Ã¡rea en el canvas temporal
+        // Dibujar el área en el canvas temporal
         tempCtx.putImageData(imageData, 0, 0);
 
         // Aplicar blur usando filter
@@ -516,7 +516,7 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
   const handleAccept = async () => {
     setProcessing(true);
     try {
-      // Generar imagen con blur aplicado si hay Ã¡reas marcadas
+      // Generar imagen con blur aplicado si hay áreas marcadas
       let blurredImageUrl: string | undefined;
       if (blurAreas.length > 0) {
         blurredImageUrl = await generateBlurredImage();
@@ -542,14 +542,14 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
       {/* Instrucciones */}
       <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded w-full max-w-4xl">
         <p className="text-blue-800 font-medium mb-2">
-          ðŸ”’ Protege la privacidad difuminando caras, matrÃ­culas u otras Ã¡reas sensibles
+          ðŸ”’ Protege la privacidad difuminando caras, matrículas u otras áreas sensibles
         </p>
         <p className="text-blue-700 text-sm">
-          â€¢ Usa "Detectar Caras AutomÃ¡ticamente" para encontrar y marcar caras en la imagen
+          â€¢ Usa "Detectar Caras Automáticamente" para encontrar y marcar caras en la imagen
           <br />
-          â€¢ O haz clic y arrastra manualmente para dibujar Ã¡reas a difuminar
+          â€¢ O haz clic y arrastra manualmente para dibujar áreas a difuminar
           <br />
-          â€¢ Puedes combinar ambos mÃ©todos y aÃ±adir mÃºltiples Ã¡reas
+          â€¢ Puedes combinar ambos métodos y añadir múltiples áreas
           <br />
           â€¢ Si no necesitas difuminar nada, haz clic en "Continuar sin difuminar"
         </p>
@@ -583,10 +583,10 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
         )}
       </div>
 
-      {/* Controles de Ã¡reas */}
+      {/* Controles de áreas */}
       {imageLoaded && (
         <>
-          {/* BotÃ³n de detecciÃ³n automÃ¡tica */}
+          {/* Botón de detección automática */}
           <div className="flex flex-col items-center gap-2 w-full max-w-md">
             <button
               onClick={detectFaces}
@@ -601,12 +601,12 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
               ) : (
                 <>
                   <Scan className="w-5 h-5" />
-                  Detectar Caras AutomÃ¡ticamente
+                  Detectar Caras Automáticamente
                 </>
               )}
             </button>
 
-            {/* Estado de la detecciÃ³n */}
+            {/* Estado de la detección */}
             {faceDetectionStatus && (
               <p
                 className={`text-sm ${
@@ -620,11 +620,11 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
             )}
 
             {!modelsLoaded && !isDetectingFaces && (
-              <p className="text-xs text-gray-500">Cargando modelos de detecciÃ³n...</p>
+              <p className="text-xs text-gray-500">Cargando modelos de detección...</p>
             )}
           </div>
 
-          {/* Controles de eliminaciÃ³n */}
+          {/* Controles de eliminación */}
           <div className="flex flex-wrap gap-3 justify-center w-full max-w-md">
             <button
               onClick={handleRemoveLast}
@@ -691,11 +691,11 @@ export default function ImageBlur({ imageUrl, onBlurComplete, onSkip, onCancel }
         <div className="text-sm text-gray-600 text-center max-w-md px-4">
           <p className="mb-1">
             {blurAreas.length === 0
-              ? "Haz clic y arrastra sobre la imagen para marcar Ã¡reas a difuminar"
-              : `${blurAreas.length} Ã¡rea(s) marcada(s) para difuminar`}
+              ? "Haz clic y arrastra sobre la imagen para marcar áreas a difuminar"
+              : `${blurAreas.length} área(s) marcada(s) para difuminar`}
           </p>
           <p className="text-xs text-gray-500">
-            Las Ã¡reas difuminadas aparecen con borde rojo punteado
+            Las áreas difuminadas aparecen con borde rojo punteado
           </p>
         </div>
       )}

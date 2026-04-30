@@ -1,11 +1,11 @@
 /**
- * Domain Service: Parser de horarios en texto libre espaÃ±ol
+ * Domain Service: Parser de horarios en texto libre español
  * Implementa IFieldTransformer
  *
  * Patrones soportados (datos reales de CCAA):
  * - "24 HORAS", "PERMANENTE", "HORARIO CONTINUO"
  * - "24 HORAS EXCEPTO FESTIVOS"
- * - "DE 07:30 A 15:00" (sin dÃ­a â†’ asume weekday)
+ * - "DE 07:30 A 15:00" (sin día → asume weekday)
  * - "LUNES A VIERNES (07:30-16:30)"
  * - "DE LUNES A VIERNES DE 09:00 A 18:00"
  * - "L-V 09:00-18:00", "L-D 08:00-22:00"
@@ -39,7 +39,7 @@ const PATTERN_24H =
 // Excepciones 24h
 const PATTERN_24H_EXCEPT = /24\s*(?:HORAS?|H)\s*(?:,?\s*)?EXCEPTO\s+(.*)/i;
 
-// Mapeo de rangos de dÃ­as a tipo
+// Mapeo de rangos de días a tipo
 // IMPORTANTE: compound patterns (rangos) van ANTES de single-day patterns
 // para que "MARTES A DOMINGO" no matchee como "DOMINGO" suelto
 const DAY_RANGES: Array<{ pattern: RegExp; dayType: ParsedBlock["dayType"] }> = [
@@ -47,7 +47,7 @@ const DAY_RANGES: Array<{ pattern: RegExp; dayType: ParsedBlock["dayType"] }> = 
   { pattern: /(?:^|\b)(?:L\s*-\s*D|LUNES\s+A\s+DOMINGO)(?:\b|$)/i, dayType: "all" },
   // L-S, LUNES A SABADO
   { pattern: /(?:^|\b)(?:L\s*-\s*S|LUNES\s+A\s+SABADOS?)(?:\b|$)/i, dayType: "all" },
-  // DE MARTES/MIERCOLES/JUEVES A DOMINGO (misc compound ranges â†’ "all")
+  // DE MARTES/MIERCOLES/JUEVES A DOMINGO (misc compound ranges → "all")
   {
     pattern: /(?:^|\b)(?:DE\s+)?(?:MARTES|MIERCOLES|MIÃ‰RCOLES|JUEVES)\s+A\s+DOMINGO(?:\b|$)/i,
     dayType: "all",
@@ -137,7 +137,7 @@ export class SpanishScheduleParser implements IFieldTransformer {
     }
 
     if (parsedBlocks.length === 0) {
-      // No pudimos parsear nada â†’ confidence 0, solo guardar description
+      // No pudimos parsear nada → confidence 0, solo guardar description
       return { fields, confidence: 0, rawValue: value };
     }
 
@@ -192,7 +192,7 @@ export class SpanishScheduleParser implements IFieldTransformer {
           break;
 
         case "unknown":
-          // No day indicator â†’ assume weekday if weekday not yet set
+          // No day indicator → assume weekday if weekday not yet set
           if (!fields.weekdayOpening) {
             fields.weekdayOpening = firstTime.opening;
             fields.weekdayClosing =
@@ -209,7 +209,7 @@ export class SpanishScheduleParser implements IFieldTransformer {
   }
 
   /**
-   * Separa el texto en bloques lÃ³gicos.
+   * Separa el texto en bloques lógicos.
    * Usa "." y "," como separadores, pero ignora "." dentro de horarios como "01.00"
    */
   private splitIntoBlocks(text: string): string[] {
@@ -284,7 +284,7 @@ export class SpanishScheduleParser implements IFieldTransformer {
   }
 
   /**
-   * Valida que un string HH:MM sea un horario vÃ¡lido
+   * Valida que un string HH:MM sea un horario válido
    */
   private isValidTime(time: string): boolean {
     const [h, m] = time.split(":").map(Number);

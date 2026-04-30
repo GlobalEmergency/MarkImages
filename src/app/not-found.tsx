@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "PÃ¡gina no encontrada",
+  title: "Página no encontrada",
   robots: { index: false, follow: true },
 };
 
@@ -14,9 +14,9 @@ export default function NotFound() {
         <div className="mb-8">
           <Heart className="h-20 w-20 text-red-500 mx-auto mb-4" />
           <h1 className="text-6xl font-bold text-gray-900 mb-2">404</h1>
-          <h2 className="text-2xl font-semibold text-gray-700 mb-4">PÃ¡gina no encontrada</h2>
+          <h2 className="text-2xl font-semibold text-gray-700 mb-4">Página no encontrada</h2>
           <p className="text-gray-600">
-            Lo sentimos, la pÃ¡gina que buscas no existe. Pero puedes encontrar un desfibrilador
+            Lo sentimos, la página que buscas no existe. Pero puedes encontrar un desfibrilador
             cercano o explorar nuestro mapa.
           </p>
         </div>
@@ -50,7 +50,7 @@ export default function NotFound() {
         <div className="mt-8 text-sm text-gray-500">
           <p>
             <MapPin className="w-4 h-4 inline mr-1" />
-            DeaMap - Mapa de desfibriladores en EspaÃ±a
+            DeaMap - Mapa de desfibriladores en España
           </p>
         </div>
       </div>

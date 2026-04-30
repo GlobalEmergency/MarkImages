@@ -1,6 +1,6 @@
 /**
  * Registro de transformadores disponibles
- * Importar este mÃ³dulo para registrar todos los transformers en el singleton
+ * Importar este módulo para registrar todos los transformers en el singleton
  */
 
 import { TransformerRegistry } from "./TransformerRegistry";

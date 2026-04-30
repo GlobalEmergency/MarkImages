@@ -207,11 +207,11 @@ export function getPublicationModeLabel(mode: PublicationMode): string {
     case "NONE":
       return "No publicado";
     case "LOCATION_ONLY":
-      return "Solo ubicaciÃ³n";
+      return "Solo ubicación";
     case "BASIC_INFO":
-      return "InformaciÃ³n bÃ¡sica";
+      return "Información básica";
     case "FULL":
-      return "InformaciÃ³n completa";
+      return "Información completa";
     default:
       return "Desconocido";
   }
@@ -223,13 +223,13 @@ export function getPublicationModeLabel(mode: PublicationMode): string {
 export function getPublicationModeDescription(mode: PublicationMode): string {
   switch (mode) {
     case "NONE":
-      return "No visible pÃºblicamente";
+      return "No visible públicamente";
     case "LOCATION_ONLY":
-      return "Solo datos de ubicaciÃ³n (sin contacto ni horarios)";
+      return "Solo datos de ubicación (sin contacto ni horarios)";
     case "BASIC_INFO":
-      return "UbicaciÃ³n + horarios + tipo de establecimiento";
+      return "Ubicación + horarios + tipo de establecimiento";
     case "FULL":
-      return "Toda la informaciÃ³n: fotos, responsable, contacto";
+      return "Toda la información: fotos, responsable, contacto";
     default:
       return "";
   }

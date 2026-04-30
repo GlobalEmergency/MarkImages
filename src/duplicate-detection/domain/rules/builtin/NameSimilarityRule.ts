@@ -1,5 +1,5 @@
 /**
- * NameSimilarityRule â€” pg_trgm trigram similarity of normalized names
+ * NameSimilarityRule — pg_trgm trigram similarity of normalized names
  *
  * Uses PostgreSQL's similarity() function (pg_trgm extension) for
  * fuzzy name matching. Threshold is configurable (default 0.9).
@@ -75,8 +75,8 @@ export class NameSimilarityRule implements ScoringRule {
       maxPoints: this.maxPoints,
       matched,
       reason: matched
-        ? `Name similarity ${sim.toFixed(2)} >= threshold ${this.threshold} â†’ +${this.maxPoints}pts`
-        : `Name similarity ${sim.toFixed(2)} < threshold ${this.threshold} â†’ 0pts`,
+        ? `Name similarity ${sim.toFixed(2)} >= threshold ${this.threshold} → +${this.maxPoints}pts`
+        : `Name similarity ${sim.toFixed(2)} < threshold ${this.threshold} → 0pts`,
       inputValue: input.normalizedName,
       candidateValue: candidate.normalized_name,
     };

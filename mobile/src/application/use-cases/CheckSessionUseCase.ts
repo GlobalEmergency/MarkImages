@@ -14,7 +14,7 @@ export class CheckSessionUseCase {
 
     try {
       return await this.authRepository.getMe();
-    } catch (_err) {
+    } catch (err) {
       // Only clear token on auth errors (401), not on network failures
       const isAuthError =
         err instanceof Error &&

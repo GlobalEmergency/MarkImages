@@ -1,5 +1,5 @@
 /**
- * S3 Data Source â€” @batchactions/import DataSource adapter
+ * S3 Data Source — @batchactions/import DataSource adapter
  *
  * Implementa la interface DataSource de @batchactions/import para leer CSVs
  * almacenados en S3. Descarga el archivo completo y lo sirve como string.
@@ -38,7 +38,7 @@ export class S3DataSource implements DataSource {
 
   /**
    * Yield el contenido completo del archivo como un string.
-   * Cachea el contenido para permitir mÃºltiples lecturas (processChunk + restore).
+   * Cachea el contenido para permitir múltiples lecturas (processChunk + restore).
    */
   async *read(): AsyncIterable<string | Buffer> {
     if (!this.cachedContent) {
@@ -48,8 +48,8 @@ export class S3DataSource implements DataSource {
   }
 
   /**
-   * Devuelve una muestra del contenido para preview/detecciÃ³n.
-   * Descarga el archivo completo (S3 no soporta range requests fÃ¡cilmente en URLs pÃºblicas).
+   * Devuelve una muestra del contenido para preview/detección.
+   * Descarga el archivo completo (S3 no soporta range requests fácilmente en URLs públicas).
    */
   async sample(maxBytes?: number): Promise<string | Buffer> {
     if (!this.cachedContent) {
@@ -134,7 +134,7 @@ export class S3DataSource implements DataSource {
 
   /**
    * Limpia el cache del contenido descargado.
-   * Ãštil para liberar memoria despuÃ©s de procesar.
+   * Ãštil para liberar memoria después de procesar.
    */
   clearCache(): void {
     this.cachedContent = null;

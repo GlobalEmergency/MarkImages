@@ -1,5 +1,5 @@
 /**
- * EstablishmentTypeRule â€” Normalized establishment type match
+ * EstablishmentTypeRule — Normalized establishment type match
  */
 
 import type {
@@ -47,17 +47,17 @@ export class EstablishmentTypeRule implements ScoringRule {
       maxPoints: this.maxPoints,
       matched,
       reason: !bothPresent
-        ? "One or both establishment types empty â†’ 0pts"
+        ? "One or both establishment types empty → 0pts"
         : matched
-          ? `Establishment type "${input.establishmentType}" matches â†’ +${this.maxPoints}pts`
-          : `Establishment type "${input.establishmentType}" != "${candidate.establishment_type}" â†’ 0pts`,
+          ? `Establishment type "${input.establishmentType}" matches → +${this.maxPoints}pts`
+          : `Establishment type "${input.establishmentType}" != "${candidate.establishment_type}" → 0pts`,
       inputValue: input.establishmentType || "(empty)",
       candidateValue: candidate.establishment_type || "(empty)",
     };
   }
 }
 
-/** Mirror PostgreSQL normalize_text(): unaccent â†’ trim â†’ lower */
+/** Mirror PostgreSQL normalize_text(): unaccent → trim → lower */
 function normalizeSimple(text: string): string {
   return text
     .normalize("NFD")

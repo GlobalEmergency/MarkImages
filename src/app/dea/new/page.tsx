@@ -66,9 +66,9 @@ export default function NewDeaPage() {
     responsible_email: "",
     responsible_phone: "",
     responsible_alternative_phone: "",
-    responsible_ownership: "PÃºblico",
-    responsible_local_ownership: "PÃºblica",
-    responsible_local_use: "PÃºblico",
+    responsible_ownership: "Público",
+    responsible_local_ownership: "Pública",
+    responsible_local_use: "Público",
     responsible_organization: "",
     responsible_position: "",
     responsible_department: "",
@@ -210,7 +210,7 @@ export default function NewDeaPage() {
       }
 
       // Redirect to home on success
-      alert("DEA creado exitosamente. EstÃ¡ pendiente de revisiÃ³n.");
+      alert("DEA creado exitosamente. Está pendiente de revisión.");
       router.push("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");
@@ -225,7 +225,7 @@ export default function NewDeaPage() {
       <h1 style={{ marginBottom: "20px" }}>Agregar Nuevo DEA</h1>
       <p style={{ marginBottom: "30px", color: "#666" }}>
         Complete el formulario para agregar un nuevo DEA. Los campos marcados con * son
-        obligatorios. El DEA estarÃ¡ en estado &quot;Pendiente de RevisiÃ³n&quot; hasta que sea
+        obligatorios. El DEA estará en estado &quot;Pendiente de Revisión&quot; hasta que sea
         validado por un administrador.
       </p>
 
@@ -253,11 +253,11 @@ export default function NewDeaPage() {
             borderRadius: "5px",
           }}
         >
-          <legend style={{ fontWeight: "bold", fontSize: "18px" }}>Datos BÃ¡sicos del DEA</legend>
+          <legend style={{ fontWeight: "bold", fontSize: "18px" }}>Datos Básicos del DEA</legend>
 
           <div style={{ marginBottom: "15px" }}>
             <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
-              CÃ³digo *
+              Código *
             </label>
             <input
               type="text"
@@ -285,7 +285,7 @@ export default function NewDeaPage() {
               value={formData.name}
               onChange={handleChange}
               required
-              placeholder="Ej: DEA Colegio Nuestra SeÃ±ora de FÃ¡tima"
+              placeholder="Ej: DEA Colegio Nuestra Señora de Fátima"
               style={{
                 width: "100%",
                 padding: "8px",
@@ -315,7 +315,7 @@ export default function NewDeaPage() {
               <option value="Centro educativo">Centro educativo</option>
               <option value="Centro de salud">Centro de salud</option>
               <option value="Centro deportivo">Centro deportivo</option>
-              <option value="Edificio pÃºblico">Edificio pÃºblico</option>
+              <option value="Edificio público">Edificio público</option>
               <option value="Centro comercial">Centro comercial</option>
               <option value="Empresa privada">Empresa privada</option>
               <option value="Otro">Otro</option>
@@ -376,7 +376,7 @@ export default function NewDeaPage() {
           {/* Interactive Map for Location Selection */}
           <div style={{ marginBottom: "15px" }}>
             <label style={{ display: "block", marginBottom: "10px", fontWeight: "500" }}>
-              Seleccionar ubicaciÃ³n en el mapa
+              Seleccionar ubicación en el mapa
             </label>
             <LocationPickerMap
               latitude={formData.latitude ? parseFloat(formData.latitude) : 0}
@@ -387,7 +387,7 @@ export default function NewDeaPage() {
 
           <div style={{ marginBottom: "15px" }}>
             <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
-              NÃºmero Provisional
+              Número Provisional
             </label>
             <input
               type="number"
@@ -433,7 +433,7 @@ export default function NewDeaPage() {
             borderRadius: "5px",
           }}
         >
-          <legend style={{ fontWeight: "bold", fontSize: "18px" }}>UbicaciÃ³n</legend>
+          <legend style={{ fontWeight: "bold", fontSize: "18px" }}>Ubicación</legend>
 
           <div
             style={{
@@ -445,7 +445,7 @@ export default function NewDeaPage() {
           >
             <div>
               <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
-                Tipo de VÃ­a *
+                Tipo de Vía *
               </label>
               <select
                 name="location_street_type"
@@ -469,7 +469,7 @@ export default function NewDeaPage() {
 
             <div>
               <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
-                Nombre de la VÃ­a *
+                Nombre de la Vía *
               </label>
               <input
                 type="text"
@@ -477,7 +477,7 @@ export default function NewDeaPage() {
                 value={formData.location_street_name}
                 onChange={handleChange}
                 required
-                placeholder="Ej: Manuel MuÃ±oz"
+                placeholder="Ej: Manuel Muñoz"
                 style={{
                   width: "100%",
                   padding: "8px",
@@ -498,7 +498,7 @@ export default function NewDeaPage() {
           >
             <div>
               <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
-                NÃºmero
+                Número
               </label>
               <input
                 type="text"
@@ -517,7 +517,7 @@ export default function NewDeaPage() {
 
             <div>
               <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
-                CÃ³digo Postal *
+                Código Postal *
               </label>
               <input
                 type="text"
@@ -564,14 +564,14 @@ export default function NewDeaPage() {
 
           <div style={{ marginBottom: "15px" }}>
             <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
-              InformaciÃ³n Adicional
+              Información Adicional
             </label>
             <input
               type="text"
               name="location_additional_info"
               value={formData.location_additional_info}
               onChange={handleChange}
-              placeholder="Ej: Acceso por C/Hijas de JesÃºs"
+              placeholder="Ej: Acceso por C/Hijas de Jesús"
               style={{
                 width: "100%",
                 padding: "8px",
@@ -583,14 +583,14 @@ export default function NewDeaPage() {
 
           <div style={{ marginBottom: "15px" }}>
             <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
-              DescripciÃ³n del Acceso
+              Descripción del Acceso
             </label>
             <textarea
               name="location_access_description"
               value={formData.location_access_description}
               onChange={handleChange}
               rows={3}
-              placeholder="Ej: Entrando al patio por la calle Hijas de JesÃºs, a la izquierda en el departamento de TecnologÃ­a"
+              placeholder="Ej: Entrando al patio por la calle Hijas de Jesús, a la izquierda en el departamento de Tecnología"
               style={{
                 width: "100%",
                 padding: "8px",
@@ -648,7 +648,7 @@ export default function NewDeaPage() {
 
             <div>
               <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
-                UbicaciÃ³n EspecÃ­fica
+                Ubicación Específica
               </label>
               <input
                 type="text"
@@ -728,7 +728,7 @@ export default function NewDeaPage() {
           >
             <div>
               <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
-                TelÃ©fono
+                Teléfono
               </label>
               <input
                 type="tel"
@@ -747,7 +747,7 @@ export default function NewDeaPage() {
 
             <div>
               <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
-                TelÃ©fono Alternativo
+                Teléfono Alternativo
               </label>
               <input
                 type="tel"
@@ -789,7 +789,7 @@ export default function NewDeaPage() {
                   borderRadius: "4px",
                 }}
               >
-                <option value="PÃºblico">PÃºblico</option>
+                <option value="Público">Público</option>
                 <option value="Privado">Privado</option>
               </select>
             </div>
@@ -810,7 +810,7 @@ export default function NewDeaPage() {
                   borderRadius: "4px",
                 }}
               >
-                <option value="PÃºblica">PÃºblica</option>
+                <option value="Pública">Pública</option>
                 <option value="Privada">Privada</option>
               </select>
             </div>
@@ -831,7 +831,7 @@ export default function NewDeaPage() {
                   borderRadius: "4px",
                 }}
               >
-                <option value="PÃºblico">PÃºblico</option>
+                <option value="Público">Público</option>
                 <option value="Privado">Privado</option>
               </select>
             </div>
@@ -839,14 +839,14 @@ export default function NewDeaPage() {
 
           <div style={{ marginBottom: "15px" }}>
             <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
-              OrganizaciÃ³n
+              Organización
             </label>
             <input
               type="text"
               name="responsible_organization"
               value={formData.responsible_organization}
               onChange={handleChange}
-              placeholder="Ej: Colegio Nuestra SeÃ±ora de FÃ¡tima"
+              placeholder="Ej: Colegio Nuestra Señora de Fátima"
               style={{
                 width: "100%",
                 padding: "8px",
@@ -924,7 +924,7 @@ export default function NewDeaPage() {
                 onChange={handleChange}
                 style={{ marginRight: "8px" }}
               />
-              <span style={{ fontWeight: "500" }}>Incluir informaciÃ³n de horarios</span>
+              <span style={{ fontWeight: "500" }}>Incluir información de horarios</span>
             </label>
           </div>
 
@@ -932,7 +932,7 @@ export default function NewDeaPage() {
             <>
               <div style={{ marginBottom: "15px" }}>
                 <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
-                  DescripciÃ³n del Horario
+                  Descripción del Horario
                 </label>
                 <input
                   type="text"
@@ -1016,7 +1016,7 @@ export default function NewDeaPage() {
 
               <div style={{ marginBottom: "15px" }}>
                 <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
-                  Horario sÃ¡bado
+                  Horario sábado
                 </label>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                   <input

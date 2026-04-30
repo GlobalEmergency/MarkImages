@@ -1,7 +1,7 @@
 /**
  * Use Case: Sugerir mapeo de columnas
- * Genera sugerencias automÃ¡ticas de mapeo basadas en nombres de columnas
- * Capa de AplicaciÃ³n
+ * Genera sugerencias automáticas de mapeo basadas en nombres de columnas
+ * Capa de Aplicación
  */
 
 import { ColumnMappingService } from "@/import/domain/services/ColumnMappingService";
@@ -43,10 +43,10 @@ export class SuggestColumnMappingUseCase {
       ? this.mappingService.suggestRequiredMappings(preview)
       : this.mappingService.suggestMappings(preview);
 
-    // Resolver conflictos (si una columna sugiere mÃºltiples campos, elegir el mejor)
+    // Resolver conflictos (si una columna sugiere múltiples campos, elegir el mejor)
     const resolvedSuggestions = this.mappingService.resolveConflicts(suggestions);
 
-    // Obtener estadÃ­sticas
+    // Obtener estadísticas
     const stats = this.mappingService.getMappingStats(resolvedSuggestions);
 
     // Validar campos requeridos

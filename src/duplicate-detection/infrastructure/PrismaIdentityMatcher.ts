@@ -1,5 +1,5 @@
 /**
- * PrismaIdentityMatcher â€” Batch identity cascade matching
+ * PrismaIdentityMatcher — Batch identity cascade matching
  *
  * 3 parallel queries max for N records:
  * 1. findMany by IDs (IN clause)

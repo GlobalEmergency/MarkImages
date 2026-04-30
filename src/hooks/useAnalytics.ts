@@ -31,7 +31,7 @@ function isGtagAvailable(): boolean {
   }
 }
 
-// CategorÃ­as de eventos para organizar el tracking
+// Categorías de eventos para organizar el tracking
 export const AnalyticsCategory = {
   NAVIGATION: "navigation",
   MAP: "map",
@@ -52,13 +52,13 @@ export interface AnalyticsEvent {
   category: AnalyticsCategoryType;
   label?: string;
   value?: number;
-  // ParÃ¡metros adicionales para eventos especÃ­ficos
+  // Parámetros adicionales para eventos específicos
   [key: string]: unknown;
 }
 
 /**
  * Hook para enviar eventos a Google Analytics
- * DiseÃ±ado para tracking detallado de interacciones pÃºblicas
+ * Diseñado para tracking detallado de interacciones públicas
  *
  * Handles cases where GA is blocked by:
  * - Ad blockers (uBlock, AdBlock Plus, etc.)
@@ -68,7 +68,7 @@ export interface AnalyticsEvent {
  */
 export function useAnalytics() {
   /**
-   * EnvÃ­a un evento personalizado a GA4
+   * Envía un evento personalizado a GA4
    * Silently fails if GA is not available (blocked or not loaded)
    */
   const trackEvent = useCallback((event: AnalyticsEvent) => {
@@ -445,10 +445,10 @@ export function useAnalytics() {
   );
 
   return {
-    // Evento genÃ©rico
+    // Evento genérico
     trackEvent,
 
-    // NavegaciÃ³n
+    // Navegación
     trackNavClick,
     trackLogoClick,
     trackMobileMenuToggle,
@@ -457,7 +457,7 @@ export function useAnalytics() {
     trackMapInteraction,
     trackMarkerClick,
 
-    // BÃºsqueda
+    // Búsqueda
     trackSearch,
     trackSearchSuggestionClick,
     trackGeolocationRequest,
@@ -496,7 +496,7 @@ export function useAnalytics() {
 }
 
 /**
- * FunciÃ³n helper para usar fuera de componentes React
+ * Función helper para usar fuera de componentes React
  * Silently fails if GA is not available
  */
 export function trackEventDirect(event: AnalyticsEvent) {

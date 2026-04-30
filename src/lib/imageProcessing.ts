@@ -1,6 +1,6 @@
 /**
  * Image Processing Service
- * Procesa imÃ¡genes con crop, blur y arrow usando Sharp
+ * Procesa imágenes con crop, blur y arrow usando Sharp
  */
 
 import sharp from "sharp";
@@ -56,10 +56,10 @@ export async function processImage(options: ProcessImageOptions): Promise<Buffer
     currentHeight = height;
   }
 
-  // Obtener el buffer despuÃ©s del crop
+  // Obtener el buffer después del crop
   let buffer = await image.toBuffer();
 
-  // 2. Aplicar blur a las Ã¡reas marcadas
+  // 2. Aplicar blur a las áreas marcadas
   if (blurAreas && blurAreas.length > 0) {
     for (const area of blurAreas) {
       // Clamp blur area to current image bounds (post-crop dimensions)
@@ -68,13 +68,13 @@ export async function processImage(options: ProcessImageOptions): Promise<Buffer
       const width = Math.max(1, Math.min(Math.round(area.width), currentWidth - left));
       const height = Math.max(1, Math.min(Math.round(area.height), currentHeight - top));
 
-      // Extraer la regiÃ³n a difuminar
+      // Extraer la región a difuminar
       const blurRegion = await sharp(buffer)
         .extract({ left, top, width, height })
         .blur(area.intensity || 10)
         .toBuffer();
 
-      // Componer la regiÃ³n difuminada sobre la imagen
+      // Componer la región difuminada sobre la imagen
       buffer = await sharp(buffer)
         .composite([{ input: blurRegion, left, top }])
         .toBuffer();
@@ -123,7 +123,7 @@ function generateArrowSVG(arrowData: ArrowData, width: number, height: number): 
   const strokeWidth = ARROW_CONFIG.STROKE_WIDTH;
   const headAngle = ARROW_CONFIG.HEAD_ANGLE;
 
-  // Calcular Ã¡ngulo y dimensiones
+  // Calcular ángulo y dimensiones
   const dx = endX - startX;
   const dy = endY - startY;
   const angle = Math.atan2(dy, dx);
@@ -163,7 +163,7 @@ function generateArrowSVG(arrowData: ArrowData, width: number, height: number): 
 }
 
 /**
- * Procesa todas las imÃ¡genes de una verificaciÃ³n
+ * Procesa todas las imágenes de una verificación
  */
 export interface ImageToProcess {
   imageId: string;
@@ -202,7 +202,7 @@ export async function processVerificationImages(
       const message = error instanceof Error ? error.message : "Unknown error";
       console.error(`âŒ Error procesando imagen ${img.imageId}: ${message}`);
       errors.push({ imageId: img.imageId, error: message });
-      // Continue processing remaining images â€” don't abort the entire verification
+      // Continue processing remaining images — don't abort the entire verification
     }
   }
 

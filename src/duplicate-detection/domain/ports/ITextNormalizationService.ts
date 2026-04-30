@@ -1,5 +1,5 @@
 /**
- * ITextNormalizationService â€” Port for text normalization
+ * ITextNormalizationService — Port for text normalization
  *
  * Defines the contract for normalizing text independently of implementation.
  * Allows different strategies (JavaScript, PostgreSQL, etc.)

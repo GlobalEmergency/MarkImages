@@ -1,15 +1,15 @@
 /**
- * AddressVariantSamePlace â€” Interaction: different address + close coords + compatible type
+ * AddressVariantSamePlace — Interaction: different address + close coords + compatible type
  *
  * Real case: "Calle Mayor 3" vs "Calle Mayor 5" with coords 2m apart
- * and same establishment type â†’ likely the same AED with a slightly
+ * and same establishment type → likely the same AED with a slightly
  * different address in different data sources.
  *
  * Applies when:
  *   - AddressMatchRule NOT matched (neither exact nor fuzzy)
  *   - ProximityRule matched (any tier)
  *   - EstablishmentType is compatible: same type OR one/both sides missing type data
- *     (missing type â‰  different type â€” absence of data shouldn't block detection)
+ *     (missing type â‰  different type — absence of data shouldn't block detection)
  *
  * Effect: +15 points bonus
  */
@@ -22,7 +22,7 @@ export class AddressVariantSamePlace implements RuleInteraction {
   readonly id = "address_variant_same_place";
   readonly name = "Address Variant, Same Place";
   readonly description =
-    "Different address but close proximity + compatible type â†’ likely same place with address variant";
+    "Different address but close proximity + compatible type → likely same place with address variant";
   readonly adjustment = 15;
 
   applies(
@@ -34,7 +34,7 @@ export class AddressVariantSamePlace implements RuleInteraction {
     const proximityClose = ruleMatched(ruleResults, "proximity");
     const sameType = ruleMatched(ruleResults, "establishment_type");
 
-    // Missing type on either side means "unknown" â€” not evidence of difference.
+    // Missing type on either side means "unknown" — not evidence of difference.
     // Only block the interaction when BOTH sides have type data and they differ.
     const typeUnknown = !input.establishmentType || !candidate.establishment_type;
     const typeCompatible = sameType || typeUnknown;
@@ -58,7 +58,7 @@ export class AddressVariantSamePlace implements RuleInteraction {
       reason: applied
         ? `Address differs but coords are close (${candidate.distance_meters?.toFixed(1)}m) ` +
           `${typeUnknown ? "and type data missing on one/both sides" : "and same establishment type"} ` +
-          `â†’ likely same place with address variant â†’ +${this.adjustment}pts`
+          `→ likely same place with address variant → +${this.adjustment}pts`
         : "Conditions for address variant not met",
       triggeringRules: applied ? ["proximity", "establishment_type"] : [],
     };

@@ -1,5 +1,5 @@
 /**
- * ScoringRule â€” Base interface for all scoring rules
+ * ScoringRule — Base interface for all scoring rules
  *
  * Each rule is an autonomous domain object with dual evaluation:
  * - SQL (batch performance via PostGIS + pg_trgm)

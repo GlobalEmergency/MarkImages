@@ -1,17 +1,17 @@
 /**
- * Transformer: Parser de direcciones espaÃ±olas via libpostal (Docker HTTP)
+ * Transformer: Parser de direcciones españolas via libpostal (Docker HTTP)
  * Capa de Infraestructura
  *
  * Llama al servicio pelias/libpostal-service en Docker para parsear
  * direcciones de texto libre en campos estructurados.
  *
  * Resiliencia:
- * - Si el servicio no estÃ¡ disponible, retorna confidence 0 (fallback a fieldMapping)
+ * - Si el servicio no está disponible, retorna confidence 0 (fallback a fieldMapping)
  * - Health check al primer uso: si falla, desactiva el transformer durante
  *   CIRCUIT_BREAKER_COOLDOWN_MS para evitar timeouts en cada registro
  * - Log claro en consola indicando el estado (disponible/no disponible)
  *
- * ConfiguraciÃ³n vÃ­a env vars:
+ * Configuración vía env vars:
  * - LIBPOSTAL_HOST: hostname del servicio (default: "127.0.0.1")
  * - LIBPOSTAL_PORT: puerto HTTP (default: "4400")
  */
@@ -24,15 +24,15 @@ const LIBPOSTAL_TIMEOUT_MS = 2_000;
 
 /**
  * Tiempo que el circuit breaker permanece abierto tras un fallo de conectividad.
- * Mientras estÃ© abierto, transform() devuelve directamente confidence 0 sin
- * intentar la conexiÃ³n HTTP, evitando N timeouts en cada registro.
+ * Mientras esté abierto, transform() devuelve directamente confidence 0 sin
+ * intentar la conexión HTTP, evitando N timeouts en cada registro.
  */
 const CIRCUIT_BREAKER_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutos
 
 /**
- * Tipos de vÃ­a que aparecen como PREFIJO (castellano, catalÃ¡n, gallego, abreviaturas).
- * Ej: "CALLE Gran VÃ­a" â†’ streetType="Calle", streetName="Gran VÃ­a"
- * Ordenados de mÃ¡s largo a mÃ¡s corto para evitar matches parciales.
+ * Tipos de vía que aparecen como PREFIJO (castellano, catalán, gallego, abreviaturas).
+ * Ej: "CALLE Gran Vía" → streetType="Calle", streetName="Gran Vía"
+ * Ordenados de más largo a más corto para evitar matches parciales.
  */
 const PREFIX_STREET_TYPES = [
   // === Castellano (largos primero) ===
@@ -65,8 +65,8 @@ const PREFIX_STREET_TYPES = [
   "LUGAR",
   "PORTAL",
   "PATIO",
-  // === CatalÃ¡n ===
-  "TRAVESSERA", // TravesÃ­a
+  // === Catalán ===
+  "TRAVESSERA", // Travesía
   "AVINGUDA", // Avenida
   "PASSEIG", // Paseo
   "CARRER", // Calle
@@ -101,19 +101,19 @@ const PREFIX_STREET_TYPES = [
 ];
 
 /**
- * Tipos de vÃ­a vascos que aparecen como SUFIJO (postfijo).
- * En euskera, el tipo de vÃ­a va al final: "Txurrua KALEA" = "Calle Txurrua"
- * Ordenados de mÃ¡s largo a mÃ¡s corto.
+ * Tipos de vía vascos que aparecen como SUFIJO (postfijo).
+ * En euskera, el tipo de vía va al final: "Txurrua KALEA" = "Calle Txurrua"
+ * Ordenados de más largo a más corto.
  */
 const BASQUE_SUFFIX_STREET_TYPES = [
   "ZUMARKALEA", // Alameda
   "PASEALEKUA", // Paseo
   "ETORBIDEA", // Avenida
   "ENPARANTZA", // Plaza
-  "PASEALEKU", // Paseo (sin artÃ­culo)
-  "ETORBIDE", // Avenida (sin artÃ­culo)
-  "KALEA", // Calle (con artÃ­culo)
-  "BIDEA", // Camino (con artÃ­culo)
+  "PASEALEKU", // Paseo (sin artículo)
+  "ETORBIDE", // Avenida (sin artículo)
+  "KALEA", // Calle (con artículo)
+  "BIDEA", // Camino (con artículo)
   "KALE", // Calle
   "BIDE", // Camino
 ];
@@ -140,7 +140,7 @@ export class LibpostalAddressTransformer implements IFieldTransformer {
   ): Promise<TransformerResult> {
     const fields: Record<string, string | null> = {};
 
-    // Circuit breaker: si el servicio estÃ¡ caÃ­do, no intentar durante el cooldown
+    // Circuit breaker: si el servicio está caído, no intentar durante el cooldown
     if (this.isCircuitOpen()) {
       return { fields: {}, confidence: 0, rawValue: value };
     }
@@ -152,7 +152,7 @@ export class LibpostalAddressTransformer implements IFieldTransformer {
         return { fields, confidence: 0, rawValue: value };
       }
 
-      // Primera llamada exitosa â†’ log disponibilidad
+      // Primera llamada exitosa → log disponibilidad
       if (!this.hasLoggedAvailability) {
         this.hasLoggedAvailability = true;
         this.hasLoggedUnavailability = false;
@@ -172,7 +172,7 @@ export class LibpostalAddressTransformer implements IFieldTransformer {
           }
           case "house": {
             // libpostal clasifica algunas direcciones (ej: nombres vascos) como "house"
-            // en lugar de "road" + "house_number". Intentamos separar nombre y nÃºmero.
+            // en lugar de "road" + "house_number". Intentamos separar nombre y número.
             const parsed = this.parseHouseLabel(comp.value);
             if (parsed.streetName && !fields.streetName) {
               fields.streetName = parsed.streetName;
@@ -215,7 +215,7 @@ export class LibpostalAddressTransformer implements IFieldTransformer {
 
       return { fields, confidence, rawValue: value };
     } catch {
-      // Service unavailable â†’ abrir circuit breaker
+      // Service unavailable → abrir circuit breaker
       this.openCircuit();
       return { fields: {}, confidence: 0, rawValue: value };
     }
@@ -241,14 +241,14 @@ export class LibpostalAddressTransformer implements IFieldTransformer {
 
   /**
    * Comprueba si el circuit breaker sigue abierto.
-   * Se cierra automÃ¡ticamente tras el cooldown para reintentar.
+   * Se cierra automáticamente tras el cooldown para reintentar.
    */
   private isCircuitOpen(): boolean {
     if (!this.circuitOpen) return false;
 
     const elapsed = Date.now() - this.circuitOpenedAt;
     if (elapsed >= CIRCUIT_BREAKER_COOLDOWN_MS) {
-      // Cooldown expirado â†’ cerrar circuito, dejar que reintente
+      // Cooldown expirado → cerrar circuito, dejar que reintente
       this.circuitOpen = false;
 
       return false;
@@ -285,12 +285,12 @@ export class LibpostalAddressTransformer implements IFieldTransformer {
 
   /**
    * Parsea el label "house" de libpostal.
-   * Cuando libpostal no reconoce una direcciÃ³n (ej: nombres vascos como "txurrua 1"),
-   * clasifica todo como "house". Intentamos separar el nÃºmero del nombre.
+   * Cuando libpostal no reconoce una dirección (ej: nombres vascos como "txurrua 1"),
+   * clasifica todo como "house". Intentamos separar el número del nombre.
    *
-   * Ej: "txurrua 1" â†’ { streetName: "txurrua", streetNumber: "1" }
-   * Ej: "txurrua 1 plentzia" â†’ { streetName: "txurrua", streetNumber: "1" }
-   *     (las palabras posteriores al nÃºmero se ignoran, ya que suelen ser ciudad/contexto)
+   * Ej: "txurrua 1" → { streetName: "txurrua", streetNumber: "1" }
+   * Ej: "txurrua 1 plentzia" → { streetName: "txurrua", streetNumber: "1" }
+   *     (las palabras posteriores al número se ignoran, ya que suelen ser ciudad/contexto)
    */
   private parseHouseLabel(houseValue: string): {
     streetName: string | null;
@@ -298,11 +298,11 @@ export class LibpostalAddressTransformer implements IFieldTransformer {
   } {
     const parts = houseValue.trim().split(/\s+/);
     if (parts.length < 2) {
-      // Solo una palabra â€” podrÃ­a ser el nombre pero no podemos separar
+      // Solo una palabra — podría ser el nombre pero no podemos separar
       return { streetName: houseValue, streetNumber: null };
     }
 
-    // Buscar el primer token numÃ©rico (ej: "1", "44", "3B")
+    // Buscar el primer token numérico (ej: "1", "44", "3B")
     for (let i = 1; i < parts.length; i++) {
       if (/^\d+\w?$/.test(parts[i])) {
         const streetName = parts.slice(0, i).join(" ");
@@ -311,16 +311,16 @@ export class LibpostalAddressTransformer implements IFieldTransformer {
       }
     }
 
-    // Sin nÃºmero encontrado â€” devolver todo como nombre
+    // Sin número encontrado — devolver todo como nombre
     return { streetName: houseValue, streetNumber: null };
   }
 
   /**
-   * Separa tipo de vÃ­a del nombre usando diccionario multilingÃ¼e.
+   * Separa tipo de vía del nombre usando diccionario multilingÃ¼e.
    *
    * Soporta dos patrones:
-   * - Prefijo (castellano/catalÃ¡n/gallego): "CALLE Gran VÃ­a" â†’ streetType="Calle"
-   * - Sufijo (euskera): "Txurrua KALEA" â†’ streetType="Kalea"
+   * - Prefijo (castellano/catalán/gallego): "CALLE Gran Vía" → streetType="Calle"
+   * - Sufijo (euskera): "Txurrua KALEA" → streetType="Kalea"
    */
   private splitStreetTypeAndName(road: string): {
     streetType: string | null;
@@ -328,7 +328,7 @@ export class LibpostalAddressTransformer implements IFieldTransformer {
   } {
     const upper = road.toUpperCase().trim();
 
-    // 1. Buscar prefijos (castellano, catalÃ¡n, gallego, abreviaturas)
+    // 1. Buscar prefijos (castellano, catalán, gallego, abreviaturas)
     for (const type of PREFIX_STREET_TYPES) {
       if (upper.startsWith(type + " ") || upper.startsWith(type + ".")) {
         const rest = road
@@ -342,7 +342,7 @@ export class LibpostalAddressTransformer implements IFieldTransformer {
       }
     }
 
-    // 2. Buscar sufijos vascos: "txurrua kalea" â†’ type="Kalea", name="Txurrua"
+    // 2. Buscar sufijos vascos: "txurrua kalea" → type="Kalea", name="Txurrua"
     for (const type of BASQUE_SUFFIX_STREET_TYPES) {
       if (upper.endsWith(" " + type)) {
         const rest = road.substring(0, road.length - type.length).trim();
@@ -353,7 +353,7 @@ export class LibpostalAddressTransformer implements IFieldTransformer {
       }
     }
 
-    // No type found â€” return full road as streetName
+    // No type found — return full road as streetName
     return { streetType: null, streetName: road };
   }
 

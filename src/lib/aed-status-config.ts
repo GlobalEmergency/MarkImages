@@ -1,5 +1,5 @@
 /**
- * AED Status Configuration â€” Single source of truth
+ * AED Status Configuration — Single source of truth
  *
  * Centralizes labels, colors, and filter options for AED statuses.
  * Use this instead of hardcoding status strings in components.
@@ -38,8 +38,8 @@ export const AED_STATUS_CONFIG: Record<AedStatus, AedStatusInfo> = {
     visibleToAll: true,
   },
   PENDING_REVIEW: {
-    label: "Pendiente de revisiÃ³n",
-    pluralLabel: "Pendientes de revisiÃ³n",
+    label: "Pendiente de revisión",
+    pluralLabel: "Pendientes de revisión",
     color: "bg-yellow-100 text-yellow-800",
     dotColor: "bg-yellow-500",
     visibleToAll: true,
@@ -74,7 +74,7 @@ export function getStatusColor(status: string): string {
 
 // â”€â”€ Pre-built filter options â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-/** All status options with "Todos" â€” for admin dropdowns */
+/** All status options with "Todos" — for admin dropdowns */
 export const AED_STATUS_FILTER_OPTIONS_ALL = [
   { value: "all", label: "Todos los estados" },
   ...Object.entries(AED_STATUS_CONFIG).map(([value, { pluralLabel }]) => ({
@@ -83,7 +83,7 @@ export const AED_STATUS_FILTER_OPTIONS_ALL = [
   })),
 ];
 
-/** Only user-visible statuses with "Todos" â€” for org member dropdowns */
+/** Only user-visible statuses with "Todos" — for org member dropdowns */
 export const AED_STATUS_FILTER_OPTIONS_USER = [
   { value: "all", label: "Todos los estados" },
   ...Object.entries(AED_STATUS_CONFIG)
@@ -91,7 +91,7 @@ export const AED_STATUS_FILTER_OPTIONS_USER = [
     .map(([value, { pluralLabel }]) => ({ value, label: pluralLabel })),
 ];
 
-/** All statuses without "Todos" â€” for checkboxes/multi-select (e.g. ExportDialog) */
+/** All statuses without "Todos" — for checkboxes/multi-select (e.g. ExportDialog) */
 export const AED_STATUS_OPTIONS = Object.entries(AED_STATUS_CONFIG).map(([value, { label }]) => ({
   value,
   label,

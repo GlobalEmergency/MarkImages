@@ -23,7 +23,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Las contraseÃ±as no coinciden");
+      setError("Las contraseñas no coinciden");
       return;
     }
 
@@ -44,7 +44,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Error al restablecer la contraseÃ±a");
+        throw new Error(data.error || "Error al restablecer la contraseña");
       }
 
       setSuccess(true);
@@ -54,7 +54,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         router.push("/login");
       }, 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al restablecer la contraseÃ±a");
+      setError(err instanceof Error ? err.message : "Error al restablecer la contraseña");
     } finally {
       setLoading(false);
     }
@@ -79,19 +79,19 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold mb-4 text-gray-800">Â¡ContraseÃ±a restablecida!</h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-800">Â¡Contraseña restablecida!</h2>
           <p className="text-gray-600 mb-6">
-            Tu contraseÃ±a ha sido restablecida exitosamente. Ya puedes iniciar sesiÃ³n con tu nueva
-            contraseÃ±a.
+            Tu contraseña ha sido restablecida exitosamente. Ya puedes iniciar sesión con tu nueva
+            contraseña.
           </p>
           <p className="text-sm text-gray-500 mb-6">
-            SerÃ¡s redirigido al inicio de sesiÃ³n en unos segundos...
+            Serás redirigido al inicio de sesión en unos segundos...
           </p>
           <Link
             href="/login"
             className="inline-block w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors text-center"
           >
-            Ir al inicio de sesiÃ³n
+            Ir al inicio de sesión
           </Link>
         </div>
       </div>
@@ -100,8 +100,8 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-2 text-center text-gray-800">Restablecer contraseÃ±a</h2>
-      <p className="text-sm text-gray-600 mb-6 text-center">Ingresa tu nueva contraseÃ±a</p>
+      <h2 className="text-2xl font-bold mb-2 text-center text-gray-800">Restablecer contraseña</h2>
+      <p className="text-sm text-gray-600 mb-6 text-center">Ingresa tu nueva contraseña</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
@@ -110,7 +110,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Nueva contraseÃ±a
+            Nueva contraseña
           </label>
           <input
             id="password"
@@ -126,7 +126,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
         <div>
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-            Confirmar contraseÃ±a
+            Confirmar contraseña
           </label>
           <input
             id="confirmPassword"
@@ -141,12 +141,12 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         </div>
 
         <div className="text-xs text-gray-600 space-y-1">
-          <p>La contraseÃ±a debe cumplir con los siguientes requisitos:</p>
+          <p>La contraseña debe cumplir con los siguientes requisitos:</p>
           <ul className="list-disc list-inside ml-2">
-            <li>MÃ­nimo 8 caracteres</li>
-            <li>Al menos una letra mayÃºscula</li>
-            <li>Al menos una letra minÃºscula</li>
-            <li>Al menos un nÃºmero</li>
+            <li>Mínimo 8 caracteres</li>
+            <li>Al menos una letra mayúscula</li>
+            <li>Al menos una letra minúscula</li>
+            <li>Al menos un número</li>
           </ul>
         </div>
 
@@ -155,13 +155,13 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
           disabled={loading}
           className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
-          {loading ? "Restableciendo..." : "Restablecer contraseÃ±a"}
+          {loading ? "Restableciendo..." : "Restablecer contraseña"}
         </button>
       </form>
 
       <p className="mt-4 text-center text-sm text-gray-600">
         <Link href="/login" className="text-blue-600 hover:text-blue-800 font-medium">
-          Volver al inicio de sesiÃ³n
+          Volver al inicio de sesión
         </Link>
       </p>
     </div>

@@ -24,7 +24,7 @@ export function useAedDetail(aedId: string | null | undefined): UseAedDetailResu
     try {
       const data = await getAedDetailUseCase.execute(aedId);
       if (thisRequest === requestIdRef.current) setAed(data);
-    } catch (_err) {
+    } catch (err) {
       if (thisRequest === requestIdRef.current) {
         setError(err instanceof Error ? err.message : "Error cargando detalle");
       }

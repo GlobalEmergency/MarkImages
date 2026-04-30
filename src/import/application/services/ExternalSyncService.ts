@@ -1,5 +1,5 @@
 /**
- * External Sync Service â€” Application Service
+ * External Sync Service — Application Service
  *
  * Orchestrates external data source synchronization using BatchEngine
  * from @batchactions/core. Replaces the legacy ExternalSyncProcessor
@@ -15,7 +15,7 @@
  * - NDJSON cache: compressed in sync_ndjson_cache table between chunks (no re-fetch)
  * - Batch duplicate detection (1 query per batch vs 1 per record)
  * - Transactional AED creation (prisma.$transaction in processor)
- * - Proper streaming (AsyncGenerator â†’ NDJSON â†’ BatchEngine)
+ * - Proper streaming (AsyncGenerator → NDJSON → BatchEngine)
  */
 
 import { gzipSync, gunzipSync } from "node:zlib";
@@ -136,7 +136,7 @@ export class ExternalSyncService {
     if (!fieldMappings || Object.keys(fieldMappings).length === 0) {
       throw new Error(
         `La fuente de datos "${dataSource.name}" no tiene configurado el mapeo de campos. ` +
-          `Configure el mapeo antes de ejecutar la sincronizaciÃ³n.`
+          `Configure el mapeo antes de ejecutar la sincronización.`
       );
     }
 
@@ -360,7 +360,7 @@ export class ExternalSyncService {
   /**
    * Fetch all records from an external data source and serialize as NDJSON.
    * This is the bridge between IDataSourceAdapter (AsyncGenerator<ImportRecord>)
-   * and BatchEngine (DataSource â†’ string/Buffer).
+   * and BatchEngine (DataSource → string/Buffer).
    */
   /** Max NDJSON buffer size: 512 MB. Prevents OOM on unexpectedly large sources. */
   private static readonly MAX_NDJSON_BYTES = 512 * 1024 * 1024;
@@ -551,7 +551,7 @@ export class ExternalSyncService {
     // 2. Invalidate all caches after bulk sync
     invalidateAllAedCaches();
 
-    // 3. Disappearance detection â€” skip for dry runs or if no syncStartTime
+    // 3. Disappearance detection — skip for dry runs or if no syncStartTime
     if (dryRun || !syncStartTime) return;
 
     await this.detectDisappearedIdentifiers(dataSourceId, syncStartTime);
@@ -622,7 +622,7 @@ export class ExternalSyncService {
         return;
       }
 
-      // Only deactivate PUBLISHED AEDs (PUBLISHED â†’ INACTIVE is a valid transition)
+      // Only deactivate PUBLISHED AEDs (PUBLISHED → INACTIVE is a valid transition)
       const publishedAeds = await this.prisma.aed.findMany({
         where: {
           id: { in: aedsToDeactivate },
@@ -637,8 +637,8 @@ export class ExternalSyncService {
           const notes = appendInternalNote(
             aed.internal_notes,
             `DEA desaparecido de la fuente "${dataSource.name}". ` +
-              `No se encontrÃ³ en la Ãºltima sincronizaciÃ³n y no tiene identificadores activos en otras fuentes. ` +
-              `Marcado como INACTIVE automÃ¡ticamente.`,
+              `No se encontró en la última sincronización y no tiene identificadores activos en otras fuentes. ` +
+              `Marcado como INACTIVE automáticamente.`,
             "auto_deactivation_disappeared",
             "ExternalSyncService"
           );
@@ -657,7 +657,7 @@ export class ExternalSyncService {
               previousStatus: aed.status,
               newStatus: "INACTIVE",
               modifiedBy: SYSTEM_USER_UUID,
-              reason: `Desaparecido de fuente "${dataSource.name}" â€” desactivaciÃ³n automÃ¡tica`,
+              reason: `Desaparecido de fuente "${dataSource.name}" — desactivación automática`,
             });
           });
           deactivatedCount++;
@@ -822,12 +822,12 @@ export class ExternalSyncService {
   }
 
   // ============================================================
-  // NDJSON Cache â€” avoid re-downloading on every resume
+  // NDJSON Cache — avoid re-downloading on every resume
   // ============================================================
 
   /**
    * Compress and store NDJSON data in sync_ndjson_cache table.
-   * Typical compression ratio: 5-8x (85 MB NDJSON â†’ ~12 MB gzip).
+   * Typical compression ratio: 5-8x (85 MB NDJSON → ~12 MB gzip).
    */
   private async cacheNdjson(jobId: string, ndjson: string, recordCount: number): Promise<void> {
     try {

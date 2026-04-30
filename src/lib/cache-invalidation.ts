@@ -1,7 +1,7 @@
 /**
  * On-demand cache invalidation for AED data.
  *
- * revalidatePath only works on ISR pages and fetch-cached data â€” NOT on
+ * revalidatePath only works on ISR pages and fetch-cached data — NOT on
  * API route handlers that set their own Cache-Control headers. Route
  * handler freshness is managed by TTLs in cache-headers.ts.
  *
@@ -13,7 +13,7 @@ import { revalidatePath } from "next/cache";
 
 /**
  * Invalidate caches after a single AED is created or updated.
- * Only targets ISR pages and v1 detail â€” internal API routes rely on
+ * Only targets ISR pages and v1 detail — internal API routes rely on
  * their 5 min TTL for natural freshness.
  */
 export function invalidateAedCaches(aedId: string): void {

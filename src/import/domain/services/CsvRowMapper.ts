@@ -1,6 +1,6 @@
 /**
  * Domain Service: Mapea datos raw del CSV a DynamicCsvRow
- * Esta es la lÃ³gica ÃšNICA compartida entre validaciÃ³n e importaciÃ³n
+ * Esta es la lógica ÃšNICA compartida entre validación e importación
  * Capa de Dominio
  */
 
@@ -13,25 +13,25 @@ export interface CsvColumnMapping {
 
 /**
  * Servicio de dominio para mapear filas CSV
- * Garantiza que validaciÃ³n e importaciÃ³n usen la misma lÃ³gica
+ * Garantiza que validación e importación usen la misma lógica
  */
 export class CsvRowMapper {
   /**
    * Construye DynamicCsvRow aplicando los mappings del usuario
    *
-   * @param rawData - Datos raw del CSV como objeto clave-valor (nombre columna â†’ valor)
-   * @param mappings - Mapeos configurados por el usuario (columna CSV â†’ campo del sistema)
+   * @param rawData - Datos raw del CSV como objeto clave-valor (nombre columna → valor)
+   * @param mappings - Mapeos configurados por el usuario (columna CSV → campo del sistema)
    * @returns DynamicCsvRow con los datos mapeados correctamente
    *
    * Ejemplo:
-   * rawData = { "NOMBRE": "Hospital", "CALLE": "Gran VÃ­a", "NUM": "1" }
+   * rawData = { "NOMBRE": "Hospital", "CALLE": "Gran Vía", "NUM": "1" }
    * mappings = [
    *   { csvColumn: "NOMBRE", systemField: "proposedName" },
    *   { csvColumn: "CALLE", systemField: "streetName" },
    *   { csvColumn: "NUM", systemField: "streetNumber" }
    * ]
    *
-   * Resultado: DynamicCsvRow con { proposedName: "Hospital", streetName: "Gran VÃ­a", streetNumber: "1" }
+   * Resultado: DynamicCsvRow con { proposedName: "Hospital", streetName: "Gran Vía", streetNumber: "1" }
    */
   static buildDynamicRow(
     rawData: Record<string, string>,
@@ -43,7 +43,7 @@ export class CsvRowMapper {
     for (const mapping of mappings) {
       const value = rawData[mapping.csvColumn];
 
-      // Solo agregar valores que existen y no estÃ¡n vacÃ­os
+      // Solo agregar valores que existen y no están vacíos
       if (value !== undefined && value !== null && value.trim() !== "") {
         mappedData[mapping.systemField] = value.trim();
       }

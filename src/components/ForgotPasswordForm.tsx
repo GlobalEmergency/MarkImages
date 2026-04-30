@@ -58,17 +58,17 @@ export default function ForgotPasswordForm() {
           </div>
           <h2 className="text-2xl font-bold mb-4 text-gray-800">Revisa tu correo</h2>
           <p className="text-gray-600 mb-6">
-            Si el email existe en nuestro sistema, recibirÃ¡s un correo con instrucciones para
-            recuperar tu contraseÃ±a.
+            Si el email existe en nuestro sistema, recibirás un correo con instrucciones para
+            recuperar tu contraseña.
           </p>
           <p className="text-sm text-gray-500 mb-6">
-            El enlace expirarÃ¡ en 1 hora por razones de seguridad.
+            El enlace expirará en 1 hora por razones de seguridad.
           </p>
           <Link
             href="/login"
             className="inline-block w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors text-center"
           >
-            Volver al inicio de sesiÃ³n
+            Volver al inicio de sesión
           </Link>
         </div>
       </div>
@@ -78,10 +78,10 @@ export default function ForgotPasswordForm() {
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-2 text-center text-gray-800">
-        Â¿Olvidaste tu contraseÃ±a?
+        Â¿Olvidaste tu contraseña?
       </h2>
       <p className="text-sm text-gray-600 mb-6 text-center">
-        Ingresa tu email y te enviaremos instrucciones para restablecer tu contraseÃ±a.
+        Ingresa tu email y te enviaremos instrucciones para restablecer tu contraseña.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -115,7 +115,7 @@ export default function ForgotPasswordForm() {
 
       <p className="mt-4 text-center text-sm text-gray-600">
         <Link href="/login" className="text-blue-600 hover:text-blue-800 font-medium">
-          Volver al inicio de sesiÃ³n
+          Volver al inicio de sesión
         </Link>
       </p>
     </div>

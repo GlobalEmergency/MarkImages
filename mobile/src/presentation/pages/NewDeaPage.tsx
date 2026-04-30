@@ -114,7 +114,7 @@ const NewDeaPage: React.FC = () => {
       });
 
       history.push("/tabs/map");
-    } catch (_error) {
+    } catch (error) {
       const message = error instanceof Error ? error.message : "Error al registrar el DEA";
       presentToast({ message, duration: 3000, color: "danger", position: "top" });
     } finally {

@@ -14,6 +14,6 @@ export const ARROW_CONFIG = {
   STROKE_COLOR: "#991b1b", // Rojo oscuro para el contorno (red-800)
   STROKE_WIDTH: 2, // Grosor del contorno
 
-  // Ãngulo de la punta (en radianes)
+  // Ángulo de la punta (en radianes)
   HEAD_ANGLE: Math.PI / 6, // 30 grados
 } as const;

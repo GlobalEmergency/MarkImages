@@ -3,11 +3,11 @@
  * Capa de Infraestructura - Implementa IDataSourceAdapter para archivos CSV
  *
  * Soporta dos modos:
- * - Local: config.filePath â†’ lee archivo del disco (importaciÃ³n manual)
- * - Remoto: config.fileUrl â†’ descarga CSV desde URL (sync automÃ¡tico)
+ * - Local: config.filePath → lee archivo del disco (importación manual)
+ * - Remoto: config.fileUrl → descarga CSV desde URL (sync automático)
  *
  * En ambos casos delega el parseo a CsvParserAdapter (PapaParse).
- * El delimitador es configurable vÃ­a config.csvDelimiter (auto-detectado si no se especifica).
+ * El delimitador es configurable vía config.csvDelimiter (auto-detectado si no se especifica).
  */
 
 import type {
@@ -37,7 +37,7 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
   }
 
   // ============================================
-  // ResoluciÃ³n de fuente: local vs remota
+  // Resolución de fuente: local vs remota
   // ============================================
 
   private isRemote(config: DataSourceConfig): boolean {
@@ -54,7 +54,7 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
   }
 
   // ============================================
-  // ObtenciÃ³n de registros
+  // Obtención de registros
   // ============================================
 
   private async getRecords(config: DataSourceConfig): Promise<Record<string, string>[]> {
@@ -118,7 +118,7 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
         }
       }
     } else {
-      // Local: usa columnMappings (flujo de importaciÃ³n manual)
+      // Local: usa columnMappings (flujo de importación manual)
       for (let i = 0; i < records.length; i++) {
         yield ImportRecord.fromCsvRow(records[i], config.columnMappings || [], i);
       }
@@ -142,7 +142,7 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
     }> = [];
 
     if (this.isRemote(config)) {
-      // ValidaciÃ³n remota
+      // Validación remota
       const url = config.fileUrl || config.apiEndpoint;
       if (!url) {
         issues.push({
@@ -161,12 +161,12 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
             field: "fileUrl",
             value: url,
             severity: "CRITICAL",
-            message: "La URL del archivo CSV no es vÃ¡lida",
+            message: "La URL del archivo CSV no es válida",
           });
         }
       }
     } else {
-      // ValidaciÃ³n local
+      // Validación local
       if (!config.filePath) {
         issues.push({
           row: 0,
@@ -185,7 +185,7 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
               field: "filePath",
               value: config.filePath,
               severity: "CRITICAL",
-              message: "La ruta no es un archivo vÃ¡lido",
+              message: "La ruta no es un archivo válido",
             });
           }
           const maxSize = 50 * 1024 * 1024;
@@ -195,7 +195,7 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
               field: "filePath",
               value: config.filePath,
               severity: "CRITICAL",
-              message: `El archivo excede el tamaÃ±o mÃ¡ximo de 50MB (${Math.round(stats.size / 1024 / 1024)}MB)`,
+              message: `El archivo excede el tamaño máximo de 50MB (${Math.round(stats.size / 1024 / 1024)}MB)`,
             });
           }
         } catch (error) {
@@ -244,7 +244,7 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
       if (validation.hasCriticalErrors()) {
         return {
           success: false,
-          message: validation.criticalErrors[0]?.message || "Error de validaciÃ³n",
+          message: validation.criticalErrors[0]?.message || "Error de validación",
         };
       }
 
@@ -253,7 +253,7 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
 
       return {
         success: true,
-        message: `CSV vÃ¡lido. ${records.length} registros encontrados.`,
+        message: `CSV válido. ${records.length} registros encontrados.`,
         recordCount: records.length,
         sampleFields,
         responseTimeMs: Date.now() - startTime,

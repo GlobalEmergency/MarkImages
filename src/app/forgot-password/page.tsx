@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import ForgotPasswordForm from "@/components/ForgotPasswordForm";
 
 export const metadata: Metadata = {
-  title: "Recuperar contraseÃ±a",
+  title: "Recuperar contraseña",
   robots: { index: false, follow: false },
 };
 

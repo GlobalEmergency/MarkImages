@@ -1,6 +1,6 @@
 /**
  * ImportPreviewTable: Muestra preview de registros validados
- * Permite ver cÃ³mo quedarÃ¡n los datos antes de importar
+ * Permite ver cómo quedarán los datos antes de importar
  */
 
 "use client";
@@ -146,7 +146,7 @@ export default function ImportPreviewTable({ previewRecords }: ImportPreviewTabl
           <span>Preview de Registros</span>
         </h3>
         <p className="text-sm text-blue-100 mt-1">
-          Muestra de cÃ³mo quedarÃ¡n los datos despuÃ©s de la importaciÃ³n
+          Muestra de cómo quedarán los datos después de la importación
         </p>
       </div>
 
@@ -162,7 +162,7 @@ export default function ImportPreviewTable({ previewRecords }: ImportPreviewTabl
         >
           <div className="flex items-center justify-center space-x-2">
             <CheckCircle className="w-4 h-4" />
-            <span>VÃ¡lidos ({validRecords.length})</span>
+            <span>Válidos ({validRecords.length})</span>
           </div>
         </button>
 
@@ -177,7 +177,7 @@ export default function ImportPreviewTable({ previewRecords }: ImportPreviewTabl
           >
             <div className="flex items-center justify-center space-x-2">
               <XCircle className="w-4 h-4" />
-              <span>InvÃ¡lidos ({invalidRecords.length})</span>
+              <span>Inválidos ({invalidRecords.length})</span>
             </div>
           </button>
         )}
@@ -204,11 +204,7 @@ export default function ImportPreviewTable({ previewRecords }: ImportPreviewTabl
         {currentRecords.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             No hay registros{" "}
-            {activeTab === "valid"
-              ? "vÃ¡lidos"
-              : activeTab === "invalid"
-                ? "invÃ¡lidos"
-                : "omitidos"}{" "}
+            {activeTab === "valid" ? "válidos" : activeTab === "invalid" ? "inválidos" : "omitidos"}{" "}
             para mostrar
           </div>
         ) : (

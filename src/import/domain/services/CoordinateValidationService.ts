@@ -1,8 +1,8 @@
 /**
  * Coordinate Validation Service (Domain Service)
  *
- * Servicio de dominio para validar coordenadas geogrÃ¡ficas.
- * Puro, sin dependencias externas, solo lÃ³gica de negocio.
+ * Servicio de dominio para validar coordenadas geográficas.
+ * Puro, sin dependencias externas, solo lógica de negocio.
  */
 
 import { ValidationError } from "../value-objects/ValidationError";
@@ -28,7 +28,7 @@ export class CoordinateValidationService {
     // Normalizar comas a puntos
     const normalizedLat = latitude.replace(",", ".");
 
-    // Verificar que sea un nÃºmero
+    // Verificar que sea un número
     if (isNaN(parseFloat(normalizedLat))) {
       return {
         isValid: false,
@@ -38,17 +38,17 @@ export class CoordinateValidationService {
           csvColumn,
           value: latitude,
           errorType: "INVALID_COORDINATE",
-          message: `La latitud "${latitude}" no es un nÃºmero vÃ¡lido`,
+          message: `La latitud "${latitude}" no es un número válido`,
           severity: "error",
           correctionSuggestion:
-            "Usa formato decimal con punto (ej: 40.4165). Si usas coma, reemplÃ¡zala por punto.",
+            "Usa formato decimal con punto (ej: 40.4165). Si usas coma, reemplázala por punto.",
         }),
       };
     }
 
     const latValue = parseFloat(normalizedLat);
 
-    // Verificar rango vÃ¡lido
+    // Verificar rango válido
     if (latValue < -90 || latValue > 90) {
       return {
         isValid: false,
@@ -58,7 +58,7 @@ export class CoordinateValidationService {
           csvColumn,
           value: latitude,
           errorType: "INVALID_COORDINATE",
-          message: `La latitud ${latValue} estÃ¡ fuera del rango vÃ¡lido (-90 a 90)`,
+          message: `La latitud ${latValue} está fuera del rango válido (-90 a 90)`,
           severity: "error",
           correctionSuggestion:
             "Verifica las coordenadas. Para Madrid, la latitud debe estar cerca de 40.4",
@@ -84,7 +84,7 @@ export class CoordinateValidationService {
     // Normalizar comas a puntos
     const normalizedLon = longitude.replace(",", ".");
 
-    // Verificar que sea un nÃºmero
+    // Verificar que sea un número
     if (isNaN(parseFloat(normalizedLon))) {
       return {
         isValid: false,
@@ -94,17 +94,17 @@ export class CoordinateValidationService {
           csvColumn,
           value: longitude,
           errorType: "INVALID_COORDINATE",
-          message: `La longitud "${longitude}" no es un nÃºmero vÃ¡lido`,
+          message: `La longitud "${longitude}" no es un número válido`,
           severity: "error",
           correctionSuggestion:
-            "Usa formato decimal con punto (ej: -3.7038). Si usas coma, reemplÃ¡zala por punto.",
+            "Usa formato decimal con punto (ej: -3.7038). Si usas coma, reemplázala por punto.",
         }),
       };
     }
 
     const lonValue = parseFloat(normalizedLon);
 
-    // Verificar rango vÃ¡lido
+    // Verificar rango válido
     if (lonValue < -180 || lonValue > 180) {
       return {
         isValid: false,
@@ -114,7 +114,7 @@ export class CoordinateValidationService {
           csvColumn,
           value: longitude,
           errorType: "INVALID_COORDINATE",
-          message: `La longitud ${lonValue} estÃ¡ fuera del rango vÃ¡lido (-180 a 180)`,
+          message: `La longitud ${lonValue} está fuera del rango válido (-180 a 180)`,
           severity: "error",
           correctionSuggestion:
             "Verifica las coordenadas. Para Madrid, la longitud debe estar cerca de -3.7",
@@ -126,7 +126,7 @@ export class CoordinateValidationService {
   }
 
   /**
-   * Valida que ambas coordenadas estÃ©n presentes o ambas ausentes
+   * Valida que ambas coordenadas estén presentes o ambas ausentes
    */
   validateCoordinatePair(
     latitude: string | undefined,
@@ -183,7 +183,7 @@ export class CoordinateValidationService {
       return pairResult;
     }
 
-    // Si no hay coordenadas, es vÃ¡lido
+    // Si no hay coordenadas, es válido
     if (!latitude && !longitude) {
       return { isValid: true };
     }

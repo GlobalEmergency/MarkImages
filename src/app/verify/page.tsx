@@ -87,15 +87,15 @@ const BASE_FILTER_OPTIONS: FilterOption[] = [
   },
   {
     value: "requires_attention",
-    label: "Requieren atenciÃ³n",
-    description: "DEAs marcados como que necesitan revisiÃ³n",
+    label: "Requieren atención",
+    description: "DEAs marcados como que necesitan revisión",
     badgeColor: "bg-red-100 text-red-800",
-    badgeText: "AtenciÃ³n",
+    badgeText: "Atención",
   },
   {
     value: "verification_expired",
-    label: "VerificaciÃ³n caducada",
-    description: "DEAs cuya verificaciÃ³n tiene mÃ¡s de 6 meses",
+    label: "Verificación caducada",
+    description: "DEAs cuya verificación tiene más de 6 meses",
     badgeColor: "bg-orange-100 text-orange-800",
     badgeText: "Caducada",
   },
@@ -210,14 +210,14 @@ export default function VerifyPage() {
       const response = await fetch(url.toString());
 
       if (!response.ok) {
-        throw new Error("Error al cargar mÃ¡s DEAs");
+        throw new Error("Error al cargar más DEAs");
       }
 
       const data: ApiResponse = await response.json();
       setAeds((prev) => [...prev, ...data.data]);
       setPagination(data.pagination);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar mÃ¡s DEAs");
+      setError(err instanceof Error ? err.message : "Error al cargar más DEAs");
     } finally {
       setLoadingMore(false);
     }
@@ -336,9 +336,9 @@ export default function VerifyPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">VerificaciÃ³n de DEAs</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Verificación de DEAs</h1>
               <p className="text-gray-600">
-                Selecciona un DEA para iniciar el proceso de verificaciÃ³n
+                Selecciona un DEA para iniciar el proceso de verificación
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -350,7 +350,7 @@ export default function VerifyPage() {
                     className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors font-medium"
                   >
                     <X className="w-5 h-5" />
-                    Cancelar selecciÃ³n
+                    Cancelar selección
                   </button>
                 ) : (
                   <button
@@ -404,7 +404,7 @@ export default function VerifyPage() {
                       type="text"
                       value={searchInput}
                       onChange={(e) => setSearchInput(e.target.value)}
-                      placeholder="CÃ³digo, nombre, direcciÃ³n..."
+                      placeholder="Código, nombre, dirección..."
                       className="w-full pl-9 pr-9 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                     {searchInput && (
@@ -433,7 +433,7 @@ export default function VerifyPage() {
                 {/* Filter type selector */}
                 <div className="flex-1">
                   <label className="block text-xs font-medium text-gray-500 mb-1">
-                    Estado de verificaciÃ³n
+                    Estado de verificación
                   </label>
                   <select
                     value={filterType}
@@ -453,7 +453,7 @@ export default function VerifyPage() {
                 {!isAdmin && userOrganizations.length > 0 && (
                   <div className="flex-1">
                     <label className="block text-xs font-medium text-gray-500 mb-1">
-                      OrganizaciÃ³n
+                      Organización
                     </label>
                     <OrganizationSelector
                       organizations={userOrganizations}
@@ -475,7 +475,7 @@ export default function VerifyPage() {
                   {currentFilter.label.toLowerCase()})
                 </span>
                 <span className="text-blue-600">
-                  PÃ¡gina {pagination.currentPage} de {pagination.totalPages}
+                  Página {pagination.currentPage} de {pagination.totalPages}
                 </span>
               </div>
 
@@ -529,10 +529,10 @@ export default function VerifyPage() {
                 : filterType === "rejected"
                   ? "âœ¨"
                   : filterType === "never_verified"
-                    ? "âœ…"
+                    ? "✅"
                     : filterType === "requires_attention"
                       ? "ðŸ‘"
-                      : "ðŸŽ‰"}
+                      : "🎉"}
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               {searchTerm
@@ -542,8 +542,8 @@ export default function VerifyPage() {
                   : filterType === "never_verified"
                     ? "No hay DEAs sin verificar"
                     : filterType === "requires_attention"
-                      ? "No hay DEAs que requieran atenciÃ³n"
-                      : "No hay DEAs con verificaciÃ³n caducada"}
+                      ? "No hay DEAs que requieran atención"
+                      : "No hay DEAs con verificación caducada"}
             </h3>
             <p className="text-gray-600">
               {searchTerm
@@ -553,15 +553,15 @@ export default function VerifyPage() {
                   : filterType === "never_verified"
                     ? "Todos los DEAs han sido verificados al menos una vez"
                     : filterType === "requires_attention"
-                      ? "No hay DEAs marcados como que necesitan revisiÃ³n"
-                      : "Todas las verificaciones estÃ¡n al dÃ­a"}
+                      ? "No hay DEAs marcados como que necesitan revisión"
+                      : "Todas las verificaciones están al día"}
             </p>
             {searchTerm && (
               <button
                 onClick={clearSearch}
                 className="mt-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
               >
-                Limpiar bÃºsqueda
+                Limpiar búsqueda
               </button>
             )}
           </div>
@@ -606,7 +606,7 @@ export default function VerifyPage() {
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-gray-900">
                           {aed.code ||
-                            (aed.provisional_number ? `#${aed.provisional_number}` : "Sin cÃ³digo")}
+                            (aed.provisional_number ? `#${aed.provisional_number}` : "Sin código")}
                         </h3>
                         <span
                           className={`text-xs font-medium px-2.5 py-0.5 rounded ${currentFilter.badgeColor}`}
@@ -627,7 +627,7 @@ export default function VerifyPage() {
                         {aed.location && (
                           <>
                             <p className="text-sm text-gray-600">
-                              <span className="font-medium">DirecciÃ³n:</span>{" "}
+                              <span className="font-medium">Dirección:</span>{" "}
                               {aed.location.street_type} {aed.location.street_name}{" "}
                               {aed.location.street_number}
                             </p>
@@ -662,7 +662,7 @@ export default function VerifyPage() {
                           ? isSelected
                             ? "Seleccionado"
                             : "Seleccionar"
-                          : "Iniciar VerificaciÃ³n"}
+                          : "Iniciar Verificación"}
                       </button>
                     </div>
                   </div>
@@ -683,7 +683,7 @@ export default function VerifyPage() {
                       Cargando...
                     </div>
                   ) : (
-                    `Cargar mÃ¡s DEAs (${pagination.totalRecords - aeds.length} restantes)`
+                    `Cargar más DEAs (${pagination.totalRecords - aeds.length} restantes)`
                   )}
                 </button>
               </div>
@@ -692,7 +692,7 @@ export default function VerifyPage() {
             {pagination && !pagination.hasNextPage && aeds.length > 12 && (
               <div className="text-center py-8">
                 <div className="text-green-600 text-lg font-medium mb-2">
-                  âœ… Todos los DEAs han sido cargados
+                  ✅ Todos los DEAs han sido cargados
                 </div>
                 <p className="text-gray-600">
                   Se han mostrado todos los {pagination.totalRecords} DEAs disponibles
@@ -737,7 +737,7 @@ export default function VerifyPage() {
       <ConfirmDialog
         isOpen={showDeleteDialog}
         title="Eliminar DEAs permanentemente"
-        message={`Â¿EstÃ¡s seguro de que deseas eliminar ${selectedIds.size} DEA${selectedIds.size !== 1 ? "s" : ""} descartado${selectedIds.size !== 1 ? "s" : ""}? Esta acciÃ³n no se puede deshacer.`}
+        message={`Â¿Estás seguro de que deseas eliminar ${selectedIds.size} DEA${selectedIds.size !== 1 ? "s" : ""} descartado${selectedIds.size !== 1 ? "s" : ""}? Esta acción no se puede deshacer.`}
         confirmText={`Eliminar ${selectedIds.size} DEA${selectedIds.size !== 1 ? "s" : ""}`}
         cancelText="Cancelar"
         confirmColor="red"

@@ -1,5 +1,5 @@
 /**
- * IDuplicateDetector â€” Main port for duplicate detection
+ * IDuplicateDetector — Main port for duplicate detection
  *
  * Orchestrates identity matching + scoring engine.
  * Consumed by: API routes, CSV imports, external sync.

@@ -1,5 +1,5 @@
 /**
- * Detection Configuration â€” Centralized thresholds and spatial parameters
+ * Detection Configuration — Centralized thresholds and spatial parameters
  *
  * All duplicate detection parameters in one place.
  * Imported by domain services and infrastructure implementations.
@@ -35,7 +35,7 @@ export const DetectionConfig = {
   },
 
   /**
-   * FALLBACK â€” When no coordinates available
+   * FALLBACK — When no coordinates available
    */
   fallback: {
     usePostalCodeFilter: true,
@@ -43,7 +43,7 @@ export const DetectionConfig = {
   },
 
   /**
-   * STATUS FILTER â€” Exclude these statuses from duplicate matching
+   * STATUS FILTER — Exclude these statuses from duplicate matching
    */
   filters: {
     excludeStatuses: ["REJECTED", "INACTIVE"] as const,

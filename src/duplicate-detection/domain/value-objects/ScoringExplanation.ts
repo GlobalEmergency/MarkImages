@@ -1,5 +1,5 @@
 /**
- * ScoringExplanation â€” Immutable Value Object
+ * ScoringExplanation — Immutable Value Object
  *
  * Detailed scoring breakdown for debugging and analysis.
  * Includes individual rule results + interaction adjustments.

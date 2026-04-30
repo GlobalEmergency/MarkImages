@@ -8,7 +8,7 @@ import crypto from "crypto";
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 const forgotPasswordSchema = z.object({
-  email: z.string().email("Email invÃ¡lido"),
+  email: z.string().email("Email inválido"),
 });
 
 export async function POST(request: NextRequest) {
@@ -30,13 +30,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           message:
-            "Si el email existe en nuestro sistema, recibirÃ¡s un correo con instrucciones para recuperar tu contraseÃ±a.",
+            "Si el email existe en nuestro sistema, recibirás un correo con instrucciones para recuperar tu contraseña.",
         },
         { status: 200 }
       );
     }
 
-    // Generate secure reset token â€” store only the hash in DB
+    // Generate secure reset token — store only the hash in DB
     const resetToken = crypto.randomBytes(32).toString("hex");
     const resetTokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
     const resetTokenExpires = new Date(Date.now() + RESET_TOKEN_TTL_MS);
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         message:
-          "Si el email existe en nuestro sistema, recibirÃ¡s un correo con instrucciones para recuperar tu contraseÃ±a.",
+          "Si el email existe en nuestro sistema, recibirás un correo con instrucciones para recuperar tu contraseña.",
       },
       { status: 200 }
     );

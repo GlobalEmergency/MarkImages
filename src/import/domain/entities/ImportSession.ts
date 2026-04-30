@@ -1,6 +1,6 @@
 /**
- * Entity: SesiÃ³n de importaciÃ³n
- * Representa el estado completo de una sesiÃ³n de importaciÃ³n con mapeo
+ * Entity: Sesión de importación
+ * Representa el estado completo de una sesión de importación con mapeo
  * Capa de Dominio
  */
 
@@ -13,9 +13,9 @@ export type ImportSessionStatus =
   | "MAPPING" // Usuario configurando mapeos
   | "VALIDATING" // Sistema validando datos
   | "READY" // Listo para importar
-  | "IMPORTING" // ImportaciÃ³n en progreso
+  | "IMPORTING" // Importación en progreso
   | "COMPLETED" // Completado
-  | "FAILED"; // FallÃ³
+  | "FAILED"; // Falló
 
 export class ImportSession {
   private constructor(
@@ -66,7 +66,7 @@ export class ImportSession {
   }
 
   /**
-   * Crea una nueva sesiÃ³n de importaciÃ³n
+   * Crea una nueva sesión de importación
    */
   static create(userId: string, fileName: string, filePath: string): ImportSession {
     return new ImportSession(
@@ -111,7 +111,7 @@ export class ImportSession {
   }
 
   /**
-   * Actualiza un mapeo especÃ­fico
+   * Actualiza un mapeo específico
    */
   updateMapping(mapping: ColumnMapping): void {
     if (this.status !== "MAPPING") {
@@ -135,7 +135,7 @@ export class ImportSession {
   }
 
   /**
-   * Establece el resultado de validaciÃ³n
+   * Establece el resultado de validación
    */
   setValidation(validation: ValidationResult): void {
     if (this.status !== "VALIDATING") {
@@ -144,7 +144,7 @@ export class ImportSession {
 
     this.validationResult = validation;
 
-    // Si la validaciÃ³n tiene errores crÃ­ticos, volver a MAPPING
+    // Si la validación tiene errores críticos, volver a MAPPING
     if (!validation.isValid) {
       this.status = "MAPPING";
     } else {
@@ -155,7 +155,7 @@ export class ImportSession {
   }
 
   /**
-   * Inicia el proceso de importaciÃ³n
+   * Inicia el proceso de importación
    */
   startImport(batchId: string): void {
     if (this.status !== "READY") {
@@ -168,7 +168,7 @@ export class ImportSession {
   }
 
   /**
-   * Marca la importaciÃ³n como completada
+   * Marca la importación como completada
    */
   markAsCompleted(): void {
     if (this.status !== "IMPORTING") {
@@ -180,7 +180,7 @@ export class ImportSession {
   }
 
   /**
-   * Marca la importaciÃ³n como fallida
+   * Marca la importación como fallida
    */
   markAsFailed(): void {
     this.status = "FAILED";
@@ -188,7 +188,7 @@ export class ImportSession {
   }
 
   /**
-   * Vuelve al estado de mapeo (si hay errores en validaciÃ³n)
+   * Vuelve al estado de mapeo (si hay errores en validación)
    */
   backToMapping(): void {
     if (this.status !== "VALIDATING" && this.status !== "READY") {
@@ -201,7 +201,7 @@ export class ImportSession {
   }
 
   /**
-   * Verifica si todos los campos requeridos estÃ¡n mapeados
+   * Verifica si todos los campos requeridos están mapeados
    */
   hasAllRequiredMappings(requiredFields: string[]): boolean {
     return requiredFields.every((field) => this.mappings.has(field));
@@ -215,14 +215,14 @@ export class ImportSession {
   }
 
   /**
-   * Verifica si la sesiÃ³n estÃ¡ lista para validar
+   * Verifica si la sesión está lista para validar
    */
   canValidate(requiredFields: string[]): boolean {
     return this.hasAllRequiredMappings(requiredFields) && this.status === "MAPPING";
   }
 
   /**
-   * Verifica si la sesiÃ³n estÃ¡ lista para importar
+   * Verifica si la sesión está lista para importar
    */
   canImport(): boolean {
     return (
@@ -231,14 +231,14 @@ export class ImportSession {
   }
 
   /**
-   * Genera un ID Ãºnico para la sesiÃ³n
+   * Genera un ID único para la sesión
    */
   private static generateId(): string {
     return `session-${Date.now()}-${Math.random().toString(36).substring(7)}`;
   }
 
   /**
-   * Convierte a objeto plano para serializaciÃ³n
+   * Convierte a objeto plano para serialización
    */
   toJSON(): {
     id: string;

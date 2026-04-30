@@ -1,6 +1,6 @@
 /**
- * ImportWizard: Flujo completo de importaciÃ³n con mapeo de columnas
- * Gestiona los 4 pasos: Upload â†’ Preview & Mapping â†’ Validation â†’ Import
+ * ImportWizard: Flujo completo de importación con mapeo de columnas
+ * Gestiona los 4 pasos: Upload → Preview & Mapping → Validation → Import
  */
 
 "use client";
@@ -21,9 +21,9 @@ type Step = "upload" | "preview" | "mapping" | "validation";
 const ASSIGNMENT_TYPE_LABELS: Record<string, string> = {
   OWNERSHIP: "Propiedad",
   MAINTENANCE: "Mantenimiento",
-  CIVIL_PROTECTION: "ProtecciÃ³n Civil",
+  CIVIL_PROTECTION: "Protección Civil",
   CERTIFIED_COMPANY: "Empresa Certificada",
-  VERIFICATION: "VerificaciÃ³n",
+  VERIFICATION: "Verificación",
 };
 
 interface ImportWizardProps {
@@ -57,7 +57,7 @@ export default function ImportWizard({
     { id: "upload", label: "Subir CSV", icon: "ðŸ“¤" },
     { id: "preview", label: "Preview", icon: "ðŸ‘ï¸" },
     { id: "mapping", label: "Mapear Columnas", icon: "ðŸ”—" },
-    { id: "validation", label: "ValidaciÃ³n", icon: "âœ“" },
+    { id: "validation", label: "Validación", icon: "âœ“" },
   ];
 
   const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
@@ -80,7 +80,7 @@ export default function ImportWizard({
       const data = await response.json();
       setSessionData(data);
       setCurrentStep("mapping");
-      toast.success("âœ… Archivo procesado correctamente");
+      toast.success("✅ Archivo procesado correctamente");
     } catch (error) {
       console.error("Error uploading file:", error);
       toast.error(error instanceof Error ? error.message : "Error al subir el archivo");
@@ -92,7 +92,7 @@ export default function ImportWizard({
   ) => {
     setSessionData((prev: any) => ({ ...prev, mappings }));
     setCurrentStep("validation");
-    toast.success("âœ… Mapeo confirmado, procediendo a validaciÃ³n");
+    toast.success("✅ Mapeo confirmado, procediendo a validación");
   };
 
   const handleValidationComplete = (validation: any) => {
@@ -107,16 +107,16 @@ export default function ImportWizard({
   };
 
   const handleStartImport = async () => {
-    // Crear clave Ãºnica basada en el filePath
+    // Crear clave única basada en el filePath
     const importKey = `importing_${sessionData.filePath}`;
 
-    // Verificar si ya hay una importaciÃ³n en proceso para este archivo
+    // Verificar si ya hay una importación en proceso para este archivo
     if (localStorage.getItem(importKey)) {
-      toast.error("Ya hay una importaciÃ³n en proceso para este archivo");
+      toast.error("Ya hay una importación en proceso para este archivo");
       return;
     }
 
-    // Prevenir mÃºltiples clicks
+    // Prevenir múltiples clicks
     if (isImporting) return;
 
     setIsImporting(true);
@@ -125,9 +125,9 @@ export default function ImportWizard({
     localStorage.setItem(importKey, "true");
 
     try {
-      toast.loading("ðŸš€ Iniciando importaciÃ³n...", { id: "import-start" });
+      toast.loading("ðŸš€ Iniciando importación...", { id: "import-start" });
 
-      // Llamar al API para iniciar la importaciÃ³n
+      // Llamar al API para iniciar la importación
       const response = await fetch("/api/import", {
         method: "POST",
         headers: {
@@ -137,7 +137,7 @@ export default function ImportWizard({
           filePath: sessionData.filePath,
           mappings: sessionData.mappings,
           sharepointCookies: sessionData.sharepointCookies,
-          batchName: `ImportaciÃ³n ${new Date().toLocaleString()}`,
+          batchName: `Importación ${new Date().toLocaleString()}`,
           organizationId: selectedOrgId || undefined,
           // Only admin sends assignmentType override; org editors auto-derive on backend
           assignmentType: selectedOrgId && isGlobalAdmin ? assignmentType : undefined,
@@ -146,21 +146,21 @@ export default function ImportWizard({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Error al iniciar la importaciÃ³n");
+        throw new Error(errorData.error || "Error al iniciar la importación");
       }
 
       await response.json();
 
-      toast.success("âœ… ImportaciÃ³n iniciada correctamente", { id: "import-start" });
+      toast.success("✅ Importación iniciada correctamente", { id: "import-start" });
 
       // Redirigir usando window.location para mayor confiabilidad
       window.location.href = "/import";
     } catch (error) {
-      // Limpiar flag y re-habilitar el botÃ³n si hay error
+      // Limpiar flag y re-habilitar el botón si hay error
       localStorage.removeItem(importKey);
       setIsImporting(false);
       console.error("Error starting import:", error);
-      toast.error(error instanceof Error ? error.message : "Error al iniciar la importaciÃ³n", {
+      toast.error(error instanceof Error ? error.message : "Error al iniciar la importación", {
         id: "import-start",
       });
     }
@@ -218,8 +218,8 @@ export default function ImportWizard({
           <div>
             <h2 className="text-2xl font-bold mb-4">Paso 1: Subir archivo CSV</h2>
             <p className="text-gray-600 mb-6">
-              Selecciona el archivo CSV que deseas importar. El sistema analizarÃ¡ automÃ¡ticamente
-              las columnas y sugerirÃ¡ mapeos.
+              Selecciona el archivo CSV que deseas importar. El sistema analizará automáticamente
+              las columnas y sugerirá mapeos.
             </p>
 
             {/* Organization & Assignment Type Selection */}
@@ -227,7 +227,7 @@ export default function ImportWizard({
               <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-center gap-2 mb-3">
                   <Building2 className="w-5 h-5 text-blue-600" />
-                  <h3 className="font-medium text-blue-900">Contexto de importaciÃ³n</h3>
+                  <h3 className="font-medium text-blue-900">Contexto de importación</h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Organization selector */}
@@ -236,7 +236,7 @@ export default function ImportWizard({
                       htmlFor="org-select"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      OrganizaciÃ³n {!isGlobalAdmin && <span className="text-red-500">*</span>}
+                      Organización {!isGlobalAdmin && <span className="text-red-500">*</span>}
                     </label>
                     <select
                       id="org-select"
@@ -245,7 +245,7 @@ export default function ImportWizard({
                       className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     >
                       {isGlobalAdmin && (
-                        <option value="">Sin organizaciÃ³n (importaciÃ³n global)</option>
+                        <option value="">Sin organización (importación global)</option>
                       )}
                       {organizations.map((org) => (
                         <option key={org.id} value={org.id}>
@@ -262,7 +262,7 @@ export default function ImportWizard({
                         htmlFor="assignment-type"
                         className="block text-sm font-medium text-gray-700 mb-1"
                       >
-                        Tipo de asignaciÃ³n
+                        Tipo de asignación
                       </label>
                       <select
                         id="assignment-type"
@@ -281,7 +281,7 @@ export default function ImportWizard({
                 </div>
                 {!isGlobalAdmin && !selectedOrgId && (
                   <p className="mt-2 text-sm text-red-600">
-                    Debes seleccionar una organizaciÃ³n para importar
+                    Debes seleccionar una organización para importar
                   </p>
                 )}
               </div>
@@ -292,7 +292,7 @@ export default function ImportWizard({
               <FileUploadZone onFileSelect={handleFileUpload} />
             ) : (
               <div className="border-2 border-dashed border-gray-200 rounded-xl p-12 text-center text-gray-400">
-                Selecciona una organizaciÃ³n para continuar
+                Selecciona una organización para continuar
               </div>
             )}
           </div>
@@ -302,9 +302,8 @@ export default function ImportWizard({
           <div>
             <h2 className="text-2xl font-bold mb-4">Paso 2: Mapeo de Columnas</h2>
             <p className="text-gray-600 mb-6">
-              Configura cÃ³mo se mapearÃ¡n las columnas de tu CSV a los campos del sistema. Los
-              campos marcados con <span className="text-red-600 font-bold">*</span> son
-              obligatorios.
+              Configura cómo se mapearán las columnas de tu CSV a los campos del sistema. Los campos
+              marcados con <span className="text-red-600 font-bold">*</span> son obligatorios.
             </p>
             <ColumnMappingEditor
               preview={sessionData.preview}
@@ -326,7 +325,7 @@ export default function ImportWizard({
         )}
       </div>
 
-      {/* NavegaciÃ³n */}
+      {/* Navegación */}
       <div className="mt-6 flex justify-between">
         <button
           onClick={() => {
@@ -348,7 +347,7 @@ export default function ImportWizard({
   );
 }
 
-// Componente de validaciÃ³n
+// Componente de validación
 function ValidationStep({
   sessionData,
   onValidationComplete,
@@ -386,20 +385,20 @@ function ValidationStep({
       });
 
       if (!response.ok) {
-        throw new Error("Error en la validaciÃ³n");
+        throw new Error("Error en la validación");
       }
 
       const validation = await response.json();
       setValidationResult(validation);
       onValidationComplete(validation);
 
-      // Si se detectÃ³ SharePoint y aÃºn no tenemos cookies, mostrar modal
+      // Si se detectó SharePoint y aún no tenemos cookies, mostrar modal
       if (validation.sharepoint?.detected && !sessionData.sharepointCookies) {
         setSharePointInfo(validation.sharepoint);
         setShowSharePointModal(true);
       }
     } catch (error) {
-      toast.error("Error en la validaciÃ³n");
+      toast.error("Error en la validación");
       console.error(error);
     } finally {
       setIsValidating(false);
@@ -409,13 +408,13 @@ function ValidationStep({
   const handleSharePointCookiesValidated = (cookies: Record<string, string>) => {
     onSharePointCookiesSet(cookies);
     setShowSharePointModal(false);
-    toast.success("âœ… Cookies de SharePoint configuradas correctamente");
+    toast.success("✅ Cookies de SharePoint configuradas correctamente");
   };
 
   const handleSharePointModalClose = () => {
     setShowSharePointModal(false);
     toast.error(
-      "ImportaciÃ³n cancelada: Se requieren cookies de SharePoint para importar las imÃ¡genes"
+      "Importación cancelada: Se requieren cookies de SharePoint para importar las imágenes"
     );
   };
 
@@ -429,9 +428,9 @@ function ValidationStep({
         detectedFields={sharePointInfo?.imageFields || []}
       />
       <div>
-        <h2 className="text-2xl font-bold mb-4">Paso 3: ValidaciÃ³n de Datos</h2>
+        <h2 className="text-2xl font-bold mb-4">Paso 3: Validación de Datos</h2>
         <p className="text-gray-600 mb-6">
-          Validaremos los datos antes de la importaciÃ³n para detectar posibles errores.
+          Validaremos los datos antes de la importación para detectar posibles errores.
         </p>
 
         {!validationResult ? (
@@ -441,7 +440,7 @@ function ValidationStep({
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">Listo para validar</h3>
             <p className="text-gray-600 mb-6">
-              Se validarÃ¡n las primeras 100 filas para detectar problemas
+              Se validarán las primeras 100 filas para detectar problemas
             </p>
             <button
               onClick={handleValidate}
@@ -454,13 +453,13 @@ function ValidationStep({
                   <span>Validando...</span>
                 </>
               ) : (
-                <span>Iniciar ValidaciÃ³n</span>
+                <span>Iniciar Validación</span>
               )}
             </button>
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Resumen de validaciÃ³n */}
+            {/* Resumen de validación */}
             <div
               className={`p-4 rounded-lg border ${
                 validationResult.validation?.isValid && validationResult.summary?.errors === 0
@@ -476,7 +475,7 @@ function ValidationStep({
                 }`}
               >
                 {validationResult.validation?.isValid && validationResult.summary?.errors === 0
-                  ? "âœ… ValidaciÃ³n exitosa"
+                  ? "✅ Validación exitosa"
                   : "âŒ Se encontraron errores"}
               </h3>
               <p
@@ -487,12 +486,12 @@ function ValidationStep({
                 }`}
               >
                 {validationResult.validation?.isValid && validationResult.summary?.errors === 0
-                  ? "Los datos estÃ¡n listos para importarse"
+                  ? "Los datos están listos para importarse"
                   : "Debes corregir los errores antes de continuar"}
               </p>
             </div>
 
-            {/* EstadÃ­sticas de validaciÃ³n */}
+            {/* Estadísticas de validación */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               <div className="bg-white border rounded-lg p-4 text-center">
                 <div className="text-2xl font-bold text-gray-900">
@@ -504,7 +503,7 @@ function ValidationStep({
                 <div className="text-2xl font-bold text-green-900">
                   {validationResult.validation?.validRecords || 0}
                 </div>
-                <div className="text-sm text-green-700">VÃ¡lidos</div>
+                <div className="text-sm text-green-700">Válidos</div>
               </div>
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
                 <div className="text-2xl font-bold text-red-900">
@@ -536,7 +535,7 @@ function ValidationStep({
               </div>
             )}
 
-            {/* BotÃ³n para iniciar importaciÃ³n */}
+            {/* Botón para iniciar importación */}
             {validationResult.validation?.isValid && validationResult.summary?.errors === 0 && (
               <div className="flex justify-center pt-6">
                 <button
@@ -552,7 +551,7 @@ function ValidationStep({
                   ) : (
                     <>
                       <span className="text-2xl">ðŸš€</span>
-                      <span>Iniciar ImportaciÃ³n</span>
+                      <span>Iniciar Importación</span>
                     </>
                   )}
                 </button>
@@ -603,8 +602,8 @@ function FileUploadZone({ onFileSelect }: { onFileSelect: (file: File) => void }
           <span className="text-4xl">ðŸ“¤</span>
         </div>
         <div>
-          <p className="text-lg font-medium text-gray-700">Arrastra tu archivo CSV aquÃ­</p>
-          <p className="text-sm text-gray-500 mt-1">o haz clic para seleccionar (mÃ¡x. 10MB)</p>
+          <p className="text-lg font-medium text-gray-700">Arrastra tu archivo CSV aquí</p>
+          <p className="text-sm text-gray-500 mt-1">o haz clic para seleccionar (máx. 10MB)</p>
         </div>
       </label>
     </div>

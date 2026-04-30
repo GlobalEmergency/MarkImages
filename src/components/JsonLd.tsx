@@ -5,7 +5,7 @@ export default function JsonLd() {
     name: "DeaMap",
     url: "https://deamap.es",
     description:
-      "Encuentra desfibriladores cerca de ti en tiempo real. Mapa interactivo con mÃ¡s de 50.000 DEAs registrados en EspaÃ±a y en todo el mundo.",
+      "Encuentra desfibriladores cerca de ti en tiempo real. Mapa interactivo con más de 50.000 DEAs registrados en España y en todo el mundo.",
     applicationCategory: "HealthApplication",
     operatingSystem: "Web",
     inLanguage: "es",
@@ -32,42 +32,42 @@ export default function JsonLd() {
     mainEntity: [
       {
         "@type": "Question",
-        name: "Â¿QuÃ© es DeaMap?",
+        name: "Â¿Qué es DeaMap?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "DeaMap es una plataforma colaborativa que permite localizar desfibriladores (DEAs) cercanos en caso de emergencia cardÃ­aca. Contamos con mÃ¡s de 50.000 DEAs registrados en EspaÃ±a y en todo el mundo. Es un proyecto desarrollado por Global Emergency.",
+          text: "DeaMap es una plataforma colaborativa que permite localizar desfibriladores (DEAs) cercanos en caso de emergencia cardíaca. Contamos con más de 50.000 DEAs registrados en España y en todo el mundo. Es un proyecto desarrollado por Global Emergency.",
         },
       },
       {
         "@type": "Question",
-        name: "Â¿CÃ³mo funciona DeaMap?",
+        name: "Â¿Cómo funciona DeaMap?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Utiliza la bÃºsqueda por ubicaciÃ³n o direcciÃ³n para encontrar los DEAs mÃ¡s cercanos a ti. Cada DEA incluye informaciÃ³n detallada sobre su ubicaciÃ³n, horarios de acceso y datos de contacto. TambiÃ©n puedes usar tu geolocalizaciÃ³n para encontrar el desfibrilador mÃ¡s cercano automÃ¡ticamente.",
+          text: "Utiliza la búsqueda por ubicación o dirección para encontrar los DEAs más cercanos a ti. Cada DEA incluye información detallada sobre su ubicación, horarios de acceso y datos de contacto. También puedes usar tu geolocalización para encontrar el desfibrilador más cercano automáticamente.",
         },
       },
       {
         "@type": "Question",
-        name: "Â¿Por quÃ© es importante tener acceso rÃ¡pido a un desfibrilador?",
+        name: "Â¿Por qué es importante tener acceso rápido a un desfibrilador?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "En una emergencia cardÃ­aca, cada segundo cuenta. Por cada minuto que pasa sin desfibrilaciÃ³n, las posibilidades de supervivencia disminuyen un 10%. Tener acceso rÃ¡pido a un desfibrilador puede salvar vidas. DeaMap facilita encontrar el equipo mÃ¡s cercano cuando mÃ¡s se necesita.",
+          text: "En una emergencia cardíaca, cada segundo cuenta. Por cada minuto que pasa sin desfibrilación, las posibilidades de supervivencia disminuyen un 10%. Tener acceso rápido a un desfibrilador puede salvar vidas. DeaMap facilita encontrar el equipo más cercano cuando más se necesita.",
         },
       },
       {
         "@type": "Question",
-        name: "Â¿CÃ³mo puedo agregar un desfibrilador al mapa?",
+        name: "Â¿Cómo puedo agregar un desfibrilador al mapa?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Si conoces la ubicaciÃ³n de un DEA que no estÃ¡ en el mapa, puedes agregarlo fÃ¡cilmente a travÃ©s del formulario en deamap.es/dea/new-simple. Solo necesitas el nombre del lugar y la direcciÃ³n. Un administrador revisarÃ¡ y completarÃ¡ los datos posteriormente.",
+          text: "Si conoces la ubicación de un DEA que no está en el mapa, puedes agregarlo fácilmente a través del formulario en deamap.es/dea/new-simple. Solo necesitas el nombre del lugar y la dirección. Un administrador revisará y completará los datos posteriormente.",
         },
       },
       {
         "@type": "Question",
-        name: "Â¿DeaMap tiene una API pÃºblica?",
+        name: "Â¿DeaMap tiene una API pública?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "SÃ­, DeaMap ofrece una API REST pÃºblica y gratuita para consultar ubicaciones de desfibriladores. Puedes buscar DEAs cercanos por coordenadas, por ciudad, o consultar estadÃ­sticas. La documentaciÃ³n estÃ¡ disponible en deamap.es/api/docs.",
+          text: "Sí, DeaMap ofrece una API REST pública y gratuita para consultar ubicaciones de desfibriladores. Puedes buscar DEAs cercanos por coordenadas, por ciudad, o consultar estadísticas. La documentación está disponible en deamap.es/api/docs.",
         },
       },
     ],

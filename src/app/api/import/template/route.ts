@@ -4,7 +4,7 @@
  * GET /api/import/template - Download a CSV template with all import columns
  *
  * Query params:
- * - exampleRows: number (default: 2) â€” number of example rows with synthetic data
+ * - exampleRows: number (default: 2) — number of example rows with synthetic data
  *
  * Returns a CSV file ready for download with:
  * - All required and optional columns from the AED import schema

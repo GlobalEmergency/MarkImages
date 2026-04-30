@@ -38,7 +38,7 @@ export default function LoginForm() {
       // Usar recarga completa para asegurar que el estado se actualice correctamente
       window.location.href = "/";
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Error al iniciar sesiÃ³n";
+      const errorMessage = err instanceof Error ? err.message : "Error al iniciar sesión";
       trackAuthSubmit("login", false, errorMessage);
       trackFormSubmit("login", false, errorMessage);
       setError(errorMessage);
@@ -49,7 +49,7 @@ export default function LoginForm() {
 
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Iniciar SesiÃ³n</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Iniciar Sesión</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
@@ -75,14 +75,14 @@ export default function LoginForm() {
         <div>
           <div className="flex items-center justify-between mb-1">
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              ContraseÃ±a
+              Contraseña
             </label>
             <Link
               href="/forgot-password"
               className="text-xs text-blue-600 hover:text-blue-800"
               onClick={() => trackAuthClick("forgot_password")}
             >
-              Â¿Olvidaste tu contraseÃ±a?
+              Â¿Olvidaste tu contraseña?
             </Link>
           </div>
           <input
@@ -102,7 +102,7 @@ export default function LoginForm() {
           disabled={loading}
           className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
-          {loading ? "Iniciando sesiÃ³n..." : "Iniciar SesiÃ³n"}
+          {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
         </button>
       </form>
 
@@ -113,7 +113,7 @@ export default function LoginForm() {
           className="text-blue-600 hover:text-blue-800 font-medium"
           onClick={() => trackAuthClick("register")}
         >
-          RegÃ­strate aquÃ­
+          Regístrate aquí
         </Link>
       </p>
     </div>

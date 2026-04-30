@@ -25,11 +25,11 @@ export interface UserPermissions {
   canViewAllAeds: boolean;
   canEditAllAeds: boolean;
 
-  // Permisos de verificaciÃ³n
+  // Permisos de verificación
   canVerify: boolean;
   canApprovePublications: boolean;
 
-  // Permisos de importaciÃ³n/exportaciÃ³n
+  // Permisos de importación/exportación
   canImportAeds: boolean;
   canExportAeds: boolean;
 

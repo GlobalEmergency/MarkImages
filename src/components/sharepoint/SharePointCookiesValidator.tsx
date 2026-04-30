@@ -1,7 +1,7 @@
 /**
  * Componente: Validador de Cookies de SharePoint
- * Permite validar que las cookies configuradas en .env son vÃ¡lidas
- * antes de iniciar una importaciÃ³n
+ * Permite validar que las cookies configuradas en .env son válidas
+ * antes de iniciar una importación
  */
 
 "use client";
@@ -78,7 +78,7 @@ export default function SharePointCookiesValidator({
     const value = e.target.value;
     setCookiesInput(value);
 
-    // Parsear automÃ¡ticamente mientras escribe
+    // Parsear automáticamente mientras escribe
     if (value.trim()) {
       const parsed = parseCookiesFromString(value);
       setParsedCookies(parsed);
@@ -91,7 +91,7 @@ export default function SharePointCookiesValidator({
     setIsValidating(true);
     setValidationResult(null);
 
-    // Si se usa custom cookies, validar que estÃ¡n parseadas
+    // Si se usa custom cookies, validar que están parseadas
     if (useCustomCookies && !parsedCookies) {
       toast.error("No se pudieron detectar FedAuth o rtFa en las cookies pegadas");
       setIsValidating(false);
@@ -120,9 +120,9 @@ export default function SharePointCookiesValidator({
       setValidationResult(result);
 
       if (result.valid) {
-        toast.success("âœ… Cookies vÃ¡lidas");
+        toast.success("✅ Cookies válidas");
       } else {
-        toast.error("âŒ Cookies invÃ¡lidas");
+        toast.error("âŒ Cookies inválidas");
       }
     } catch (error) {
       const errorResult: ValidationResult = {
@@ -147,17 +147,15 @@ export default function SharePointCookiesValidator({
             <span className="text-2xl">ðŸ”</span>
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-900">
-              ValidaciÃ³n de Cookies de SharePoint
-            </h3>
+            <h3 className="text-lg font-bold text-gray-900">Validación de Cookies de SharePoint</h3>
             <p className="text-sm text-gray-600 mt-1">
-              Verifica que las cookies configuradas permiten importar imÃ¡genes
+              Verifica que las cookies configuradas permiten importar imágenes
             </p>
           </div>
         </div>
       </div>
 
-      {/* Estado de validaciÃ³n */}
+      {/* Estado de validación */}
       {validationResult && !isValidating && (
         <div
           className={`mb-4 p-4 rounded-lg border ${
@@ -181,14 +179,14 @@ export default function SharePointCookiesValidator({
                 {validationResult.message}
               </p>
 
-              {/* Detalles tÃ©cnicos (solo si hay error) */}
+              {/* Detalles técnicos (solo si hay error) */}
               {!validationResult.valid && validationResult.details && (
                 <div className="mt-2 text-xs text-red-700 space-y-1">
                   {validationResult.details.statusCode && (
                     <p>â€¢ Status Code: {validationResult.details.statusCode}</p>
                   )}
                   {validationResult.details.redirectedToLogin && (
-                    <p>â€¢ Redirigido a pÃ¡gina de login</p>
+                    <p>â€¢ Redirigido a página de login</p>
                   )}
                   {validationResult.details.contentType && (
                     <p>â€¢ Content-Type: {validationResult.details.contentType}</p>
@@ -199,15 +197,15 @@ export default function SharePointCookiesValidator({
                 </div>
               )}
 
-              {/* Mensaje de ayuda si las cookies son invÃ¡lidas */}
+              {/* Mensaje de ayuda si las cookies son inválidas */}
               {!validationResult.valid && (
                 <div className="mt-3 p-3 bg-white border border-red-200 rounded text-sm">
-                  <p className="font-medium text-red-900 mb-2">Â¿CÃ³mo solucionar?</p>
+                  <p className="font-medium text-red-900 mb-2">Â¿Cómo solucionar?</p>
                   <ol className="list-decimal list-inside space-y-1 text-red-800">
-                    <li>Abre SharePoint en tu navegador e inicia sesiÃ³n</li>
+                    <li>Abre SharePoint en tu navegador e inicia sesión</li>
                     <li>
-                      Abre las DevTools (F12) â†’ pestaÃ±a{" "}
-                      <code className="bg-red-100 px-1 rounded">Application</code> â†’ Cookies
+                      Abre las DevTools (F12) → pestaña{" "}
+                      <code className="bg-red-100 px-1 rounded">Application</code> → Cookies
                     </li>
                     <li>
                       Copia los valores de <code className="bg-red-100 px-1 rounded">FedAuth</code>{" "}
@@ -226,7 +224,7 @@ export default function SharePointCookiesValidator({
         </div>
       )}
 
-      {/* Sin validaciÃ³n todavÃ­a */}
+      {/* Sin validación todavía */}
       {!validationResult && !isValidating && (
         <div className="mb-4 p-4 rounded-lg border border-yellow-200 bg-yellow-50">
           <div className="flex items-start space-x-3">
@@ -245,7 +243,7 @@ export default function SharePointCookiesValidator({
         </div>
       )}
 
-      {/* Ãrea para pegar cookies */}
+      {/* Área para pegar cookies */}
       <div className="mb-4">
         <button
           onClick={() => setShowCookiesInput(!showCookiesInput)}
@@ -259,7 +257,7 @@ export default function SharePointCookiesValidator({
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Pega todas las cookies del navegador aquÃ­:
+                Pega todas las cookies del navegador aquí:
               </label>
               <textarea
                 value={cookiesInput}
@@ -268,16 +266,16 @@ export default function SharePointCookiesValidator({
                 className="w-full h-24 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
               />
               <p className="mt-1 text-xs text-gray-500">
-                ðŸ’¡ <strong>Tip:</strong> En DevTools â†’ Application â†’ Cookies, haz clic derecho
-                en cualquier cookie â†’ "Show Requests with this Cookie" â†’ Copia el valor completo
-                de "Cookie" del header
+                ðŸ’¡ <strong>Tip:</strong> En DevTools → Application → Cookies, haz clic derecho en
+                cualquier cookie → "Show Requests with this Cookie" → Copia el valor completo de
+                "Cookie" del header
               </p>
             </div>
 
             {/* Indicador de cookies detectadas */}
             {parsedCookies && (
               <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm font-medium text-green-900 mb-2">âœ… Cookies detectadas:</p>
+                <p className="text-sm font-medium text-green-900 mb-2">✅ Cookies detectadas:</p>
                 <div className="text-xs text-green-800 space-y-1 font-mono">
                   {parsedCookies.FedAuth && (
                     <p>â€¢ FedAuth: {parsedCookies.FedAuth.substring(0, 50)}...</p>
@@ -294,7 +292,7 @@ export default function SharePointCookiesValidator({
                   âŒ No se detectaron FedAuth o rtFa en el texto pegado
                 </p>
                 <p className="text-xs text-red-700 mt-1">
-                  AsegÃºrate de copiar las cookies en formato:
+                  Asegúrate de copiar las cookies en formato:
                   <code className="bg-red-100 px-1 rounded ml-1">nombre=valor; nombre2=valor2</code>
                 </p>
               </div>
@@ -303,9 +301,9 @@ export default function SharePointCookiesValidator({
         )}
       </div>
 
-      {/* Botones de acciÃ³n */}
+      {/* Botones de acción */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* BotÃ³n para validar con cookies del .env */}
+        {/* Botón para validar con cookies del .env */}
         <button
           onClick={() => handleValidate(false)}
           disabled={isValidating}
@@ -324,7 +322,7 @@ export default function SharePointCookiesValidator({
           )}
         </button>
 
-        {/* BotÃ³n para validar con cookies pegadas */}
+        {/* Botón para validar con cookies pegadas */}
         {showCookiesInput && parsedCookies && (
           <button
             onClick={() => handleValidate(true)}
@@ -354,12 +352,11 @@ export default function SharePointCookiesValidator({
         )}
       </div>
 
-      {/* InformaciÃ³n adicional */}
+      {/* Información adicional */}
       <div className="mt-4 pt-4 border-t border-gray-200">
         <p className="text-xs text-gray-500">
-          <strong>Nota:</strong> Las cookies de SharePoint (FedAuth, rtFa) caducan periÃ³dicamente.
-          Si la importaciÃ³n falla por errores de autenticaciÃ³n, vuelve a validar las cookies
-          aquÃ­.
+          <strong>Nota:</strong> Las cookies de SharePoint (FedAuth, rtFa) caducan periódicamente.
+          Si la importación falla por errores de autenticación, vuelve a validar las cookies aquí.
         </p>
       </div>
     </div>

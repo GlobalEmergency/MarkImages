@@ -1,5 +1,5 @@
 /**
- * Comprime y redimensiona una imagen para reducir su tamaÃ±o antes de subirla
+ * Comprime y redimensiona una imagen para reducir su tamaño antes de subirla
  */
 
 export interface ImageCompressionOptions {
@@ -88,14 +88,14 @@ export async function compressImageDataUrl(
         // Dibujar imagen redimensionada
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Comprimir iterativamente hasta alcanzar el tamaÃ±o deseado
+        // Comprimir iterativamente hasta alcanzar el tamaño deseado
         let quality = opts.quality;
         let compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
 
-        // Calcular tamaÃ±o en MB
+        // Calcular tamaño en MB
         const sizeInMB = (compressedDataUrl.length * 0.75) / (1024 * 1024);
 
-        // Si aÃºn es muy grande, reducir calidad iterativamente
+        // Si aún es muy grande, reducir calidad iterativamente
         if (sizeInMB > opts.maxSizeMB && quality > 0.5) {
           let attempts = 0;
           const maxAttempts = 5;
@@ -128,14 +128,14 @@ export async function compressImageDataUrl(
 }
 
 /**
- * Obtiene informaciÃ³n sobre el tamaÃ±o de una imagen
+ * Obtiene información sobre el tamaño de una imagen
  */
 export function getImageInfo(dataUrl: string): {
   sizeInBytes: number;
   sizeInMB: number;
   sizeInKB: number;
 } {
-  const sizeInBytes = dataUrl.length * 0.75; // AproximaciÃ³n del tamaÃ±o real desde base64
+  const sizeInBytes = dataUrl.length * 0.75; // Aproximación del tamaño real desde base64
   const sizeInKB = sizeInBytes / 1024;
   const sizeInMB = sizeInKB / 1024;
 

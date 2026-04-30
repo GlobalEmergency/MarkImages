@@ -130,7 +130,7 @@ export default function ArrowPlacer({ imageUrl, onArrowComplete, onCancel }: Arr
         return;
       }
 
-      // Configurar tamaÃ±o del canvas
+      // Configurar tamaño del canvas
       canvas.width = dimensions.width;
       canvas.height = dimensions.height;
 
@@ -217,11 +217,11 @@ export default function ArrowPlacer({ imageUrl, onArrowComplete, onCancel }: Arr
       <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded w-full max-w-4xl">
         <p className="text-blue-800 font-medium">
           {!arrowStart &&
-            "ðŸŽ¯ Paso 1: Haz clic en la imagen para establecer el INICIO de la flecha (punto desde donde saldrÃ¡)"}
+            "ðŸŽ¯ Paso 1: Haz clic en la imagen para establecer el INICIO de la flecha (punto desde donde saldrá)"}
           {arrowStart &&
             !arrowEnd &&
             "ðŸŽ¯ Paso 2: Haz clic donde quieres que APUNTE la flecha (punto final)"}
-          {arrowStart && arrowEnd && 'âœ… Â¡Perfecto! Haz clic en "Aceptar Flecha" para continuar.'}
+          {arrowStart && arrowEnd && '✅ Â¡Perfecto! Haz clic en "Aceptar Flecha" para continuar.'}
         </p>
       </div>
 
@@ -440,7 +440,7 @@ export default function ArrowPlacer({ imageUrl, onArrowComplete, onCancel }: Arr
         </button>
       </div>
 
-      {/* InformaciÃ³n adicional */}
+      {/* Información adicional */}
       <div className="text-sm text-gray-600 text-center max-w-md">
         {!arrowStart && (
           <p>

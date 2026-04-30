@@ -61,7 +61,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
       return { url: config.apiEndpoint, isDirect: true };
     }
 
-    // Si no, usar el patrÃ³n CKAN tradicional
+    // Si no, usar el patrón CKAN tradicional
     if (config.baseUrl && config.resourceId) {
       validateExternalUrl(config.baseUrl);
       return {
@@ -204,7 +204,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
         rowIndex++;
       }
 
-      // Verificar si hay mÃ¡s pÃ¡ginas (strict > avoids extra page when total % pageSize === 0)
+      // Verificar si hay más páginas (strict > avoids extra page when total % pageSize === 0)
       hasMore = records.length > 0 && records.length >= pageSize;
       offset += pageSize;
 
@@ -246,7 +246,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
 
   /**
    * Extrae los registros de una respuesta JSON
-   * Soporta mÃºltiples formatos: CKAN API, JSON directo, GeoJSON
+   * Soporta múltiples formatos: CKAN API, JSON directo, GeoJSON
    */
   private extractRecordsFromJson(data: unknown): Record<string, unknown>[] {
     // Raw array
@@ -341,7 +341,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
           field: "apiEndpoint",
           value: config.apiEndpoint,
           severity: "ERROR",
-          message: "El endpoint de la API no es una URL vÃ¡lida",
+          message: "El endpoint de la API no es una URL válida",
         });
       }
     }
@@ -356,12 +356,12 @@ export class CkanApiAdapter implements IDataSourceAdapter {
           field: "baseUrl",
           value: config.baseUrl,
           severity: "ERROR",
-          message: "La URL base no es vÃ¡lida",
+          message: "La URL base no es válida",
         });
       }
     }
 
-    // Validar resourceId si se estÃ¡ usando API CKAN (no URL directa)
+    // Validar resourceId si se está usando API CKAN (no URL directa)
     if (!hasDirectUrl && config.resourceId) {
       if (!/^[0-9a-f-]{36}$/i.test(config.resourceId)) {
         issues.push({
@@ -369,7 +369,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
           field: "resourceId",
           value: config.resourceId,
           severity: "WARNING",
-          message: "El ID del recurso no parece ser un UUID vÃ¡lido",
+          message: "El ID del recurso no parece ser un UUID válido",
         });
       }
     }
@@ -380,7 +380,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
         field: "pageSize",
         value: config.pageSize.toString(),
         severity: "WARNING",
-        message: "El tamaÃ±o de pÃ¡gina debe estar entre 1 y 1000",
+        message: "El tamaño de página debe estar entre 1 y 1000",
       });
     }
 
@@ -448,7 +448,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
       if (validation.hasCriticalErrors()) {
         return {
           success: false,
-          message: validation.criticalErrors[0]?.message || "Error de validaciÃ³n",
+          message: validation.criticalErrors[0]?.message || "Error de validación",
         };
       }
 
@@ -477,7 +477,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
 
         return {
           success: true,
-          message: `ConexiÃ³n exitosa. ${records.length} registros disponibles (JSON directo).`,
+          message: `Conexión exitosa. ${records.length} registros disponibles (JSON directo).`,
           recordCount: records.length,
           sampleFields,
           responseTimeMs: Date.now() - startTime,
@@ -501,7 +501,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
 
       return {
         success: true,
-        message: `ConexiÃ³n exitosa. ${response.result.total} registros disponibles.`,
+        message: `Conexión exitosa. ${response.result.total} registros disponibles.`,
         recordCount: response.result.total,
         sampleFields,
         responseTimeMs: Date.now() - startTime,
@@ -509,14 +509,14 @@ export class CkanApiAdapter implements IDataSourceAdapter {
     } catch (error) {
       return {
         success: false,
-        message: `Error de conexiÃ³n: ${error instanceof Error ? error.message : "Error desconocido"}`,
+        message: `Error de conexión: ${error instanceof Error ? error.message : "Error desconocido"}`,
         responseTimeMs: Date.now() - startTime,
       };
     }
   }
 
   /**
-   * Construye la URL de bÃºsqueda CKAN
+   * Construye la URL de búsqueda CKAN
    */
   private buildSearchUrl(
     baseUrl: string,

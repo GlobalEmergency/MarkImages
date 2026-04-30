@@ -1,7 +1,7 @@
 /**
  * AED Import Schema for @batchactions/import
  *
- * Define la estructura de validaciÃ³n de los campos de importaciÃ³n de DEAs.
+ * Define la estructura de validación de los campos de importación de DEAs.
  * Traduce las FieldDefinition existentes al formato SchemaDefinition de @batchactions/import.
  * Los aliases se extraen de las keywords de FieldDefinition para matching exacto.
  * El auto-mapeo fuzzy sigue siendo responsabilidad de ColumnMappingService.
@@ -19,18 +19,18 @@ import {
 // ============================================================
 
 /**
- * Valida formato de cÃ³digo postal espaÃ±ol (5 dÃ­gitos)
+ * Valida formato de código postal español (5 dígitos)
  */
 function validatePostalCode(value: unknown): ValidationFieldResult {
   const str = String(value).trim();
-  if (!str) return { valid: true }; // VacÃ­o es vÃ¡lido (campo opcional)
+  if (!str) return { valid: true }; // Vacío es válido (campo opcional)
 
   if (str.length !== 5 || !/^\d{5}$/.test(str)) {
     return {
       valid: false,
-      message: `El cÃ³digo postal "${str}" debe tener exactamente 5 dÃ­gitos numÃ©ricos`,
+      message: `El código postal "${str}" debe tener exactamente 5 dígitos numéricos`,
       severity: "warning",
-      suggestion: "Los cÃ³digos postales espaÃ±oles tienen 5 dÃ­gitos (ej: 28001, 28042)",
+      suggestion: "Los códigos postales españoles tienen 5 dígitos (ej: 28001, 28042)",
       metadata: { value: str, expectedFormat: "DDDDD" },
     };
   }
@@ -42,7 +42,7 @@ function validatePostalCode(value: unknown): ValidationFieldResult {
  */
 function validateLatitude(value: unknown): ValidationFieldResult {
   const str = String(value).trim();
-  if (!str) return { valid: true }; // VacÃ­o es vÃ¡lido (campo opcional)
+  if (!str) return { valid: true }; // Vacío es válido (campo opcional)
 
   const normalized = str.replace(/,/g, ".");
   const num = parseFloat(normalized);
@@ -50,17 +50,17 @@ function validateLatitude(value: unknown): ValidationFieldResult {
   if (isNaN(num)) {
     return {
       valid: false,
-      message: `La latitud "${str}" no es un nÃºmero vÃ¡lido`,
+      message: `La latitud "${str}" no es un número válido`,
       severity: "error",
       suggestion:
-        "Usa formato decimal con punto (ej: 40.4165). Si usas coma, se convertirÃ¡ automÃ¡ticamente.",
+        "Usa formato decimal con punto (ej: 40.4165). Si usas coma, se convertirá automáticamente.",
     };
   }
 
   if (num < -90 || num > 90) {
     return {
       valid: false,
-      message: `La latitud ${num} estÃ¡ fuera del rango vÃ¡lido (-90 a 90)`,
+      message: `La latitud ${num} está fuera del rango válido (-90 a 90)`,
       severity: "error",
       suggestion: "Para Madrid, la latitud debe estar cerca de 40.4",
       metadata: { value: num, min: -90, max: 90 },
@@ -83,17 +83,17 @@ function validateLongitude(value: unknown): ValidationFieldResult {
   if (isNaN(num)) {
     return {
       valid: false,
-      message: `La longitud "${str}" no es un nÃºmero vÃ¡lido`,
+      message: `La longitud "${str}" no es un número válido`,
       severity: "error",
       suggestion:
-        "Usa formato decimal con punto (ej: -3.7038). Si usas coma, se convertirÃ¡ automÃ¡ticamente.",
+        "Usa formato decimal con punto (ej: -3.7038). Si usas coma, se convertirá automáticamente.",
     };
   }
 
   if (num < -180 || num > 180) {
     return {
       valid: false,
-      message: `La longitud ${num} estÃ¡ fuera del rango vÃ¡lido (-180 a 180)`,
+      message: `La longitud ${num} está fuera del rango válido (-180 a 180)`,
       severity: "error",
       suggestion: "Para Madrid, la longitud debe estar cerca de -3.7",
       metadata: { value: num, min: -180, max: 180 },
@@ -113,7 +113,7 @@ function validateTimeFormat(value: unknown): ValidationFieldResult {
   if (!/^([01]?\d|2[0-3]):[0-5]\d$/.test(str)) {
     return {
       valid: false,
-      message: `"${str}" no tiene formato de hora vÃ¡lido (HH:MM)`,
+      message: `"${str}" no tiene formato de hora válido (HH:MM)`,
       severity: "warning",
       suggestion: "Usa formato 24h (ej: 09:00, 18:30, 22:00)",
     };
@@ -131,16 +131,16 @@ function validateName(value: unknown): ValidationFieldResult {
   if (str.length < 3) {
     return {
       valid: true, // No bloquear, solo warning
-      message: `El nombre "${str}" es demasiado corto (mÃ­nimo 3 caracteres recomendado)`,
+      message: `El nombre "${str}" es demasiado corto (mínimo 3 caracteres recomendado)`,
       severity: "warning",
-      suggestion: "Proporciona un nombre mÃ¡s descriptivo",
+      suggestion: "Proporciona un nombre más descriptivo",
     };
   }
 
   if (str.length > 255) {
     return {
       valid: false,
-      message: "El nombre es demasiado largo (mÃ¡ximo 255 caracteres)",
+      message: "El nombre es demasiado largo (máximo 255 caracteres)",
       severity: "error",
       suggestion: "Acorta el nombre del establecimiento",
     };
@@ -156,11 +156,11 @@ function validateEmail(value: unknown): ValidationFieldResult {
   const str = String(value).trim();
   if (!str) return { valid: true };
 
-  // Regex bÃ¡sica para email
+  // Regex básica para email
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str)) {
     return {
       valid: false,
-      message: `"${str}" no tiene un formato de email vÃ¡lido`,
+      message: `"${str}" no tiene un formato de email válido`,
       severity: "warning",
       suggestion: "Verifica el formato del email (ej: ejemplo@dominio.com)",
     };
@@ -220,20 +220,20 @@ function validateUrl(value: unknown): ValidationFieldResult {
 }
 
 /**
- * Valida valores booleanos en espaÃ±ol/inglÃ©s
+ * Valida valores booleanos en español/inglés
  */
 function validateBoolean(value: unknown): ValidationFieldResult {
   const str = String(value).trim().toLowerCase();
   if (!str) return { valid: true };
 
-  const validValues = ["si", "sÃ­", "no", "true", "false", "1", "0", "yes", "verdadero", "falso"];
+  const validValues = ["si", "sí", "no", "true", "false", "1", "0", "yes", "verdadero", "falso"];
 
   if (!validValues.includes(str)) {
     return {
       valid: true, // No bloquear, solo warning
-      message: `"${value}" podrÃ­a no ser un valor booleano reconocido`,
+      message: `"${value}" podría no ser un valor booleano reconocido`,
       severity: "warning",
-      suggestion: 'Usa "SÃ­"/"No", "true"/"false" o "1"/"0"',
+      suggestion: 'Usa "Sí"/"No", "true"/"false" o "1"/"0"',
     };
   }
 
@@ -245,7 +245,7 @@ function validateBoolean(value: unknown): ValidationFieldResult {
 // ============================================================
 
 /**
- * Normaliza coordenadas: coma â†’ punto
+ * Normaliza coordenadas: coma → punto
  */
 function transformCoordinate(value: unknown): unknown {
   if (value === null || value === undefined) return value;
@@ -267,26 +267,26 @@ function transformTrim(value: unknown): unknown {
  */
 function transformBoolean(value: unknown): unknown {
   const str = String(value).trim().toLowerCase();
-  if (["si", "sÃ­", "yes", "true", "1", "verdadero"].includes(str)) return "true";
+  if (["si", "sí", "yes", "true", "1", "verdadero"].includes(str)) return "true";
   if (["no", "false", "0", "falso"].includes(str)) return "false";
   return str;
 }
 
 // ============================================================
-// Mapeo de tipos FieldDefinition â†’ @batchactions/import type
+// Mapeo de tipos FieldDefinition → @batchactions/import type
 // ============================================================
 
 const TYPE_MAP: Record<string, "string" | "number" | "boolean" | "date" | "email" | "custom"> = {
   string: "string",
-  number: "custom", // Usamos custom para coordenadas con validaciÃ³n especial
-  boolean: "custom", // Usamos custom para booleanos con formatos espaÃ±ol
-  url: "custom", // Usamos custom para URLs con validaciÃ³n flexible
+  number: "custom", // Usamos custom para coordenadas con validación especial
+  boolean: "custom", // Usamos custom para booleanos con formatos español
+  url: "custom", // Usamos custom para URLs con validación flexible
   email: "email",
   date: "date",
 };
 
 // ============================================================
-// GeneraciÃ³n del schema
+// Generación del schema
 // ============================================================
 
 /**
@@ -363,10 +363,10 @@ function toSchemaField(field: FieldDefinition) {
 }
 
 /**
- * Schema de importaciÃ³n de AEDs para @batchactions/import
+ * Schema de importación de AEDs para @batchactions/import
  *
  * Combina todos los campos de REQUIRED_FIELDS y OPTIONAL_FIELDS
- * con validadores custom, transforms, y aliases extraÃ­dos de las keywords.
+ * con validadores custom, transforms, y aliases extraídos de las keywords.
  *
  * @example
  * ```typescript
@@ -391,7 +391,7 @@ export const aedImportSchema: SchemaDefinition = {
 
 /**
  * Schema estricto (rechaza columnas desconocidas)
- * Ãštil para validaciones mÃ¡s rigurosas
+ * Ãštil para validaciones más rigurosas
  */
 export const aedImportSchemaStrict: SchemaDefinition = {
   ...aedImportSchema,
@@ -400,7 +400,7 @@ export const aedImportSchemaStrict: SchemaDefinition = {
 
 /**
  * Obtiene solo los campos requeridos del schema
- * Ãštil para validaciones rÃ¡pidas de preview
+ * Ãštil para validaciones rápidas de preview
  */
 export function getRequiredFieldNames(): string[] {
   return REQUIRED_FIELDS.map((f) => f.key);
@@ -414,7 +414,7 @@ export function getAllFieldNames(): string[] {
 }
 
 /**
- * Obtiene los aliases planos para un campo especÃ­fico
+ * Obtiene los aliases planos para un campo específico
  */
 export function getFieldAliases(fieldKey: string): string[] {
   const allFields = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS];

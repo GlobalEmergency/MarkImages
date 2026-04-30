@@ -10,13 +10,13 @@
 import type { AedStatus } from "./aed-status-config";
 
 // ---------------------------------------------------------------------------
-// Public visibility filter â€” single source of truth
+// Public visibility filter — single source of truth
 // ---------------------------------------------------------------------------
 // An AED is publicly visible when:
 //   1. status = 'PUBLISHED'  (approved by a reviewer)
 //   2. publication_mode â‰  'NONE'  (owner opted into some level of visibility)
 //
-// âš ï¸  Do NOT add `published_at IS NOT NULL` â€” most imported AEDs lack that
+// âš ï¸  Do NOT add `published_at IS NOT NULL` — most imported AEDs lack that
 //     timestamp.  The `status` field is the canonical publication gate.
 // ---------------------------------------------------------------------------
 
@@ -64,7 +64,7 @@ export function validateStatusTransition(from: string, to: string): void {
   if (!isValidStatusTransition(from, to)) {
     const allowed = getValidNextStatuses(from);
     throw new Error(
-      `TransiciÃ³n de estado invÃ¡lida: ${from} â†’ ${to}. ` +
+      `Transición de estado inválida: ${from} → ${to}. ` +
         `Transiciones permitidas desde ${from}: ${allowed.length > 0 ? allowed.join(", ") : "ninguna"}`
     );
   }

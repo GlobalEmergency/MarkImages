@@ -1,6 +1,6 @@
 /**
- * Puerto (Interface) para descarga de imÃ¡genes desde URLs externas
- * Capa de Dominio - No depende de ninguna implementaciÃ³n
+ * Puerto (Interface) para descarga de imágenes desde URLs externas
+ * Capa de Dominio - No depende de ninguna implementación
  */
 
 export interface SharePointAuthConfig {
@@ -25,7 +25,7 @@ export interface ImageDownloadResult {
 export interface IImageDownloader {
   /**
    * Descarga una imagen desde una URL externa
-   * @throws Error si la URL no es vÃ¡lida, la descarga falla, o el contenido no es una imagen
+   * @throws Error si la URL no es válida, la descarga falla, o el contenido no es una imagen
    */
   download(options: ImageDownloadOptions): Promise<ImageDownloadResult>;
 

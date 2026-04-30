@@ -2,7 +2,7 @@
  * AED Validation Service (Domain Service)
  *
  * Servicio de dominio para validar reglas de negocio de AEDs.
- * Puro, sin dependencias externas, solo lÃ³gica de negocio.
+ * Puro, sin dependencias externas, solo lógica de negocio.
  */
 
 import { ValidationError } from "../value-objects/ValidationError";
@@ -15,7 +15,7 @@ export interface AedValidationResult {
 
 export class AedValidationService {
   /**
-   * Valida que los campos obligatorios estÃ©n presentes
+   * Valida que los campos obligatorios estén presentes
    */
   validateRequiredFields(
     data: AedImportData,
@@ -34,7 +34,7 @@ export class AedValidationService {
           csvColumn,
           value: data.proposedName || "",
           errorType: "MISSING_DATA",
-          message: "El campo 'nombre' es obligatorio y no puede estar vacÃ­o",
+          message: "El campo 'nombre' es obligatorio y no puede estar vacío",
           severity: "error",
           correctionSuggestion: `Completa el campo '${csvColumn}' en la fila ${row}`,
         })
@@ -48,7 +48,7 @@ export class AedValidationService {
   }
 
   /**
-   * Valida el formato del cÃ³digo postal
+   * Valida el formato del código postal
    */
   validatePostalCode(
     postalCode: string | undefined,
@@ -60,7 +60,7 @@ export class AedValidationService {
     if (postalCode && postalCode.trim() !== "") {
       const trimmed = postalCode.trim();
 
-      // Debe tener exactamente 5 dÃ­gitos
+      // Debe tener exactamente 5 dígitos
       if (trimmed.length !== 5) {
         errors.push(
           ValidationError.create({
@@ -69,15 +69,15 @@ export class AedValidationService {
             csvColumn,
             value: postalCode,
             errorType: "INVALID_POSTAL_CODE",
-            message: `El cÃ³digo postal "${postalCode}" debe tener exactamente 5 dÃ­gitos`,
+            message: `El código postal "${postalCode}" debe tener exactamente 5 dígitos`,
             severity: "error",
             correctionSuggestion:
-              "Los cÃ³digos postales de Madrid tienen 5 dÃ­gitos (ej: 28001, 28042)",
+              "Los códigos postales de Madrid tienen 5 dígitos (ej: 28001, 28042)",
           })
         );
       }
 
-      // Debe ser numÃ©rico
+      // Debe ser numérico
       if (!/^\d{5}$/.test(trimmed)) {
         errors.push(
           ValidationError.create({
@@ -86,9 +86,9 @@ export class AedValidationService {
             csvColumn,
             value: postalCode,
             errorType: "INVALID_POSTAL_CODE",
-            message: `El cÃ³digo postal "${postalCode}" debe contener solo dÃ­gitos`,
+            message: `El código postal "${postalCode}" debe contener solo dígitos`,
             severity: "error",
-            correctionSuggestion: "Usa solo nÃºmeros (ej: 28001, no 28.001 ni 28-001)",
+            correctionSuggestion: "Usa solo números (ej: 28001, no 28.001 ni 28-001)",
           })
         );
       }
@@ -109,7 +109,7 @@ export class AedValidationService {
     if (name && name.trim() !== "") {
       const trimmed = name.trim();
 
-      // Longitud mÃ­nima
+      // Longitud mínima
       if (trimmed.length < 3) {
         errors.push(
           ValidationError.create({
@@ -118,14 +118,14 @@ export class AedValidationService {
             csvColumn,
             value: name,
             errorType: "INVALID_FORMAT",
-            message: `El nombre "${name}" es demasiado corto (mÃ­nimo 3 caracteres)`,
+            message: `El nombre "${name}" es demasiado corto (mínimo 3 caracteres)`,
             severity: "warning",
-            correctionSuggestion: "Proporciona un nombre mÃ¡s descriptivo",
+            correctionSuggestion: "Proporciona un nombre más descriptivo",
           })
         );
       }
 
-      // Longitud mÃ¡xima
+      // Longitud máxima
       if (trimmed.length > 255) {
         errors.push(
           ValidationError.create({
@@ -134,7 +134,7 @@ export class AedValidationService {
             csvColumn,
             value: name,
             errorType: "INVALID_FORMAT",
-            message: `El nombre es demasiado largo (mÃ¡ximo 255 caracteres)`,
+            message: `El nombre es demasiado largo (máximo 255 caracteres)`,
             severity: "error",
             correctionSuggestion: "Acorta el nombre del AED",
           })
@@ -166,7 +166,7 @@ export class AedValidationService {
     const nameResult = this.validateName(data.proposedName, row, mappings.get("proposedName"));
     allErrors.push(...nameResult.errors);
 
-    // Validar cÃ³digo postal
+    // Validar código postal
     const postalCodeResult = this.validatePostalCode(
       data.postalCode,
       row,

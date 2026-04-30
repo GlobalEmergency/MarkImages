@@ -2,7 +2,7 @@
  * SharePoint URL Detection Utility
  *
  * Utilidad compartida para detectar URLs de SharePoint de forma segura.
- * Centraliza la lÃ³gica que antes estaba duplicada en:
+ * Centraliza la lógica que antes estaba duplicada en:
  * - aedImportHooks.ts
  * - SharePointDetectionService.ts
  * - SharePointImageDownloader.ts
@@ -14,19 +14,19 @@
  * en ".sharepoint.com" y queda cubierto por la regla general.
  */
 
-/** Dominios vÃ¡lidos de SharePoint */
+/** Dominios válidos de SharePoint */
 const SHAREPOINT_DOMAINS = ["sharepoint.com", "sharepoint-df.com"] as const;
 
 /**
  * Verifica si una URL pertenece a SharePoint.
  *
  * Matching seguro con `endsWith` para prevenir falsos positivos:
- * - âœ… "company.sharepoint.com" â†’ true
- * - âœ… "company-my.sharepoint.com" â†’ true
- * - âœ… "microsoft.sharepoint.com" â†’ true (ends with .sharepoint.com)
- * - âœ… "sharepoint.com" â†’ true (exact match)
- * - âŒ "fakesharepoint.com" â†’ false
- * - âŒ "notsharepoint.com.evil.com" â†’ false
+ * - ✅ "company.sharepoint.com" → true
+ * - ✅ "company-my.sharepoint.com" → true
+ * - ✅ "microsoft.sharepoint.com" → true (ends with .sharepoint.com)
+ * - ✅ "sharepoint.com" → true (exact match)
+ * - âŒ "fakesharepoint.com" → false
+ * - âŒ "notsharepoint.com.evil.com" → false
  *
  * @param url - URL completa a verificar
  * @returns true si la URL pertenece a un dominio de SharePoint

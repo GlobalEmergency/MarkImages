@@ -31,7 +31,7 @@ const presignRateLimiter = createRateLimiter("presign-upload", {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Rate limit instead of auth â€” anonymous users can upload photos
+    // Rate limit instead of auth — anonymous users can upload photos
     const rateLimitResponse = presignRateLimiter(request);
     if (rateLimitResponse) return rateLimitResponse;
 

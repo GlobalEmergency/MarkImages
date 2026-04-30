@@ -1,5 +1,5 @@
 /**
- * Factory: Crea el adapter correcto segÃºn el tipo de fuente de datos
+ * Factory: Crea el adapter correcto según el tipo de fuente de datos
  * Capa de Infraestructura
  */
 
@@ -54,7 +54,7 @@ export class DataSourceAdapterFactory implements IDataSourceAdapterFactory {
   }
 
   /**
-   * MÃ©todo estÃ¡tico para obtener un adapter segÃºn tipo.
+   * Método estático para obtener un adapter según tipo.
    * CSV_FILE ahora soporta tanto ficheros locales como URLs remotas.
    */
   static getApiAdapter(type: DataSourceType): IDataSourceAdapter {
@@ -76,7 +76,7 @@ export class DataSourceAdapterFactory implements IDataSourceAdapterFactory {
   }
 
   /**
-   * MÃ©todo estÃ¡tico para crear la factory con todos los adapters disponibles
+   * Método estático para crear la factory con todos los adapters disponibles
    */
   static createDefault(csvParser?: CsvParserAdapter): DataSourceAdapterFactory {
     return new DataSourceAdapterFactory(csvParser);

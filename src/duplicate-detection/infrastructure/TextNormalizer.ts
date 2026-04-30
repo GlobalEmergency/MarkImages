@@ -1,10 +1,10 @@
 /**
- * TextNormalizer â€” PostgreSQL-compatible text normalization
+ * TextNormalizer — PostgreSQL-compatible text normalization
  *
  * Replicates the logic of PostgreSQL's normalize_text() function:
  *   LOWER(TRIM(immutable_unaccent(text)))
  *
- * Order matches PostgreSQL: unaccent â†’ trim â†’ lower
+ * Order matches PostgreSQL: unaccent → trim → lower
  *
  * Moved from: src/import/infrastructure/services/PostgreSqlTextNormalizer.ts
  */
@@ -16,7 +16,7 @@ export class TextNormalizer implements ITextNormalizationService {
    * Normalize text using the same logic as PostgreSQL
    * Replicates: LOWER(TRIM(immutable_unaccent(text)))
    *
-   * Order: unaccent first â†’ trim â†’ lower (matches PostgreSQL)
+   * Order: unaccent first → trim → lower (matches PostgreSQL)
    */
   normalize(text: string | null | undefined): string {
     if (!text) return "";
@@ -35,7 +35,7 @@ export class TextNormalizer implements ITextNormalizationService {
    *   normalize_text(COALESCE(street_type, '') || ' ' || COALESCE(street_name, '') || ' ' || COALESCE(street_number, ''))
    *
    * Always concatenates all 3 parts with spaces (even if empty),
-   * then normalizes â€” this ensures JS and SQL produce identical results.
+   * then normalizes — this ensures JS and SQL produce identical results.
    */
   normalizeAddress(
     streetType: string | null | undefined,

@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return NextResponse.json({ error: "Email invÃ¡lido" }, { status: 400 });
+      return NextResponse.json({ error: "Email inválido" }, { status: 400 });
     }
 
     // Validate password strength
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingUser) {
-      return NextResponse.json({ error: "El email ya estÃ¡ registrado" }, { status: 409 });
+      return NextResponse.json({ error: "El email ya está registrado" }, { status: 409 });
     }
 
     // Hash password

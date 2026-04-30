@@ -40,7 +40,7 @@ export function DataListPagination({
         {/* Items per page selector */}
         {onLimitChange && (
           <div className="flex items-center justify-center gap-2 md:justify-start">
-            <label className="text-sm text-gray-700">Por pÃ¡gina:</label>
+            <label className="text-sm text-gray-700">Por página:</label>
             <select
               value={limit}
               onChange={(e) => onLimitChange(parseInt(e.target.value))}

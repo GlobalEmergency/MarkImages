@@ -1,6 +1,6 @@
 /**
- * Value Object: AcciÃ³n de reconciliaciÃ³n
- * Capa de Dominio - Representa la acciÃ³n a tomar para un registro
+ * Value Object: Acción de reconciliación
+ * Capa de Dominio - Representa la acción a tomar para un registro
  *
  * Determina si un registro debe ser creado, actualizado, saltado,
  * marcado como conflicto, o si el AED existente debe desactivarse
@@ -9,14 +9,14 @@
 import type { ImportRecord } from "./ImportRecord";
 
 /**
- * Tipos de acciones de reconciliaciÃ³n
+ * Tipos de acciones de reconciliación
  */
 export type ReconciliationActionType =
   | "CREATE" // Crear nuevo AED
   | "UPDATE" // Actualizar AED existente
   | "SKIP" // Saltar (sin cambios o ya enriquecido)
-  | "DEACTIVATE" // Desactivar AED (no estÃ¡ en fuente)
-  | "CONFLICT"; // Conflicto que requiere revisiÃ³n manual
+  | "DEACTIVATE" // Desactivar AED (no está en fuente)
+  | "CONFLICT"; // Conflicto que requiere revisión manual
 
 /**
  * Detalle de un conflicto entre valores
@@ -44,7 +44,7 @@ export interface ConflictDetail {
 }
 
 /**
- * Value Object: AcciÃ³n de reconciliaciÃ³n
+ * Value Object: Acción de reconciliación
  */
 export class ReconciliationAction {
   private constructor(
@@ -129,12 +129,12 @@ export class ReconciliationAction {
     return ReconciliationAction.skip(
       record,
       aedId,
-      "Sin cambios - el registro ya estÃ¡ actualizado"
+      "Sin cambios - el registro ya está actualizado"
     );
   }
 
   /**
-   * Saltar porque estÃ¡ enriquecido manualmente
+   * Saltar porque está enriquecido manualmente
    */
   static skipEnriched(record: ImportRecord, aedId: string): ReconciliationAction {
     return ReconciliationAction.skip(
@@ -145,7 +145,7 @@ export class ReconciliationAction {
   }
 
   /**
-   * Desactivar AED (ya no estÃ¡ en la fuente)
+   * Desactivar AED (ya no está en la fuente)
    */
   static deactivate(aedId: string, reason?: string): ReconciliationAction {
     return new ReconciliationAction(
@@ -161,7 +161,7 @@ export class ReconciliationAction {
   }
 
   /**
-   * Marcar como conflicto para revisiÃ³n manual
+   * Marcar como conflicto para revisión manual
    */
   static conflict(
     record: ImportRecord,
@@ -177,7 +177,7 @@ export class ReconciliationAction {
       conflictDetails,
       `Conflicto en campos: ${fieldsInConflict}`,
       true,
-      `Se encontrÃ³ un posible duplicado con conflictos en: ${fieldsInConflict}`
+      `Se encontró un posible duplicado con conflictos en: ${fieldsInConflict}`
     );
   }
 
@@ -204,7 +204,7 @@ export class ReconciliationAction {
       ],
       `Posible duplicado con score ${score}/100`,
       true,
-      `Posible duplicado detectado (score: ${score}/100). Requiere revisiÃ³n manual.`
+      `Posible duplicado detectado (score: ${score}/100). Requiere revisión manual.`
     );
   }
 
@@ -213,28 +213,28 @@ export class ReconciliationAction {
   // ============================================
 
   /**
-   * Verifica si la acciÃ³n requiere crear un nuevo AED
+   * Verifica si la acción requiere crear un nuevo AED
    */
   isCreate(): boolean {
     return this.type === "CREATE";
   }
 
   /**
-   * Verifica si la acciÃ³n requiere actualizar un AED
+   * Verifica si la acción requiere actualizar un AED
    */
   isUpdate(): boolean {
     return this.type === "UPDATE";
   }
 
   /**
-   * Verifica si la acciÃ³n es saltar
+   * Verifica si la acción es saltar
    */
   isSkip(): boolean {
     return this.type === "SKIP";
   }
 
   /**
-   * Verifica si la acciÃ³n requiere desactivar
+   * Verifica si la acción requiere desactivar
    */
   isDeactivate(): boolean {
     return this.type === "DEACTIVATE";
@@ -255,14 +255,14 @@ export class ReconciliationAction {
   }
 
   /**
-   * Verifica si requiere revisiÃ³n manual
+   * Verifica si requiere revisión manual
    */
   requiresManualReview(): boolean {
     return this.type === "CONFLICT" || this.hasWarning;
   }
 
   /**
-   * Obtiene el nÃºmero de campos en conflicto
+   * Obtiene el número de campos en conflicto
    */
   getConflictCount(): number {
     return this.conflictDetails.length;
@@ -273,7 +273,7 @@ export class ReconciliationAction {
   // ============================================
 
   /**
-   * Convierte a objeto plano para serializaciÃ³n
+   * Convierte a objeto plano para serialización
    */
   toJSON(): {
     type: ReconciliationActionType;
@@ -298,7 +298,7 @@ export class ReconciliationAction {
   }
 
   /**
-   * Genera un mensaje descriptivo de la acciÃ³n
+   * Genera un mensaje descriptivo de la acción
    */
   describe(): string {
     switch (this.type) {

@@ -1,6 +1,6 @@
 /**
  * Domain Service: Servicio de mapeo de columnas
- * Orquesta la lÃ³gica de sugerencias automÃ¡ticas de mapeo
+ * Orquesta la lógica de sugerencias automáticas de mapeo
  * Capa de Dominio
  */
 
@@ -10,7 +10,7 @@ import { FieldDefinition, getAllFields, REQUIRED_FIELDS } from "../value-objects
 
 export class ColumnMappingService {
   /**
-   * Genera sugerencias automÃ¡ticas de mapeo para todas las columnas del CSV
+   * Genera sugerencias automáticas de mapeo para todas las columnas del CSV
    * MEJORADO: Ahora pasa datos de muestra para pattern matching
    */
   suggestMappings(csvPreview: CsvPreview): ColumnMapping[] {
@@ -20,7 +20,7 @@ export class ColumnMappingService {
 
     // Intentar mapear cada columna del CSV con datos de muestra
     for (const csvHeader of csvHeaders) {
-      // Usar el mÃ©todo pÃºblico para obtener datos de muestra de esta columna
+      // Usar el método público para obtener datos de muestra de esta columna
       const sampleData = csvPreview.getColumnSampleValues(csvHeader);
 
       const suggestion = ColumnMapping.autoSuggest(csvHeader, allFields, sampleData);
@@ -35,8 +35,8 @@ export class ColumnMappingService {
 
   /**
    * Genera sugerencias solo para campos requeridos
-   * Prioriza los campos crÃ­ticos
-   * MEJORADO: Ahora tambiÃ©n pasa datos de muestra
+   * Prioriza los campos críticos
+   * MEJORADO: Ahora también pasa datos de muestra
    */
   suggestRequiredMappings(csvPreview: CsvPreview): ColumnMapping[] {
     const suggestions: ColumnMapping[] = [];
@@ -72,7 +72,7 @@ export class ColumnMappingService {
   }
 
   /**
-   * Detecta mapeos duplicados (misma columna CSV mapeada a mÃºltiples campos)
+   * Detecta mapeos duplicados (misma columna CSV mapeada a múltiples campos)
    */
   detectDuplicateMappings(mappings: ColumnMapping[]): {
     hasDuplicates: boolean;
@@ -97,7 +97,7 @@ export class ColumnMappingService {
   }
 
   /**
-   * Detecta campos del sistema mapeados mÃºltiples veces (conflicto)
+   * Detecta campos del sistema mapeados múltiples veces (conflicto)
    */
   detectConflictingMappings(mappings: ColumnMapping[]): {
     hasConflicts: boolean;
@@ -122,7 +122,7 @@ export class ColumnMappingService {
   }
 
   /**
-   * Resuelve conflictos automÃ¡ticamente eligiendo el mapeo con mayor confianza
+   * Resuelve conflictos automáticamente eligiendo el mapeo con mayor confianza
    */
   resolveConflicts(mappings: ColumnMapping[]): ColumnMapping[] {
     const systemFieldMap = new Map<string, ColumnMapping>();
@@ -139,7 +139,7 @@ export class ColumnMappingService {
   }
 
   /**
-   * Obtiene estadÃ­sticas del mapeo
+   * Obtiene estadísticas del mapeo
    */
   getMappingStats(mappings: ColumnMapping[]): {
     totalMappings: number;

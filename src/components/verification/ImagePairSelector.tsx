@@ -47,7 +47,7 @@ export default function ImagePairSelector({
   const [image2Error, setImage2Error] = useState(false);
   const [image1DataUrl, setImage1DataUrl] = useState<string>("");
   const [image2DataUrl, setImage2DataUrl] = useState<string>("");
-  const [loadingState, setLoadingState] = useState<string>("Cargando imÃ¡genes...");
+  const [loadingState, setLoadingState] = useState<string>("Cargando imágenes...");
   const [uploadMode, setUploadMode] = useState(false);
   const [newImage1Url, setNewImage1Url] = useState<string | null>(null);
   const [newImage2Url, setNewImage2Url] = useState<string | null>(null);
@@ -57,7 +57,7 @@ export default function ImagePairSelector({
   const hasSingleImage = (hasImage1 && !hasImage2) || (!hasImage1 && hasImage2);
   const hasNoImages = !hasImage1 && !hasImage2;
 
-  // Cargar imÃ¡genes
+  // Cargar imágenes
   useEffect(() => {
     const loadImages = async () => {
       // Cargar imagen 1
@@ -183,7 +183,7 @@ export default function ImagePairSelector({
           selection = {
             image1Valid: false,
             image2Valid: true,
-            imagesSwapped: hasImage1, // Si la Ãºnica imagen es image1, necesitamos swap
+            imagesSwapped: hasImage1, // Si la única imagen es image1, necesitamos swap
             markedAsInvalid: false,
           };
           break;
@@ -196,7 +196,7 @@ export default function ImagePairSelector({
           };
           break;
         default:
-          throw new Error("OpciÃ³n no vÃ¡lida");
+          throw new Error("Opción no válida");
       }
 
       // Parent calls updateStep which triggers a re-render that unmounts us.
@@ -222,15 +222,15 @@ export default function ImagePairSelector({
     }
   };
 
-  // Renderizar caso: Sin imÃ¡genes
+  // Renderizar caso: Sin imágenes
   if (hasNoImages) {
     if (uploadMode && onUploadNewImages) {
       return (
         <div className="space-y-6 w-full">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-blue-800 mb-4">Subir Nuevas ImÃ¡genes</h3>
+            <h3 className="text-lg font-semibold text-blue-800 mb-4">Subir Nuevas Imágenes</h3>
             <p className="text-blue-700 mb-6">
-              Sube 1 o 2 imÃ¡genes nuevas para este DEA. Las imÃ¡genes deben corresponder a:
+              Sube 1 o 2 imágenes nuevas para este DEA. Las imágenes deben corresponder a:
             </p>
             <ul className="text-blue-700 text-sm space-y-1 list-disc list-inside mb-6">
               <li>
@@ -271,7 +271,7 @@ export default function ImagePairSelector({
                   Procesando...
                 </>
               ) : (
-                "Continuar con las ImÃ¡genes Subidas"
+                "Continuar con las Imágenes Subidas"
               )}
             </button>
             <button
@@ -301,17 +301,15 @@ export default function ImagePairSelector({
     return (
       <div className="space-y-6 w-full">
         <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
-          <div className="text-red-600 text-xl mb-4">âš ï¸ Sin ImÃ¡genes</div>
-          <p className="text-red-700 mb-4">
-            Este DEA no tiene imÃ¡genes disponibles para procesar.
-          </p>
+          <div className="text-red-600 text-xl mb-4">âš ï¸ Sin Imágenes</div>
+          <p className="text-red-700 mb-4">Este DEA no tiene imágenes disponibles para procesar.</p>
           <div className="flex flex-col gap-3 max-w-md mx-auto">
             {onUploadNewImages && (
               <button
                 onClick={() => setUploadMode(true)}
                 className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
-                ðŸ“¤ Subir Nuevas ImÃ¡genes
+                ðŸ“¤ Subir Nuevas Imágenes
               </button>
             )}
             <button
@@ -319,7 +317,7 @@ export default function ImagePairSelector({
               disabled={isProcessing}
               className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
             >
-              {isProcessing ? "Procesando..." : "Marcar DEA como InvÃ¡lido"}
+              {isProcessing ? "Procesando..." : "Marcar DEA como Inválido"}
             </button>
           </div>
         </div>
@@ -374,7 +372,7 @@ export default function ImagePairSelector({
 
         {descripcionAcceso && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="text-md font-semibold text-blue-800 mb-2">DescripciÃ³n de Acceso</h4>
+            <h4 className="text-md font-semibold text-blue-800 mb-2">Descripción de Acceso</h4>
             <p className="text-blue-700">{descripcionAcceso}</p>
           </div>
         )}
@@ -390,7 +388,7 @@ export default function ImagePairSelector({
               <strong>Foto 1 (Entrada):</strong> Vista general, desde la entrada o acceso al lugar
             </li>
             <li>
-              <strong>Foto 2 (Detalle):</strong> Vista de cerca del DEA o su ubicaciÃ³n exacta
+              <strong>Foto 2 (Detalle):</strong> Vista de cerca del DEA o su ubicación exacta
             </li>
           </ul>
         </div>
@@ -417,7 +415,7 @@ export default function ImagePairSelector({
             disabled={isProcessing || !imageLoaded}
             className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Imagen InvÃ¡lida
+            Imagen Inválida
           </button>
           <button
             onClick={onCancel}
@@ -431,14 +429,14 @@ export default function ImagePairSelector({
     );
   }
 
-  // Modo de subida de imÃ¡genes cuando hay imÃ¡genes invÃ¡lidas
+  // Modo de subida de imágenes cuando hay imágenes inválidas
   if (uploadMode && onUploadNewImages) {
     return (
       <div className="space-y-6 w-full">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-800 mb-4">Subir Nuevas ImÃ¡genes</h3>
+          <h3 className="text-lg font-semibold text-blue-800 mb-4">Subir Nuevas Imágenes</h3>
           <p className="text-blue-700 mb-6">
-            Las imÃ¡genes actuales no son vÃ¡lidas. Sube 1 o 2 imÃ¡genes nuevas para reemplazarlas:
+            Las imágenes actuales no son válidas. Sube 1 o 2 imágenes nuevas para reemplazarlas:
           </p>
           <ul className="text-blue-700 text-sm space-y-1 list-disc list-inside mb-6">
             <li>
@@ -479,7 +477,7 @@ export default function ImagePairSelector({
                 Procesando...
               </>
             ) : (
-              "Continuar con las ImÃ¡genes Subidas"
+              "Continuar con las Imágenes Subidas"
             )}
           </button>
           <button
@@ -506,7 +504,7 @@ export default function ImagePairSelector({
     );
   }
 
-  // Renderizar caso: Dos imÃ¡genes
+  // Renderizar caso: Dos imágenes
   return (
     <div className="space-y-6 w-full">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -567,15 +565,15 @@ export default function ImagePairSelector({
 
       {descripcionAcceso && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="text-md font-semibold text-blue-800 mb-2">DescripciÃ³n de Acceso</h4>
+          <h4 className="text-md font-semibold text-blue-800 mb-2">Descripción de Acceso</h4>
           <p className="text-blue-700">{descripcionAcceso}</p>
         </div>
       )}
 
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <h4 className="text-md font-semibold text-yellow-800 mb-3">Validar ImÃ¡genes</h4>
+        <h4 className="text-md font-semibold text-yellow-800 mb-3">Validar Imágenes</h4>
         <p className="text-yellow-700 text-sm mb-3">
-          Verifica que las imÃ¡genes sean vÃ¡lidas y correspondan correctamente:
+          Verifica que las imágenes sean válidas y correspondan correctamente:
         </p>
         <ul className="text-yellow-700 text-sm space-y-1 list-disc list-inside">
           <li>
@@ -584,8 +582,8 @@ export default function ImagePairSelector({
           <li>
             <strong>Imagen 2:</strong> Debe ser la vista de detalle del DEA
           </li>
-          <li>Si estÃ¡n intercambiadas, selecciona la opciÃ³n de intercambiar</li>
-          <li>Si alguna es borrosa o incorrecta, mÃ¡rcala como invÃ¡lida</li>
+          <li>Si están intercambiadas, selecciona la opción de intercambiar</li>
+          <li>Si alguna es borrosa o incorrecta, márcala como inválida</li>
         </ul>
       </div>
 
@@ -596,14 +594,14 @@ export default function ImagePairSelector({
             disabled={isProcessing || isLoading}
             className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            âœ… Ambas VÃ¡lidas
+            ✅ Ambas Válidas
           </button>
           <button
             onClick={() => handleSelection("swap_images")}
             disabled={isProcessing || isLoading}
             className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            ðŸ”„ Intercambiar ImÃ¡genes
+            ðŸ”„ Intercambiar Imágenes
           </button>
         </div>
 
@@ -613,14 +611,14 @@ export default function ImagePairSelector({
             disabled={isProcessing || isLoading}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Solo Imagen 1 VÃ¡lida
+            Solo Imagen 1 Válida
           </button>
           <button
             onClick={() => handleSelection("only_image2")}
             disabled={isProcessing || isLoading}
             className="px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Solo Imagen 2 VÃ¡lida
+            Solo Imagen 2 Válida
           </button>
         </div>
 
@@ -630,7 +628,7 @@ export default function ImagePairSelector({
             disabled={isProcessing || isLoading}
             className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            âŒ Ambas InvÃ¡lidas
+            âŒ Ambas Inválidas
           </button>
           {onUploadNewImages && (
             <button
@@ -638,7 +636,7 @@ export default function ImagePairSelector({
               disabled={isProcessing || isLoading}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              ðŸ“¤ Subir Nuevas ImÃ¡genes
+              ðŸ“¤ Subir Nuevas Imágenes
             </button>
           )}
         </div>

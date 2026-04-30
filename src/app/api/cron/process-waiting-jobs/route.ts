@@ -503,7 +503,7 @@ async function processExternalSyncJob(
 // ============================================================
 
 /**
- * Calcula y actualiza la prÃ³xima fecha de sincronizaciÃ³n programada
+ * Calcula y actualiza la próxima fecha de sincronización programada
  */
 async function updateNextScheduledSync(dataSourceId: string, syncFrequency: string): Promise<void> {
   const now = new Date();
@@ -520,7 +520,7 @@ async function updateNextScheduledSync(dataSourceId: string, syncFrequency: stri
       nextSync = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
       break;
     default:
-      return; // MANUAL â€” no next sync
+      return; // MANUAL — no next sync
   }
 
   await prisma.externalDataSource.update({

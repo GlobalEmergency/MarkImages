@@ -5,7 +5,7 @@
  * Individual route handlers still perform their own auth checks,
  * but this middleware catches cases where a handler forgets to.
  *
- * NOTE: Edge Runtime limitations apply â€” no Prisma, no Node.js crypto.
+ * NOTE: Edge Runtime limitations apply — no Prisma, no Node.js crypto.
  * We only verify that the auth cookie exists and the JWT is structurally valid.
  * Full role-based checks remain in route handlers.
  */
@@ -92,14 +92,14 @@ export async function middleware(request: NextRequest) {
     if (!secret) {
       // In production without JWT_SECRET, reject all requests
       console.error("[Middleware] JWT_SECRET not configured");
-      return NextResponse.json({ error: "Error de configuraciÃ³n del servidor" }, { status: 500 });
+      return NextResponse.json({ error: "Error de configuración del servidor" }, { status: 500 });
     }
 
     const encodedSecret = new TextEncoder().encode(secret);
     await jwtVerify(token, encodedSecret);
   } catch {
     // Token invalid or expired
-    return NextResponse.json({ error: "SesiÃ³n invÃ¡lida o expirada" }, { status: 401 });
+    return NextResponse.json({ error: "Sesión inválida o expirada" }, { status: 401 });
   }
 
   return NextResponse.next();

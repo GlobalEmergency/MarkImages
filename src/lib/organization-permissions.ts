@@ -282,7 +282,7 @@ export async function getAedsForUserOrganizations(
 const SINGLE_ASSIGNMENT_TYPES = ["CIVIL_PROTECTION", "OWNERSHIP", "MAINTENANCE"];
 
 const ASSIGNMENT_TYPE_LABELS: Record<string, string> = {
-  CIVIL_PROTECTION: "ProtecciÃ³n Civil",
+  CIVIL_PROTECTION: "Protección Civil",
   OWNERSHIP: "Propietario",
   MAINTENANCE: "Mantenedor",
 };
@@ -318,7 +318,7 @@ export async function checkAssignmentConflict(
     const label = ASSIGNMENT_TYPE_LABELS[assignmentType] || assignmentType;
     return {
       hasConflict: true,
-      conflictMessage: `Este DEA ya estÃ¡ asignado a ${existing.organization.name} como ${label}. Debe revocarse esa asignaciÃ³n primero.`,
+      conflictMessage: `Este DEA ya está asignado a ${existing.organization.name} como ${label}. Debe revocarse esa asignación primero.`,
     };
   }
 
@@ -376,7 +376,7 @@ export async function getEffectivePublicationMode(aedId: string) {
 export type VerificationFilterType =
   | "never_verified" // Nunca verificados (last_verified_at is null), cualquier estado
   | "requires_attention" // Marcados como requires_attention = true
-  | "verification_expired" // VerificaciÃ³n caducada (last_verified_at > 6 meses)
+  | "verification_expired" // Verificación caducada (last_verified_at > 6 meses)
   | "rejected"; // DEAs en estado REJECTED (solo admins)
 
 /**
@@ -431,21 +431,21 @@ export async function getVerifiableAedsForUser(
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
   // Solo DEAs en estado verificable (excluir REJECTED, INACTIVE)
-  // DRAFT IS verifiable â€” verification is the mechanism to review and publish
+  // DRAFT IS verifiable — verification is the mechanism to review and publish
   const verifiableStatusFilter = {
     status: { in: ["DRAFT", "PENDING_REVIEW", "PUBLISHED"] },
   };
 
   switch (filterType) {
     case "requires_attention":
-      // DEAs marcados como que requieren atenciÃ³n
+      // DEAs marcados como que requieren atención
       additionalWhere = {
         requires_attention: true,
         ...verifiableStatusFilter,
       };
       break;
     case "verification_expired":
-      // DEAs con verificaciÃ³n caducada (> 6 meses)
+      // DEAs con verificación caducada (> 6 meses)
       additionalWhere = {
         last_verified_at: { not: null, lt: sixMonthsAgo },
         ...verifiableStatusFilter,

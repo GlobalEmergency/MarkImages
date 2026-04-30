@@ -181,7 +181,7 @@ export default function DataSourcesPage() {
               </Link>
               <h1 className="text-3xl font-bold text-gray-900">Fuentes de Datos Externas</h1>
               <p className="mt-2 text-sm text-gray-600">
-                Gestiona las conexiones con APIs externas para importar DEAs automÃ¡ticamente
+                Gestiona las conexiones con APIs externas para importar DEAs automáticamente
               </p>
             </div>
             <Link
@@ -293,7 +293,7 @@ export default function DataSourcesPage() {
                           {source.lastSyncStatus && getStatusBadge(source.lastSyncStatus)}
                         </div>
                         <div className="mt-2 text-sm text-gray-500">
-                          {source.description || "Sin descripciÃ³n"}
+                          {source.description || "Sin descripción"}
                         </div>
                         <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
                           <span className="flex items-center">

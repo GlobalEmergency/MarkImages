@@ -1,5 +1,5 @@
 /**
- * Adapter de S3 para almacenamiento de imÃ¡genes
+ * Adapter de S3 para almacenamiento de imágenes
  * Capa de Infraestructura - Implementa IImageStorage
  *
  * Uses the shared S3Client singleton from @/lib/s3 to avoid

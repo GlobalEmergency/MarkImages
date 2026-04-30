@@ -1,5 +1,5 @@
 /**
- * RuleInteraction â€” Conditional interactions between rules
+ * RuleInteraction — Conditional interactions between rules
  *
  * Individual rules evaluate each criterion independently (SRP).
  * But combinations matter: same address + different floor = different unit (NOT duplicate).
@@ -8,8 +8,8 @@
  * AFTER individual rules have been evaluated.
  *
  * Evaluation process:
- * 1. Phase 1: Each ScoringRule evaluates independently â†’ RuleExplanation[]
- * 2. Phase 2: Each RuleInteraction examines Phase 1 results â†’ InteractionExplanation[]
+ * 1. Phase 1: Each ScoringRule evaluates independently → RuleExplanation[]
+ * 2. Phase 2: Each RuleInteraction examines Phase 1 results → InteractionExplanation[]
  * 3. Final score = sum(rules) + sum(interactions)
  */
 
@@ -33,7 +33,7 @@ export interface InteractionExplanation {
  * Conditional interaction between rules.
  *
  * Evaluated AFTER all individual rules have executed.
- * Expresses logic like: "IF rule X matched AND rule Z didn't â†’ adjust score".
+ * Expresses logic like: "IF rule X matched AND rule Z didn't → adjust score".
  */
 export interface RuleInteraction {
   /** Unique identifier (e.g., "same_building_different_unit") */

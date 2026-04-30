@@ -106,12 +106,12 @@ export async function POST(request: NextRequest) {
     const validTypes = ["CSV_FILE", "CKAN_API", "JSON_FILE", "REST_API"];
     if (!validTypes.includes(body.type)) {
       return NextResponse.json(
-        { error: `Tipo invÃ¡lido. Valores permitidos: ${validTypes.join(", ")}` },
+        { error: `Tipo inválido. Valores permitidos: ${validTypes.join(", ")}` },
         { status: 400 }
       );
     }
 
-    // Verificar nombre Ãºnico
+    // Verificar nombre único
     const existing = await prisma.externalDataSource.findUnique({
       where: { name: body.name },
     });

@@ -1,6 +1,6 @@
 /**
  * DeaImageProcessor - Reusable image processing pipeline for DEA images
- * Chains: CROP â†’ BLUR â†’ ARROW for a single image
+ * Chains: CROP → BLUR → ARROW for a single image
  * Used by any user with permissions on the DEA (admin, verifier, etc.)
  *
  * After client-side processing, sends metadata to server for Sharp-based processing.

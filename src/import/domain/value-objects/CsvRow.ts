@@ -1,54 +1,54 @@
 /**
- * Value Object: Representa una fila del CSV de importaciÃ³n
+ * Value Object: Representa una fila del CSV de importación
  * Capa de Dominio
  */
 
 export interface CsvRowData {
   Id: string;
-  "Correo electrÃ³nico": string;
+  "Correo electrónico": string;
   Nombre: string;
-  "NÃºmero provisional DEA": string;
+  "Número provisional DEA": string;
   "Referencia externa": string;
   "Tipo de establecimiento": string;
   "Titularidad del local": string;
   "Uso del local": string;
   Titularidad: string;
-  "Propuesta de denominaciÃ³n": string;
-  "Tipo de vÃ­a": string;
-  "Nombre de la vÃ­a": string;
-  "NÃºmero de la vÃ­a": string;
-  "Complemento de direcciÃ³n": string;
-  "CÃ³digo postal": string;
+  "Propuesta de denominación": string;
+  "Tipo de vía": string;
+  "Nombre de la vía": string;
+  "Número de la vía": string;
+  "Complemento de dirección": string;
+  "Código postal": string;
   Distrito: string;
   Planta: string;
-  "UbicaciÃ³n especÃ­fica": string;
+  "Ubicación específica": string;
   "Coordenadas-Latitud (norte)": string;
   "Coordenadas-Longitud (oeste, por lo tanto, negativa)": string;
   "Horario de apertura del establecimiento": string;
   "Hora de APERTURA de lunes a viernes": string;
   "Hora de CIERRE de lunes a viernes": string;
-  "Hora de APERTURA los sÃ¡bados": string;
-  "Hora de CIERRE los sÃ¡bados": string;
+  "Hora de APERTURA los sábados": string;
+  "Hora de CIERRE los sábados": string;
   "Hora de APERTURA los domingos": string;
   "Hora de CIERRE los domingos": string;
-  "Â¿Tiene vigilante 24 horas al dÃ­a que pueda facilitar el desfibrilador en caso necesario aunque estÃ© cerrado?": string;
+  "Â¿Tiene vigilante 24 horas al día que pueda facilitar el desfibrilador en caso necesario aunque esté cerrado?": string;
   "Foto 1": string;
   "Foto 2": string;
 
   // NEW SIMPLIFIED FIELDS
   "Instrucciones de acceso": string;
-  "Comentarios pÃºblicos": string;
+  "Comentarios públicos": string;
 
-  // DEPRECATED - Mantener para compatibilidad durante transiciÃ³n
-  "DescripciÃ³n acceso": string;
+  // DEPRECATED - Mantener para compatibilidad durante transición
+  "Descripción acceso": string;
   "Referencias visibles": string;
   "Advertencias acceso": string;
-  "Observaciones ubicaciÃ³n": string;
+  "Observaciones ubicación": string;
   "Comentario libre": string;
 
   // Optional fields that may exist in some CSV formats
   "Hora de inicio"?: string;
-  "Hora de finalizaciÃ³n"?: string;
+  "Hora de finalización"?: string;
 }
 
 export class CsvRow {
@@ -59,7 +59,7 @@ export class CsvRow {
   }
 
   get submitterEmail(): string {
-    return this.data["Correo electrÃ³nico"];
+    return this.data["Correo electrónico"];
   }
 
   get submitterName(): string {
@@ -67,11 +67,11 @@ export class CsvRow {
   }
 
   get provisionalNumber(): string {
-    return this.data["NÃºmero provisional DEA"];
+    return this.data["Número provisional DEA"];
   }
 
   get proposedName(): string {
-    return this.data["Propuesta de denominaciÃ³n"];
+    return this.data["Propuesta de denominación"];
   }
 
   // Alias para compatibilidad con DynamicCsvRow
@@ -84,23 +84,23 @@ export class CsvRow {
   }
 
   get streetType(): string {
-    return this.data["Tipo de vÃ­a"];
+    return this.data["Tipo de vía"];
   }
 
   get streetName(): string {
-    return this.data["Nombre de la vÃ­a"];
+    return this.data["Nombre de la vía"];
   }
 
   get streetNumber(): string {
-    return this.data["NÃºmero de la vÃ­a"];
+    return this.data["Número de la vía"];
   }
 
   get additionalInfo(): string {
-    return this.data["Complemento de direcciÃ³n"];
+    return this.data["Complemento de dirección"];
   }
 
   get postalCode(): string {
-    return this.data["CÃ³digo postal"];
+    return this.data["Código postal"];
   }
 
   get district(): string {
@@ -124,7 +124,7 @@ export class CsvRow {
   }
 
   get accessDescription(): string {
-    return this.data["DescripciÃ³n acceso"];
+    return this.data["Descripción acceso"];
   }
 
   get freeComment(): string {
@@ -144,11 +144,11 @@ export class CsvRow {
   }
 
   get saturdayOpening(): string {
-    return this.data["Hora de APERTURA los sÃ¡bados"];
+    return this.data["Hora de APERTURA los sábados"];
   }
 
   get saturdayClosing(): string {
-    return this.data["Hora de CIERRE los sÃ¡bados"];
+    return this.data["Hora de CIERRE los sábados"];
   }
 
   get sundayOpening(): string {
@@ -161,11 +161,11 @@ export class CsvRow {
 
   get has24hSurveillance(): boolean {
     const value = this.data[
-      "Â¿Tiene vigilante 24 horas al dÃ­a que pueda facilitar el desfibrilador en caso necesario aunque estÃ© cerrado?"
+      "Â¿Tiene vigilante 24 horas al día que pueda facilitar el desfibrilador en caso necesario aunque esté cerrado?"
     ]
       ?.toLowerCase()
       .trim();
-    return value === "sÃ­" || value === "si" || value === "yes";
+    return value === "sí" || value === "si" || value === "yes";
   }
 
   get ownership(): string {
@@ -185,12 +185,12 @@ export class CsvRow {
   }
 
   get endTime(): string {
-    return this.data["Hora de finalizaciÃ³n"] || "";
+    return this.data["Hora de finalización"] || "";
   }
 
   /**
-   * Valida que la fila tenga los campos mÃ­nimos requeridos
-   * Solo son obligatorios: nombre, nombre de calle y nÃºmero de calle
+   * Valida que la fila tenga los campos mínimos requeridos
+   * Solo son obligatorios: nombre, nombre de calle y número de calle
    */
   hasMinimumRequiredFields(): boolean {
     return !!(this.proposedName && this.streetName && this.streetNumber);

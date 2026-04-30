@@ -2,14 +2,14 @@
  * AED Import Lifecycle Hooks for @batchactions/import
  *
  * Implementa los hooks del pipeline de procesamiento de registros:
- * 1. beforeValidate â€” Normaliza datos raw (trim, lowercase, coordinate format)
- * 2. afterValidate  â€” Downgrade errores de duplicados cuando skipDuplicates=true
- * 3. beforeProcess  â€” Prepara datos para creaciÃ³n multi-entidad
- * 4. afterProcess   â€” Descarga imÃ¡genes y las sube a S3
+ * 1. beforeValidate — Normaliza datos raw (trim, lowercase, coordinate format)
+ * 2. afterValidate  — Downgrade errores de duplicados cuando skipDuplicates=true
+ * 3. beforeProcess  — Prepara datos para creación multi-entidad
+ * 4. afterProcess   — Descarga imágenes y las sube a S3
  *
  * Pipeline completo en @batchactions/import:
- * Parse â†’ Alias resolution â†’ beforeValidate â†’ Transforms â†’ Validation â†’
- * Uniqueness â†’ afterValidate â†’ beforeProcess â†’ Processor â†’ afterProcess
+ * Parse → Alias resolution → beforeValidate → Transforms → Validation →
+ * Uniqueness → afterValidate → beforeProcess → Processor → afterProcess
  */
 
 import type {
@@ -38,7 +38,7 @@ type ImageFieldKey =
   | "photoLocationUrl"
   | "photoAccessUrl";
 
-/** Mapeo de campo de imagen â†’ tipo de imagen en AedImage */
+/** Mapeo de campo de imagen → tipo de imagen en AedImage */
 const IMAGE_FIELD_TO_TYPE: Record<ImageFieldKey, AedImageType> = {
   photoFrontUrl: AedImageType.FRONT,
   photoLocationUrl: AedImageType.LOCATION,
@@ -48,13 +48,13 @@ const IMAGE_FIELD_TO_TYPE: Record<ImageFieldKey, AedImageType> = {
   photo3Url: AedImageType.CONTEXT,
 };
 
-/** Prioridad de campos de imagen (especÃ­ficos antes que genÃ©ricos) */
+/** Prioridad de campos de imagen (específicos antes que genéricos) */
 const IMAGE_FIELD_PRIORITY: ImageFieldKey[] = [
-  // Nomenclatura especÃ­fica (prioridad)
+  // Nomenclatura específica (prioridad)
   "photoFrontUrl",
   "photoLocationUrl",
   "photoAccessUrl",
-  // Nomenclatura genÃ©rica (fallback)
+  // Nomenclatura genérica (fallback)
   "photo1Url",
   "photo2Url",
   "photo3Url",
@@ -63,13 +63,13 @@ const IMAGE_FIELD_PRIORITY: ImageFieldKey[] = [
 export interface AedImportHooksOptions {
   /** Prisma client para crear registros AedImage */
   prisma: PrismaClient;
-  /** Use case para descargar imÃ¡genes y subirlas a S3 */
+  /** Use case para descargar imágenes y subirlas a S3 */
   downloadAndUploadImageUseCase?: DownloadAndUploadImageUseCase;
-  /** AutenticaciÃ³n SharePoint (cookies rtFa/fedAuth) */
+  /** Autenticación SharePoint (cookies rtFa/fedAuth) */
   sharePointAuth?: SharePointAuthConfig;
   /** Si true, los registros duplicados se procesan como warning en vez de error */
   skipDuplicates?: boolean;
-  /** Column mappings from UI wizard: CSV column â†’ schema field */
+  /** Column mappings from UI wizard: CSV column → schema field */
   mappings?: Array<{ csvColumn: string; systemField: string }>;
 }
 
@@ -79,7 +79,7 @@ export interface AedImportHooksOptions {
 
 /**
  * Creates a beforeValidate hook that:
- * 1. Applies user column mappings (CSV column â†’ schema field)
+ * 1. Applies user column mappings (CSV column → schema field)
  * 2. Normalizes raw data (trim, clean empty strings)
  *
  * The mapping step is critical: @batchactions/import’s alias resolution
@@ -90,7 +90,7 @@ export interface AedImportHooksOptions {
 function createBeforeValidate(
   mappings?: Array<{ csvColumn: string; systemField: string }>
 ): (record: RawRecord, context: HookContext) => Promise<RawRecord> {
-  // Build lookup map once (CSV column name â†’ schema field name)
+  // Build lookup map once (CSV column name → schema field name)
   const mappingMap = new Map<string, string>();
   if (mappings && mappings.length > 0) {
     for (const m of mappings) {
@@ -136,8 +136,8 @@ function createBeforeValidate(
 // ============================================================
 
 /**
- * DespuÃ©s de la validaciÃ³n, ajusta el comportamiento de duplicados:
- * - Si skipDuplicates=true, downgrade errores EXTERNAL_DUPLICATE de error â†’ warning
+ * Después de la validación, ajusta el comportamiento de duplicados:
+ * - Si skipDuplicates=true, downgrade errores EXTERNAL_DUPLICATE de error → warning
  *   para que el registro no se bloquee pero quede anotado
  */
 function createAfterValidate(
@@ -154,7 +154,7 @@ function createAfterValidate(
 
     if (!hasExternalDuplicate) return record;
 
-    // Downgrade EXTERNAL_DUPLICATE de error â†’ warning
+    // Downgrade EXTERNAL_DUPLICATE de error → warning
     const adjustedErrors = record.errors.map((error) => {
       if (error.code === "EXTERNAL_DUPLICATE") {
         return {
@@ -165,7 +165,7 @@ function createAfterValidate(
       return error;
     });
 
-    // Recalcular status: si solo quedan warnings, el record es vÃ¡lido
+    // Recalcular status: si solo quedan warnings, el record es válido
     const hasBlockingErrors = adjustedErrors.some((e) => (e.severity || "error") === "error");
 
     return {
@@ -184,12 +184,12 @@ function createAfterValidate(
  * Antes del processor callback, prepara los datos parseados:
  * - Detecta URLs de SharePoint en campos de imagen
  * - Marca el registro con metadata de SharePoint para el afterProcess
- * - Pre-genera UUIDs para AED e imÃ¡genes
+ * - Pre-genera UUIDs para AED e imágenes
  */
 async function beforeProcess(record: ParsedRecord, _context: HookContext): Promise<ParsedRecord> {
   const enriched: Record<string, unknown> = { ...record };
 
-  // Pre-generar UUID del AED para que las imÃ¡genes puedan referenciarlo
+  // Pre-generar UUID del AED para que las imágenes puedan referenciarlo
   if (!enriched._aedId) {
     enriched._aedId = randomUUID();
   }
@@ -222,7 +222,7 @@ async function beforeProcess(record: ParsedRecord, _context: HookContext): Promi
     });
   }
 
-  // Almacenar metadata de imÃ¡genes para el afterProcess
+  // Almacenar metadata de imágenes para el afterProcess
   enriched._imageUrls = imageUrls;
   enriched._hasSharePoint = hasSharePoint;
 
@@ -230,15 +230,15 @@ async function beforeProcess(record: ParsedRecord, _context: HookContext): Promi
 }
 
 // ============================================================
-// afterProcess: Descarga de imÃ¡genes â†’ S3 + creaciÃ³n AedImage
+// afterProcess: Descarga de imágenes → S3 + creación AedImage
 // ============================================================
 
 /**
- * DespuÃ©s de que el processor crea el AED exitosamente,
- * descarga las imÃ¡genes desde URLs externas, las sube a S3,
+ * Después de que el processor crea el AED exitosamente,
+ * descarga las imágenes desde URLs externas, las sube a S3,
  * y crea los registros AedImage en la base de datos.
  *
- * Las imÃ¡genes se procesan secuencialmente para no saturar el sistema.
+ * Las imágenes se procesan secuencialmente para no saturar el sistema.
  * Si una imagen falla, se crea un registro fallback con la URL original.
  */
 function createAfterProcess(
@@ -260,7 +260,7 @@ function createAfterProcess(
 
     if (!aedId || !imageUrls || imageUrls.length === 0) return;
 
-    // Procesar imÃ¡genes secuencialmente
+    // Procesar imágenes secuencialmente
     for (const [index, img] of imageUrls.entries()) {
       try {
         if (downloadAndUploadImageUseCase) {
@@ -279,7 +279,7 @@ function createAfterProcess(
               type: img.type,
               order: index + 1,
               original_url: s3Result.url,
-              processed_url: null, // Se llena durante verificaciÃ³n
+              processed_url: null, // Se llena durante verificación
               is_verified: false,
             },
           });
@@ -329,7 +329,7 @@ function createAfterProcess(
 // ============================================================
 
 /**
- * Crea la configuraciÃ³n de hooks para la importaciÃ³n de AEDs.
+ * Crea la configuración de hooks para la importación de AEDs.
  *
  * @example
  * ```typescript

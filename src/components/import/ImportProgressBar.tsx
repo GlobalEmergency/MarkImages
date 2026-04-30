@@ -1,5 +1,5 @@
 /**
- * Barra de progreso para importaciones con segmentos de Ã©xito y error
+ * Barra de progreso para importaciones con segmentos de éxito y error
  */
 
 import type { ImportStatus } from "@/types/import";
@@ -26,7 +26,7 @@ export default function ImportProgressBar({
     <div className="space-y-1">
       {/* Barra de progreso */}
       <div className="relative w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-        {/* Segmento de Ã©xito */}
+        {/* Segmento de éxito */}
         <div
           className="absolute top-0 left-0 h-full bg-green-500 transition-all duration-500"
           style={{ width: `${successPercentage}%` }}
@@ -39,7 +39,7 @@ export default function ImportProgressBar({
             width: `${failurePercentage}%`,
           }}
         />
-        {/* AnimaciÃ³n para IN_PROGRESS y RESUMING */}
+        {/* Animación para IN_PROGRESS y RESUMING */}
         {(status === "IN_PROGRESS" || status === "RESUMING") && (
           <div
             className="absolute top-0 left-0 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"
@@ -56,7 +56,7 @@ export default function ImportProgressBar({
         <span className="font-medium">{percentage}%</span>
       </div>
 
-      {/* Estilos personalizados para la animaciÃ³n */}
+      {/* Estilos personalizados para la animación */}
       <style jsx>{`
         @keyframes slideProgress {
           0% {

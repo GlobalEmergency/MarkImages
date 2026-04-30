@@ -85,12 +85,12 @@ export default function NewOrganizationPage() {
       const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.error || "Error al crear la organizaciÃ³n");
+        throw new Error(data.error || "Error al crear la organización");
       }
 
       router.push("/admin/organizations");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Error al crear la organizaciÃ³n");
+      setError(err instanceof Error ? err.message : "Error al crear la organización");
     } finally {
       setLoading(false);
     }
@@ -116,9 +116,9 @@ export default function NewOrganizationPage() {
           >
             â† Volver a Organizaciones
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Nueva OrganizaciÃ³n</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Nueva Organización</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Crea una nueva protecciÃ³n civil, empresa certificada o grupo de voluntarios
+            Crea una nueva protección civil, empresa certificada o grupo de voluntarios
           </p>
         </div>
 
@@ -135,11 +135,11 @@ export default function NewOrganizationPage() {
         <form onSubmit={handleSubmit} className="bg-white shadow rounded-lg p-6 space-y-6">
           {/* Basic Information */}
           <div className="space-y-4">
-            <h2 className="text-lg font-medium text-gray-900">InformaciÃ³n BÃ¡sica</h2>
+            <h2 className="text-lg font-medium text-gray-900">Información Básica</h2>
 
             <div>
               <label htmlFor="type" className="block text-sm font-medium text-gray-700">
-                Tipo de OrganizaciÃ³n *
+                Tipo de Organización *
               </label>
               <select
                 id="type"
@@ -149,7 +149,7 @@ export default function NewOrganizationPage() {
                 required
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               >
-                <option value="CIVIL_PROTECTION">ProtecciÃ³n Civil</option>
+                <option value="CIVIL_PROTECTION">Protección Civil</option>
                 <option value="CERTIFIED_COMPANY">Empresa Certificada</option>
                 <option value="VOLUNTEER_GROUP">Grupo de Voluntarios</option>
                 <option value="MUNICIPALITY">Ayuntamiento</option>
@@ -175,7 +175,7 @@ export default function NewOrganizationPage() {
 
             <div>
               <label htmlFor="code" className="block text-sm font-medium text-gray-700">
-                CÃ³digo (Ãºnico)
+                Código (único)
               </label>
               <input
                 type="text"
@@ -190,7 +190,7 @@ export default function NewOrganizationPage() {
 
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                DescripciÃ³n
+                Descripción
               </label>
               <textarea
                 id="description"
@@ -205,7 +205,7 @@ export default function NewOrganizationPage() {
 
           {/* Contact Information */}
           <div className="space-y-4">
-            <h2 className="text-lg font-medium text-gray-900">InformaciÃ³n de Contacto</h2>
+            <h2 className="text-lg font-medium text-gray-900">Información de Contacto</h2>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -223,7 +223,7 @@ export default function NewOrganizationPage() {
 
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                TelÃ©fono
+                Teléfono
               </label>
               <input
                 type="tel"
@@ -253,11 +253,11 @@ export default function NewOrganizationPage() {
 
           {/* Geographic Scope */}
           <div className="space-y-4">
-            <h2 className="text-lg font-medium text-gray-900">Ãmbito GeogrÃ¡fico</h2>
+            <h2 className="text-lg font-medium text-gray-900">Ámbito Geográfico</h2>
 
             <div>
               <label htmlFor="scope_type" className="block text-sm font-medium text-gray-700">
-                Tipo de Ãmbito
+                Tipo de Ámbito
               </label>
               <select
                 id="scope_type"
@@ -278,7 +278,7 @@ export default function NewOrganizationPage() {
               <>
                 <div>
                   <label htmlFor="city_code" className="block text-sm font-medium text-gray-700">
-                    CÃ³digo de Ciudad (INE)
+                    Código de Ciudad (INE)
                   </label>
                   <input
                     type="text"
@@ -314,7 +314,7 @@ export default function NewOrganizationPage() {
                   htmlFor="custom_scope_description"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  DescripciÃ³n del Ãmbito Personalizado
+                  Descripción del Ámbito Personalizado
                 </label>
                 <textarea
                   id="custom_scope_description"
@@ -330,7 +330,7 @@ export default function NewOrganizationPage() {
 
           {/* Approval Settings */}
           <div className="space-y-4">
-            <h2 className="text-lg font-medium text-gray-900">ConfiguraciÃ³n de AprobaciÃ³n</h2>
+            <h2 className="text-lg font-medium text-gray-900">Configuración de Aprobación</h2>
 
             <div className="flex items-center">
               <input
@@ -342,7 +342,7 @@ export default function NewOrganizationPage() {
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <label htmlFor="require_approval" className="ml-2 block text-sm text-gray-700">
-                Requiere aprobaciÃ³n externa
+                Requiere aprobación externa
               </label>
             </div>
 
@@ -352,7 +352,7 @@ export default function NewOrganizationPage() {
                   htmlFor="approval_authority"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Autoridad de AprobaciÃ³n
+                  Autoridad de Aprobación
                 </label>
                 <input
                   type="text"
@@ -369,7 +369,7 @@ export default function NewOrganizationPage() {
 
           {/* Badge Settings */}
           <div className="space-y-4">
-            <h2 className="text-lg font-medium text-gray-900">Badge de VerificaciÃ³n</h2>
+            <h2 className="text-lg font-medium text-gray-900">Badge de Verificación</h2>
 
             <div>
               <label htmlFor="badge_name" className="block text-sm font-medium text-gray-700">
@@ -414,7 +414,7 @@ export default function NewOrganizationPage() {
               disabled={loading}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Creando..." : "Crear OrganizaciÃ³n"}
+              {loading ? "Creando..." : "Crear Organización"}
             </button>
           </div>
         </form>

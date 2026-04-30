@@ -17,7 +17,7 @@ export default function Footer() {
           <div>
             <h3 className="font-bold text-lg mb-3 text-white">DeaMap</h3>
             <p className="text-gray-300 text-sm leading-relaxed">
-              Mapa colaborativo de desfibriladores en EspaÃ±a
+              Mapa colaborativo de desfibriladores en España
             </p>
           </div>
 
@@ -43,10 +43,10 @@ export default function Footer() {
             <p className="text-gray-400 text-xs mt-2">Mejorando la respuesta ante emergencias</p>
           </div>
 
-          {/* App MÃ³vil */}
+          {/* App Móvil */}
           <AppStoreFooterLinks />
 
-          {/* Enlaces rÃ¡pidos */}
+          {/* Enlaces rápidos */}
           <div>
             <h3 className="font-bold text-lg mb-3 text-white">Enlaces</h3>
             <ul className="space-y-2 text-sm">
@@ -74,10 +74,10 @@ export default function Footer() {
                 <Link
                   href="/api/docs"
                   className="text-gray-300 hover:text-white transition-colors inline-flex items-center gap-1"
-                  onClick={() => trackNavClick("API pÃºblica (footer)", "/api/docs")}
+                  onClick={() => trackNavClick("API pública (footer)", "/api/docs")}
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
-                  API pÃºblica
+                  API pública
                 </Link>
               </li>
               <li>
@@ -105,10 +105,10 @@ export default function Footer() {
         <div className="border-t border-gray-700 pt-6 text-sm text-gray-400">
           <div className="flex flex-wrap justify-center gap-4 mb-3">
             <Link href="/legal/privacidad" className="hover:text-white transition-colors">
-              PolÃ­tica de Privacidad
+              Política de Privacidad
             </Link>
             <Link href="/legal/cookies" className="hover:text-white transition-colors">
-              PolÃ­tica de Cookies
+              Política de Cookies
             </Link>
             <Link href="/legal/condiciones" className="hover:text-white transition-colors">
               Condiciones de Uso

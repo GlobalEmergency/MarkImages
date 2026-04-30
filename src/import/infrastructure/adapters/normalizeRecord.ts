@@ -4,17 +4,17 @@
  *
  * Ejemplos:
  * - { geo_point_2d: { lon: 7.6, lat: 47.5 } }
- *   â†’ aÃ±ade "geo_point_2d.lon": 7.6, "geo_point_2d.lat": 47.5
+ *   → añade "geo_point_2d.lon": 7.6, "geo_point_2d.lat": 47.5
  *
  * - { wkb_geometry: "POINT(-4.419 36.717)" }
- *   â†’ aÃ±ade "wkb_geometry.longitude": -4.419, "wkb_geometry.latitude": 36.717
+ *   → añade "wkb_geometry.longitude": -4.419, "wkb_geometry.latitude": 36.717
  */
 
 const WKT_POINT_RE = /^POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)$/i;
 
 /**
  * Aplana un registro expandiendo objetos anidados y formatos geoespaciales.
- * NO modifica el registro original â€” devuelve una copia enriquecida.
+ * NO modifica el registro original — devuelve una copia enriquecida.
  */
 export function normalizeRecord(record: Record<string, unknown>): Record<string, unknown> {
   const result = { ...record };
@@ -33,7 +33,7 @@ export function normalizeRecord(record: Record<string, unknown>): Record<string,
       continue;
     }
 
-    // Parse WKT POINT strings â†’ longitude/latitude
+    // Parse WKT POINT strings → longitude/latitude
     if (typeof value === "string") {
       const match = value.match(WKT_POINT_RE);
       if (match) {

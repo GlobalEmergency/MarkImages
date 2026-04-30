@@ -116,9 +116,9 @@ export default function UsersPage() {
           >
             â† Volver al panel
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">GestiÃ³n de Usuarios</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Administra usuarios y sus membresÃ­as a organizaciones
+            Administra usuarios y sus membresías a organizaciones
           </p>
         </div>
 
@@ -235,7 +235,7 @@ export default function UsersPage() {
 
                       {user.organizations.length === 0 && (
                         <div className="mt-3 text-sm text-gray-500 italic">
-                          Sin membresÃ­as a organizaciones
+                          Sin membresías a organizaciones
                         </div>
                       )}
                     </div>
