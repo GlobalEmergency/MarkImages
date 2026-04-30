@@ -31,8 +31,8 @@ export const V1_OPENAPI_HEADERS = {
 
 /**
  * Dynamic cache headers for internal API routes (/api/aeds/*).
- * - Authenticated → private, no-store (always fresh)
- * - Anonymous → 5 min CDN cache
+ * - Authenticated â†’ private, no-store (always fresh)
+ * - Anonymous â†’ 5 min CDN cache
  */
 export function getInternalCacheHeaders(request: NextRequest): Record<string, string> {
   const hasAuth =

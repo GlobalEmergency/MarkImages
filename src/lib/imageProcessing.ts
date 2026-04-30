@@ -1,6 +1,6 @@
 /**
  * Image Processing Service
- * Procesa imágenes con crop, blur y arrow usando Sharp
+ * Procesa imÃ¡genes con crop, blur y arrow usando Sharp
  */
 
 import sharp from "sharp";
@@ -51,21 +51,16 @@ export async function processImage(options: ProcessImageOptions): Promise<Buffer
     const width = Math.max(1, Math.min(Math.round(cropData.width), imgWidth - left));
     const height = Math.max(1, Math.min(Math.round(cropData.height), imgHeight - top));
 
-    console.log(
-      `🔲 Aplicando crop: ${width}x${height} en (${left}, ${top}) [imagen: ${imgWidth}x${imgHeight}]`
-    );
     image = image.extract({ left, top, width, height });
     currentWidth = width;
     currentHeight = height;
   }
 
-  // Obtener el buffer después del crop
+  // Obtener el buffer despuÃ©s del crop
   let buffer = await image.toBuffer();
 
-  // 2. Aplicar blur a las áreas marcadas
+  // 2. Aplicar blur a las Ã¡reas marcadas
   if (blurAreas && blurAreas.length > 0) {
-    console.log(`🔒 Aplicando ${blurAreas.length} área(s) de blur`);
-
     for (const area of blurAreas) {
       // Clamp blur area to current image bounds (post-crop dimensions)
       const left = Math.max(0, Math.min(Math.round(area.x), currentWidth - 1));
@@ -73,13 +68,13 @@ export async function processImage(options: ProcessImageOptions): Promise<Buffer
       const width = Math.max(1, Math.min(Math.round(area.width), currentWidth - left));
       const height = Math.max(1, Math.min(Math.round(area.height), currentHeight - top));
 
-      // Extraer la región a difuminar
+      // Extraer la regiÃ³n a difuminar
       const blurRegion = await sharp(buffer)
         .extract({ left, top, width, height })
         .blur(area.intensity || 10)
         .toBuffer();
 
-      // Componer la región difuminada sobre la imagen
+      // Componer la regiÃ³n difuminada sobre la imagen
       buffer = await sharp(buffer)
         .composite([{ input: blurRegion, left, top }])
         .toBuffer();
@@ -88,10 +83,6 @@ export async function processImage(options: ProcessImageOptions): Promise<Buffer
 
   // 3. Dibujar flecha si existe
   if (arrowData) {
-    console.log(
-      `🎯 Dibujando flecha desde (${arrowData.startX}, ${arrowData.startY}) hasta (${arrowData.endX}, ${arrowData.endY})`
-    );
-
     // Re-read dimensions (may have changed after crop/blur)
     const arrowMeta = await sharp(buffer).metadata();
     const width = arrowMeta.width || currentWidth || 1000;
@@ -115,8 +106,6 @@ export async function processImage(options: ProcessImageOptions): Promise<Buffer
   // 4. Optimizar imagen final
   const finalImage = await sharp(buffer).jpeg({ quality: 90, mozjpeg: true }).toBuffer();
 
-  console.log("✅ Imagen procesada exitosamente");
-
   return finalImage;
 }
 
@@ -134,7 +123,7 @@ function generateArrowSVG(arrowData: ArrowData, width: number, height: number): 
   const strokeWidth = ARROW_CONFIG.STROKE_WIDTH;
   const headAngle = ARROW_CONFIG.HEAD_ANGLE;
 
-  // Calcular ángulo y dimensiones
+  // Calcular Ã¡ngulo y dimensiones
   const dx = endX - startX;
   const dy = endY - startY;
   const angle = Math.atan2(dy, dx);
@@ -174,7 +163,7 @@ function generateArrowSVG(arrowData: ArrowData, width: number, height: number): 
 }
 
 /**
- * Procesa todas las imágenes de una verificación
+ * Procesa todas las imÃ¡genes de una verificaciÃ³n
  */
 export interface ImageToProcess {
   imageId: string;
@@ -196,8 +185,6 @@ export async function processVerificationImages(
   const errors: Array<{ imageId: string; error: string }> = [];
 
   for (const img of images) {
-    console.log(`📸 Procesando imagen ${img.imageId}...`);
-
     try {
       // Descargar imagen original
       const imageBuffer = await downloadImage(img.originalUrl);
@@ -211,12 +198,11 @@ export async function processVerificationImages(
       });
 
       processedImages.set(img.imageId, processedBuffer);
-      console.log(`✅ Imagen ${img.imageId} procesada`);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
-      console.error(`❌ Error procesando imagen ${img.imageId}: ${message}`);
+      console.error(`âŒ Error procesando imagen ${img.imageId}: ${message}`);
       errors.push({ imageId: img.imageId, error: message });
-      // Continue processing remaining images — don't abort the entire verification
+      // Continue processing remaining images â€” don't abort the entire verification
     }
   }
 

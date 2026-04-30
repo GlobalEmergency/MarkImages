@@ -39,8 +39,8 @@ interface AedExportData {
 }
 
 /**
- * Interfaz completa para exportación en formato de importación
- * Incluye TODOS los campos del CSV de importación simplificado
+ * Interfaz completa para exportaciÃ³n en formato de importaciÃ³n
+ * Incluye TODOS los campos del CSV de importaciÃ³n simplificado
  */
 interface AedImportFormatData {
   id?: string | null;
@@ -67,7 +67,7 @@ interface AedImportFormatData {
     local_use?: string | null;
   } | null;
 
-  // Ubicación
+  // UbicaciÃ³n
   location?: {
     street_type?: string | null;
     street_name?: string | null;
@@ -114,7 +114,7 @@ interface AedImportFormatData {
     schedule_exceptions?: string | null;
   } | null;
 
-  // Imágenes
+  // ImÃ¡genes
   images?: Array<{
     url?: string | null;
     sequence?: number | null;
@@ -137,7 +137,7 @@ interface AedImportFormatData {
 }
 
 /**
- * Parsea el contenido de notas para extraer información estructurada
+ * Parsea el contenido de notas para extraer informaciÃ³n estructurada
  */
 function parseNotesContent(notes: string): {
   legacyId: string;
@@ -210,7 +210,7 @@ function parseNotesContent(notes: string): {
  * Usa punto y coma (;) como separador para compatibilidad con Excel
  */
 export function aedsToCsv(aeds: AedExportData[]): string {
-  // Definir las columnas del CSV según los requisitos + columnas adicionales para información estructurada
+  // Definir las columnas del CSV segÃºn los requisitos + columnas adicionales para informaciÃ³n estructurada
   const headers = [
     "provisional_id",
     "RM_ID",
@@ -228,7 +228,7 @@ export function aedsToCsv(aeds: AedExportData[]): string {
     "neighborhood",
     "latitude",
     "longitude",
-    "¿opening 24/7?",
+    "Â¿opening 24/7?",
     "opening Mon-Fri",
     "closing Mon-Fri",
     "opening Sat",
@@ -239,7 +239,7 @@ export function aedsToCsv(aeds: AedExportData[]): string {
     "INCLUDE",
     "notes",
     "COO",
-    // Columnas adicionales para información estructurada
+    // Columnas adicionales para informaciÃ³n estructurada
     "legacy_id",
     "reviewed_by",
     "reviewer_email",
@@ -278,7 +278,7 @@ export function aedsToCsv(aeds: AedExportData[]): string {
       aed.location?.neighborhood_name ?? "", // neighborhood
       aed.latitude ?? "", // latitude
       aed.longitude ?? "", // longitude
-      aed.schedule?.has_24h_surveillance ? "SÍ" : "NO", // ¿opening 24/7?
+      aed.schedule?.has_24h_surveillance ? "SÃ" : "NO", // Â¿opening 24/7?
       aed.schedule?.weekday_opening ?? "", // opening Mon-Fri
       aed.schedule?.weekday_closing ?? "", // closing Mon-Fri
       aed.schedule?.saturday_opening ?? "", // opening Sat
@@ -299,11 +299,11 @@ export function aedsToCsv(aeds: AedExportData[]): string {
     ];
   });
 
-  // Función para escapar valores CSV (RFC 4180 compliant, usando ; como separador)
+  // FunciÃ³n para escapar valores CSV (RFC 4180 compliant, usando ; como separador)
   const escapeCsvValue = (value: string | number): string => {
     const stringValue = String(value);
 
-    // Limpiar caracteres problemáticos: tabs, retornos de carro, y normalizar saltos de línea
+    // Limpiar caracteres problemÃ¡ticos: tabs, retornos de carro, y normalizar saltos de lÃ­nea
     const cleanValue = stringValue
       .replace(/\t/g, " ") // Reemplazar tabs con espacios
       .replace(/\r\n/g, " ") // Reemplazar CRLF con espacio
@@ -327,7 +327,7 @@ export function aedsToCsv(aeds: AedExportData[]): string {
 }
 
 /**
- * Genera un nombre de archivo para la exportación
+ * Genera un nombre de archivo para la exportaciÃ³n
  */
 export function generateExportFilename(filters?: {
   status?: string[];
@@ -362,57 +362,57 @@ export function createCsvBlob(csvContent: string): Blob {
 }
 
 /**
- * Convierte un array de AEDs a formato CSV compatible con IMPORTACIÓN
- * Usa el mismo formato de 58 columnas que la plantilla de importación
+ * Convierte un array de AEDs a formato CSV compatible con IMPORTACIÃ“N
+ * Usa el mismo formato de 58 columnas que la plantilla de importaciÃ³n
  * Usa punto y coma (;) como separador para compatibilidad con Excel
  */
 export function aedsToImportFormatCsv(aeds: AedImportFormatData[]): string {
-  // Definir las 58 columnas según la plantilla de importación simplificada
+  // Definir las 58 columnas segÃºn la plantilla de importaciÃ³n simplificada
   const headers = [
     "Id",
-    "Número provisional DEA",
-    "Código DEA",
+    "NÃºmero provisional DEA",
+    "CÃ³digo DEA",
     "Referencia externa",
-    "Propuesta de denominación",
+    "Propuesta de denominaciÃ³n",
     "Tipo de establecimiento",
     "Titularidad",
     "Titularidad del local",
     "Uso del local",
     "Observaciones origen",
-    "Tipo de vía",
-    "Nombre de la vía",
-    "Número de la vía",
-    "Complemento de dirección",
-    "Código postal",
+    "Tipo de vÃ­a",
+    "Nombre de la vÃ­a",
+    "NÃºmero de la vÃ­a",
+    "Complemento de direcciÃ³n",
+    "CÃ³digo postal",
     "Ciudad",
-    "Código ciudad",
+    "CÃ³digo ciudad",
     "Distrito",
     "Barrio",
     "Planta",
-    "Ubicación específica",
+    "UbicaciÃ³n especÃ­fica",
     "Instrucciones de acceso",
-    "Comentarios públicos",
+    "Comentarios pÃºblicos",
     "Coordenadas-Latitud (norte)",
     "Coordenadas-Longitud (oeste, por lo tanto, negativa)",
-    "Precisión coordenadas",
+    "PrecisiÃ³n coordenadas",
     "Horario de apertura del establecimiento",
     "Hora de APERTURA de lunes a viernes",
     "Hora de CIERRE de lunes a viernes",
-    "Hora de APERTURA los sábados",
-    "Hora de CIERRE los sábados",
+    "Hora de APERTURA los sÃ¡bados",
+    "Hora de CIERRE los sÃ¡bados",
     "Hora de APERTURA los domingos",
     "Hora de CIERRE los domingos",
-    "¿Tiene vigilante 24 horas al día que pueda facilitar el desfibrilador en caso necesario aunque esté cerrado?",
+    "Â¿Tiene vigilante 24 horas al dÃ­a que pueda facilitar el desfibrilador en caso necesario aunque estÃ© cerrado?",
     "Acceso restringido",
-    "Festivos como día laborable",
+    "Festivos como dÃ­a laborable",
     "Cerrado en festivos",
     "Cerrado en agosto",
     "Excepciones horario",
     "Nombre",
-    "Correo electrónico",
-    "Teléfono",
-    "Teléfono alternativo",
-    "Organización",
+    "Correo electrÃ³nico",
+    "TelÃ©fono",
+    "TelÃ©fono alternativo",
+    "OrganizaciÃ³n",
     "Cargo",
     "Departamento",
     "Observaciones contacto",
@@ -424,11 +424,11 @@ export function aedsToImportFormatCsv(aeds: AedImportFormatData[]): string {
     "Foto 5",
     "Foto 6",
     "Estado",
-    "Requiere atención",
-    "Motivo atención",
-    "Notas de validación",
+    "Requiere atenciÃ³n",
+    "Motivo atenciÃ³n",
+    "Notas de validaciÃ³n",
     "Notas internas",
-    "Fecha publicación",
+    "Fecha publicaciÃ³n",
   ];
 
   // Crear filas de datos
@@ -444,17 +444,17 @@ export function aedsToImportFormatCsv(aeds: AedImportFormatData[]): string {
         .filter(Boolean)
         .join(". ");
 
-    // Consolidar comentarios públicos (nuevo formato o fallback)
+    // Consolidar comentarios pÃºblicos (nuevo formato o fallback)
     const publicNotes =
       aed.location?.public_notes || aed.public_notes || aed.location?.location_observations || "";
 
-    // Consolidar notas de validación
+    // Consolidar notas de validaciÃ³n
     const validationNotes = aed.validation_notes || aed.validation_observations || "";
 
     // Consolidar notas internas
     const internalNotes = aed.internal_notes || aed.origin_observations || "";
 
-    // Obtener URLs de imágenes (hasta 6)
+    // Obtener URLs de imÃ¡genes (hasta 6)
     const imageUrls = (aed.images || [])
       .sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
       .slice(0, 6)
@@ -462,50 +462,50 @@ export function aedsToImportFormatCsv(aeds: AedImportFormatData[]): string {
     while (imageUrls.length < 6) imageUrls.push(""); // Rellenar hasta 6
 
     return [
-      aed.id ?? "", // Id (UUID único)
-      aed.provisional_number ?? "", // Número provisional DEA
-      aed.code ?? "", // Código DEA
+      aed.id ?? "", // Id (UUID Ãºnico)
+      aed.provisional_number ?? "", // NÃºmero provisional DEA
+      aed.code ?? "", // CÃ³digo DEA
       aed.external_reference ?? "", // Referencia externa
-      aed.name ?? "", // Propuesta de denominación
+      aed.name ?? "", // Propuesta de denominaciÃ³n
       aed.establishment_type ?? "", // Tipo de establecimiento
       aed.responsible?.ownership ?? "", // Titularidad
       aed.responsible?.local_ownership ?? "", // Titularidad del local
       aed.responsible?.local_use ?? "", // Uso del local
       aed.origin_observations ?? "", // Observaciones origen (deprecated pero se mantiene)
-      aed.location?.street_type ?? "", // Tipo de vía
-      aed.location?.street_name ?? "", // Nombre de la vía
-      aed.location?.street_number ?? "", // Número de la vía
-      aed.location?.additional_info ?? "", // Complemento de dirección
-      aed.location?.postal_code ?? "", // Código postal
+      aed.location?.street_type ?? "", // Tipo de vÃ­a
+      aed.location?.street_name ?? "", // Nombre de la vÃ­a
+      aed.location?.street_number ?? "", // NÃºmero de la vÃ­a
+      aed.location?.additional_info ?? "", // Complemento de direcciÃ³n
+      aed.location?.postal_code ?? "", // CÃ³digo postal
       aed.location?.city_name ?? "", // Ciudad
-      aed.location?.city_code ?? "", // Código ciudad
+      aed.location?.city_code ?? "", // CÃ³digo ciudad
       aed.location?.district_name ?? "", // Distrito
       aed.location?.neighborhood_name ?? "", // Barrio
       aed.location?.floor ?? "", // Planta
-      aed.location?.specific_location ?? "", // Ubicación específica
+      aed.location?.specific_location ?? "", // UbicaciÃ³n especÃ­fica
       accessInstructions, // Instrucciones de acceso (consolidado)
-      publicNotes, // Comentarios públicos (consolidado)
+      publicNotes, // Comentarios pÃºblicos (consolidado)
       aed.latitude ?? "", // Coordenadas-Latitud
       aed.longitude ?? "", // Coordenadas-Longitud
-      aed.coordinates_precision ?? "", // Precisión coordenadas
+      aed.coordinates_precision ?? "", // PrecisiÃ³n coordenadas
       aed.schedule?.description ?? "", // Horario de apertura del establecimiento
       aed.schedule?.weekday_opening ?? "", // Hora de APERTURA de lunes a viernes
       aed.schedule?.weekday_closing ?? "", // Hora de CIERRE de lunes a viernes
-      aed.schedule?.saturday_opening ?? "", // Hora de APERTURA los sábados
-      aed.schedule?.saturday_closing ?? "", // Hora de CIERRE los sábados
+      aed.schedule?.saturday_opening ?? "", // Hora de APERTURA los sÃ¡bados
+      aed.schedule?.saturday_closing ?? "", // Hora de CIERRE los sÃ¡bados
       aed.schedule?.sunday_opening ?? "", // Hora de APERTURA los domingos
       aed.schedule?.sunday_closing ?? "", // Hora de CIERRE los domingos
-      aed.schedule?.has_24h_surveillance ? "Sí" : "No", // ¿Tiene vigilante 24h?
-      aed.schedule?.has_restricted_access ? "Sí" : "No", // Acceso restringido
-      aed.schedule?.holidays_as_weekday ? "Sí" : "No", // Festivos como día laborable
-      aed.schedule?.closed_on_holidays ? "Sí" : "No", // Cerrado en festivos
-      aed.schedule?.closed_in_august ? "Sí" : "No", // Cerrado en agosto
+      aed.schedule?.has_24h_surveillance ? "SÃ­" : "No", // Â¿Tiene vigilante 24h?
+      aed.schedule?.has_restricted_access ? "SÃ­" : "No", // Acceso restringido
+      aed.schedule?.holidays_as_weekday ? "SÃ­" : "No", // Festivos como dÃ­a laborable
+      aed.schedule?.closed_on_holidays ? "SÃ­" : "No", // Cerrado en festivos
+      aed.schedule?.closed_in_august ? "SÃ­" : "No", // Cerrado en agosto
       aed.schedule?.schedule_exceptions ?? "", // Excepciones horario
       aed.responsible?.name ?? "", // Nombre
-      aed.responsible?.email ?? "", // Correo electrónico
-      aed.responsible?.phone ?? "", // Teléfono
-      aed.responsible?.alternative_phone ?? "", // Teléfono alternativo
-      aed.responsible?.organization ?? "", // Organización
+      aed.responsible?.email ?? "", // Correo electrÃ³nico
+      aed.responsible?.phone ?? "", // TelÃ©fono
+      aed.responsible?.alternative_phone ?? "", // TelÃ©fono alternativo
+      aed.responsible?.organization ?? "", // OrganizaciÃ³n
       aed.responsible?.position ?? "", // Cargo
       aed.responsible?.department ?? "", // Departamento
       aed.responsible?.observations ?? "", // Observaciones contacto
@@ -517,19 +517,19 @@ export function aedsToImportFormatCsv(aeds: AedImportFormatData[]): string {
       imageUrls[4], // Foto 5
       imageUrls[5], // Foto 6
       aed.status ?? "", // Estado
-      aed.requires_attention ? "Sí" : "No", // Requiere atención
-      aed.attention_reason ?? "", // Motivo atención
-      validationNotes, // Notas de validación (consolidado)
+      aed.requires_attention ? "SÃ­" : "No", // Requiere atenciÃ³n
+      aed.attention_reason ?? "", // Motivo atenciÃ³n
+      validationNotes, // Notas de validaciÃ³n (consolidado)
       internalNotes, // Notas internas (consolidado)
-      aed.published_at ? new Date(aed.published_at).toISOString().split(".")[0] : "", // Fecha publicación
+      aed.published_at ? new Date(aed.published_at).toISOString().split(".")[0] : "", // Fecha publicaciÃ³n
     ];
   });
 
-  // Función para escapar valores CSV (RFC 4180 compliant, usando ; como separador)
+  // FunciÃ³n para escapar valores CSV (RFC 4180 compliant, usando ; como separador)
   const escapeCsvValue = (value: string | number): string => {
     const stringValue = String(value);
 
-    // Limpiar caracteres problemáticos: tabs, retornos de carro, y normalizar saltos de línea
+    // Limpiar caracteres problemÃ¡ticos: tabs, retornos de carro, y normalizar saltos de lÃ­nea
     const cleanValue = stringValue
       .replace(/\t/g, " ") // Reemplazar tabs con espacios
       .replace(/\r\n/g, " ") // Reemplazar CRLF con espacio

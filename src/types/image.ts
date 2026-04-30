@@ -14,11 +14,11 @@ export enum AedImageType {
 
 export const IMAGE_TYPE_LABELS: Record<AedImageType, string> = {
   [AedImageType.FRONT]: "Frontal del DEA",
-  [AedImageType.LOCATION]: "Ubicación Exterior",
+  [AedImageType.LOCATION]: "UbicaciÃ³n Exterior",
   [AedImageType.ACCESS]: "Acceso al Lugar",
-  [AedImageType.SIGNAGE]: "Señalización",
+  [AedImageType.SIGNAGE]: "SeÃ±alizaciÃ³n",
   [AedImageType.CONTEXT]: "Contexto General",
-  [AedImageType.PLATE]: "Placa/Información",
+  [AedImageType.PLATE]: "Placa/InformaciÃ³n",
 };
 
 export const IMAGE_TYPE_OPTIONS = Object.entries(IMAGE_TYPE_LABELS).map(([value, label]) => ({

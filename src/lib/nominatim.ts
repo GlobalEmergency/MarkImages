@@ -2,7 +2,7 @@
  * Nominatim Reverse Geocoding Utility
  *
  * Uses the public Nominatim (OpenStreetMap) API to derive geographic hierarchy
- * from coordinates. Works worldwide — no API key required.
+ * from coordinates. Works worldwide â€” no API key required.
  *
  * Rate limit: 1 request/second (OSM policy for public API).
  * Concurrency-safe via promise-chain serialization.
@@ -31,7 +31,7 @@ function enqueueThrottle(): Promise<void> {
 export interface ReverseGeocodeResult {
   /** ISO 3166-1 alpha-2 country code (e.g., "ES", "FR", "DE") */
   countryCode: string;
-  /** First-level admin division (e.g., "Comunidad de Madrid", "Île-de-France") */
+  /** First-level admin division (e.g., "Comunidad de Madrid", "ÃŽle-de-France") */
   adminLevel1: string | null;
   /** City, town, or village name */
   city: string | null;
@@ -71,7 +71,7 @@ export async function reverseGeocode(
       clearTimeout(timeout);
 
       if (response.status === 429) {
-        // Rate limited — wait longer before retry
+        // Rate limited â€” wait longer before retry
         await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
         continue;
       }

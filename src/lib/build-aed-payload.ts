@@ -65,7 +65,7 @@ function buildObservations(form: SimpleDeaFormData): string {
   if (form.observations) parts.push(form.observations);
   if (form.accessDescription) parts.push(`Acceso: ${form.accessDescription}`);
   if (form.floor) parts.push(`Planta: ${form.floor}`);
-  if (form.specificLocation) parts.push(`Ubicación específica: ${form.specificLocation}`);
+  if (form.specificLocation) parts.push(`UbicaciÃ³n especÃ­fica: ${form.specificLocation}`);
   if (form.scheduleDescription) parts.push(`Horario: ${form.scheduleDescription}`);
 
   return parts.join("\n");
@@ -93,8 +93,8 @@ export function buildAedPayload(
     longitude: hasCoords ? parseFloat(form.longitude) : undefined,
     origin_observations: observations || undefined,
     source_details: hasCoords
-      ? "Formulario simplificado v2 - con geolocalización"
-      : "Formulario simplificado v2 - dirección sin geocodificar",
+      ? "Formulario simplificado v2 - con geolocalizaciÃ³n"
+      : "Formulario simplificado v2 - direcciÃ³n sin geocodificar",
     location: {
       street_name: form.street || undefined,
       street_number: form.number || undefined,

@@ -111,13 +111,13 @@ export interface ImageProcessingState {
 
 export const VERIFICATION_STEPS_CONFIG = {
   [VerificationStep.ADDRESS_VALIDATION]: {
-    title: "Validación de Dirección",
-    description: "Verifica la dirección del DEA con Google Maps u OpenStreetMap",
+    title: "ValidaciÃ³n de DirecciÃ³n",
+    description: "Verifica la direcciÃ³n del DEA con Google Maps u OpenStreetMap",
     required: true,
   },
   [VerificationStep.IMAGE_SELECTION]: {
-    title: "Selección de Imágenes",
-    description: "Selecciona las imágenes del frontal/acceso y del interior",
+    title: "SelecciÃ³n de ImÃ¡genes",
+    description: "Selecciona las imÃ¡genes del frontal/acceso y del interior",
     required: true,
   },
   [VerificationStep.IMAGE_CROP]: {
@@ -126,13 +126,13 @@ export const VERIFICATION_STEPS_CONFIG = {
     required: true,
   },
   [VerificationStep.IMAGE_BLUR]: {
-    title: "Difuminar Áreas Sensibles",
-    description: "Difumina caras, matrículas u otras áreas sensibles (opcional)",
+    title: "Difuminar Ãreas Sensibles",
+    description: "Difumina caras, matrÃ­culas u otras Ã¡reas sensibles (opcional)",
     required: false,
   },
   [VerificationStep.IMAGE_ARROW]: {
     title: "Marcar DEA en Imagen",
-    description: "Coloca una flecha señalando el DEA en la imagen",
+    description: "Coloca una flecha seÃ±alando el DEA en la imagen",
     required: true,
   },
   [VerificationStep.RESPONSIBLE_ASSIGNMENT]: {
@@ -141,13 +141,13 @@ export const VERIFICATION_STEPS_CONFIG = {
     required: true,
   },
   [VerificationStep.REVIEW]: {
-    title: "Revisión Final",
-    description: "Revisa toda la información antes de finalizar",
+    title: "RevisiÃ³n Final",
+    description: "Revisa toda la informaciÃ³n antes de finalizar",
     required: true,
   },
   [VerificationStep.COMPLETED]: {
     title: "Completado",
-    description: "La verificación ha sido completada exitosamente",
+    description: "La verificaciÃ³n ha sido completada exitosamente",
     required: false,
   },
 };

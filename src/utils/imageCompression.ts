@@ -1,5 +1,5 @@
 /**
- * Comprime y redimensiona una imagen para reducir su tamaño antes de subirla
+ * Comprime y redimensiona una imagen para reducir su tamaÃ±o antes de subirla
  */
 
 export interface ImageCompressionOptions {
@@ -88,14 +88,14 @@ export async function compressImageDataUrl(
         // Dibujar imagen redimensionada
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Comprimir iterativamente hasta alcanzar el tamaño deseado
+        // Comprimir iterativamente hasta alcanzar el tamaÃ±o deseado
         let quality = opts.quality;
         let compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
 
-        // Calcular tamaño en MB
+        // Calcular tamaÃ±o en MB
         const sizeInMB = (compressedDataUrl.length * 0.75) / (1024 * 1024);
 
-        // Si aún es muy grande, reducir calidad iterativamente
+        // Si aÃºn es muy grande, reducir calidad iterativamente
         if (sizeInMB > opts.maxSizeMB && quality > 0.5) {
           let attempts = 0;
           const maxAttempts = 5;
@@ -105,10 +105,6 @@ export async function compressImageDataUrl(
             compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
             const newSizeInMB = (compressedDataUrl.length * 0.75) / (1024 * 1024);
 
-            console.log(
-              `🔄 Intento ${attempts + 1}: Calidad ${quality.toFixed(2)}, Tamaño: ${newSizeInMB.toFixed(2)}MB`
-            );
-
             if (newSizeInMB <= opts.maxSizeMB) {
               break;
             }
@@ -116,11 +112,6 @@ export async function compressImageDataUrl(
             attempts++;
           }
         }
-
-        const finalSizeInMB = (compressedDataUrl.length * 0.75) / (1024 * 1024);
-        console.log(
-          `✅ Imagen comprimida: ${width}x${height}, Calidad: ${quality.toFixed(2)}, Tamaño: ${finalSizeInMB.toFixed(2)}MB`
-        );
 
         resolve(compressedDataUrl);
       } catch (error) {
@@ -137,14 +128,14 @@ export async function compressImageDataUrl(
 }
 
 /**
- * Obtiene información sobre el tamaño de una imagen
+ * Obtiene informaciÃ³n sobre el tamaÃ±o de una imagen
  */
 export function getImageInfo(dataUrl: string): {
   sizeInBytes: number;
   sizeInMB: number;
   sizeInKB: number;
 } {
-  const sizeInBytes = dataUrl.length * 0.75; // Aproximación del tamaño real desde base64
+  const sizeInBytes = dataUrl.length * 0.75; // AproximaciÃ³n del tamaÃ±o real desde base64
   const sizeInKB = sizeInBytes / 1024;
   const sizeInMB = sizeInKB / 1024;
 

@@ -65,10 +65,9 @@ export function getServerEnv(): ServerEnv {
       .join("\n");
 
     if (process.env.NODE_ENV === "production") {
-      throw new Error(`❌ Invalid environment variables:\n${errorMessage}`);
+      throw new Error(`âŒ Invalid environment variables:\n${errorMessage}`);
     }
 
-    console.warn(`⚠️ Environment variable warnings:\n${errorMessage}`);
     // In dev, allow continuing with partial env (use process.env directly)
     _validatedEnv = {
       DATABASE_URL: process.env.DATABASE_URL ?? "",

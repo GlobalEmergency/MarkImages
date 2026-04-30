@@ -200,7 +200,7 @@ export interface AedChangeProposal {
   proposed_at: Date;
 
   change_type: ProposalChangeType;
-  proposed_changes: Record<string, any>; // JSON
+  proposed_changes: Record<string, unknown>; // JSON
   attached_images: string[];
 
   status: ProposalStatus;
@@ -355,7 +355,7 @@ export interface CreateVerificationRequest {
 export interface CreateChangeProposalRequest {
   aed_id: string;
   change_type: ProposalChangeType;
-  proposed_changes: Record<string, any>;
+  proposed_changes: Record<string, unknown>;
   attached_images?: string[];
 }
 
@@ -404,7 +404,7 @@ export interface AedWithOrganizations {
 // ============================================
 
 export const ORGANIZATION_TYPE_LABELS: Record<OrganizationType, string> = {
-  CIVIL_PROTECTION: "Protección Civil",
+  CIVIL_PROTECTION: "ProtecciÃ³n Civil",
   CERTIFIED_COMPANY: "Empresa Certificada",
   VOLUNTEER_GROUP: "Grupo de Voluntarios",
   MUNICIPALITY: "Ayuntamiento",
@@ -429,23 +429,23 @@ export const MEMBER_ROLE_LABELS: Record<OrgMemberRole, string> = {
 };
 
 export const ASSIGNMENT_TYPE_LABELS: Record<AssignmentType, string> = {
-  CIVIL_PROTECTION: "Protección Civil",
+  CIVIL_PROTECTION: "ProtecciÃ³n Civil",
   CERTIFIED_COMPANY: "Empresa Certificada",
   OWNERSHIP: "Propiedad",
   MAINTENANCE: "Mantenimiento",
-  VERIFICATION: "Verificación",
+  VERIFICATION: "VerificaciÃ³n",
 };
 
 export const VERIFICATION_TYPE_LABELS: Record<VerificationType, string> = {
-  INFORMAL: "Verificación Informal",
-  OFFICIAL: "Certificación Oficial",
+  INFORMAL: "VerificaciÃ³n Informal",
+  OFFICIAL: "CertificaciÃ³n Oficial",
   SELF_REPORTED: "Auto-reportado",
-  FIELD_INSPECTION: "Inspección de Campo",
+  FIELD_INSPECTION: "InspecciÃ³n de Campo",
 };
 
 export const PROPOSAL_CHANGE_TYPE_LABELS: Record<ProposalChangeType, string> = {
   UPDATE_SCHEDULE: "Actualizar Horarios",
-  UPDATE_LOCATION: "Corregir Ubicación",
+  UPDATE_LOCATION: "Corregir UbicaciÃ³n",
   ADD_PHOTOS: "Agregar Fotos",
   UPDATE_ACCESS: "Actualizar Acceso",
   REPORT_ISSUE: "Reportar Problema",
