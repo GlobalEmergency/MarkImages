@@ -1,5 +1,5 @@
 /**
- * DetectionResult — Immutable Value Object
+ * DetectionResult â€” Immutable Value Object
  *
  * Result of duplicate detection. Includes the scoring explanation
  * for full debuggability and analysis.

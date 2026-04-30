@@ -1,12 +1,12 @@
 /**
- * Sync Record Processor — @batchactions/core RecordProcessorFn
+ * Sync Record Processor â€” @batchactions/core RecordProcessorFn
  *
  * Processes a single record from an external data source sync.
  * Handles both creation of new AEDs and updating existing ones.
  *
  * Business logic ported from ExternalSyncProcessor:
- * - 3-tier duplicate detection (external_ref → coordinates → skip)
- * - 4 merge scenarios (isMerging × isAutomaticSync)
+ * - 3-tier duplicate detection (external_ref â†’ coordinates â†’ skip)
+ * - 4 merge scenarios (isMerging Ã— isAutomaticSync)
  * - Verified AED protection
  * - Code protection (existing codes are never overwritten)
  * - Audit trail via internal_notes and AedFieldChange
@@ -97,13 +97,13 @@ function parseCoordinate(value: unknown): number | null {
 
 /**
  * Parses a value as boolean, recognizing Spanish formats.
- * Handles "Sí", "si", "S", "1", "true", "yes", "y", "verdadero".
+ * Handles "SÃ­", "si", "S", "1", "true", "yes", "y", "verdadero".
  */
 function parseBoolean(value: unknown): boolean {
   if (!value) return false;
   if (typeof value === "boolean") return value;
   const str = String(value).toLowerCase().trim();
-  return ["true", "1", "sí", "si", "yes", "y", "s", "verdadero", "t", "oui"].includes(str);
+  return ["true", "1", "sÃ­", "si", "yes", "y", "s", "verdadero", "t", "oui"].includes(str);
 }
 
 function parseBooleanOrNull(value: unknown): boolean | null {
@@ -111,7 +111,7 @@ function parseBooleanOrNull(value: unknown): boolean | null {
   if (typeof value === "boolean") return value;
   const str = String(value).toLowerCase().trim();
   if (!str) return null;
-  if (["true", "1", "sí", "si", "yes", "y", "s", "t", "oui"].includes(str)) return true;
+  if (["true", "1", "sÃ­", "si", "yes", "y", "s", "t", "oui"].includes(str)) return true;
   if (["false", "0", "no", "n", "f", "non"].includes(str)) return false;
   return null;
 }
@@ -188,7 +188,7 @@ export function createSyncRecordProcessor(
       return;
     }
 
-    // Suspected duplicate: no externalId + coordinate/detector match → create and flag
+    // Suspected duplicate: no externalId + coordinate/detector match â†’ create and flag
     const suspectedDuplicate = data._suspectedDuplicate as
       | { matchedAedId: string; matchedAedName: string; matchReason: string }
       | undefined;
@@ -202,7 +202,7 @@ export function createSyncRecordProcessor(
       });
       if (stats) stats.created++;
     } else if (existingAed) {
-      // Cross-source: AED belongs to a different data source → create as
+      // Cross-source: AED belongs to a different data source â†’ create as
       // PENDING_REVIEW for manual deduplication in /verify/duplicates
       const isCrossSource = !!(
         existingAed.data_source_id && existingAed.data_source_id !== dataSourceId
@@ -335,7 +335,7 @@ async function createAed(
       responsibleId = responsible.id;
     }
 
-    // 4. AED — resolve unique code (externalId may collide if source IDs aren't unique)
+    // 4. AED â€” resolve unique code (externalId may collide if source IDs aren't unique)
     let code = baseCode;
     if (code) {
       const existing = await tx.aed.findUnique({ where: { code }, select: { id: true } });
@@ -377,7 +377,7 @@ async function createAed(
       `;
     }
 
-    // 6. Device (conditional — if device data exists)
+    // 6. Device (conditional â€” if device data exists)
     await createOrUpdateDevice(tx, createdAed.id, data);
 
     // Stash created ID so afterProcess hook can register it in the cache
@@ -427,7 +427,7 @@ async function createAedWithDuplicateFlag(
   });
 
   if (!matchedAed) {
-    // Matched AED no longer exists — just create normally
+    // Matched AED no longer exists â€” just create normally
     await createAed(prisma, data, opts);
     return;
   }
@@ -544,7 +544,7 @@ async function createAedForDuplicateReview(
       responsibleId = responsible.id;
     }
 
-    // 4. AED — unique code
+    // 4. AED â€” unique code
     let code = baseCode;
     if (code) {
       const existing = await tx.aed.findUnique({ where: { code }, select: { id: true } });
@@ -589,10 +589,10 @@ async function createAedForDuplicateReview(
 }
 
 // ============================================================
-// Update AED — 2 protection tiers + same-source update
+// Update AED â€” 2 protection tiers + same-source update
 //
-// Tier 1: Verified AED → metadata only
-// Tier 2: Same-source update → authoritative overwrite
+// Tier 1: Verified AED â†’ metadata only
+// Tier 2: Same-source update â†’ authoritative overwrite
 //
 // Note: Cross-source matches are handled by createAedForDuplicateReview
 // above, so updateAed only handles same-source scenarios.
@@ -612,7 +612,7 @@ async function updateAed(
   const { dataSourceId, sourceOrigin, externalId } = opts;
 
   // Reverse geocode OUTSIDE transaction (network I/O)
-  // Skip if coordinates haven't changed — avoids redundant Nominatim calls on repeated syncs
+  // Skip if coordinates haven't changed â€” avoids redundant Nominatim calls on repeated syncs
   let updateAdminLevel1: string | null = null;
   const updateLat = parseCoordinate(data.latitude);
   const updateLon = parseCoordinate(data.longitude);
@@ -636,7 +636,7 @@ async function updateAed(
     if (aed.last_verified_at) {
       const notes = appendInternalNote(
         aed.internal_notes,
-        `Sync detectó match con DEA verificado (sin modificar datos). ` +
+        `Sync detectÃ³ match con DEA verificado (sin modificar datos). ` +
           `Fuente: data_source_id="${dataSourceId}", external_id="${externalId}".`,
         "verified_sync_skip",
         "ExternalSyncService"
@@ -657,7 +657,7 @@ async function updateAed(
 
     // ==============================
     // TIER 2: SAME-SOURCE UPDATE (authoritative)
-    // This data source owns the AED → full update
+    // This data source owns the AED â†’ full update
     // ==============================
     const latitude = parseCoordinate(data.latitude);
     const longitude = parseCoordinate(data.longitude);

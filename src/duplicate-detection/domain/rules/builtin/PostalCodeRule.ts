@@ -1,5 +1,5 @@
 /**
- * PostalCodeRule — Exact postal code match
+ * PostalCodeRule â€” Exact postal code match
  */
 
 import type {
@@ -42,10 +42,10 @@ export class PostalCodeRule implements ScoringRule {
       maxPoints: this.maxPoints,
       matched,
       reason: !bothPresent
-        ? "One or both postal codes empty → 0pts"
+        ? "One or both postal codes empty â†’ 0pts"
         : matched
-          ? `Postal code "${input.postalCode}" matches → +${this.maxPoints}pts`
-          : `Postal code "${input.postalCode}" != "${candidate.postal_code}" → 0pts`,
+          ? `Postal code "${input.postalCode}" matches â†’ +${this.maxPoints}pts`
+          : `Postal code "${input.postalCode}" != "${candidate.postal_code}" â†’ 0pts`,
       inputValue: input.postalCode || "(empty)",
       candidateValue: candidate.postal_code || "(empty)",
     };

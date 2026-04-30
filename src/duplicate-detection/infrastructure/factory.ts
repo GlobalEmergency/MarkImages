@@ -1,5 +1,5 @@
 /**
- * Factory — Singleton and custom detector creation
+ * Factory â€” Singleton and custom detector creation
  *
  * getDuplicateDetector(): Returns a process-level singleton with default config.
  *   Uses globalThis to survive Next.js hot reload in development.

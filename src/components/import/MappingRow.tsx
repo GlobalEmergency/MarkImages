@@ -42,7 +42,7 @@ export default function MappingRow({
     }
   }, [isOpen]);
 
-  // Filtrar campos según el término de búsqueda
+  // Filtrar campos segÃºn el tÃ©rmino de bÃºsqueda
   const filteredFields = useMemo(() => {
     if (!searchTerm.trim()) {
       return allFields;
@@ -67,7 +67,7 @@ export default function MappingRow({
   const requiredFields = useMemo(() => filteredFields.filter((f) => f.required), [filteredFields]);
   const optionalFields = useMemo(() => filteredFields.filter((f) => !f.required), [filteredFields]);
 
-  // Determinar color y estilo según estado
+  // Determinar color y estilo segÃºn estado
   const getStatusStyle = () => {
     if (!systemField) {
       return {
@@ -106,7 +106,7 @@ export default function MappingRow({
     const isSelected = systemField === fieldKey;
     onUpdate(isSelected ? null : fieldKey);
     setIsOpen(false);
-    setSearchTerm(""); // Limpiar búsqueda al seleccionar
+    setSearchTerm(""); // Limpiar bÃºsqueda al seleccionar
   };
 
   return (
@@ -138,7 +138,7 @@ export default function MappingRow({
                     key={idx}
                     className="px-2 py-1 bg-white rounded text-xs text-gray-700 border border-gray-200"
                   >
-                    {value || "(vacío)"}
+                    {value || "(vacÃ­o)"}
                   </span>
                 ))}
               </div>
@@ -181,10 +181,10 @@ export default function MappingRow({
                 </div>
               </button>
 
-              {/* Dropdown de opciones con búsqueda */}
+              {/* Dropdown de opciones con bÃºsqueda */}
               {isOpen && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg overflow-hidden">
-                  {/* Input de búsqueda */}
+                  {/* Input de bÃºsqueda */}
                   <div className="p-2 border-b border-gray-200 bg-gray-50">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -231,7 +231,7 @@ export default function MappingRow({
                                   disabled={isMapped && !isSelected}
                                   title={
                                     isMapped && !isSelected
-                                      ? `Este campo ya está mapeado a otra columna`
+                                      ? `Este campo ya estÃ¡ mapeado a otra columna`
                                       : field.description || field.label
                                   }
                                   className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
@@ -282,7 +282,7 @@ export default function MappingRow({
                                   disabled={isMapped && !isSelected}
                                   title={
                                     isMapped && !isSelected
-                                      ? `Este campo ya está mapeado a otra columna`
+                                      ? `Este campo ya estÃ¡ mapeado a otra columna`
                                       : field.description || field.label
                                   }
                                   className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${

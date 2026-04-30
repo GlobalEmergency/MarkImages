@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import ResetPasswordForm from "@/components/ResetPasswordForm";
 
 export const metadata: Metadata = {
-  title: "Restablecer contraseña",
+  title: "Restablecer contraseÃ±a",
   robots: { index: false, follow: false },
 };
 

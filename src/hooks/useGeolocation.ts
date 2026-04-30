@@ -89,7 +89,7 @@ export function useGeolocation(
     if (!navigator.geolocation) {
       setState((prev) => ({
         ...prev,
-        error: "Tu navegador no soporta geolocalización",
+        error: "Tu navegador no soporta geolocalizaciÃ³n",
       }));
       return;
     }
@@ -106,14 +106,14 @@ export function useGeolocation(
       (err) => {
         const messages: Record<number, string> = {
           [err.PERMISSION_DENIED]:
-            "Permiso de ubicación denegado. Actívalo en la configuración del navegador.",
-          [err.POSITION_UNAVAILABLE]: "No se pudo determinar tu ubicación.",
-          [err.TIMEOUT]: "Se agotó el tiempo para obtener la ubicación.",
+            "Permiso de ubicaciÃ³n denegado. ActÃ­valo en la configuraciÃ³n del navegador.",
+          [err.POSITION_UNAVAILABLE]: "No se pudo determinar tu ubicaciÃ³n.",
+          [err.TIMEOUT]: "Se agotÃ³ el tiempo para obtener la ubicaciÃ³n.",
         };
         setState({
           geolocating: false,
           reverseGeocoding: false,
-          error: messages[err.code] || "Error de geolocalización desconocido.",
+          error: messages[err.code] || "Error de geolocalizaciÃ³n desconocido.",
         });
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }

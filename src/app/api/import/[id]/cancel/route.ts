@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Cancel Import API — Dual-mode
  *
  * POST /api/import/[id]/cancel - Cancel a running or waiting import
@@ -25,8 +25,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const user = await requireAuth(request);
     const { id } = await params;
-
-    console.log(`🚫 [Import Cancel] Cancelling import ${id} by user ${user.userId}`);
 
     // Leer metadata del job para determinar el motor
     const job = await prisma.batchJob.findUnique({
@@ -91,8 +89,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         },
       });
 
-      console.log(`✅ [Import Cancel] BulkImport ${id} cancelled successfully`);
-
       return NextResponse.json({
         success: true,
         status: "CANCELLED",
@@ -134,8 +130,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         { status }
       );
     }
-
-    console.log(`✅ [Import Cancel] Legacy import ${id} cancelled successfully`);
 
     return NextResponse.json({
       success: true,

@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Error al iniciar sesión");
+      throw new Error(error.error || "Error al iniciar sesiÃ³n");
     }
 
     const result = await response.json();

@@ -1,7 +1,7 @@
 /**
  * API Endpoint: Validar Cookies de SharePoint
- * Verifica que las cookies configuradas en .env son válidas
- * y permiten descargar imágenes desde SharePoint
+ * Verifica que las cookies configuradas en .env son vÃ¡lidas
+ * y permiten descargar imÃ¡genes desde SharePoint
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { testImageUrl, customCookies } = body;
 
-    // Validar que se proporcionó URL de prueba
+    // Validar que se proporcionÃ³ URL de prueba
     if (!testImageUrl || typeof testImageUrl !== "string") {
       return NextResponse.json(
         {
@@ -63,14 +63,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validar autenticación usando SharePointImageDownloader
+    // Validar autenticaciÃ³n usando SharePointImageDownloader
     const downloader = new SharePointImageDownloader();
     const validationResult = await downloader.validateAuthentication(testImageUrl, {
       fedAuth: sharepointCookies.FedAuth,
       rtFa: sharepointCookies.rtFa,
     });
 
-    // Devolver resultado de validación
+    // Devolver resultado de validaciÃ³n
     return NextResponse.json(validationResult, {
       status: validationResult.valid ? 200 : 400,
     });

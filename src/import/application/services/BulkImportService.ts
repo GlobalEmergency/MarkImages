@@ -1,15 +1,15 @@
-﻿/**
- * BulkImport Service â€” Application Service
+/**
+ * BulkImport Service — Application Service
  *
- * Orquesta la integraciÃ³n de @batchactions/import con los adaptadores del sistema.
- * Punto de entrada principal para las API routes de importaciÃ³n.
+ * Orquesta la integración de @batchactions/import con los adaptadores del sistema.
+ * Punto de entrada principal para las API routes de importación.
  *
  * Responsabilidades:
  * - Configurar BulkImport con schema, hooks, duplicate checker, state store
- * - Ejecutar preview (validaciÃ³n sin procesamiento)
+ * - Ejecutar preview (validación sin procesamiento)
  * - Ejecutar processChunk (procesamiento serverless)
  * - Restaurar jobs para resume/CRON
- * - Combinar validaciÃ³n de @batchactions/import con auto-mapeo inteligente
+ * - Combinar validación de @batchactions/import con auto-mapeo inteligente
  */
 
 import {
@@ -63,9 +63,9 @@ export interface ImportPreviewOptions {
   csvContent: string | Buffer;
   /** Nombre del archivo original (para detectar formato: csv, json, xml) */
   fileName?: string;
-  /** Delimitador CSV (default: ";") â€" ignorado para JSON/XML */
+  /** Delimitador CSV (default: ";") — ignorado para JSON/XML */
   delimiter?: string;
-  /** NÃºmero mÃ¡ximo de registros para preview */
+  /** Número máximo de registros para preview */
   maxRecords?: number;
 }
 
@@ -76,11 +76,11 @@ export interface ImportPreviewResult {
   sampleRecords: Array<Record<string, unknown>>;
   /** Total de registros en el CSV */
   totalRecords: number;
-  /** Registros vÃ¡lidos en el preview */
+  /** Registros válidos en el preview */
   validRecords: number;
-  /** Registros invÃ¡lidos con errores */
+  /** Registros inválidos con errores */
   invalidRecords: number;
-  /** Errores de validaciÃ³n detallados */
+  /** Errores de validación detallados */
   errors: Array<{
     recordIndex: number;
     field: string;
@@ -109,23 +109,23 @@ export interface StartImportOptions {
   s3Url: string;
   /** Nombre del archivo original */
   fileName: string;
-  /** ID del usuario que inicia la importaciÃ³n */
+  /** ID del usuario que inicia la importación */
   userId: string;
   /** Column mappings confirmed by the user in the UI wizard */
   mappings?: ColumnMapping[];
   /** Delimitador CSV (default: ";") */
   delimiter?: string;
-  /** TamaÃ±o del batch (default: 50) */
+  /** Tamaño del batch (default: 50) */
   batchSize?: number;
-  /** Si true, continÃºa aunque fallen registros (default: true) */
+  /** Si true, continúa aunque fallen registros (default: true) */
   continueOnError?: boolean;
   /** Si true, los duplicados se reportan como warning (default: true) */
   skipDuplicates?: boolean;
-  /** AutenticaciÃ³n SharePoint (cookies) */
+  /** Autenticación SharePoint (cookies) */
   sharePointAuth?: SharePointAuthConfig;
-  /** Tiempo mÃ¡ximo por chunk en ms (default: 80000 para Vercel) */
+  /** Tiempo máximo por chunk en ms (default: 80000 para Vercel) */
   maxDurationMs?: number;
-  /** MÃ¡ximo de registros por chunk (safety cap, default: 500) */
+  /** Máximo de registros por chunk (safety cap, default: 500) */
   maxRecordsPerChunk?: number;
   /** Nombre del job para la UI */
   jobName?: string;
@@ -519,50 +519,30 @@ export class BulkImportService {
   // Private helpers
   // ============================================================
 
-  /**
-   * Suscribe eventos del BulkImport para logging estructurado.
-   * Reemplaza console.logs dispersos con un sistema unificado basado en eventos.
-   */
   private subscribeImportEvents(importer: BulkImport, label: string): void {
     importer
-      .on("job:started", (e) => {
-        console.log(
-          `[Import:${label}] Job ${e.jobId} started — ${e.totalRecords} records in ${e.totalBatches} batches`
-        );
+      .on("job:started", (_e) => {
+        // Log job started
       })
       .on("job:progress", (e) => {
-        const p = e.progress;
-        console.log(
-          `[Import:${label}] Progress — ${p.processedRecords}/${p.totalRecords} (${p.percentage}%) ` +
-            `batch ${p.currentBatch}/${p.totalBatches}` +
-            (p.estimatedRemainingMs ? ` ~${Math.round(p.estimatedRemainingMs / 1000)}s left` : "")
-        );
+        const _p = e.progress;
+        // Log progress
       })
-      .on("batch:completed", (e) => {
-        console.log(
-          `[Import:${label}] Batch ${e.batchIndex + 1} done — ${e.processedCount}/${e.totalCount} processed, ${e.failedCount} failed`
-        );
+      .on("batch:completed", (_e) => {
+        // Log batch completed
       })
-      .on("record:retried", (e) => {
-        console.warn(
-          `[Import:${label}] Record ${e.recordIndex} retried (attempt ${e.attempt}/${e.maxRetries})`
-        );
+      .on("record:retried", (_e) => {
+        // Log record retry
       })
-      .on("record:failed", (e) => {
-        console.warn(`[Import:${label}] Record ${e.recordIndex} failed: ${e.error}`);
+      .on("record:failed", (_e) => {
+        // Log record failure
       })
-      .on("chunk:completed", (e) => {
-        console.log(
-          `[Import:${label}] Chunk done — ${e.processedRecords} processed, ${e.failedRecords} failed, done=${e.done}`
-        );
+      .on("chunk:completed", (_e) => {
+        // Log chunk completion
       })
       .on("job:completed", (e) => {
-        const s = e.summary;
-        console.log(
-          `[Import:${label}] Job ${e.jobId} COMPLETED — ` +
-            `${s.processed}/${s.total} records, ${s.failed} failed ` +
-            `(${s.elapsedMs}ms)`
-        );
+        const _s = e.summary;
+        // Log job summary
       })
       .on("job:failed", (e) => {
         console.error(`[Import:${label}] Job ${e.jobId} FAILED: ${e.error}`);

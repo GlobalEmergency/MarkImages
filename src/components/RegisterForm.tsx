@@ -38,7 +38,7 @@ export default function RegisterForm() {
     setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      const errorMessage = "Las contraseñas no coinciden";
+      const errorMessage = "Las contraseÃ±as no coinciden";
       trackFormSubmit("register", false, errorMessage);
       setError(errorMessage);
       return;
@@ -108,7 +108,7 @@ export default function RegisterForm() {
 
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Contraseña
+            ContraseÃ±a
           </label>
           <input
             id="password"
@@ -118,16 +118,16 @@ export default function RegisterForm() {
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             onFocus={() => trackFormFieldFocus("register", "password")}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="••••••••"
+            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
           />
           <p className="mt-1 text-xs text-gray-500">
-            Mínimo 8 caracteres, incluye mayúsculas, minúsculas y números
+            MÃ­nimo 8 caracteres, incluye mayÃºsculas, minÃºsculas y nÃºmeros
           </p>
         </div>
 
         <div>
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-            Confirmar Contraseña
+            Confirmar ContraseÃ±a
           </label>
           <input
             id="confirmPassword"
@@ -137,7 +137,7 @@ export default function RegisterForm() {
             onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
             onFocus={() => trackFormFieldFocus("register", "confirmPassword")}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="••••••••"
+            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
           />
         </div>
 
@@ -151,13 +151,13 @@ export default function RegisterForm() {
       </form>
 
       <p className="mt-4 text-center text-sm text-gray-600">
-        ¿Ya tienes cuenta?{" "}
+        Â¿Ya tienes cuenta?{" "}
         <Link
           href="/login"
           className="text-blue-600 hover:text-blue-800 font-medium"
           onClick={() => trackAuthClick("login")}
         >
-          Inicia sesión aquí
+          Inicia sesiÃ³n aquÃ­
         </Link>
       </p>
     </div>

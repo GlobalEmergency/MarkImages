@@ -86,15 +86,9 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
         );
       }
       // En desarrollo, permitir sin secret pero loguear warning
-      console.warn(
-        "[Cron] CRON_SECRET not configured -- allowing unauthenticated access (dev only)"
-      );
     } else if (authHeader !== `Bearer ${cronSecret}`) {
-      console.warn("[WARN] [Cron] Unauthorized cron request");
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
-
-    console.log("[TIME] [Cron] Starting batch job processing...");
 
     const repository = getLegacyRepository();
 
@@ -102,17 +96,10 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
     const orphanedJobs = await repository.findTimedOutJobs(ORPHANED_JOB_TIMEOUT_MS);
 
     if (orphanedJobs.length > 0) {
-      console.log(
-        `[WARN] [Cron] Found ${orphanedJobs.length} orphaned jobs, marking as INTERRUPTED`
-      );
-
       for (const orphanJob of orphanedJobs) {
         try {
           orphanJob.markInterrupted();
           await repository.update(orphanJob);
-          console.log(
-            `[OK] [Cron] Job ${orphanJob.id} marked as INTERRUPTED and will be recovered`
-          );
         } catch (error) {
           console.error(`[ERROR] [Cron] Error marking job ${orphanJob.id} as INTERRUPTED:`, error);
         }
@@ -136,7 +123,6 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
       });
 
       if (dueSyncs.length > 0) {
-        console.log(`[SYNC] [Cron] Found ${dueSyncs.length} data sources due for scheduled sync`);
       }
 
       for (const ds of dueSyncs) {
@@ -154,15 +140,8 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
         });
 
         if (activeJob) {
-          console.log(
-            `[SKIP] [Cron] Data source '${ds.name}' already has active job ${activeJob.id}, skipping scheduled sync`
-          );
           continue;
         }
-
-        console.log(
-          `[SYNC] [Cron] Starting scheduled sync for '${ds.name}' (${ds.sync_frequency})`
-        );
 
         try {
           const service = getExternalSyncService();
@@ -175,8 +154,6 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
           // Calculate next scheduled sync
           await updateNextScheduledSync(ds.id, ds.sync_frequency as string);
           scheduledSyncsStarted++;
-
-          console.log(`[OK] [Cron] Scheduled sync started for '${ds.name}'`);
         } catch (syncError) {
           console.error(
             `[ERROR] [Cron] Failed to start scheduled sync for '${ds.name}':`,
@@ -187,9 +164,6 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
         // Check if we're running out of time
         const elapsed = Date.now() - startTime;
         if (elapsed > CRON_SAFETY_TIMEOUT_MS) {
-          console.warn(
-            `[TIME] [Cron] Approaching timeout after scheduled syncs, skipping remaining`
-          );
           break;
         }
       }
@@ -216,7 +190,6 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
     );
 
     if (jobsToProcess.length === 0) {
-      console.log("[IDLE] [Cron] No jobs to process");
       return NextResponse.json({
         success: true,
         message: "No jobs to process",
@@ -225,10 +198,6 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
         duration: Date.now() - startTime,
       });
     }
-
-    console.log(
-      `[INFO] [Cron] Found ${jobsToProcess.length} jobs to process (${interruptedJobs.length} interrupted, ${pendingJobs.length} pending, ${waitingJobs.length} waiting)`
-    );
 
     const results: Array<{
       jobId: string;
@@ -250,7 +219,6 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
     for (const job of jobsToProcess) {
       const jobStartTime = Date.now();
       const engine = (job.metadata?.engine as string) || "legacy";
-      console.log(`\n[INFO] [Cron] Processing job ${job.id} (${job.name}) [engine: ${engine}]`);
 
       try {
         const wasPending = job.status === "PENDING" || job.status === "QUEUED";
@@ -264,9 +232,6 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
           lockAcquired = await repository.tryAcquireJobLock(job.id);
 
           if (!lockAcquired) {
-            console.log(
-              `[SKIP]  [Cron] Job ${job.id} already being processed by another instance, skipping`
-            );
             results.push({
               jobId: job.id,
               jobName: job.name,
@@ -281,8 +246,6 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
             });
             continue;
           }
-
-          console.log(`[LOCK] [Cron] Lock acquired for job ${job.id}`);
         }
 
         // ========================================
@@ -334,21 +297,12 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
 
         const lastResult = results[results.length - 1];
         const duration = Date.now() - jobStartTime;
-        console.log(
-          `[OK] [Cron] Job ${job.id} [${engine}] processed: ${lastResult.processedRecords}/${lastResult.totalRecords} (${lastResult.percentage}%) in ${duration}ms`
-        );
 
         if (!lastResult.hasMore) {
-          console.log(`[DONE] [Cron] Job ${job.id} completed!`);
-
           // Regenerate cluster cache after import/sync jobs complete
           if (engine === "bulkimport" || engine === "externalsync") {
             try {
-              console.log(`[CACHE] [Cron] Regenerating cluster cache after job ${job.id}...`);
               const cacheResult = await regenerateClusterCache();
-              console.log(
-                `[CACHE] [Cron] Cluster cache regenerated: ${cacheResult.totalClusters} clusters in ${cacheResult.durationMs}ms`
-              );
             } catch (cacheError) {
               console.error(`[CACHE] [Cron] Error regenerating cluster cache:`, cacheError);
             }
@@ -376,9 +330,7 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
       const elapsed = Date.now() - startTime;
       if (elapsed > CRON_SAFETY_TIMEOUT_MS) {
         // 50 seconds - leave 10s buffer for response
-        console.warn(
-          `[TIME] [Cron] Approaching timeout (${elapsed}ms), stopping after processing ${results.length} jobs`
-        );
+
         break;
       }
     }
@@ -388,10 +340,6 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
     const skippedCount = results.filter((r) => r.lockAcquired === false).length;
     const startedCount = results.filter((r) => r.wasPending).length;
     const resumedCount = results.filter((r) => r.wasInterrupted).length;
-
-    console.log(
-      `\n[SUMMARY] [Cron] Batch processing complete: ${successCount}/${results.length} jobs successful (${startedCount} started, ${resumedCount} resumed, ${skippedCount} skipped, ${orphanedJobs.length} recovered) in ${totalDuration}ms`
-    );
 
     return NextResponse.json(
       {
@@ -554,7 +502,7 @@ async function processExternalSyncJob(
 // ============================================================
 
 /**
- * Calcula y actualiza la próxima fecha de sincronización programada
+ * Calcula y actualiza la prÃ³xima fecha de sincronizaciÃ³n programada
  */
 async function updateNextScheduledSync(dataSourceId: string, syncFrequency: string): Promise<void> {
   const now = new Date();
@@ -571,7 +519,7 @@ async function updateNextScheduledSync(dataSourceId: string, syncFrequency: stri
       nextSync = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
       break;
     default:
-      return; // MANUAL — no next sync
+      return; // MANUAL â€” no next sync
   }
 
   await prisma.externalDataSource.update({

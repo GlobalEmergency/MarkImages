@@ -14,10 +14,10 @@ export async function POST(request: NextRequest) {
     const prefix = (formData.get("prefix") as string) || "dea-foto";
 
     if (!file) {
-      return NextResponse.json({ error: "No se proporcionó ningún archivo" }, { status: 400 });
+      return NextResponse.json({ error: "No se proporcionÃ³ ningÃºn archivo" }, { status: 400 });
     }
 
-    // Inyección de dependencias: Adapter → Use Case
+    // InyecciÃ³n de dependencias: Adapter â†’ Use Case
     const imageStorage = new S3ImageStorageAdapter();
     const uploadImageUseCase = new UploadImageUseCase(imageStorage);
 

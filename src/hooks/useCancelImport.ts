@@ -1,5 +1,5 @@
 /**
- * Hook para cancelar una importación en progreso
+ * Hook para cancelar una importaciÃ³n en progreso
  */
 
 import { useState } from "react";
@@ -24,14 +24,14 @@ export function useCancelImport() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || data.message || "Error al cancelar la importación");
+        throw new Error(data.error || data.message || "Error al cancelar la importaciÃ³n");
       }
 
-      toast.success("Importación cancelada correctamente");
+      toast.success("ImportaciÃ³n cancelada correctamente");
 
       return {
         success: true,
-        message: data.message || "Importación cancelada",
+        message: data.message || "ImportaciÃ³n cancelada",
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error desconocido";

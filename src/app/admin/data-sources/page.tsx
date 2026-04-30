@@ -177,11 +177,11 @@ export default function DataSourcesPage() {
                 href="/admin"
                 className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-block"
               >
-                ← Volver al panel
+                â† Volver al panel
               </Link>
               <h1 className="text-3xl font-bold text-gray-900">Fuentes de Datos Externas</h1>
               <p className="mt-2 text-sm text-gray-600">
-                Gestiona las conexiones con APIs externas para importar DEAs automáticamente
+                Gestiona las conexiones con APIs externas para importar DEAs automÃ¡ticamente
               </p>
             </div>
             <Link
@@ -293,7 +293,7 @@ export default function DataSourcesPage() {
                           {source.lastSyncStatus && getStatusBadge(source.lastSyncStatus)}
                         </div>
                         <div className="mt-2 text-sm text-gray-500">
-                          {source.description || "Sin descripción"}
+                          {source.description || "Sin descripciÃ³n"}
                         </div>
                         <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
                           <span className="flex items-center">
@@ -326,7 +326,7 @@ export default function DataSourcesPage() {
                                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                               />
                             </svg>
-                            Última sync: {formatDate(source.lastSyncAt)}
+                            Ãšltima sync: {formatDate(source.lastSyncAt)}
                           </span>
                         </div>
                       </div>

@@ -68,17 +68,17 @@ export default function ColumnMappingEditor({
     [preview.headers, preview.rows]
   );
 
-  // Filtrar columnas según término de búsqueda
-  // 🔧 MEJORADO: También filtra columnas completamente vacías
+  // Filtrar columnas segÃºn tÃ©rmino de bÃºsqueda
+  // ðŸ”§ MEJORADO: TambiÃ©n filtra columnas completamente vacÃ­as
   const filteredMappingStates = useMemo(() => {
-    // Primero filtrar columnas vacías
+    // Primero filtrar columnas vacÃ­as
     const nonEmptyStates = mappingStates.filter((state) => {
       const sampleData = getSampleDataForColumn(state.csvColumn);
       const hasData = sampleData.some((value) => value.trim().length > 0);
-      return hasData || state.csvColumn.trim().length > 0; // Mantener si tiene nombre aunque datos vacíos
+      return hasData || state.csvColumn.trim().length > 0; // Mantener si tiene nombre aunque datos vacÃ­os
     });
 
-    // Luego aplicar filtro de búsqueda
+    // Luego aplicar filtro de bÃºsqueda
     if (!searchTerm.trim()) return nonEmptyStates;
 
     const term = searchTerm.toLowerCase();
@@ -97,7 +97,7 @@ export default function ColumnMappingEditor({
 
       {/* Barra de herramientas */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-        {/* Búsqueda */}
+        {/* BÃºsqueda */}
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -109,7 +109,7 @@ export default function ColumnMappingEditor({
           />
         </div>
 
-        {/* Botón de limpiar */}
+        {/* BotÃ³n de limpiar */}
         <button
           onClick={clearAllMappings}
           className="flex items-center justify-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -125,7 +125,7 @@ export default function ColumnMappingEditor({
           <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
             <Search className="w-12 h-12 text-gray-400 mx-auto mb-3" />
             <p className="text-gray-600">No se encontraron columnas que coincidan</p>
-            <p className="text-sm text-gray-500 mt-1">Intenta con otro término de búsqueda</p>
+            <p className="text-sm text-gray-500 mt-1">Intenta con otro tÃ©rmino de bÃºsqueda</p>
           </div>
         ) : (
           filteredMappingStates.map((state) => (
@@ -150,10 +150,11 @@ export default function ColumnMappingEditor({
             <span className="text-white text-xs font-bold">i</span>
           </div>
           <div className="flex-1">
-            <h4 className="font-medium text-blue-900 mb-1">Sugerencias automáticas</h4>
+            <h4 className="font-medium text-blue-900 mb-1">Sugerencias automÃ¡ticas</h4>
             <p className="text-sm text-blue-800">
-              El sistema ha analizado las columnas de tu CSV y ha sugerido mapeos automáticos
-              basándose en la similitud de nombres. Revisa y ajusta los mapeos según sea necesario.
+              El sistema ha analizado las columnas de tu CSV y ha sugerido mapeos automÃ¡ticos
+              basÃ¡ndose en la similitud de nombres. Revisa y ajusta los mapeos segÃºn sea
+              necesario.
             </p>
             <p className="text-sm text-blue-800 mt-2">
               Los campos marcados con <span className="text-red-600 font-bold">*</span> son
@@ -163,7 +164,7 @@ export default function ColumnMappingEditor({
         </div>
       </div>
 
-      {/* Botón de continuar */}
+      {/* BotÃ³n de continuar */}
       <div className="flex justify-end pt-4 border-t">
         <button
           onClick={handleConfirm}
@@ -175,7 +176,7 @@ export default function ColumnMappingEditor({
           }`}
         >
           {summary.canProceed
-            ? "Continuar con validación →"
+            ? "Continuar con validaciÃ³n â†’"
             : `Mapea los ${summary.requiredTotal - summary.requiredMapped} campos faltantes`}
         </button>
       </div>

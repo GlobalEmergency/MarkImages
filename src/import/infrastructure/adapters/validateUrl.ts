@@ -1,6 +1,6 @@
 /**
  * SSRF protection: validates that URLs used by data source adapters
- * point to external, public resources — not internal infrastructure.
+ * point to external, public resources â€” not internal infrastructure.
  */
 
 const BLOCKED_HOSTNAMES = new Set([
@@ -43,7 +43,7 @@ export function validateExternalUrl(url: string): void {
   try {
     parsed = new URL(url);
   } catch {
-    throw new Error(`URL inválida: ${url}`);
+    throw new Error(`URL invÃ¡lida: ${url}`);
   }
 
   // Only allow http/https

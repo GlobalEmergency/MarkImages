@@ -1,12 +1,12 @@
 /**
- * /embed/map — embeddable map page.
+ * /embed/map â€” embeddable map page.
  *
  * Accepted search params:
- *   city   — center on a Spanish city (geocoded server-side via Nominatim)
- *   lat    — latitude
- *   lng    — longitude
- *   zoom   — initial zoom level (default: 14)
- *   theme  — reserved for future use (light|dark, default: light)
+ *   city   â€” center on a Spanish city (geocoded server-side via Nominatim)
+ *   lat    â€” latitude
+ *   lng    â€” longitude
+ *   zoom   â€” initial zoom level (default: 14)
+ *   theme  â€” reserved for future use (light|dark, default: light)
  *
  * The map component is loaded dynamically with ssr:false because
  * Leaflet needs `window` (not available during server rendering).
@@ -15,9 +15,9 @@
 import EmbedMapLoader from "./EmbedMapLoader";
 import type { Metadata } from "next";
 
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Types
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface EmbedMapPageProps {
   searchParams: Promise<{
@@ -35,9 +35,9 @@ interface GeocodingResult {
   display_name: string;
 }
 
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Helpers
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const DEFAULT_CENTER: [number, number] = [40.4168, -3.7038]; // Madrid
 const DEFAULT_ZOOM = 12;
@@ -64,22 +64,22 @@ async function geocodeCity(city: string): Promise<{ center: [number, number]; la
   }
 }
 
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Metadata
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function generateMetadata({ searchParams }: EmbedMapPageProps): Promise<Metadata> {
   const params = await searchParams;
-  const city = params.city ?? "España";
+  const city = params.city ?? "EspaÃ±a";
   return {
-    title: `Mapa de DEAs — ${city} | DeaMap`,
+    title: `Mapa de DEAs â€” ${city} | DeaMap`,
     robots: { index: false, follow: false },
   };
 }
 
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Page (Server Component)
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default async function EmbedMapPage({ searchParams }: EmbedMapPageProps) {
   const params = await searchParams;

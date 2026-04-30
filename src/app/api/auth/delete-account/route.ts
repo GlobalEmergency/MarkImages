@@ -24,7 +24,7 @@ export async function DELETE(request: NextRequest) {
 
     if (!password) {
       return NextResponse.json(
-        { error: "La contraseña es obligatoria para confirmar la eliminación" },
+        { error: "La contraseÃ±a es obligatoria para confirmar la eliminaciÃ³n" },
         { status: 400 }
       );
     }
@@ -40,7 +40,7 @@ export async function DELETE(request: NextRequest) {
 
     const isValidPassword = await verifyPassword(password, user.password_hash);
     if (!isValidPassword) {
-      return NextResponse.json({ error: "Contraseña incorrecta" }, { status: 401 });
+      return NextResponse.json({ error: "ContraseÃ±a incorrecta" }, { status: 401 });
     }
 
     // Anonymize user data and remove org memberships in a single transaction

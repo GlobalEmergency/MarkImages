@@ -20,7 +20,7 @@ export interface IAedRepository {
   existsById(id: string): Promise<boolean>;
 
   /**
-   * Verifica si existe un AED con el código dado
+   * Verifica si existe un AED con el cÃ³digo dado
    */
   findByCode(code: string): Promise<DuplicateCheckResult | null>;
 
@@ -30,25 +30,25 @@ export interface IAedRepository {
   findByExternalReference(externalRef: string): Promise<DuplicateCheckResult | null>;
 
   /**
-   * Busca un AED por ID y retorna información básica
+   * Busca un AED por ID y retorna informaciÃ³n bÃ¡sica
    */
   findById(id: string): Promise<DuplicateCheckResult | null>;
 
   /**
-   * Busca AEDs por múltiples IDs en una sola query.
-   * Retorna un Map de id → DuplicateCheckResult para los encontrados.
+   * Busca AEDs por mÃºltiples IDs en una sola query.
+   * Retorna un Map de id â†’ DuplicateCheckResult para los encontrados.
    */
   findByIds(ids: string[]): Promise<Map<string, DuplicateCheckResult>>;
 
   /**
-   * Busca AEDs por múltiples códigos en una sola query.
-   * Retorna un Map de code (lowercase) → DuplicateCheckResult para los encontrados.
+   * Busca AEDs por mÃºltiples cÃ³digos en una sola query.
+   * Retorna un Map de code (lowercase) â†’ DuplicateCheckResult para los encontrados.
    */
   findByCodes(codes: string[]): Promise<Map<string, DuplicateCheckResult>>;
 
   /**
-   * Busca AEDs por múltiples referencias externas en una sola query.
-   * Retorna un Map de externalReference (lowercase) → DuplicateCheckResult para los encontrados.
+   * Busca AEDs por mÃºltiples referencias externas en una sola query.
+   * Retorna un Map de externalReference (lowercase) â†’ DuplicateCheckResult para los encontrados.
    */
   findByExternalReferences(refs: string[]): Promise<Map<string, DuplicateCheckResult>>;
 }

@@ -110,21 +110,18 @@ export class BatchJobOrchestrator {
     const processor = this.getProcessor(job.type);
 
     // Initialize processor (get total count, etc.)
-    console.log(
-      `🔧 [Orchestrator] Initializing processor for job ${jobId} (type: ${job.type}, status: ${job.status})`
-    );
+
     const initResult = await processor.initialize(job.config);
 
     if (!initResult.success) {
       const errorMessage = initResult.error || "Initialization failed";
-      console.error(`❌ [Orchestrator] Initialization failed for job ${jobId}:`, {
+      console.error(`âŒ [Orchestrator] Initialization failed for job ${jobId}:`, {
         jobType: job.type,
         jobStatus: job.status,
         errorMessage,
         config: job.config,
       });
 
-      console.log(`🔄 [Orchestrator] Marking job ${jobId} as FAILED (reason: ${errorMessage})`);
       job.fail(errorMessage);
       await this.repository.update(job);
       return {
@@ -132,10 +129,6 @@ export class BatchJobOrchestrator {
         chunkResult: this.createFailedResult(job, errorMessage),
       };
     }
-
-    console.log(
-      `✅ [Orchestrator] Initialization successful for job ${jobId} (totalRecords: ${initResult.totalRecords})`
-    );
 
     // Update job with total records
     job.setTotalRecords(initResult.totalRecords);
@@ -285,16 +278,10 @@ export class BatchJobOrchestrator {
    * Counts actually created records in DB and updates job progress
    */
   private async recoverProgressFromDatabase(job: BatchJob): Promise<void> {
-    console.log(`🔧 [Orchestrator] Recovering progress for job ${job.id} from database...`);
-
     const createdCount = await this.repository.countCreatedRecords(job.id);
     const currentProgress = job.progress.successfulRecords;
 
     if (createdCount > currentProgress) {
-      console.log(
-        `📊 [Orchestrator] Found ${createdCount} records in DB vs ${currentProgress} in job progress. Updating...`
-      );
-
       // Recalculate progress based on actual created records
       const updatedProgress = job.progress.withProcessed(createdCount);
 
@@ -306,16 +293,8 @@ export class BatchJobOrchestrator {
       }
 
       job.updateProgress(progress);
-
-      console.log(
-        `✅ [Orchestrator] Progress recovered: ${createdCount}/${job.progress.totalRecords} records`
-      );
     } else if (createdCount === currentProgress) {
-      console.log(`✅ [Orchestrator] Progress already in sync: ${createdCount} records`);
     } else {
-      console.warn(
-        `⚠️ [Orchestrator] DB has fewer records (${createdCount}) than job progress (${currentProgress}). Keeping job progress.`
-      );
     }
   }
 
@@ -339,18 +318,10 @@ export class BatchJobOrchestrator {
     let shouldContinue = true;
     let chunkCount = 0;
 
-    console.log(
-      `🔄 [Orchestrator] Starting multi-chunk processing from index ${startIndex} (timeout: ${this.defaultTimeoutMs}ms)`
-    );
-
     // Process multiple chunks until timeout or completion
     while (hasMore && shouldContinue && Date.now() < effectiveTimeout.getTime()) {
       chunkCount++;
       const chunkStartTime = Date.now();
-
-      console.log(
-        `📦 [Orchestrator] Processing chunk #${chunkCount} at index ${currentIndex} (${Math.round((effectiveTimeout.getTime() - Date.now()) / 1000)}s remaining)`
-      );
 
       const chunkResult = await this.processSingleChunk(
         job,
@@ -368,19 +339,14 @@ export class BatchJobOrchestrator {
       currentIndex = chunkResult.nextIndex;
 
       const chunkDuration = Date.now() - chunkStartTime;
-      console.log(
-        `✅ [Orchestrator] Chunk #${chunkCount} complete: ${chunkResult.processedCount} records in ${chunkDuration}ms (hasMore: ${hasMore}, shouldContinue: ${shouldContinue})`
-      );
 
       // Stop if chunk failed or processor says stop
       if (!shouldContinue) {
-        console.warn(`⚠️ [Orchestrator] Stopping: processor requested stop`);
         break;
       }
 
       // Stop if no more records
       if (!hasMore) {
-        console.log(`🎉 [Orchestrator] All records processed!`);
         break;
       }
 
@@ -388,16 +354,9 @@ export class BatchJobOrchestrator {
       const timeRemaining = effectiveTimeout.getTime() - Date.now();
       const estimatedChunkTime = chunkDuration * 1.2; // Add 20% buffer
       if (timeRemaining < estimatedChunkTime) {
-        console.log(
-          `⏰ [Orchestrator] Stopping after ${chunkCount} chunks: insufficient time remaining (${Math.round(timeRemaining / 1000)}s < ${Math.round(estimatedChunkTime / 1000)}s estimated)`
-        );
         break;
       }
     }
-
-    console.log(
-      `🏁 [Orchestrator] Multi-chunk session complete: ${chunkCount} chunks, ${totalProcessed} records, ${totalSuccess} successful`
-    );
 
     // Return consolidated result
     return {

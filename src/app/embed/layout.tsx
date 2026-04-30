@@ -10,9 +10,9 @@ import type { Metadata } from "next";
 import "../globals.css";
 
 export const metadata: Metadata = {
-  title: "Mapa de Desfibriladores — DeaMap",
+  title: "Mapa de Desfibriladores â€” DeaMap",
   description:
-    "Widget de mapa integrable con desfibriladores (DEAs) de DeaMap. Cópialo e incrústalo en tu web.",
+    "Widget de mapa integrable con desfibriladores (DEAs) de DeaMap. CÃ³pialo e incrÃºstalo en tu web.",
   robots: {
     // Prevent embed pages from being indexed independently
     index: false,

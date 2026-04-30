@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AED Import Lifecycle Hooks for @batchactions/import
  *
  * Implementa los hooks del pipeline de procesamiento de registros:
@@ -264,10 +264,6 @@ function createAfterProcess(
     for (const [index, img] of imageUrls.entries()) {
       try {
         if (downloadAndUploadImageUseCase) {
-          console.log(
-            `[AedImportHooks] Processing image ${index + 1}/${imageUrls.length} for AED ${aedId}`
-          );
-
           const s3Result = await downloadAndUploadImageUseCase.execute({
             url: img.url,
             aedId,
@@ -287,13 +283,9 @@ function createAfterProcess(
               is_verified: false,
             },
           });
-
-          console.log(`[AedImportHooks] Image ${index + 1} uploaded to S3: ${s3Result.url}`);
         } else {
           // Fallback: guardar URL original si no hay use case de descarga
-          console.warn(
-            `[AedImportHooks] Image download not available. Saving original URL for image ${index + 1}`
-          );
+
           await prisma.aedImage.create({
             data: {
               id: img.imageId,
@@ -324,7 +316,6 @@ function createAfterProcess(
               is_verified: false,
             },
           });
-          console.log("[AedImportHooks] Created fallback image record with original URL");
         } catch (fallbackError) {
           console.error("[AedImportHooks] Failed to create fallback image record:", fallbackError);
         }

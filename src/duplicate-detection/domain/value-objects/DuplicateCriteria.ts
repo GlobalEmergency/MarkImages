@@ -1,5 +1,5 @@
 /**
- * DuplicateCriteria — Immutable Value Object
+ * DuplicateCriteria â€” Immutable Value Object
  *
  * Encapsulates all the data needed to search for duplicates.
  * Used by all consumers: API routes, CSV imports, external sync.

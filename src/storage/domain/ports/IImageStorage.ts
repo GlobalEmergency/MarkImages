@@ -1,6 +1,6 @@
 /**
- * Puerto (Interface) para almacenamiento de imágenes
- * Capa de Dominio - No depende de ninguna implementación
+ * Puerto (Interface) para almacenamiento de imÃ¡genes
+ * Capa de Dominio - No depende de ninguna implementaciÃ³n
  */
 
 /** Image variant types (domain concept, not tied to any storage impl) */

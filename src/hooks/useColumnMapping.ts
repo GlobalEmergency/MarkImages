@@ -1,5 +1,5 @@
 /**
- * Hook para gestionar el estado y lógica del mapeo de columnas
+ * Hook para gestionar el estado y lÃ³gica del mapeo de columnas
  * Permite al usuario mapear columnas CSV a campos del sistema
  */
 
@@ -76,7 +76,7 @@ export function useColumnMapping(
     return new Set(Object.values(mappings).filter((field): field is string => field !== null));
   }, [mappings]);
 
-  // Verificar si un campo del sistema ya está mapeado
+  // Verificar si un campo del sistema ya estÃ¡ mapeado
   const isFieldMapped = useCallback(
     (systemField: string) => {
       return mappedSystemFields.has(systemField);

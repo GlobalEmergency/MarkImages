@@ -32,7 +32,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   const organizations = user?.permissions?.organizations || [];
   const hasOrganizations = organizations.length > 0;
 
-  // Permisos de la organización seleccionada
+  // Permisos de la organizaciÃ³n seleccionada
   const isOrgOwner = selectedOrganization?.role === "OWNER";
   const isOrgAdmin =
     selectedOrganization?.role === "ADMIN" || selectedOrganization?.role === "OWNER";
@@ -41,7 +41,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   const canEdit = selectedOrganization?.permissions?.can_edit || false;
   const canApprove = selectedOrganization?.permissions?.can_approve || false;
 
-  // Cargar organización seleccionada del localStorage
+  // Cargar organizaciÃ³n seleccionada del localStorage
   useEffect(() => {
     if (!hasOrganizations) {
       setSelectedOrganizationState(null);
@@ -52,7 +52,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsedOrg = JSON.parse(stored);
-        // Verificar que la organización almacenada todavía existe en las organizaciones del usuario
+        // Verificar que la organizaciÃ³n almacenada todavÃ­a existe en las organizaciones del usuario
         const orgExists = organizations.find((org) => org.id === parsedOrg.id);
         if (orgExists) {
           setSelectedOrganizationState(orgExists);
@@ -63,13 +63,13 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       console.error("Error loading selected organization:", error);
     }
 
-    // Si no hay organización almacenada o no existe, seleccionar la primera
+    // Si no hay organizaciÃ³n almacenada o no existe, seleccionar la primera
     if (organizations.length > 0) {
       setSelectedOrganizationState(organizations[0]);
     }
   }, [user]);
 
-  // Guardar organización seleccionada en localStorage
+  // Guardar organizaciÃ³n seleccionada en localStorage
   const setSelectedOrganization = (org: UserOrganization | null) => {
     setSelectedOrganizationState(org);
     if (org) {

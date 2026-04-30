@@ -1,5 +1,5 @@
 /**
- * Rules index — exports all built-in rules, interactions, and registry factory
+ * Rules index â€” exports all built-in rules, interactions, and registry factory
  */
 
 // Core interfaces
@@ -65,8 +65,8 @@ export function createDefaultRegistry(): RuleRegistry {
     ],
     // Conditional interactions (applied after individual rules)
     [
-      new SameBuildingDifferentUnit(), // address✓ + floor≠ → -30
-      new AddressVariantSamePlace(), // address✗ + coords_close✓ + type_compatible → +15
+      new SameBuildingDifferentUnit(), // addressâœ“ + floorâ‰  â†’ -30
+      new AddressVariantSamePlace(), // addressâœ— + coords_closeâœ“ + type_compatible â†’ +15
     ]
   );
 }

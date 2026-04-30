@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File;
 
     if (!file) {
-      return NextResponse.json({ error: "No se proporcionó ningún archivo" }, { status: 400 });
+      return NextResponse.json({ error: "No se proporcionÃ³ ningÃºn archivo" }, { status: 400 });
     }
 
     // Validar que sea CSV
@@ -40,8 +40,6 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = new Uint8Array(arrayBuffer);
     await fs.writeFile(filePath, buffer);
-
-    console.log(`📁 Preview file saved: ${filePath}`);
 
     // Parsear CSV y generar preview
     const parseUseCase = new ParseCsvPreviewUseCase();

@@ -29,7 +29,7 @@ const LocationPickerMap = dynamic(() => import("@/components/LocationPickerMap")
   loading: () => <div className="h-48 bg-gray-100 rounded-lg animate-pulse" />,
 });
 
-// ── Types ───────────────────────────────────────────────────────────
+// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface AccessPointImage {
   id: string;
@@ -93,11 +93,11 @@ interface AccessPointsPanelProps {
   onRefresh: () => void;
 }
 
-// ── Constants ───────────────────────────────────────────────────────
+// â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const ACCESS_POINT_TYPES = [
   { value: "PEDESTRIAN", label: "Peatonal", icon: Footprints },
-  { value: "VEHICLE", label: "Vehículo", icon: Car },
+  { value: "VEHICLE", label: "VehÃ­culo", icon: Car },
   { value: "EMERGENCY", label: "Emergencias", icon: Siren },
   { value: "WHEELCHAIR", label: "Accesible", icon: Accessibility },
   { value: "UNIVERSAL", label: "Universal", icon: Navigation },
@@ -105,7 +105,7 @@ const ACCESS_POINT_TYPES = [
 
 const RESTRICTION_TYPES = [
   { value: "NONE", label: "Acceso libre", icon: Unlock, color: "text-green-600" },
-  { value: "CODE", label: "Código", icon: Lock, color: "text-amber-600" },
+  { value: "CODE", label: "CÃ³digo", icon: Lock, color: "text-amber-600" },
   { value: "KEY", label: "Llave", icon: Lock, color: "text-amber-600" },
   { value: "CARD", label: "Tarjeta", icon: Lock, color: "text-amber-600" },
   { value: "INTERCOM", label: "Portero", icon: Phone, color: "text-amber-600" },
@@ -138,7 +138,7 @@ const EMPTY_FORM: NewAccessPointData = {
   can_deliver_to_entrance: false,
 };
 
-// ── Helpers ─────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function getTypeInfo(type: string) {
   return ACCESS_POINT_TYPES.find((t) => t.value === type) || ACCESS_POINT_TYPES[4];
@@ -148,7 +148,7 @@ function getRestrictionInfo(type: string) {
   return RESTRICTION_TYPES.find((t) => t.value === type) || RESTRICTION_TYPES[0];
 }
 
-// ── Component ───────────────────────────────────────────────────────
+// â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function AccessPointsPanel({
   aedId,
@@ -167,7 +167,7 @@ export default function AccessPointsPanel({
   const inputClass =
     "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm";
 
-  // ── API calls ──
+  // â”€â”€ API calls â”€â”€
 
   const handleCreate = useCallback(async () => {
     setError(null);
@@ -211,7 +211,7 @@ export default function AccessPointsPanel({
       setFormData(EMPTY_FORM);
       onRefresh();
     } catch {
-      setError("Error de conexión");
+      setError("Error de conexiÃ³n");
     } finally {
       setSaving(false);
     }
@@ -219,7 +219,7 @@ export default function AccessPointsPanel({
 
   const handleDelete = useCallback(
     async (apId: string) => {
-      if (!confirm("¿Eliminar este punto de acceso?")) return;
+      if (!confirm("Â¿Eliminar este punto de acceso?")) return;
       setDeleting(apId);
       try {
         const res = await fetch(`/api/admin/deas/${aedId}/access-points/${apId}`, {
@@ -232,7 +232,7 @@ export default function AccessPointsPanel({
         }
         onRefresh();
       } catch {
-        setError("Error de conexión");
+        setError("Error de conexiÃ³n");
       } finally {
         setDeleting(null);
       }
@@ -257,7 +257,7 @@ export default function AccessPointsPanel({
     [aedId, onRefresh]
   );
 
-  // ── Render ──
+  // â”€â”€ Render â”€â”€
 
   return (
     <div className="space-y-6">
@@ -274,13 +274,13 @@ export default function AccessPointsPanel({
         </div>
       )}
 
-      {/* ── Existing Access Points ── */}
+      {/* â”€â”€ Existing Access Points â”€â”€ */}
       {accessPoints.length === 0 && !showForm && (
         <div className="text-center py-12">
           <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 mb-1">Sin puntos de acceso</p>
           <p className="text-gray-400 text-sm mb-4">
-            Añade puntos de acceso para indicar cómo llegar a este DEA
+            AÃ±ade puntos de acceso para indicar cÃ³mo llegar a este DEA
           </p>
           <button
             onClick={() => {
@@ -294,7 +294,7 @@ export default function AccessPointsPanel({
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
           >
             <Plus className="w-4 h-4" />
-            Añadir punto de acceso
+            AÃ±adir punto de acceso
           </button>
         </div>
       )}
@@ -313,7 +313,7 @@ export default function AccessPointsPanel({
               ap.is_primary ? "border-blue-300 ring-1 ring-blue-100" : "border-gray-200"
             } overflow-hidden`}
           >
-            {/* Header — always visible */}
+            {/* Header â€” always visible */}
             <button
               onClick={() => setExpandedId(isExpanded ? null : ap.id)}
               className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 text-left"
@@ -345,7 +345,8 @@ export default function AccessPointsPanel({
                   )}
                   {ap.floor_difference != null && ap.floor_difference !== 0 && (
                     <span>
-                      {ap.floor_difference > 0 ? "↑" : "↓"} {Math.abs(ap.floor_difference)} planta
+                      {ap.floor_difference > 0 ? "â†‘" : "â†“"} {Math.abs(ap.floor_difference)}{" "}
+                      planta
                       {Math.abs(ap.floor_difference) !== 1 ? "s" : ""}
                       {ap.has_elevator ? " (ascensor)" : ""}
                     </span>
@@ -380,13 +381,13 @@ export default function AccessPointsPanel({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   {/* Restriction info */}
                   <div>
-                    <p className="text-gray-500 text-xs mb-1">Restricción</p>
+                    <p className="text-gray-500 text-xs mb-1">RestricciÃ³n</p>
                     <p className={`font-medium ${restrictionInfo.color}`}>
                       {restrictionInfo.label}
                     </p>
                     {ap.unlock_code && (
                       <p className="text-gray-700 mt-1">
-                        Código: <span className="font-mono font-medium">{ap.unlock_code}</span>
+                        CÃ³digo: <span className="font-mono font-medium">{ap.unlock_code}</span>
                       </p>
                     )}
                   </div>
@@ -426,7 +427,7 @@ export default function AccessPointsPanel({
                             {ap.floor_difference > 0 ? "Subir" : "Bajar"}{" "}
                             {Math.abs(ap.floor_difference)} planta
                             {Math.abs(ap.floor_difference) !== 1 ? "s" : ""}
-                            {ap.has_elevator ? " — ascensor disponible" : " — solo escaleras"}
+                            {ap.has_elevator ? " â€” ascensor disponible" : " â€” solo escaleras"}
                           </p>
                         )}
                       </div>
@@ -515,7 +516,7 @@ export default function AccessPointsPanel({
                 </div>
 
                 <p className="text-xs text-gray-400">
-                  Creado: {new Date(ap.created_at).toLocaleString("es-ES")} · Coords:{" "}
+                  Creado: {new Date(ap.created_at).toLocaleString("es-ES")} Â· Coords:{" "}
                   {ap.latitude.toFixed(6)}, {ap.longitude.toFixed(6)}
                 </p>
               </div>
@@ -524,7 +525,7 @@ export default function AccessPointsPanel({
         );
       })}
 
-      {/* ── Add Access Point Form ── */}
+      {/* â”€â”€ Add Access Point Form â”€â”€ */}
       {showForm && (
         <div className="bg-white rounded-lg border border-blue-200 p-6 space-y-4">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -535,7 +536,7 @@ export default function AccessPointsPanel({
           {/* Map picker */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ubicación del acceso (haz clic en el mapa)
+              UbicaciÃ³n del acceso (haz clic en el mapa)
             </label>
             <div className="h-56 rounded-lg overflow-hidden border border-gray-200">
               <LocationPickerMap
@@ -576,7 +577,7 @@ export default function AccessPointsPanel({
                 type="text"
                 value={formData.label}
                 onChange={(e) => setFormData((p) => ({ ...p, label: e.target.value }))}
-                placeholder="Ej: Recepción planta 12"
+                placeholder="Ej: RecepciÃ³n planta 12"
                 className={inputClass}
               />
             </div>
@@ -597,7 +598,7 @@ export default function AccessPointsPanel({
           {/* Restrictions */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Restricción</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">RestricciÃ³n</label>
               <select
                 value={formData.restriction_type}
                 onChange={(e) => setFormData((p) => ({ ...p, restriction_type: e.target.value }))}
@@ -614,7 +615,7 @@ export default function AccessPointsPanel({
             {formData.restriction_type === "CODE" && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Código de acceso
+                  CÃ³digo de acceso
                 </label>
                 <input
                   type="text"
@@ -632,14 +633,14 @@ export default function AccessPointsPanel({
                 type="text"
                 value={formData.contact_name}
                 onChange={(e) => setFormData((p) => ({ ...p, contact_name: e.target.value }))}
-                placeholder="Vigilante, Recepción..."
+                placeholder="Vigilante, RecepciÃ³n..."
                 className={inputClass}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Teléfono contacto
+                TelÃ©fono contacto
               </label>
               <input
                 type="tel"
@@ -722,7 +723,7 @@ export default function AccessPointsPanel({
           {/* Indoor steps */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Pasos para llegar al DEA (uno por línea)
+              Pasos para llegar al DEA (uno por lÃ­nea)
             </label>
             <textarea
               value={formData.indoor_steps}
@@ -739,13 +740,13 @@ export default function AccessPointsPanel({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Teléfono de emergencia
+                TelÃ©fono de emergencia
               </label>
               <input
                 type="tel"
                 value={formData.emergency_phone}
                 onChange={(e) => setFormData((p) => ({ ...p, emergency_phone: e.target.value }))}
-                placeholder="Teléfono directo para emergencias"
+                placeholder="TelÃ©fono directo para emergencias"
                 className={inputClass}
               />
             </div>
@@ -802,7 +803,7 @@ export default function AccessPointsPanel({
           className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:text-blue-600 hover:border-blue-300 transition-colors text-sm"
         >
           <Plus className="w-4 h-4" />
-          Añadir otro punto de acceso
+          AÃ±adir otro punto de acceso
         </button>
       )}
     </div>

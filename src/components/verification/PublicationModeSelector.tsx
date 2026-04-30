@@ -65,7 +65,7 @@ export default function PublicationModeSelector({
 
   const handleUpdate = async () => {
     if (selectedMode === currentMode) {
-      setError("El modo de publicación ya es " + getPublicationModeLabel(selectedMode));
+      setError("El modo de publicaciÃ³n ya es " + getPublicationModeLabel(selectedMode));
       return;
     }
 
@@ -89,10 +89,10 @@ export default function PublicationModeSelector({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Error al actualizar modo de publicación");
+        throw new Error(data.message || "Error al actualizar modo de publicaciÃ³n");
       }
 
-      setSuccess(`Modo de publicación actualizado a: ${getPublicationModeLabel(selectedMode)}`);
+      setSuccess(`Modo de publicaciÃ³n actualizado a: ${getPublicationModeLabel(selectedMode)}`);
       setReason("");
       setNotes("");
 
@@ -138,7 +138,9 @@ export default function PublicationModeSelector({
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Modo de Publicación</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          Modo de PublicaciÃ³n
+        </h3>
         <span
           className={`px-3 py-1 rounded-full text-sm font-medium ${
             currentMode === "FULL"
@@ -155,7 +157,7 @@ export default function PublicationModeSelector({
       </div>
 
       <p className="text-sm text-gray-600 dark:text-gray-400">
-        Controla qué información de este DEA es visible públicamente en el mapa.
+        Controla quÃ© informaciÃ³n de este DEA es visible pÃºblicamente en el mapa.
       </p>
 
       {/* Mode Selector */}
@@ -192,14 +194,14 @@ export default function PublicationModeSelector({
           htmlFor="reason"
           className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
         >
-          Razón del cambio (opcional)
+          RazÃ³n del cambio (opcional)
         </label>
         <input
           id="reason"
           type="text"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          placeholder="Ej: Propietario autorizó publicación completa"
+          placeholder="Ej: Propietario autorizÃ³ publicaciÃ³n completa"
           disabled={disabled || isUpdating}
           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white disabled:opacity-50"
         />
@@ -217,7 +219,7 @@ export default function PublicationModeSelector({
           id="notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Información adicional sobre este cambio..."
+          placeholder="InformaciÃ³n adicional sobre este cambio..."
           rows={3}
           disabled={disabled || isUpdating}
           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white disabled:opacity-50"
@@ -274,15 +276,17 @@ export default function PublicationModeSelector({
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {entry.previous_mode ? getPublicationModeLabel(entry.previous_mode) : "—"} →{" "}
-                      {getPublicationModeLabel(entry.new_mode)}
+                      {entry.previous_mode ? getPublicationModeLabel(entry.previous_mode) : "â€”"}{" "}
+                      â†’ {getPublicationModeLabel(entry.new_mode)}
                     </span>
                     <span className="text-xs text-gray-500 dark:text-gray-400">
                       {new Date(entry.created_at).toLocaleString("es-ES")}
                     </span>
                   </div>
                   {entry.change_reason && (
-                    <p className="text-gray-600 dark:text-gray-400">Razón: {entry.change_reason}</p>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      RazÃ³n: {entry.change_reason}
+                    </p>
                   )}
                 </div>
               ))}

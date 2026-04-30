@@ -3,7 +3,7 @@
  *
  * Interface que define el contrato para servicios de clustering geoespacial.
  * Siguiendo SOLID - Dependency Inversion Principle (DIP):
- * - El dominio define la abstracción
+ * - El dominio define la abstracciÃ³n
  * - La infraestructura implementa los detalles
  */
 
@@ -34,13 +34,13 @@ export interface ClusteringResult {
 
 /**
  * Puerto para servicios de clustering
- * Define el contrato que debe cumplir cualquier implementación
+ * Define el contrato que debe cumplir cualquier implementaciÃ³n
  */
 export interface IClusteringService {
   /**
-   * Calcula clusters y marcadores individuales dentro de un área geográfica
+   * Calcula clusters y marcadores individuales dentro de un Ã¡rea geogrÃ¡fica
    *
-   * @param params - Parámetros de clustering
+   * @param params - ParÃ¡metros de clustering
    * @returns Resultado con clusters y marcadores individuales
    */
   calculateClusters(params: ClusteringParams): Promise<ClusteringResult>;
@@ -48,8 +48,8 @@ export interface IClusteringService {
   /**
    * Obtiene todos los DEAs individuales sin clustering
    *
-   * @param bounds - Límites geográficos
-   * @param limit - Número máximo de resultados
+   * @param bounds - LÃ­mites geogrÃ¡ficos
+   * @param limit - NÃºmero mÃ¡ximo de resultados
    * @returns Lista de marcadores
    */
   getIndividualMarkers(bounds: BoundingBox, limit: number): Promise<AedMapMarker[]>;

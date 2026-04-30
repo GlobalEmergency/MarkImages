@@ -59,7 +59,7 @@ export default function NewSimpleDeaPage() {
     number: "",
     city: "",
     postalCode: "",
-    country: "España",
+    country: "EspaÃ±a",
     name: "",
     establishmentType: "",
     observations: "",
@@ -69,7 +69,7 @@ export default function NewSimpleDeaPage() {
     scheduleDescription: "",
   });
 
-  // ── Hooks ─────────────────────────────────────────────────────
+  // â”€â”€ Hooks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const handlePositionObtained = useCallback((lat: number, lng: number) => {
     setFormData((prev) => ({
@@ -121,7 +121,7 @@ export default function NewSimpleDeaPage() {
     }
   }, [formData, formStarted, trackFormStart]);
 
-  // ── Handlers ──────────────────────────────────────────────────
+  // â”€â”€ Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -150,7 +150,7 @@ export default function NewSimpleDeaPage() {
     setError(null);
 
     try {
-      // Upload images (presigned URLs — works for anonymous and authenticated users)
+      // Upload images (presigned URLs â€” works for anonymous and authenticated users)
       let uploadedImages: { original_url: string; type: string; order: number }[] = [];
 
       if (images.length > 0) {
@@ -158,7 +158,7 @@ export default function NewSimpleDeaPage() {
         uploadedImages = uploaded;
         if (failedCount > 0) {
           setError(
-            `No se pudieron subir ${failedCount} de ${images.length} foto(s). El DEA se enviará con las fotos que se subieron correctamente.`
+            `No se pudieron subir ${failedCount} de ${images.length} foto(s). El DEA se enviarÃ¡ con las fotos que se subieron correctamente.`
           );
         }
       }
@@ -195,14 +195,14 @@ export default function NewSimpleDeaPage() {
     router.push("/");
   };
 
-  // ── Derived state ─────────────────────────────────────────────
+  // â”€â”€ Derived state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const hasCoords = !!(formData.latitude && formData.longitude);
   const hasAddress = !!(formData.street && formData.city);
   const canProceedToStep2 = hasCoords || hasAddress;
   const canSubmit = formData.name.trim().length >= 2;
 
-  // ── Render ────────────────────────────────────────────────────
+  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -221,7 +221,7 @@ export default function NewSimpleDeaPage() {
           <div className="flex-1">
             <h1 className="text-lg font-semibold text-gray-900">Agregar DEA</h1>
             <p className="text-xs text-gray-500">
-              Paso {step} de 2 &mdash; {step === 1 ? "Ubicación" : "Detalles"}
+              Paso {step} de 2 &mdash; {step === 1 ? "UbicaciÃ³n" : "Detalles"}
             </p>
           </div>
           <div className="flex gap-1.5">
@@ -243,16 +243,16 @@ export default function NewSimpleDeaPage() {
           </div>
         )}
 
-        {/* ── STEP 1: Location ─────────────────────────────── */}
+        {/* â”€â”€ STEP 1: Location â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {step === 1 && (
           <div className="space-y-5">
             <div className="text-center mb-2">
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100 mb-3">
                 <MapPin className="w-6 h-6 text-emerald-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">¿Dónde está el DEA?</h2>
+              <h2 className="text-xl font-bold text-gray-900">Â¿DÃ³nde estÃ¡ el DEA?</h2>
               <p className="text-sm text-gray-500 mt-1">
-                Usa tu ubicación actual o marca el punto en el mapa
+                Usa tu ubicaciÃ³n actual o marca el punto en el mapa
               </p>
             </div>
 
@@ -265,18 +265,18 @@ export default function NewSimpleDeaPage() {
               {geolocating ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Obteniendo ubicación...
+                  Obteniendo ubicaciÃ³n...
                 </>
               ) : (
                 <>
                   <Navigation className="w-5 h-5" />
-                  Usar mi ubicación actual
+                  Usar mi ubicaciÃ³n actual
                 </>
               )}
             </button>
 
             {reverseGeocoding && (
-              <p className="text-center text-xs text-gray-400">Obteniendo dirección...</p>
+              <p className="text-center text-xs text-gray-400">Obteniendo direcciÃ³n...</p>
             )}
 
             <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
@@ -297,7 +297,7 @@ export default function NewSimpleDeaPage() {
             <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
-                Dirección
+                DirecciÃ³n
                 {reverseGeocoding && <Loader2 className="w-3 h-3 animate-spin text-gray-400" />}
               </h3>
 
@@ -315,7 +315,7 @@ export default function NewSimpleDeaPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Nº</label>
+                  <label className="block text-xs text-gray-500 mb-1">NÂº</label>
                   <input
                     type="text"
                     name="number"
@@ -330,7 +330,7 @@ export default function NewSimpleDeaPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Población</label>
+                  <label className="block text-xs text-gray-500 mb-1">PoblaciÃ³n</label>
                   <input
                     type="text"
                     name="city"
@@ -371,22 +371,22 @@ export default function NewSimpleDeaPage() {
 
             {!canProceedToStep2 && (
               <p className="text-center text-xs text-gray-400">
-                Marca un punto en el mapa o escribe al menos la calle y población
+                Marca un punto en el mapa o escribe al menos la calle y poblaciÃ³n
               </p>
             )}
           </div>
         )}
 
-        {/* ── STEP 2: Details ──────────────────────────────── */}
+        {/* â”€â”€ STEP 2: Details â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {step === 2 && (
           <div className="space-y-5">
             <div className="text-center mb-2">
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mb-3">
                 <Info className="w-6 h-6 text-blue-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">Cuéntanos sobre el DEA</h2>
+              <h2 className="text-xl font-bold text-gray-900">CuÃ©ntanos sobre el DEA</h2>
               <p className="text-sm text-gray-500 mt-1">
-                Cuantos más datos aportes, más fácil será verificarlo
+                Cuantos mÃ¡s datos aportes, mÃ¡s fÃ¡cil serÃ¡ verificarlo
               </p>
             </div>
 
@@ -394,7 +394,7 @@ export default function NewSimpleDeaPage() {
             <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre o descripción del lugar *
+                  Nombre o descripciÃ³n del lugar *
                 </label>
                 <input
                   type="text"
@@ -403,11 +403,11 @@ export default function NewSimpleDeaPage() {
                   onChange={handleChange}
                   onFocus={() => handleFieldFocus("name")}
                   required
-                  placeholder="Ej: Farmacia López, Centro deportivo municipal..."
+                  placeholder="Ej: Farmacia LÃ³pez, Centro deportivo municipal..."
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-shadow"
                 />
                 <p className="text-xs text-gray-400 mt-1">
-                  Nombre del lugar donde está instalado el DEA
+                  Nombre del lugar donde estÃ¡ instalado el DEA
                 </p>
               </div>
 
@@ -427,12 +427,12 @@ export default function NewSimpleDeaPage() {
                   <option value="Centro de salud">Centro de salud</option>
                   <option value="Centro deportivo">Centro deportivo</option>
                   <option value="Centro educativo">Centro educativo</option>
-                  <option value="Edificio público">Edificio público</option>
+                  <option value="Edificio pÃºblico">Edificio pÃºblico</option>
                   <option value="Centro comercial">Centro comercial</option>
-                  <option value="Estación de transporte">Estación de transporte</option>
+                  <option value="EstaciÃ³n de transporte">EstaciÃ³n de transporte</option>
                   <option value="Hotel / alojamiento">Hotel / alojamiento</option>
                   <option value="Empresa privada">Empresa privada</option>
-                  <option value="Vía pública">Vía pública</option>
+                  <option value="VÃ­a pÃºblica">VÃ­a pÃºblica</option>
                   <option value="Otro">Otro</option>
                 </select>
               </div>
@@ -447,7 +447,7 @@ export default function NewSimpleDeaPage() {
                   onChange={handleChange}
                   onFocus={() => handleFieldFocus("observations")}
                   rows={3}
-                  placeholder="Cualquier información útil: dónde se ve, si tiene cartel, si está accesible..."
+                  placeholder="Cualquier informaciÃ³n Ãºtil: dÃ³nde se ve, si tiene cartel, si estÃ¡ accesible..."
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-shadow resize-none"
                 />
               </div>
@@ -469,12 +469,12 @@ export default function NewSimpleDeaPage() {
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-emerald-700">
                   <li>
-                    <strong>Entrada al edificio</strong> — fachada o acceso desde la calle
+                    <strong>Entrada al edificio</strong> â€” fachada o acceso desde la calle
                   </li>
                   <li>
-                    <strong>Interior con el DEA visible</strong> — dónde está exactamente dentro
+                    <strong>Interior con el DEA visible</strong> â€” dÃ³nde estÃ¡ exactamente dentro
                   </li>
-                  <li>Señalización, carteles o indicaciones si las hay</li>
+                  <li>SeÃ±alizaciÃ³n, carteles o indicaciones si las hay</li>
                 </ul>
                 <a
                   href="/dea/example-verified"
@@ -534,7 +534,7 @@ export default function NewSimpleDeaPage() {
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-emerald-400 hover:text-emerald-600 transition-colors"
                 >
                   <Camera className="w-4 h-4" />
-                  {images.length === 0 ? "Añadir foto del DEA" : "Añadir otra foto"}
+                  {images.length === 0 ? "AÃ±adir foto del DEA" : "AÃ±adir otra foto"}
                 </button>
               )}
 
@@ -564,7 +564,7 @@ export default function NewSimpleDeaPage() {
                   Detalles adicionales (opcional)
                 </span>
                 <span className="text-xs text-emerald-600 font-normal">
-                  Ayuda a la verificación
+                  Ayuda a la verificaciÃ³n
                 </span>
               </button>
 
@@ -572,7 +572,7 @@ export default function NewSimpleDeaPage() {
                 <div className="px-4 pb-4 space-y-3 border-t border-gray-100 pt-3">
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">
-                      ¿Cómo se accede al DEA?
+                      Â¿CÃ³mo se accede al DEA?
                     </label>
                     <textarea
                       name="accessDescription"
@@ -580,7 +580,7 @@ export default function NewSimpleDeaPage() {
                       onChange={handleChange}
                       onFocus={() => handleFieldFocus("accessDescription")}
                       rows={2}
-                      placeholder="Ej: Entrando por la puerta principal, a la izquierda en recepción"
+                      placeholder="Ej: Entrando por la puerta principal, a la izquierda en recepciÃ³n"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-shadow resize-none"
                     />
                   </div>
@@ -599,7 +599,9 @@ export default function NewSimpleDeaPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">Ubicación concreta</label>
+                      <label className="block text-xs text-gray-500 mb-1">
+                        UbicaciÃ³n concreta
+                      </label>
                       <input
                         type="text"
                         name="specificLocation"
@@ -635,8 +637,8 @@ export default function NewSimpleDeaPage() {
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700 flex items-start gap-2">
               <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <span>
-                Un administrador revisará y completará los datos. Cuanta más información aportes,
-                más rápido se publicará el DEA en el mapa.
+                Un administrador revisarÃ¡ y completarÃ¡ los datos. Cuanta mÃ¡s informaciÃ³n
+                aportes, mÃ¡s rÃ¡pido se publicarÃ¡ el DEA en el mapa.
               </span>
             </div>
 
@@ -648,7 +650,7 @@ export default function NewSimpleDeaPage() {
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-3.5 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Atrás
+                AtrÃ¡s
               </button>
 
               <button
@@ -677,7 +679,7 @@ export default function NewSimpleDeaPage() {
         )}
       </div>
 
-      {/* ── Success Modal ────────────────────────────────────── */}
+      {/* â”€â”€ Success Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {showSuccess && (
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-modal-backdrop p-4"
@@ -702,12 +704,12 @@ export default function NewSimpleDeaPage() {
               </svg>
             </div>
 
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">¡Gracias por tu aporte!</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">Â¡Gracias por tu aporte!</h2>
 
             <p className="text-gray-500 mb-6 leading-relaxed">
-              El DEA ha sido registrado y está pendiente de verificación.{" "}
-              {images.length > 0 && "Las fotos que subiste ayudarán mucho a agilizar el proceso. "}
-              Un administrador lo revisará pronto.
+              El DEA ha sido registrado y estÃ¡ pendiente de verificaciÃ³n.{" "}
+              {images.length > 0 && "Las fotos que subiste ayudarÃ¡n mucho a agilizar el proceso. "}
+              Un administrador lo revisarÃ¡ pronto.
             </p>
 
             <button

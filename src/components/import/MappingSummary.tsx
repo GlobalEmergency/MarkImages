@@ -1,6 +1,6 @@
 /**
  * Componente de resumen del estado del mapeo de columnas
- * Muestra indicadores visuales del progreso y validación
+ * Muestra indicadores visuales del progreso y validaciÃ³n
  */
 
 "use client";
@@ -41,18 +41,18 @@ export default function MappingSummary({ summary }: MappingSummaryProps) {
           )}
           <div>
             <h3 className="font-bold text-gray-900">
-              {canProceed ? "¡Listo para continuar!" : "Mapeo incompleto"}
+              {canProceed ? "Â¡Listo para continuar!" : "Mapeo incompleto"}
             </h3>
             <p className="text-sm text-gray-600">
               {canProceed
-                ? "Todos los campos requeridos están mapeados"
+                ? "Todos los campos requeridos estÃ¡n mapeados"
                 : `Faltan ${requiredTotal - requiredMapped} campos requeridos`}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Grid de estadísticas */}
+      {/* Grid de estadÃ­sticas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Campos requeridos */}
         <StatCard
@@ -121,7 +121,7 @@ export default function MappingSummary({ summary }: MappingSummaryProps) {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
           <LegendItem color="green" label="Campo requerido mapeado" />
           <LegendItem color="blue" label="Campo opcional mapeado" />
-          <LegendItem color="amber" label="Sugerencia automática" />
+          <LegendItem color="amber" label="Sugerencia automÃ¡tica" />
           <LegendItem color="gray" label="Sin mapear" />
         </div>
       </div>
@@ -129,7 +129,7 @@ export default function MappingSummary({ summary }: MappingSummaryProps) {
   );
 }
 
-// Componente auxiliar para tarjetas de estadística
+// Componente auxiliar para tarjetas de estadÃ­stica
 function StatCard({
   icon,
   label,

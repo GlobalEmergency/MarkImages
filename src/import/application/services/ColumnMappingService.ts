@@ -1,7 +1,7 @@
 /**
  * Column Mapping Service (Application Service)
  *
- * Servicio de aplicación para mapear columnas CSV a campos del sistema.
+ * Servicio de aplicaciÃ³n para mapear columnas CSV a campos del sistema.
  * Transforma datos crudos del CSV a AedImportData.
  */
 
@@ -37,14 +37,14 @@ export class ColumnMappingService {
   }
 
   /**
-   * Mapea múltiples registros
+   * Mapea mÃºltiples registros
    */
   mapRecords(records: CsvRecord[], mappings: ColumnMapping[]): AedImportData[] {
     return records.map((record) => this.mapRecord(record, mappings));
   }
 
   /**
-   * Crea un Map de systemField -> csvColumn para facilitar búsquedas inversas
+   * Crea un Map de systemField -> csvColumn para facilitar bÃºsquedas inversas
    */
   createMappingIndex(mappings: ColumnMapping[]): Map<string, string> {
     const index = new Map<string, string>();

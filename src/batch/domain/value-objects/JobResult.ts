@@ -295,7 +295,7 @@ export class JobResult {
     }
 
     const durationSec = Math.round(summary.durationMs / 1000);
-    lines.push(`Duración: ${durationSec} segundos`);
+    lines.push(`DuraciÃ³n: ${durationSec} segundos`);
 
     return lines.join("\n");
   }

@@ -1,5 +1,5 @@
 /**
- * LocationDetailsPenaltyRule — Penalty when location details differ
+ * LocationDetailsPenaltyRule â€” Penalty when location details differ
  */
 
 import type {
@@ -47,10 +47,10 @@ export class LocationDetailsPenaltyRule implements ScoringRule {
       maxPoints: this.maxPoints,
       matched: different,
       reason: !bothPresent
-        ? "One or both location details empty → no penalty"
+        ? "One or both location details empty â†’ no penalty"
         : different
-          ? `Location details "${input.normalizedLocationDetails}" != "${candidate.normalized_location_details}" → ${this.maxPoints}pts`
-          : `Location details match → no penalty`,
+          ? `Location details "${input.normalizedLocationDetails}" != "${candidate.normalized_location_details}" â†’ ${this.maxPoints}pts`
+          : `Location details match â†’ no penalty`,
       inputValue: input.normalizedLocationDetails || "(empty)",
       candidateValue: candidate.normalized_location_details || "(empty)",
     };

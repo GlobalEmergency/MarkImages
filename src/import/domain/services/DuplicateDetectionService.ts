@@ -2,8 +2,8 @@
  * Duplicate Detection Service (Domain Service)
  *
  * Servicio de dominio para detectar duplicados de AEDs.
- * Usa el patrón de cascada: ID → Code → External Reference
- * Sigue el principio DIP (depende de IAedRepository, no de implementación concreta)
+ * Usa el patrÃ³n de cascada: ID â†’ Code â†’ External Reference
+ * Sigue el principio DIP (depende de IAedRepository, no de implementaciÃ³n concreta)
  */
 
 import { IAedRepository, DuplicateCheckResult } from "../ports/IAedRepository";
@@ -36,7 +36,7 @@ export class DuplicateDetectionService {
     const code = data.code?.trim();
     const externalRef = data.externalReference?.trim();
 
-    // Si no hay ningún identificador, no podemos verificar duplicados
+    // Si no hay ningÃºn identificador, no podemos verificar duplicados
     if (!id && !code && !externalRef) {
       return { isDuplicate: false };
     }
@@ -66,15 +66,14 @@ export class DuplicateDetectionService {
                 errorType: "DUPLICATE",
                 message: `Ya existe un AED con el ID "${id}"`,
                 severity: "error",
-                correctionSuggestion: `El AED duplicado tiene código: ${existingById.matchedCode || "N/A"}`,
+                correctionSuggestion: `El AED duplicado tiene cÃ³digo: ${existingById.matchedCode || "N/A"}`,
               }),
               matchInfo: existingById,
             };
           }
         }
       } catch (error) {
-        // ID no válido o no es UUID, continuar con otros métodos
-        console.warn(`Invalid ID format during duplicate check: ${id}`, error);
+        // ID no vÃ¡lido o no es UUID, continuar con otros mÃ©todos
       }
     }
 
@@ -98,7 +97,7 @@ export class DuplicateDetectionService {
               field: "code",
               value: code,
               errorType: "DUPLICATE",
-              message: `Ya existe un AED con el código "${code}"`,
+              message: `Ya existe un AED con el cÃ³digo "${code}"`,
               severity: "error",
               correctionSuggestion: `El AED duplicado tiene ID: ${existingByCode.matchedAedId}`,
             }),
@@ -130,7 +129,7 @@ export class DuplicateDetectionService {
               errorType: "DUPLICATE",
               message: `Ya existe un AED con la referencia externa "${externalRef}"`,
               severity: "error",
-              correctionSuggestion: `El AED duplicado tiene código: ${existingByExtRef.matchedCode || "N/A"}`,
+              correctionSuggestion: `El AED duplicado tiene cÃ³digo: ${existingByExtRef.matchedCode || "N/A"}`,
             }),
             matchInfo: existingByExtRef,
           };
@@ -138,7 +137,7 @@ export class DuplicateDetectionService {
       }
     }
 
-    // No se encontró ningún duplicado
+    // No se encontrÃ³ ningÃºn duplicado
     return { isDuplicate: false };
   }
 }

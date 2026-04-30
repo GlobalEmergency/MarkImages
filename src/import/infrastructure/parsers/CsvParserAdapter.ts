@@ -35,13 +35,13 @@ export class CsvParserAdapter {
 
   /**
    * Parsea contenido CSV al formato legacy CsvRow (formulario Madrid).
-   * Delimitador hardcodeado a ";" por compatibilidad con el flujo de importación manual.
+   * Delimitador hardcodeado a ";" por compatibilidad con el flujo de importaciÃ³n manual.
    */
   parseContent(content: string): CsvParseResult {
     const parseResult = Papa.parse<CsvRowData>(content, {
       header: true,
       skipEmptyLines: true,
-      delimiter: ";", // CSV importación manual usa punto y coma
+      delimiter: ";", // CSV importaciÃ³n manual usa punto y coma
       transformHeader: (header: string) => header.trim(),
     });
 
@@ -54,14 +54,14 @@ export class CsvParserAdapter {
         rows.push(csvRow);
       } catch (error) {
         errors.push({
-          row: index + 2, // +2 porque índice empieza en 0 y primera fila es header
+          row: index + 2, // +2 porque Ã­ndice empieza en 0 y primera fila es header
           message: error instanceof Error ? error.message : String(error),
           data: rowData,
         });
       }
     });
 
-    // Añadir errores de parsing de Papa
+    // AÃ±adir errores de parsing de Papa
     if (parseResult.errors.length > 0) {
       parseResult.errors.forEach((error) => {
         errors.push({
@@ -79,9 +79,9 @@ export class CsvParserAdapter {
   }
 
   /**
-   * Parsea contenido CSV a registros genéricos Record<string, string>.
+   * Parsea contenido CSV a registros genÃ©ricos Record<string, string>.
    * Usado por fuentes de datos externas (sync remoto) donde los campos
-   * varían según la fuente y se normalizan vía fieldMappings.
+   * varÃ­an segÃºn la fuente y se normalizan vÃ­a fieldMappings.
    *
    * @param content - Texto CSV
    * @param delimiter - Separador (auto-detectado por PapaParse si no se especifica)

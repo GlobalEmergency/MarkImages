@@ -1,5 +1,5 @@
 /**
- * Sync Hooks — @batchactions/core JobHooks
+ * Sync Hooks â€” @batchactions/core JobHooks
  *
  * Lifecycle hooks for external sync processing.
  * The key optimization is the beforeProcess hook that pre-loads
@@ -33,7 +33,7 @@ import { createHash } from "crypto";
  * Prefixed with "syn:" to distinguish from real external IDs.
  *
  * This ensures:
- * - Same record in subsequent syncs → same synthetic ID → matches existing AED
+ * - Same record in subsequent syncs â†’ same synthetic ID â†’ matches existing AED
  * - Reviewer decisions (duplicate/not duplicate) are preserved across re-imports
  * - Two DEAs at the same location with different names get different IDs
  */
@@ -77,7 +77,7 @@ const MAX_EXTREF_DISTANCE_M = 500;
 
 export interface SyncHooksOptions {
   prisma: PrismaClient;
-  /** Data source ID — used to pre-load all existing AEDs for this source */
+  /** Data source ID â€” used to pre-load all existing AEDs for this source */
   dataSourceId: string;
 }
 
@@ -123,7 +123,7 @@ class AedLookupCache {
     if (this.loaded) return;
 
     // Load all AEDs owned by this data source (by external_reference index).
-    // Exclude REJECTED/INACTIVE — these should not block new entries.
+    // Exclude REJECTED/INACTIVE â€” these should not block new entries.
     const owned = await this.prisma.aed.findMany({
       where: {
         data_source_id: this.dataSourceId,
@@ -180,18 +180,10 @@ class AedLookupCache {
         }
       }
     } catch (error) {
-      console.warn(
-        `[SyncHooks] Failed to load external identifiers (non-critical):`,
-        error instanceof Error ? error.message : error
-      );
+      /* Ignored */
     }
 
     this.loaded = true;
-
-    console.log(
-      `[SyncHooks] Pre-loaded ${owned.length} existing AEDs for data source ${this.dataSourceId} ` +
-        `(${this.byExternalRef.size} with external_reference, ${this.byIdentifier.size} from identifiers table)`
-    );
   }
 
   findByExternalRef(ref: string): ExistingAedRow | undefined {
@@ -334,7 +326,7 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
       let externalId = record.externalId as string | null;
       let existingAed: ExistingAedRow | undefined;
 
-      // Parse coordinates early — needed for synthetic ID and spatial matching
+      // Parse coordinates early â€” needed for synthetic ID and spatial matching
       const latStr = record.latitude as string | null;
       const lngStr = record.longitude as string | null;
       const lat = latStr ? parseFloat(String(latStr).replace(",", ".")) : NaN;
@@ -348,14 +340,11 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
         const syntheticId = generateSyntheticExternalId(record.name as string | null, lat, lng);
         externalId = syntheticId;
         record = { ...record, externalId: syntheticId };
-        console.log(
-          `[SyncHooks] Generated synthetic ID: ${syntheticId} for "${record.name || "?"}"`
-        );
       }
 
       // Strategy 1: by external reference (includes synthetic IDs)
       // Safety: if coordinates are far apart (>500m), the source likely reused the
-      // code for a different record → don't auto-merge, flag for review instead.
+      // code for a different record â†’ don't auto-merge, flag for review instead.
       if (externalId) {
         const extRefMatch = cache.findByExternalRef(externalId);
         if (extRefMatch) {
@@ -371,11 +360,8 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
           const distance = canCheckDistance ? haversineMeters(lat, lng, matchLat, matchLng) : 0;
 
           if (canCheckDistance && distance > MAX_EXTREF_DISTANCE_M) {
-            // Same external_reference but different location → source reused the code
-            console.log(
-              `[SyncHooks] EXTREF MISMATCH: "${record.name}" (${externalId}) matched "${extRefMatch.name}" ` +
-                `but ${Math.round(distance)}m apart — flagging, not merging`
-            );
+            // Same external_reference but different location â†’ source reused the code
+
             return {
               ...record,
               _suspectedDuplicate: {
@@ -401,23 +387,16 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
         const coordMatch = cache.findByCoordinates(lat, lng);
 
         if (coordMatch) {
-          // Same coords but different externalIds (real or synthetic) → distinct devices
+          // Same coords but different externalIds (real or synthetic) â†’ distinct devices
           if (
             externalId &&
             coordMatch.external_reference &&
             coordMatch.external_reference !== externalId &&
             coordMatch.data_source_id === dataSourceId
           ) {
-            console.log(
-              `[SyncHooks] Same-source, same coords, different IDs — distinct devices: ` +
-                `"${record.name}" (${externalId}) vs "${coordMatch.name}" (${coordMatch.external_reference})`
-            );
           } else if (!externalId) {
-            // No coords + no externalId → flag as suspected duplicate
-            console.log(
-              `[SyncHooks] Suspected duplicate (coords, no ID): ` +
-                `"${record.name || "?"}" near "${coordMatch.name}" (${coordMatch.id})`
-            );
+            // No coords + no externalId â†’ flag as suspected duplicate
+
             return {
               ...record,
               _suspectedDuplicate: {
@@ -433,7 +412,7 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
         if (!existingAed) {
           const globalMatch = await cache.findByGlobalDuplicateDetector(record, lat, lng);
           if (globalMatch) {
-            // Cross-source match → always flag for manual review, never auto-merge
+            // Cross-source match â†’ always flag for manual review, never auto-merge
             const isCrossSource = !!(
               globalMatch.data_source_id && globalMatch.data_source_id !== dataSourceId
             );
@@ -442,10 +421,6 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
               (existingAed as ExistingAedRow & { _matchReason?: string })._matchReason =
                 "duplicate_detector";
             } else {
-              console.log(
-                `[SyncHooks] Suspected duplicate (detector): ` +
-                  `"${record.name || "?"}" near "${globalMatch.name}" (${globalMatch.id})`
-              );
               return {
                 ...record,
                 _suspectedDuplicate: {
@@ -467,10 +442,7 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
         const isCrossSource = !!(
           existingAed.data_source_id && existingAed.data_source_id !== dataSourceId
         );
-        console.log(
-          `[SyncHooks] Match: "${record.name || record.externalId}" → AED ${existingAed.id} ` +
-            `(${existingAed.name}) via ${matchReason}${isCrossSource ? " [CROSS-SOURCE]" : ""}`
-        );
+
         return { ...record, _existingAed: existingAed };
       }
 
@@ -479,7 +451,7 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
 
     afterProcess: async (record: ProcessedRecord, _context: HookContext): Promise<void> => {
       // Register newly created AEDs in the cache to prevent intra-chunk duplicates.
-      // If the record didn't have _existingAed, it was a create — register it.
+      // If the record didn't have _existingAed, it was a create â€” register it.
       const data = record as unknown as Record<string, unknown>;
       if (!data._existingAed && data.externalId) {
         const externalId = String(data.externalId);

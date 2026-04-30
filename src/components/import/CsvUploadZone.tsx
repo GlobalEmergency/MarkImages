@@ -43,14 +43,14 @@ export default function CsvUploadZone({ onUploadStart }: CsvUploadZoneProps) {
       const lines = text.split("\n");
 
       if (lines.length < 2) {
-        return "El archivo CSV está vacío o no tiene datos";
+        return "El archivo CSV estÃ¡ vacÃ­o o no tiene datos";
       }
 
       // Obtener header
       const header = lines[0];
       const columns = header.split(";").map((col) => col.trim());
 
-      // Columnas mínimas requeridas
+      // Columnas mÃ­nimas requeridas
       const requiredColumns = ["Nombre", "Distrito"];
 
       // Verificar que existan las columnas requeridas
@@ -62,22 +62,22 @@ export default function CsvUploadZone({ onUploadStart }: CsvUploadZoneProps) {
         return `Faltan columnas requeridas: ${missingColumns.join(", ")}`;
       }
 
-      return null; // Validación exitosa
+      return null; // ValidaciÃ³n exitosa
     } catch {
       return "Error al leer el archivo CSV";
     }
   };
 
-  // Manejar selección de archivo
+  // Manejar selecciÃ³n de archivo
   const handleFileSelect = async (file: File) => {
-    // Validación básica
+    // ValidaciÃ³n bÃ¡sica
     const basicError = validateFile(file);
     if (basicError) {
       toast.error(basicError);
       return;
     }
 
-    // Validación de estructura (async)
+    // ValidaciÃ³n de estructura (async)
     const structureError = await validateCsvStructure(file);
     if (structureError) {
       toast.error(structureError);
@@ -85,11 +85,11 @@ export default function CsvUploadZone({ onUploadStart }: CsvUploadZoneProps) {
     }
 
     setSelectedFile(file);
-    // Generar nombre automático del batch
+    // Generar nombre automÃ¡tico del batch
     const timestamp = new Date().toLocaleDateString("es-ES");
-    setBatchName(`Importación ${file.name} - ${timestamp}`);
+    setBatchName(`ImportaciÃ³n ${file.name} - ${timestamp}`);
     reset();
-    toast.success("✅ Archivo CSV validado correctamente");
+    toast.success("âœ… Archivo CSV validado correctamente");
   };
 
   // Drag & drop handlers
@@ -138,7 +138,7 @@ export default function CsvUploadZone({ onUploadStart }: CsvUploadZoneProps) {
     }
   };
 
-  // Iniciar importación
+  // Iniciar importaciÃ³n
   const handleUpload = async () => {
     if (!selectedFile || !batchName.trim()) {
       toast.error("Por favor selecciona un archivo y proporciona un nombre");
@@ -147,7 +147,7 @@ export default function CsvUploadZone({ onUploadStart }: CsvUploadZoneProps) {
 
     const batchId = await uploadCsv(selectedFile, batchName);
     if (batchId) {
-      toast.success("🚀 Importación iniciada correctamente");
+      toast.success("ðŸš€ ImportaciÃ³n iniciada correctamente");
       onUploadStart(batchId);
       // Limpiar formulario
       handleRemove();
@@ -184,9 +184,9 @@ export default function CsvUploadZone({ onUploadStart }: CsvUploadZoneProps) {
               <Upload className={`w-8 h-8 ${dragActive ? "text-blue-600" : "text-gray-400"}`} />
             </div>
             <div className="text-center">
-              <p className="text-base font-medium text-gray-700">Arrastra tu archivo CSV aquí</p>
+              <p className="text-base font-medium text-gray-700">Arrastra tu archivo CSV aquÃ­</p>
               <p className="text-sm text-gray-500 mt-1">o haz clic para seleccionar</p>
-              <p className="text-xs text-gray-400 mt-2">Archivos CSV (máx. 10MB)</p>
+              <p className="text-xs text-gray-400 mt-2">Archivos CSV (mÃ¡x. 10MB)</p>
             </div>
           </div>
 
@@ -225,19 +225,19 @@ export default function CsvUploadZone({ onUploadStart }: CsvUploadZoneProps) {
           {/* Nombre del batch */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
-              Nombre de la importación
+              Nombre de la importaciÃ³n
             </label>
             <input
               type="text"
               value={batchName}
               onChange={(e) => setBatchName(e.target.value)}
               disabled={uploading}
-              placeholder="Ej: Importación Madrid 2025"
+              placeholder="Ej: ImportaciÃ³n Madrid 2025"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
 
-          {/* Botón de importar */}
+          {/* BotÃ³n de importar */}
           <button
             onClick={handleUpload}
             disabled={uploading || !batchName.trim()}
@@ -246,12 +246,12 @@ export default function CsvUploadZone({ onUploadStart }: CsvUploadZoneProps) {
             {uploading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Iniciando importación...</span>
+                <span>Iniciando importaciÃ³n...</span>
               </>
             ) : (
               <>
                 <Upload className="w-5 h-5" />
-                <span>Iniciar Importación</span>
+                <span>Iniciar ImportaciÃ³n</span>
               </>
             )}
           </button>

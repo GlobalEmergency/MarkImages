@@ -70,7 +70,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         );
       }
 
-      console.log(`🔄 Admin processing existing image ${imageId} for AED ${aedId}`);
       existingDbImageId = imageId;
       extension = extractExtension(existingImage.original_url);
       originalBuffer = await downloadImage(existingImage.original_url);
@@ -89,16 +88,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       originalBuffer = Buffer.from(base64Data, "base64");
       extension = newImageContentType.includes("png") ? "png" : "jpg";
       isNewImage = true;
-
-      console.log(`🔄 Admin processing new image upload for AED ${aedId}`);
     } else if (newImageUrl) {
       // Download pre-uploaded image from S3 URL
       originalBuffer = await downloadImage(newImageUrl);
       extension = extractExtension(newImageUrl) || "jpg";
       newImageContentType = extension === "png" ? "image/png" : "image/jpeg";
       isNewImage = true;
-
-      console.log(`🔄 Admin processing new image from URL for AED ${aedId}`);
     } else {
       return NextResponse.json(
         { success: false, error: "Either imageId, newImageDataUrl, or newImageUrl is required" },
@@ -141,7 +136,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         contentType: newImageContentType,
         prefix: aedId,
       });
-      console.log(`☁️ Original uploaded: ${originalUrl}`);
     } else {
       dbImageId = existingDbImageId!;
       const existingImage = aed.images.find((img) => img.id === imageId)!;
@@ -156,7 +150,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       contentType: "image/jpeg",
       prefix: aedId,
     });
-    console.log(`☁️ Processed uploaded: ${processedUrl}`);
 
     // ── Phase 4: All DB writes in a single transaction ──
     const now = new Date();
@@ -196,8 +189,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
       return image;
     });
-
-    console.log(`✅ Image ${dbImageId} processed successfully`);
 
     return NextResponse.json({
       success: true,

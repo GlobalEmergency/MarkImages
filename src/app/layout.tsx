@@ -15,11 +15,11 @@ import "./globals.css";
 const siteUrl = "https://deamap.es";
 const siteName = "DeaMap";
 const siteDescription =
-  "Encuentra desfibriladores cerca de ti en tiempo real. Mapa interactivo con más de 50.000 DEAs registrados en España y en todo el mundo.";
+  "Encuentra desfibriladores cerca de ti en tiempo real. Mapa interactivo con mÃ¡s de 50.000 DEAs registrados en EspaÃ±a y en todo el mundo.";
 
 export const metadata: Metadata = {
   title: {
-    default: "Mapa de Desfibriladores (DEA) en España — Encuentra el más cercano | DeaMap",
+    default: "Mapa de Desfibriladores (DEA) en EspaÃ±a â€” Encuentra el mÃ¡s cercano | DeaMap",
     template: "%s | DeaMap",
   },
   description: siteDescription,
@@ -40,10 +40,10 @@ export const metadata: Metadata = {
     "desfibrilador mas cercano",
     "dea cerca de mi",
     "dea ubicacion",
-    "desfibriladores España",
-    "dea españa",
-    "emergencia cardíaca",
-    "parada cardíaca",
+    "desfibriladores EspaÃ±a",
+    "dea espaÃ±a",
+    "emergencia cardÃ­aca",
+    "parada cardÃ­aca",
     "desfibrilador cerca",
     "dea near me",
     "AED locator",
@@ -61,21 +61,21 @@ export const metadata: Metadata = {
     locale: "es_ES",
     url: siteUrl,
     siteName,
-    title: "Mapa de Desfibriladores (DEA) en España — Encuentra el más cercano | DeaMap",
+    title: "Mapa de Desfibriladores (DEA) en EspaÃ±a â€” Encuentra el mÃ¡s cercano | DeaMap",
     description: siteDescription,
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "DeaMap - Mapa interactivo de desfibriladores en España y en todo el mundo",
+        alt: "DeaMap - Mapa interactivo de desfibriladores en EspaÃ±a y en todo el mundo",
         type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Mapa de Desfibriladores (DEA) en España — Encuentra el más cercano | DeaMap",
+    title: "Mapa de Desfibriladores (DEA) en EspaÃ±a â€” Encuentra el mÃ¡s cercano | DeaMap",
     description: siteDescription,
     images: ["/og-image.png"],
   },

@@ -5,7 +5,7 @@ const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=es.deamap.
 
 export const metadata: Metadata = {
   title: "Abrir DeaMap",
-  description: "Abre la app DeaMap o descárgala en tu dispositivo.",
+  description: "Abre la app DeaMap o descÃ¡rgala en tu dispositivo.",
   robots: { index: false, follow: false },
 };
 
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
  *
  * Flow:
  *  1. On iOS, Universal Links (apple-app-site-association) will intercept
- *     https://deamap.es/open?source=X BEFORE this page even loads — opening the
+ *     https://deamap.es/open?source=X BEFORE this page even loads â€” opening the
  *     app directly.  If the app is NOT installed the page renders normally.
  *  2. On Android, we attempt an Intent URL which either opens the app or falls
  *     back silently.  After a short timeout we redirect to the Play Store.
@@ -54,7 +54,7 @@ export default function OpenPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
-      {/* Inline redirect script — runs before React hydration */}
+      {/* Inline redirect script â€” runs before React hydration */}
       <script dangerouslySetInnerHTML={{ __html: redirectScript }} />
 
       {/* Visible fallback for desktop or slow connections */}

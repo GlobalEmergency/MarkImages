@@ -75,7 +75,7 @@ export function useAedsByBounds(
         lastFetchedBoundsRef.current = b;
         lastFetchedZoomRef.current = z;
       }
-    } catch (err) {
+    } catch (_err) {
       if (mountedRef.current && currentRequestId === requestIdRef.current) {
         setError(err instanceof Error ? err.message : "Error cargando DEAs");
       }

@@ -31,7 +31,7 @@ function isGtagAvailable(): boolean {
   }
 }
 
-// Categorías de eventos para organizar el tracking
+// CategorÃ­as de eventos para organizar el tracking
 export const AnalyticsCategory = {
   NAVIGATION: "navigation",
   MAP: "map",
@@ -52,13 +52,13 @@ export interface AnalyticsEvent {
   category: AnalyticsCategoryType;
   label?: string;
   value?: number;
-  // Parámetros adicionales para eventos específicos
+  // ParÃ¡metros adicionales para eventos especÃ­ficos
   [key: string]: unknown;
 }
 
 /**
  * Hook para enviar eventos a Google Analytics
- * Diseñado para tracking detallado de interacciones públicas
+ * DiseÃ±ado para tracking detallado de interacciones pÃºblicas
  *
  * Handles cases where GA is blocked by:
  * - Ad blockers (uBlock, AdBlock Plus, etc.)
@@ -68,15 +68,14 @@ export interface AnalyticsEvent {
  */
 export function useAnalytics() {
   /**
-   * Envía un evento personalizado a GA4
+   * EnvÃ­a un evento personalizado a GA4
    * Silently fails if GA is not available (blocked or not loaded)
    */
   const trackEvent = useCallback((event: AnalyticsEvent) => {
     if (!isGtagAvailable()) {
       // Silently skip - GA is blocked or unavailable
       // Optionally log in development:
-      // if (process.env.NODE_ENV === "development") {
-      //   console.debug("[Analytics] GA not available, skipping event:", event.action);
+
       // }
       return;
     }
@@ -96,7 +95,7 @@ export function useAnalytics() {
   }, []);
 
   // =====================
-  // EVENTOS DE NAVEGACIÓN
+  // EVENTOS DE NAVEGACIÃ“N
   // =====================
 
   const trackNavClick = useCallback(
@@ -158,7 +157,7 @@ export function useAnalytics() {
   );
 
   // =====================
-  // EVENTOS DE BÚSQUEDA
+  // EVENTOS DE BÃšSQUEDA
   // =====================
 
   const trackSearch = useCallback(
@@ -446,10 +445,10 @@ export function useAnalytics() {
   );
 
   return {
-    // Evento genérico
+    // Evento genÃ©rico
     trackEvent,
 
-    // Navegación
+    // NavegaciÃ³n
     trackNavClick,
     trackLogoClick,
     trackMobileMenuToggle,
@@ -458,7 +457,7 @@ export function useAnalytics() {
     trackMapInteraction,
     trackMarkerClick,
 
-    // Búsqueda
+    // BÃºsqueda
     trackSearch,
     trackSearchSuggestionClick,
     trackGeolocationRequest,
@@ -497,7 +496,7 @@ export function useAnalytics() {
 }
 
 /**
- * Función helper para usar fuera de componentes React
+ * FunciÃ³n helper para usar fuera de componentes React
  * Silently fails if GA is not available
  */
 export function trackEventDirect(event: AnalyticsEvent) {

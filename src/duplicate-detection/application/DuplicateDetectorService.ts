@@ -1,8 +1,8 @@
 /**
- * DuplicateDetectorService — Application service (orchestrator)
+ * DuplicateDetectorService â€” Application service (orchestrator)
  *
  * Orchestrates the two-phase duplicate detection:
- *   Phase 1: Identity cascade (ID → Code → ExternalRef)
+ *   Phase 1: Identity cascade (ID â†’ Code â†’ ExternalRef)
  *   Phase 2: Fuzzy/spatial scoring via rules engine
  *
  * Each phase is delegated to an infrastructure port, keeping
@@ -41,12 +41,12 @@ export class DuplicateDetectorService implements IDuplicateDetector {
    * Batch-optimized duplicate detection for N records.
    *
    * Phase 1: Identity cascade (3 batch queries max)
-   *   → matches by ID, code, or externalReference win immediately (score=100)
+   *   â†’ matches by ID, code, or externalReference win immediately (score=100)
    *
    * Phase 2: Scoring engine (only records without identity match + spatial data)
-   *   → dynamic SQL from rules engine → ScoringExplanation with per-rule breakdown
+   *   â†’ dynamic SQL from rules engine â†’ ScoringExplanation with per-rule breakdown
    *
-   * Merge: identity wins → then scoring → then none
+   * Merge: identity wins â†’ then scoring â†’ then none
    */
   async checkBatch(
     criteriaList: readonly DuplicateCriteria[]
@@ -56,7 +56,7 @@ export class DuplicateDetectorService implements IDuplicateDetector {
     // Phase 1: Identity cascade (batch, 3 queries max)
     const identityMatches = await this.identityMatcher.matchBatch(criteriaList);
 
-    // Phase 2: Scoring engine — only for records without identity match
+    // Phase 2: Scoring engine â€” only for records without identity match
     // AND that have spatial or postal code data for searching
     const scoringInputs: ScoringInput[] = [];
     for (let i = 0; i < criteriaList.length; i++) {
@@ -76,7 +76,7 @@ export class DuplicateDetectorService implements IDuplicateDetector {
         ? await this.scoringEngine.scoreBatch(scoringInputs, this.ruleRegistry)
         : new Map<number, never>();
 
-    // Merge results: identity → scoring → none
+    // Merge results: identity â†’ scoring â†’ none
     const results = criteriaList.map((criteria, i) => {
       // Identity match wins
       const identity = identityMatches.get(i);
@@ -141,7 +141,7 @@ export class DuplicateDetectorService implements IDuplicateDetector {
       const result = results[i];
       if (!result.isDuplicate) continue;
 
-      // Fire and forget — don't await, don't block the caller
+      // Fire and forget â€” don't await, don't block the caller
       void this.eventBus.emit({
         type: result.isConfirmed ? "duplicate.confirmed" : "duplicate.possible",
         timestamp: new Date(),

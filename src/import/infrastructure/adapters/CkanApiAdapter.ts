@@ -61,7 +61,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
       return { url: config.apiEndpoint, isDirect: true };
     }
 
-    // Si no, usar el patrón CKAN tradicional
+    // Si no, usar el patrÃ³n CKAN tradicional
     if (config.baseUrl && config.resourceId) {
       validateExternalUrl(config.baseUrl);
       return {
@@ -127,8 +127,6 @@ export class CkanApiAdapter implements IDataSourceAdapter {
     fieldMappings: Record<string, string>,
     config: DataSourceConfig
   ): AsyncGenerator<ImportRecord> {
-    console.log(`📥 Fetching records from direct JSON URL: ${url}`);
-
     const response = await fetch(url, {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(this.fetchTimeoutMs),
@@ -155,9 +153,6 @@ export class CkanApiAdapter implements IDataSourceAdapter {
     }
 
     const externalIdField = this.resolveExternalIdField(records, config);
-    console.log(
-      `📋 Found ${records.length} records, using '${externalIdField}' as external ID field`
-    );
 
     for (let rowIndex = 0; rowIndex < records.length; rowIndex++) {
       const { record: enriched, mappings } = await enrichRecordIfNeeded(
@@ -168,11 +163,8 @@ export class CkanApiAdapter implements IDataSourceAdapter {
       yield ImportRecord.fromApiRecord(enriched, mappings, rowIndex, externalIdField);
 
       if ((rowIndex + 1) % 1000 === 0) {
-        console.log(`📥 Processed ${rowIndex + 1} records...`);
       }
     }
-
-    console.log(`✅ Finished processing ${records.length} records from direct JSON`);
   }
 
   /**
@@ -211,17 +203,14 @@ export class CkanApiAdapter implements IDataSourceAdapter {
         rowIndex++;
       }
 
-      // Verificar si hay más páginas (strict > avoids extra page when total % pageSize === 0)
+      // Verificar si hay mÃ¡s pÃ¡ginas (strict > avoids extra page when total % pageSize === 0)
       hasMore = records.length > 0 && records.length >= pageSize;
       offset += pageSize;
 
       // Log de progreso cada 1000 registros
       if (rowIndex % 1000 === 0) {
-        console.log(`📥 Fetched ${rowIndex} records from CKAN API...`);
       }
     }
-
-    console.log(`✅ Finished fetching ${rowIndex} records from CKAN API`);
   }
 
   async getRecordCount(config: DataSourceConfig): Promise<number> {
@@ -255,14 +244,11 @@ export class CkanApiAdapter implements IDataSourceAdapter {
 
   /**
    * Extrae los registros de una respuesta JSON
-   * Soporta múltiples formatos: CKAN API, JSON directo, GeoJSON
+   * Soporta mÃºltiples formatos: CKAN API, JSON directo, GeoJSON
    */
   private extractRecordsFromJson(data: unknown): Record<string, unknown>[] {
-    console.log("🔍 Extracting records from JSON data...");
-
     // Raw array
     if (Array.isArray(data)) {
-      console.log(`✅ Found direct array with ${data.length} records`);
       return data;
     }
 
@@ -275,25 +261,21 @@ export class CkanApiAdapter implements IDataSourceAdapter {
           ? (obj.result as Record<string, unknown>)
           : null;
       if (result?.records && Array.isArray(result.records)) {
-        console.log(`✅ Found CKAN result.records format with ${result.records.length} records`);
         return result.records as Record<string, unknown>[];
       }
 
       // Direct data array
       if (obj.data && Array.isArray(obj.data)) {
-        console.log(`✅ Found data array with ${obj.data.length} records`);
         return obj.data;
       }
 
       // Direct records array
       if (obj.records && Array.isArray(obj.records)) {
-        console.log(`✅ Found records array with ${obj.records.length} records`);
         return obj.records;
       }
 
       // GeoJSON format: { features: [{ properties: {...}, geometry: {...} }] }
       if (obj.features && Array.isArray(obj.features)) {
-        console.log(`✅ Found GeoJSON features with ${obj.features.length} records`);
         interface GeoJsonFeature {
           properties: Record<string, unknown>;
           geometry?: {
@@ -314,18 +296,12 @@ export class CkanApiAdapter implements IDataSourceAdapter {
 
       // Check if it might be a serialized JSON string
       const keys = Object.keys(obj);
-      console.log(
-        `⚠️ Unknown JSON structure. Keys: ${keys.slice(0, 5).join(", ")}${keys.length > 5 ? "..." : ""}`
-      );
 
       // Log first record sample for debugging
       if (keys.length > 0) {
-        console.log("📋 First key sample:", keys[0]);
-        console.log("📋 First value sample:", JSON.stringify(obj[keys[0]]).substring(0, 200));
       }
     }
 
-    console.log("❌ No valid records array found in JSON data");
     return [];
   }
 
@@ -362,7 +338,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
           field: "apiEndpoint",
           value: config.apiEndpoint,
           severity: "ERROR",
-          message: "El endpoint de la API no es una URL válida",
+          message: "El endpoint de la API no es una URL vÃ¡lida",
         });
       }
     }
@@ -377,12 +353,12 @@ export class CkanApiAdapter implements IDataSourceAdapter {
           field: "baseUrl",
           value: config.baseUrl,
           severity: "ERROR",
-          message: "La URL base no es válida",
+          message: "La URL base no es vÃ¡lida",
         });
       }
     }
 
-    // Validar resourceId si se está usando API CKAN (no URL directa)
+    // Validar resourceId si se estÃ¡ usando API CKAN (no URL directa)
     if (!hasDirectUrl && config.resourceId) {
       if (!/^[0-9a-f-]{36}$/i.test(config.resourceId)) {
         issues.push({
@@ -390,7 +366,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
           field: "resourceId",
           value: config.resourceId,
           severity: "WARNING",
-          message: "El ID del recurso no parece ser un UUID válido",
+          message: "El ID del recurso no parece ser un UUID vÃ¡lido",
         });
       }
     }
@@ -401,7 +377,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
         field: "pageSize",
         value: config.pageSize.toString(),
         severity: "WARNING",
-        message: "El tamaño de página debe estar entre 1 y 1000",
+        message: "El tamaÃ±o de pÃ¡gina debe estar entre 1 y 1000",
       });
     }
 
@@ -469,7 +445,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
       if (validation.hasCriticalErrors()) {
         return {
           success: false,
-          message: validation.criticalErrors[0]?.message || "Error de validación",
+          message: validation.criticalErrors[0]?.message || "Error de validaciÃ³n",
         };
       }
 
@@ -498,7 +474,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
 
         return {
           success: true,
-          message: `Conexión exitosa. ${records.length} registros disponibles (JSON directo).`,
+          message: `ConexiÃ³n exitosa. ${records.length} registros disponibles (JSON directo).`,
           recordCount: records.length,
           sampleFields,
           responseTimeMs: Date.now() - startTime,
@@ -522,7 +498,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
 
       return {
         success: true,
-        message: `Conexión exitosa. ${response.result.total} registros disponibles.`,
+        message: `ConexiÃ³n exitosa. ${response.result.total} registros disponibles.`,
         recordCount: response.result.total,
         sampleFields,
         responseTimeMs: Date.now() - startTime,
@@ -530,14 +506,14 @@ export class CkanApiAdapter implements IDataSourceAdapter {
     } catch (error) {
       return {
         success: false,
-        message: `Error de conexión: ${error instanceof Error ? error.message : "Error desconocido"}`,
+        message: `Error de conexiÃ³n: ${error instanceof Error ? error.message : "Error desconocido"}`,
         responseTimeMs: Date.now() - startTime,
       };
     }
   }
 
   /**
-   * Construye la URL de búsqueda CKAN
+   * Construye la URL de bÃºsqueda CKAN
    */
   private buildSearchUrl(
     baseUrl: string,
@@ -571,9 +547,6 @@ export class CkanApiAdapter implements IDataSourceAdapter {
       return (await response.json()) as CkanResponse;
     } catch (error) {
       if (attempt < this.maxRetries) {
-        console.warn(
-          `⚠️ CKAN API request failed (attempt ${attempt}/${this.maxRetries}), retrying...`
-        );
         await this.delay(this.retryDelayMs * attempt);
         return this.fetchWithRetry(url, attempt + 1);
       }

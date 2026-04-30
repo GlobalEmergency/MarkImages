@@ -1,5 +1,5 @@
 /**
- * Hook para obtener detalles y errores de un batch específico
+ * Hook para obtener detalles y errores de un batch especÃ­fico
  */
 
 import { useEffect, useState } from "react";

@@ -36,7 +36,7 @@ export function useNearbyAeds(radius = 5, limit = 20): UseNearbyAedsResult {
           limit
         );
         if (mountedRef.current) setAeds(data);
-      } catch (err) {
+      } catch (_err) {
         if (mountedRef.current) {
           setError(err instanceof Error ? err.message : "Error cargando DEAs cercanos");
         }

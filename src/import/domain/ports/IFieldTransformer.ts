@@ -1,11 +1,11 @@
 /**
  * Puerto: Transformador de campos
  * Capa de Dominio - Interface para transformar valores de texto libre
- * en campos estructurados (ej: "DE 07:30 A 15:00" → weekdayOpening/Closing)
+ * en campos estructurados (ej: "DE 07:30 A 15:00" â†’ weekdayOpening/Closing)
  */
 
 /**
- * Resultado de una transformación de campo
+ * Resultado de una transformaciÃ³n de campo
  */
 export interface TransformerResult {
   /** Campos normalizados producidos por el transformer */
@@ -21,7 +21,7 @@ export interface TransformerResult {
  * Implementaciones: SpanishScheduleParser, LibpostalAddressTransformer
  */
 export interface IFieldTransformer {
-  /** Nombre único del transformer (ej: "spanish-schedule", "libpostal-address") */
+  /** Nombre Ãºnico del transformer (ej: "spanish-schedule", "libpostal-address") */
   readonly name: string;
 
   /**

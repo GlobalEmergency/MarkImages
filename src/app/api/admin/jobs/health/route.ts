@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     if (!result.success) {
       return NextResponse.json(
         {
-          error: "Error al obtener métricas de salud",
+          error: "Error al obtener mÃ©tricas de salud",
           details: result.error,
         },
         { status: 500 }
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     console.error("[API] Error getting jobs health:", error);
     return NextResponse.json(
       {
-        error: "Error al obtener métricas de salud",
+        error: "Error al obtener mÃ©tricas de salud",
         details: error instanceof Error ? error.message : "Error desconocido",
       },
       { status: 500 }

@@ -1,5 +1,5 @@
 /**
- * Implementación del repositorio de fuentes de datos con Prisma
+ * ImplementaciÃ³n del repositorio de fuentes de datos con Prisma
  * Capa de Infraestructura - Implementa IDataSourceRepository
  */
 
@@ -244,7 +244,7 @@ export class PrismaDataSourceRepository implements IDataSourceRepository {
   }
 
   /**
-   * Mapea el modelo de Prisma a la configuración de dominio
+   * Mapea el modelo de Prisma a la configuraciÃ³n de dominio
    * Construye un DataSourceConfig completo incluyendo el type
    */
   private mapToConfig(ds: ExternalDataSourceModel): ExternalDataSourceConfig {

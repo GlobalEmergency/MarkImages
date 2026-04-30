@@ -372,7 +372,7 @@ export async function POST(request: NextRequest) {
         })
       );
 
-      // Confirmed duplicate → block creation
+      // Confirmed duplicate â†’ block creation
       if (dupResult.isConfirmed) {
         return NextResponse.json(
           {
@@ -385,7 +385,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Possible duplicate → allow creation but flag for review
+      // Possible duplicate â†’ allow creation but flag for review
       requiresAttention = dupResult.isPossible;
       if (dupResult.isPossible && dupResult.explanation) {
         duplicateNotes = [
@@ -409,7 +409,7 @@ export async function POST(request: NextRequest) {
         {
           type: "duplicate_detection_error",
           detected_at: new Date().toISOString(),
-          message: "Duplicate detection failed — flagged for manual review",
+          message: "Duplicate detection failed â€” flagged for manual review",
         },
       ];
     }
@@ -498,7 +498,7 @@ export async function POST(request: NextRequest) {
         scheduleId = schedule.id;
       }
 
-      // Coordinates precision — use explicit null checks (0 is valid)
+      // Coordinates precision â€” use explicit null checks (0 is valid)
       const hasCoords =
         body.latitude !== undefined &&
         body.latitude !== null &&
@@ -571,7 +571,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error creating AED:", error);
 
-    // Handle unique constraint violation on code → 409
+    // Handle unique constraint violation on code â†’ 409
     const errorMessage = error instanceof Error ? error.message : "";
     if (errorMessage.includes("Unique constraint") && errorMessage.includes("code")) {
       return NextResponse.json(

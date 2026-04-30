@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       "rejected",
     ];
     if (!validFilterTypes.includes(filterType)) {
-      return NextResponse.json({ error: "Tipo de filtro no válido" }, { status: 400 });
+      return NextResponse.json({ error: "Tipo de filtro no vÃ¡lido" }, { status: 400 });
     }
 
     // "rejected" filter is admin-only

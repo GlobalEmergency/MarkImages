@@ -1,5 +1,5 @@
 /**
- * IIdentityMatcher — Port for exact identity matching
+ * IIdentityMatcher â€” Port for exact identity matching
  *
  * Batch-optimized: 3 queries max for N records (by ID, code, external reference).
  * Cascade priority: ID > Code > ExternalReference.
@@ -17,7 +17,7 @@ export interface IdentityMatch {
 export interface IIdentityMatcher {
   /**
    * Batch identity matching.
-   * Returns a Map from criteriaList index → IdentityMatch for matches found.
+   * Returns a Map from criteriaList index â†’ IdentityMatch for matches found.
    */
   matchBatch(
     criteriaList: readonly DuplicateCriteria[]

@@ -1,9 +1,9 @@
 /**
- * AddressMatchRule — Exact and fuzzy normalized address match
+ * AddressMatchRule â€” Exact and fuzzy normalized address match
  *
  * Two tiers:
- *   - Exact match of normalized address → 25pts
- *   - Trigram similarity >= 0.7 (pg_trgm) → 15pts
+ *   - Exact match of normalized address â†’ 25pts
+ *   - Trigram similarity >= 0.7 (pg_trgm) â†’ 15pts
  *
  * The fuzzy tier handles cross-source address format differences
  * (e.g., "calle suero de quinones 34" vs "c suero de quinones 34").
@@ -83,7 +83,7 @@ export class AddressMatchRule implements ScoringRule {
         points: 0,
         maxPoints: this.maxPoints,
         matched: false,
-        reason: "One or both addresses empty → 0pts",
+        reason: "One or both addresses empty â†’ 0pts",
         inputValue: input.normalizedAddress || "(empty)",
         candidateValue: candidate.normalized_address || "(empty)",
       };
@@ -97,7 +97,7 @@ export class AddressMatchRule implements ScoringRule {
         points: this.maxPoints,
         maxPoints: this.maxPoints,
         matched: true,
-        reason: `Normalized address "${input.normalizedAddress}" matches exactly → +${this.maxPoints}pts`,
+        reason: `Normalized address "${input.normalizedAddress}" matches exactly â†’ +${this.maxPoints}pts`,
         inputValue: input.normalizedAddress,
         candidateValue: candidate.normalized_address,
       };
@@ -114,8 +114,8 @@ export class AddressMatchRule implements ScoringRule {
       maxPoints: this.maxPoints,
       matched: fuzzyMatch,
       reason: fuzzyMatch
-        ? `Address similarity ${sim.toFixed(2)} >= ${this.fuzzyThreshold} → +${this.fuzzyPoints}pts (fuzzy)`
-        : `Address "${input.normalizedAddress}" != "${candidate.normalized_address}" (sim=${sim.toFixed(2)}) → 0pts`,
+        ? `Address similarity ${sim.toFixed(2)} >= ${this.fuzzyThreshold} â†’ +${this.fuzzyPoints}pts (fuzzy)`
+        : `Address "${input.normalizedAddress}" != "${candidate.normalized_address}" (sim=${sim.toFixed(2)}) â†’ 0pts`,
       inputValue: input.normalizedAddress,
       candidateValue: candidate.normalized_address,
     };

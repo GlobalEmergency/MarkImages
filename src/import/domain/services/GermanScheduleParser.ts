@@ -1,16 +1,16 @@
 /**
- * Domain Service: Parser de horarios en formato alemán
+ * Domain Service: Parser de horarios en formato alemÃ¡n
  * Implementa IFieldTransformer
  *
  * Soporta formatos de:
  * - Wien (Austria): "Mo-Fr 0630-1900<br>Sa-So nicht erreichbar"
  *                    "Mo-Do 0800-1200#1300-1700<br>Fr 0800-1200"
  * - Basel (Suiza):  "08:00-17:00 (Mo-Fr)"
- *                    "24-365" (24h, 365 días)
+ *                    "24-365" (24h, 365 dÃ­as)
  *                    "Wenn Besatzung vor Ort" (condicional)
  *
  * Patrones:
- * - Días: Mo, Di, Mi, Do, Fr, Sa, So (abreviaciones alemanas)
+ * - DÃ­as: Mo, Di, Mi, Do, Fr, Sa, So (abreviaciones alemanas)
  * - Rangos: Mo-Fr, Mo-So, Sa-So
  * - Tiempos sin separador: 0630-1900 (HHMM-HHMM)
  * - Tiempos con separador: 06:30-19:00 (HH:MM-HH:MM)
@@ -31,7 +31,7 @@ interface ParsedBlock {
   unavailable: boolean;
 }
 
-/** German day abbreviations → ordered index (0=Mo, 6=So) */
+/** German day abbreviations â†’ ordered index (0=Mo, 6=So) */
 const DAY_INDEX: Record<string, number> = {
   mo: 0,
   di: 1,
@@ -42,7 +42,7 @@ const DAY_INDEX: Record<string, number> = {
   so: 6,
 };
 
-/** Index → day type category */
+/** Index â†’ day type category */
 const INDEX_TO_TYPE: DayType[] = [
   "weekday",
   "weekday",
@@ -66,7 +66,7 @@ const SINGLE_DAY_RE = /\b(Mo|Di|Mi|Do|Fr|Sa|So)\b/gi;
 const PATTERN_24H = /(?:24\s*[-/]\s*365|rund\s+um\s+die\s+uhr|24\s*h|24\s*stunden|durchgehend)/i;
 
 /** Unavailable patterns */
-const PATTERN_UNAVAILABLE = /nicht\s+erreichbar|geschlossen|kein\s+zugang|nicht\s+zug[äa]nglich/i;
+const PATTERN_UNAVAILABLE = /nicht\s+erreichbar|geschlossen|kein\s+zugang|nicht\s+zug[Ã¤a]nglich/i;
 
 export class GermanScheduleParser implements IFieldTransformer {
   readonly name = "german-schedule";
@@ -253,7 +253,7 @@ export class GermanScheduleParser implements IFieldTransformer {
       return Array.from(dayTypes);
     }
 
-    // No day info found — if there's time info, assume weekday
+    // No day info found â€” if there's time info, assume weekday
     return [];
   }
 

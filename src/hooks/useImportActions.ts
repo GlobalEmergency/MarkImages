@@ -1,5 +1,5 @@
 /**
- * Hook para gestionar acciones de importación (reanudar, cancelar)
+ * Hook para gestionar acciones de importaciÃ³n (reanudar, cancelar)
  */
 
 import { useState, useCallback } from "react";

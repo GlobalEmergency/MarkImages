@@ -1,4 +1,4 @@
-﻿/**
+/**
  * S3 Data Source â€” @batchactions/import DataSource adapter
  *
  * Implementa la interface DataSource de @batchactions/import para leer CSVs

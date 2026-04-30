@@ -58,12 +58,12 @@ export default function ObservationsDisplay({
             <div className="space-y-2">
               <h4 className="text-sm font-semibold text-amber-800 flex items-center">
                 <Info className="w-4 h-4 mr-1.5" />
-                Información General
+                InformaciÃ³n General
               </h4>
               <div className="ml-5 space-y-1 text-sm text-gray-700">
                 {data.provisionalNumber && (
                   <p>
-                    <strong>Número Provisional:</strong> {data.provisionalNumber}
+                    <strong>NÃºmero Provisional:</strong> {data.provisionalNumber}
                   </p>
                 )}
                 {data.establishmentType && (
@@ -113,7 +113,7 @@ export default function ObservationsDisplay({
             <div className="space-y-2">
               <h4 className="text-sm font-semibold text-amber-800 flex items-center">
                 <Key className="w-4 h-4 mr-1.5" />
-                Descripción de Acceso
+                DescripciÃ³n de Acceso
               </h4>
               <div className="ml-5 text-sm text-gray-700">
                 <p className="whitespace-pre-wrap">{data.accessDescription}</p>
@@ -124,7 +124,7 @@ export default function ObservationsDisplay({
           {/* Other Fields */}
           {hasOtherFields && (
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-amber-800">Información Adicional</h4>
+              <h4 className="text-sm font-semibold text-amber-800">InformaciÃ³n Adicional</h4>
               <div className="ml-5 space-y-1 text-sm text-gray-700">
                 {Object.entries(otherFields).map(([key, value]) => (
                   <p key={key}>

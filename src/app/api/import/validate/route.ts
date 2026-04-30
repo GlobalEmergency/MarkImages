@@ -3,7 +3,7 @@
  * POST /api/import/validate
  * Pre-valida los datos usando los mapeos configurados
  *
- * NO crea BatchJob, solo valida en memoria (rápido y limpio)
+ * NO crea BatchJob, solo valida en memoria (rÃ¡pido y limpio)
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     if (!filePath || !mappings) {
       return NextResponse.json(
-        { error: "Faltan parámetros requeridos (filePath, mappings)" },
+        { error: "Faltan parÃ¡metros requeridos (filePath, mappings)" },
         { status: 400 }
       );
     }

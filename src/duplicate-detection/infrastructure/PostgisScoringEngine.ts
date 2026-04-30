@@ -1,5 +1,5 @@
 /**
- * PostgisScoringEngine — Compiles rules into dynamic SQL
+ * PostgisScoringEngine â€” Compiles rules into dynamic SQL
  *
  * The key infrastructure piece: reads rules from the RuleRegistry,
  * generates SQL CASE fragments dynamically, and executes against PostGIS.
@@ -68,10 +68,10 @@ export class PostgisScoringEngine implements IScoringEngine {
     const { searchRadiusDegrees: radiusDegrees, srid } = DetectionConfig.spatial;
     const excludeStatuses = [...DetectionConfig.filters.excludeStatuses];
 
-    // SQL pre-filter threshold — lower than JS to avoid false negatives
+    // SQL pre-filter threshold â€” lower than JS to avoid false negatives
     const sqlThreshold = Math.max(0, DetectionConfig.thresholds.possible - SQL_THRESHOLD_MARGIN);
 
-    // Process each input individually — each may use different strategy
+    // Process each input individually â€” each may use different strategy
     for (const { index, normalized } of inputs) {
       const candidates =
         normalized.latitude !== undefined && normalized.longitude !== undefined
@@ -94,7 +94,7 @@ export class PostgisScoringEngine implements IScoringEngine {
       const candidateRecord = this.toCandidateRecord(best);
       const explanation = this.buildExplanation(normalized, candidateRecord, registry);
 
-      // JS is the authoritative scorer — apply the real threshold here
+      // JS is the authoritative scorer â€” apply the real threshold here
       if (explanation.totalScore >= DetectionConfig.thresholds.possible) {
         results.set(index, explanation);
       }
@@ -167,7 +167,7 @@ export class PostgisScoringEngine implements IScoringEngine {
 
       return await this.prisma.$queryRawUnsafe<ScoredCandidate[]>(sql, ...allParams);
     } catch (error) {
-      // Log full error for debugging — surface misconfigurations
+      // Log full error for debugging â€” surface misconfigurations
       console.error(
         "[PostgisScoringEngine] Spatial query failed. Ensure PostGIS and pg_trgm extensions are installed.",
         error

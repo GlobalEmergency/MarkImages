@@ -1,5 +1,5 @@
 /**
- * Diálogo para crear una nueva exportación con filtros
+ * DiÃ¡logo para crear una nueva exportaciÃ³n con filtros
  */
 
 "use client";
@@ -27,11 +27,11 @@ export default function ExportDialog({ isOpen, onClose, onExport }: ExportDialog
   const statusOptions = AED_STATUS_OPTIONS;
 
   const sourceOriginOptions = [
-    { value: "", label: "Todos los orígenes" },
+    { value: "", label: "Todos los orÃ­genes" },
     { value: "WEB_FORM", label: "Formulario web" },
     { value: "ADMIN_FORM", label: "Formulario admin" },
-    { value: "CSV_IMPORT", label: "Importación CSV" },
-    { value: "EXCEL_IMPORT", label: "Importación Excel" },
+    { value: "CSV_IMPORT", label: "ImportaciÃ³n CSV" },
+    { value: "EXCEL_IMPORT", label: "ImportaciÃ³n Excel" },
     { value: "EXTERNAL_API", label: "API externa" },
   ];
 
@@ -60,7 +60,7 @@ export default function ExportDialog({ isOpen, onClose, onExport }: ExportDialog
         filters.cityName = cityName.trim();
       }
 
-      await onExport(name || "Exportación de DEAs", filters);
+      await onExport(name || "ExportaciÃ³n de DEAs", filters);
 
       // Reset form
       setName("");
@@ -69,7 +69,7 @@ export default function ExportDialog({ isOpen, onClose, onExport }: ExportDialog
       setCityName("");
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al crear exportación");
+      setError(err instanceof Error ? err.message : "Error al crear exportaciÃ³n");
     } finally {
       setLoading(false);
     }
@@ -90,8 +90,10 @@ export default function ExportDialog({ isOpen, onClose, onExport }: ExportDialog
               <Download className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Nueva Exportación</h2>
-              <p className="text-sm text-gray-500">Configura los filtros para la exportación CSV</p>
+              <h2 className="text-xl font-bold text-gray-900">Nueva ExportaciÃ³n</h2>
+              <p className="text-sm text-gray-500">
+                Configura los filtros para la exportaciÃ³n CSV
+              </p>
             </div>
           </div>
           <button
@@ -112,16 +114,16 @@ export default function ExportDialog({ isOpen, onClose, onExport }: ExportDialog
             </div>
           )}
 
-          {/* Nombre de la exportación */}
+          {/* Nombre de la exportaciÃ³n */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nombre de la exportación (opcional)
+              Nombre de la exportaciÃ³n (opcional)
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ej: Exportación DEAs Madrid"
+              placeholder="Ej: ExportaciÃ³n DEAs Madrid"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               disabled={loading}
             />
@@ -155,8 +157,8 @@ export default function ExportDialog({ isOpen, onClose, onExport }: ExportDialog
             </div>
             <p className="text-xs text-gray-500 mt-2">
               {selectedStatus.length === 0
-                ? "Se exportarán DEAs de todos los estados"
-                : `Se exportarán DEAs con estado: ${selectedStatus.map((s) => statusOptions.find((o) => o.value === s)?.label).join(", ")}`}
+                ? "Se exportarÃ¡n DEAs de todos los estados"
+                : `Se exportarÃ¡n DEAs con estado: ${selectedStatus.map((s) => statusOptions.find((o) => o.value === s)?.label).join(", ")}`}
             </p>
           </div>
 
@@ -196,8 +198,8 @@ export default function ExportDialog({ isOpen, onClose, onExport }: ExportDialog
           {/* Info box */}
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>Información:</strong> La exportación se procesa en segundo plano. Podrás ver
-              el progreso y descargar el archivo CSV cuando termine.
+              <strong>InformaciÃ³n:</strong> La exportaciÃ³n se procesa en segundo plano. PodrÃ¡s
+              ver el progreso y descargar el archivo CSV cuando termine.
             </p>
           </div>
         </div>
@@ -224,7 +226,7 @@ export default function ExportDialog({ isOpen, onClose, onExport }: ExportDialog
             ) : (
               <>
                 <Download className="w-4 h-4" />
-                <span>Crear Exportación</span>
+                <span>Crear ExportaciÃ³n</span>
               </>
             )}
           </button>

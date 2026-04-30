@@ -65,10 +65,6 @@ export class ForceResetJobUseCase {
       // Persist the reset job
       await this.repository.update(job);
 
-      console.log(
-        `[ForceResetJob] Job ${jobId} force reset from ${previousStatus} to ${job.status} by ${performedBy}`
-      );
-
       return {
         success: true,
         job,

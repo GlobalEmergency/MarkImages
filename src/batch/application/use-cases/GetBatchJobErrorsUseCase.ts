@@ -1,8 +1,8 @@
 /**
  * Use Case: Get Batch Job Errors
  *
- * Obtiene la lista de errores de un batch job específico
- * con soporte para paginación.
+ * Obtiene la lista de errores de un batch job especÃ­fico
+ * con soporte para paginaciÃ³n.
  */
 
 import type { PrismaClient } from "@/generated/client/client";

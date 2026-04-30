@@ -3,7 +3,7 @@
  * Capa de Infraestructura
  *
  * Enriquece un raw record aplicando transformers configurados.
- * Los campos parseados se añaden al record con prefijo _t_ y se crean
+ * Los campos parseados se aÃ±aden al record con prefijo _t_ y se crean
  * identity mappings para ellos. Como applyFieldMappings procesa en orden,
  * los transformer mappings (al final) sobreescriben los del fieldMapping original.
  *
@@ -20,8 +20,8 @@ export class TransformerPipeline {
    * Enriquece un record aplicando transformers configurados
    *
    * @param record - Record crudo de la fuente de datos
-   * @param fieldTransformers - Mapa: campo fuente → nombre(s) de transformer
-   * @param fieldMappings - Mapa original: campo fuente → campo normalizado
+   * @param fieldTransformers - Mapa: campo fuente â†’ nombre(s) de transformer
+   * @param fieldMappings - Mapa original: campo fuente â†’ campo normalizado
    * @returns Record enriquecido + mappings augmentados
    */
   async enrichRecord(
@@ -61,7 +61,6 @@ export class TransformerPipeline {
       for (const name of names) {
         const transformer = this.registry.get(name);
         if (!transformer) {
-          console.warn(`⚠️ Transformer '${name}' no registrado, ignorando`);
           continue;
         }
 
@@ -71,15 +70,12 @@ export class TransformerPipeline {
             mergedFields = { ...mergedFields, ...lastResult.fields };
           }
         } catch (error) {
-          console.warn(
-            `⚠️ Transformer '${name}' falló para campo '${sourceField}': ${error instanceof Error ? error.message : error}`
-          );
           break; // Parar cadena en error, mantener fallback
         }
       }
 
-      // Añadir campos producidos por transformers al record con prefijo _t_.
-      // Solo añadir campos que no estaban en baseContext o que fueron modificados.
+      // AÃ±adir campos producidos por transformers al record con prefijo _t_.
+      // Solo aÃ±adir campos que no estaban en baseContext o que fueron modificados.
       for (const [normalizedField, value] of Object.entries(mergedFields)) {
         if (value !== null && value !== undefined && value !== baseContext[normalizedField]) {
           const tempKey = `_t_${normalizedField}`;

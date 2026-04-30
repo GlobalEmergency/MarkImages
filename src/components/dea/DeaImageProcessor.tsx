@@ -1,6 +1,6 @@
 /**
  * DeaImageProcessor - Reusable image processing pipeline for DEA images
- * Chains: CROP → BLUR → ARROW for a single image
+ * Chains: CROP â†’ BLUR â†’ ARROW for a single image
  * Used by any user with permissions on the DEA (admin, verifier, etc.)
  *
  * After client-side processing, sends metadata to server for Sharp-based processing.
@@ -53,7 +53,7 @@ export default function DeaImageProcessor({
   const [croppedUrl, setCroppedUrl] = useState<string | null>(null);
   const [blurredUrl, setBlurredUrl] = useState<string | null>(null);
 
-  // ── Step handlers ──
+  // â”€â”€ Step handlers â”€â”€
 
   const handleCropComplete = useCallback((crop: CropData, croppedImageUrl?: string) => {
     setCropData(crop);

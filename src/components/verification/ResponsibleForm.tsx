@@ -128,7 +128,7 @@ export default function ResponsibleForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">TelÃ©fono</label>
             <div className="relative">
               <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
               <input
@@ -144,7 +144,7 @@ export default function ResponsibleForm({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Teléfono Alternativo
+              TelÃ©fono Alternativo
             </label>
             <input
               type="tel"
@@ -162,19 +162,19 @@ export default function ResponsibleForm({
       <div className="bg-white border rounded-lg p-6">
         <div className="flex items-center space-x-2 mb-4">
           <Building2 className="w-5 h-5 text-blue-600" />
-          <h3 className="text-lg font-semibold">Información de la Organización</h3>
+          <h3 className="text-lg font-semibold">InformaciÃ³n de la OrganizaciÃ³n</h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Organización</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">OrganizaciÃ³n</label>
             <input
               type="text"
               name="organization"
               value={formData.organization}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Nombre de la organización"
+              placeholder="Nombre de la organizaciÃ³n"
             />
           </div>
 
@@ -218,7 +218,7 @@ export default function ResponsibleForm({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Seleccionar...</option>
-              <option value="Público">Público</option>
+              <option value="PÃºblico">PÃºblico</option>
               <option value="Privado">Privado</option>
             </select>
           </div>
@@ -234,7 +234,7 @@ export default function ResponsibleForm({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Seleccionar...</option>
-              <option value="Pública">Pública</option>
+              <option value="PÃºblica">PÃºblica</option>
               <option value="Privada">Privada</option>
             </select>
           </div>
@@ -248,7 +248,7 @@ export default function ResponsibleForm({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Seleccionar...</option>
-              <option value="Público">Público</option>
+              <option value="PÃºblico">PÃºblico</option>
               <option value="Privado">Privado</option>
             </select>
           </div>

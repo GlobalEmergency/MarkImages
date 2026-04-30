@@ -23,7 +23,7 @@ export function OrganizationDeasTab({ organizationId }: OrganizationDeasTabProps
               key: "search",
               type: "search",
               label: "Buscar",
-              placeholder: "Nombre, código, dirección...",
+              placeholder: "Nombre, cÃ³digo, direcciÃ³n...",
             },
             {
               key: "aed_status",
@@ -34,13 +34,13 @@ export function OrganizationDeasTab({ organizationId }: OrganizationDeasTabProps
             {
               key: "assignment_type",
               type: "select",
-              label: "Tipo Asignación",
+              label: "Tipo AsignaciÃ³n",
               options: [
-                { value: "CIVIL_PROTECTION", label: "Protección Civil" },
+                { value: "CIVIL_PROTECTION", label: "ProtecciÃ³n Civil" },
                 { value: "CERTIFIED_COMPANY", label: "Empresa Certificada" },
                 { value: "OWNERSHIP", label: "Propiedad" },
                 { value: "MAINTENANCE", label: "Mantenimiento" },
-                { value: "VERIFICATION", label: "Verificación" },
+                { value: "VERIFICATION", label: "VerificaciÃ³n" },
               ],
             },
           ],
@@ -57,7 +57,7 @@ export function OrganizationDeasTab({ organizationId }: OrganizationDeasTabProps
             canCreate: false,
             isAdmin: true,
           },
-          emptyMessage: "No hay DEAs asignados a esta organización",
+          emptyMessage: "No hay DEAs asignados a esta organizaciÃ³n",
         }}
       />
     </div>

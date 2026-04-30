@@ -10,12 +10,12 @@ export default function OrgBottomNavigation() {
   const pathname = usePathname();
   const { selectedOrganization, canManageMembers } = useOrganization();
 
-  // Solo mostrar en rutas de organización
+  // Solo mostrar en rutas de organizaciÃ³n
   if (!pathname.startsWith("/org")) {
     return null;
   }
 
-  // Si no hay organización seleccionada, no mostrar
+  // Si no hay organizaciÃ³n seleccionada, no mostrar
   if (!selectedOrganization) {
     return null;
   }
@@ -29,7 +29,7 @@ export default function OrgBottomNavigation() {
     return pathname.startsWith(path);
   };
 
-  // Enlaces base (todos los usuarios de organización)
+  // Enlaces base (todos los usuarios de organizaciÃ³n)
   const baseLinks = [
     {
       href: `/org/${orgId}`,
@@ -48,7 +48,7 @@ export default function OrgBottomNavigation() {
     },
   ];
 
-  // Enlaces adicionales según permisos
+  // Enlaces adicionales segÃºn permisos
   const adminLinks = [
     ...(canManageMembers
       ? [
@@ -72,7 +72,7 @@ export default function OrgBottomNavigation() {
 
   const allLinks = [...baseLinks, ...adminLinks];
 
-  // Limitar a 5 items máximo para mejor UX móvil
+  // Limitar a 5 items mÃ¡ximo para mejor UX mÃ³vil
   const navLinks = allLinks.slice(0, 5);
 
   return (

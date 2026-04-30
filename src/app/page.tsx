@@ -146,7 +146,7 @@ export default function Home() {
       if (nearbyData.success && nearbyData.data) {
         setNearbyAeds(nearbyData.data);
         if (nearbyData.data.length === 0) {
-          setError("No se encontraron DEAs cerca de esta ubicación en un radio de 10 km.");
+          setError("No se encontraron DEAs cerca de esta ubicaciÃ³n en un radio de 10 km.");
         } else {
           appPrompt.trigger("search_results", 2000);
         }
@@ -230,7 +230,7 @@ export default function Home() {
     try {
       // Get user's location
       if (!navigator.geolocation) {
-        throw new Error("La geolocalización no está disponible en tu navegador");
+        throw new Error("La geolocalizaciÃ³n no estÃ¡ disponible en tu navegador");
       }
 
       const position = await new Promise<{
@@ -262,11 +262,11 @@ export default function Home() {
         if (geoError.code === 1) {
           // PERMISSION_DENIED
           trackGeolocationRequest("denied");
-          setError("Necesitas permitir el acceso a tu ubicación.");
+          setError("Necesitas permitir el acceso a tu ubicaciÃ³n.");
         } else if (geoError.code === 2) {
           // POSITION_UNAVAILABLE
           trackGeolocationRequest("error");
-          setError("No se pudo determinar tu ubicación.");
+          setError("No se pudo determinar tu ubicaciÃ³n.");
         } else {
           trackGeolocationRequest("error");
           setError("Tiempo de espera agotado.");
@@ -283,7 +283,7 @@ export default function Home() {
     e.preventDefault();
 
     if (!address.trim()) {
-      setError("Por favor, introduce una dirección");
+      setError("Por favor, introduce una direcciÃ³n");
       return;
     }
 
@@ -298,13 +298,13 @@ export default function Home() {
       const geocodeResponse = await fetch(`/api/geocode?q=${encodeURIComponent(address)}`);
 
       if (!geocodeResponse.ok) {
-        throw new Error("Error al buscar la dirección");
+        throw new Error("Error al buscar la direcciÃ³n");
       }
 
       const geocodeData: GeocodingResult[] = await geocodeResponse.json();
 
       if (!geocodeData || geocodeData.length === 0) {
-        throw new Error("No se encontró la dirección. Intenta con otra más específica.");
+        throw new Error("No se encontrÃ³ la direcciÃ³n. Intenta con otra mÃ¡s especÃ­fica.");
       }
 
       // Use the first result
@@ -318,7 +318,7 @@ export default function Home() {
       await searchNearbyAeds(lat, lng);
     } catch (err) {
       console.error("Error searching by address:", err);
-      setError(err instanceof Error ? err.message : "Error al buscar por dirección");
+      setError(err instanceof Error ? err.message : "Error al buscar por direcciÃ³n");
       setLoading(false);
     }
   };
@@ -401,7 +401,7 @@ export default function Home() {
       {/* Fullscreen Map Section */}
       <div className="relative w-full h-[calc(100vh-56px)]">
         <h1 className="sr-only">
-          Mapa de Desfibriladores (DEA) — Encuentra el más cercano en España y en todo el mundo
+          Mapa de Desfibriladores (DEA) â€” Encuentra el mÃ¡s cercano en EspaÃ±a y en todo el mundo
         </h1>
         <MapView
           onAedClick={handleMapMarkerClick}
@@ -421,7 +421,7 @@ export default function Home() {
                 <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
                 <input
                   type="text"
-                  placeholder="Buscar dirección..."
+                  placeholder="Buscar direcciÃ³n..."
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   onFocus={() => {
@@ -439,7 +439,7 @@ export default function Home() {
                   aria-activedescendant={
                     activeSuggestionIndex >= 0 ? `suggestion-${activeSuggestionIndex}` : undefined
                   }
-                  aria-label="Buscar dirección para localizar desfibriladores"
+                  aria-label="Buscar direcciÃ³n para localizar desfibriladores"
                 />
                 {loadingSuggestions && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
                 {address && !loadingSuggestions && (
@@ -452,7 +452,7 @@ export default function Home() {
                       setAddressSuggestions([]);
                       setActiveSuggestionIndex(-1);
                     }}
-                    aria-label="Limpiar búsqueda"
+                    aria-label="Limpiar bÃºsqueda"
                     className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                   >
                     <X className="w-4 h-4 text-gray-400" />
@@ -460,16 +460,16 @@ export default function Home() {
                 )}
               </form>
 
-              {/* Región viva para lectores de pantalla */}
+              {/* RegiÃ³n viva para lectores de pantalla */}
               <div aria-live="polite" aria-atomic="true" className="sr-only">
                 {loading
                   ? "Buscando desfibriladores cercanos..."
                   : error
-                    ? `Error en la búsqueda: ${error}`
+                    ? `Error en la bÃºsqueda: ${error}`
                     : showResults && nearbyAeds.length > 0
-                      ? `Búsqueda completada. ${nearbyAeds.length} desfibriladores encontrados.`
+                      ? `BÃºsqueda completada. ${nearbyAeds.length} desfibriladores encontrados.`
                       : showResults && nearbyAeds.length === 0
-                        ? "Búsqueda completada. No se encontraron resultados."
+                        ? "BÃºsqueda completada. No se encontraron resultados."
                         : ""}
               </div>
 
@@ -517,7 +517,7 @@ export default function Home() {
                 <button
                   onClick={handleFindNearestByGeolocation}
                   disabled={loading}
-                  aria-label="Usar mi ubicación actual"
+                  aria-label="Usar mi ubicaciÃ³n actual"
                   className="w-full p-3 flex items-center gap-3 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
                 >
                   {loading ? (
@@ -530,7 +530,7 @@ export default function Home() {
                       <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
                         <Navigation className="w-4 h-4 text-white" />
                       </div>
-                      <span className="text-sm font-medium text-gray-900">Usar mi ubicación</span>
+                      <span className="text-sm font-medium text-gray-900">Usar mi ubicaciÃ³n</span>
                     </>
                   )}
                 </button>
@@ -557,7 +557,7 @@ export default function Home() {
           <button
             onClick={handleFindNearestByGeolocation}
             disabled={loading}
-            aria-label="Usar mi ubicación actual"
+            aria-label="Usar mi ubicaciÃ³n actual"
             className="bg-blue-600 text-white rounded-full shadow-2xl p-4 flex items-center gap-3 hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
           >
             {loading ? (
@@ -568,7 +568,7 @@ export default function Home() {
             ) : (
               <>
                 <Navigation className="w-6 h-6" />
-                <span className="text-sm font-medium pr-2">Usar mi ubicación</span>
+                <span className="text-sm font-medium pr-2">Usar mi ubicaciÃ³n</span>
               </>
             )}
           </button>
@@ -580,7 +580,7 @@ export default function Home() {
             {/* Desktop: Right Panel */}
             <section
               role="region"
-              aria-label="Resultados de búsqueda"
+              aria-label="Resultados de bÃºsqueda"
               className="hidden md:block absolute top-4 right-4 bottom-4 w-96 z-[1000]"
             >
               <div className="bg-white rounded-xl shadow-2xl h-full flex flex-col overflow-hidden">
@@ -619,7 +619,7 @@ export default function Home() {
             {/* Mobile: Bottom Sheet */}
             <section
               role="region"
-              aria-label="Resultados de búsqueda"
+              aria-label="Resultados de bÃºsqueda"
               className="md:hidden absolute bottom-0 left-0 right-0 z-[1000] max-h-[50vh]"
             >
               <div className="bg-white rounded-t-2xl shadow-2xl overflow-hidden">
@@ -667,7 +667,7 @@ export default function Home() {
           <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-[999] pointer-events-none">
             <div className="flex flex-col items-center gap-2 text-white drop-shadow-lg">
               <span className="text-sm font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
-                Más información
+                MÃ¡s informaciÃ³n
               </span>
               <ChevronDown className="w-6 h-6 animate-bounce" />
             </div>
@@ -695,17 +695,17 @@ export default function Home() {
               </div>
               <h2 className="text-4xl font-bold text-gray-900 mb-4">Sobre DeaMap</h2>
               <p className="text-xl text-gray-600">
-                El mapa colaborativo de desfibriladores más completo de España
+                El mapa colaborativo de desfibriladores mÃ¡s completo de EspaÃ±a
               </p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-white rounded-xl p-6 shadow-lg">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">¿Qué es DeaMap?</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Â¿QuÃ© es DeaMap?</h3>
                 <p className="text-gray-700 leading-relaxed mb-3">
                   DeaMap es una plataforma colaborativa que permite localizar desfibriladores (DEAs)
-                  cercanos en caso de emergencia cardíaca. Contamos con cobertura en España y planes
-                  de expansión a nivel europeo.
+                  cercanos en caso de emergencia cardÃ­aca. Contamos con cobertura en EspaÃ±a y
+                  planes de expansiÃ³n a nivel europeo.
                 </p>
                 <p className="text-sm text-gray-600">
                   Proyecto desarrollado por{" "}
@@ -724,33 +724,33 @@ export default function Home() {
                   >
                     Global Emergency
                   </a>
-                  , organización dedicada a mejorar la respuesta ante emergencias.
+                  , organizaciÃ³n dedicada a mejorar la respuesta ante emergencias.
                 </p>
               </div>
 
               <div className="bg-white rounded-xl p-6 shadow-lg">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">¿Cómo funciona?</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Â¿CÃ³mo funciona?</h3>
                 <p className="text-gray-700 leading-relaxed">
-                  Utiliza la búsqueda por ubicación o dirección para encontrar los DEAs más cercanos
-                  a ti. Cada DEA incluye información detallada sobre su ubicación, horarios de
-                  acceso y datos de contacto.
+                  Utiliza la bÃºsqueda por ubicaciÃ³n o direcciÃ³n para encontrar los DEAs mÃ¡s
+                  cercanos a ti. Cada DEA incluye informaciÃ³n detallada sobre su ubicaciÃ³n,
+                  horarios de acceso y datos de contacto.
                 </p>
               </div>
 
               <div className="bg-white rounded-xl p-6 shadow-lg">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">¿Por qué es importante?</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Â¿Por quÃ© es importante?</h3>
                 <p className="text-gray-700 leading-relaxed">
-                  En una emergencia cardíaca, cada segundo cuenta. Tener acceso rápido a un
-                  desfibrilador puede salvar vidas. DeaMap facilita encontrar el equipo más cercano
-                  cuando más se necesita.
+                  En una emergencia cardÃ­aca, cada segundo cuenta. Tener acceso rÃ¡pido a un
+                  desfibrilador puede salvar vidas. DeaMap facilita encontrar el equipo mÃ¡s cercano
+                  cuando mÃ¡s se necesita.
                 </p>
               </div>
 
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Colabora con nosotros</h3>
                 <p className="text-gray-700 leading-relaxed mb-3">
-                  Si conoces la ubicación de un DEA que no está en el mapa, puedes agregarlo
-                  fácilmente.
+                  Si conoces la ubicaciÃ³n de un DEA que no estÃ¡ en el mapa, puedes agregarlo
+                  fÃ¡cilmente.
                 </p>
                 <Link
                   href="/dea/new"
@@ -774,8 +774,8 @@ export default function Home() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="text-center">
                   <MapPin className="w-8 h-8 mx-auto mb-3" />
-                  <p className="text-4xl font-bold mb-2">🇪🇸</p>
-                  <p className="text-lg font-semibold">España</p>
+                  <p className="text-4xl font-bold mb-2">ðŸ‡ªðŸ‡¸</p>
+                  <p className="text-lg font-semibold">EspaÃ±a</p>
                   <p className="text-sm text-blue-100 mt-1">Cobertura nacional</p>
                 </div>
                 <div className="text-center">
@@ -786,9 +786,9 @@ export default function Home() {
                 </div>
                 <div className="text-center">
                   <Navigation className="w-8 h-8 mx-auto mb-3" />
-                  <p className="text-4xl font-bold mb-2">🇪🇺</p>
+                  <p className="text-4xl font-bold mb-2">ðŸ‡ªðŸ‡º</p>
                   <p className="text-lg font-semibold">Europa</p>
-                  <p className="text-sm text-blue-100 mt-1">Próximamente</p>
+                  <p className="text-sm text-blue-100 mt-1">PrÃ³ximamente</p>
                 </div>
               </div>
             </div>
@@ -820,7 +820,7 @@ function NearbyAedCard({
       ? aed.images[0].thumbnail_url || aed.images[0].processed_url || aed.images[0].original_url
       : null;
 
-  const cardAriaLabel = `${rank}º más cercano: ${aed.name}, a ${distanceText}`;
+  const cardAriaLabel = `${rank}Âº mÃ¡s cercano: ${aed.name}, a ${distanceText}`;
 
   if (compact) {
     return (
@@ -936,7 +936,7 @@ function NearbyAedCard({
               {aed.schedule.has_24h_surveillance
                 ? "24h"
                 : aed.schedule.weekday_opening && aed.schedule.weekday_closing
-                  ? `L-V: ${aed.schedule.weekday_opening}-${aed.schedule.weekday_closing}${aed.schedule.saturday_opening && aed.schedule.saturday_closing ? ` · S: ${aed.schedule.saturday_opening}-${aed.schedule.saturday_closing}` : ""}${aed.schedule.sunday_opening && aed.schedule.sunday_closing ? ` · D: ${aed.schedule.sunday_opening}-${aed.schedule.sunday_closing}` : ""}`
+                  ? `L-V: ${aed.schedule.weekday_opening}-${aed.schedule.weekday_closing}${aed.schedule.saturday_opening && aed.schedule.saturday_closing ? ` Â· S: ${aed.schedule.saturday_opening}-${aed.schedule.saturday_closing}` : ""}${aed.schedule.sunday_opening && aed.schedule.sunday_closing ? ` Â· D: ${aed.schedule.sunday_opening}-${aed.schedule.sunday_closing}` : ""}`
                   : "Horario no especificado"}
             </p>
           </div>

@@ -45,7 +45,7 @@ const RegisterPage: React.FC = () => {
       await register(name, email, password);
       await promptSaveCredentials(email, password);
       history.replace("/tabs/profile");
-    } catch (error) {
+    } catch (_error) {
       const message = error instanceof Error ? error.message : "Error al registrarse";
       presentToast({ message, duration: 3000, color: "danger", position: "top" });
     } finally {

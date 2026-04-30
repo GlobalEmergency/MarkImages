@@ -1,6 +1,6 @@
 /**
  * Use Case: Subir imagen al sistema de almacenamiento
- * Capa de Aplicación - Orquesta la lógica de negocio
+ * Capa de AplicaciÃ³n - Orquesta la lÃ³gica de negocio
  */
 
 import { IImageStorage } from "@/storage/domain/ports/IImageStorage";
@@ -35,17 +35,17 @@ export class UploadImageUseCase {
     // 1. Validar tipo de contenido
     if (!this.ALLOWED_TYPES.includes(request.contentType)) {
       throw new Error(
-        `Tipo de archivo no válido. Solo se permiten: ${this.ALLOWED_TYPES.join(", ")}`
+        `Tipo de archivo no vÃ¡lido. Solo se permiten: ${this.ALLOWED_TYPES.join(", ")}`
       );
     }
 
     // 2. Convertir File a Buffer si es necesario
     const buffer = await this.toBuffer(request.file);
 
-    // 3. Validar tamaño
+    // 3. Validar tamaÃ±o
     const maxSize = request.maxSizeBytes || this.MAX_SIZE_DEFAULT;
     if (buffer.length > maxSize) {
-      throw new Error(`El archivo es demasiado grande. Máximo ${maxSize / 1024 / 1024}MB.`);
+      throw new Error(`El archivo es demasiado grande. MÃ¡ximo ${maxSize / 1024 / 1024}MB.`);
     }
 
     // 4. Subir a storage

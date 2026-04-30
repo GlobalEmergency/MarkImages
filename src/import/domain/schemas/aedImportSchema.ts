@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AED Import Schema for @batchactions/import
  *
  * Define la estructura de validaciÃ³n de los campos de importaciÃ³n de DEAs.

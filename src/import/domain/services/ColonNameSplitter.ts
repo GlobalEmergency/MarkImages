@@ -1,17 +1,17 @@
 /**
- * Domain Service: Separa nombre + descripción de acceso por ":"
+ * Domain Service: Separa nombre + descripciÃ³n de acceso por ":"
  * Implementa IFieldTransformer
  *
- * Patrón común en fuentes donde un solo campo combina el nombre del sitio
- * con la ubicación específica del DEA, separados por ":"
+ * PatrÃ³n comÃºn en fuentes donde un solo campo combina el nombre del sitio
+ * con la ubicaciÃ³n especÃ­fica del DEA, separados por ":"
  *
  * Ejemplos reales (Santa Cruz de Tenerife):
- *   "EL CORTE INGLÉS TENERIFE: Reserva"
- *     → name: EL CORTE INGLÉS TENERIFE, specificLocation: Reserva
- *   "C.C. MERIDIANO: Planta galería, junto a plaza de Cortefiel"
- *     → name: C.C. MERIDIANO, specificLocation: Planta galería, junto a plaza de Cortefiel
- *   "BANCO DE ESPAÑA: Entrada instalaciones"
- *     → name: BANCO DE ESPAÑA, specificLocation: Entrada instalaciones
+ *   "EL CORTE INGLÃ‰S TENERIFE: Reserva"
+ *     â†’ name: EL CORTE INGLÃ‰S TENERIFE, specificLocation: Reserva
+ *   "C.C. MERIDIANO: Planta galerÃ­a, junto a plaza de Cortefiel"
+ *     â†’ name: C.C. MERIDIANO, specificLocation: Planta galerÃ­a, junto a plaza de Cortefiel
+ *   "BANCO DE ESPAÃ‘A: Entrada instalaciones"
+ *     â†’ name: BANCO DE ESPAÃ‘A, specificLocation: Entrada instalaciones
  *
  * Si no hay ":", devuelve solo name con confianza baja.
  */
@@ -45,7 +45,7 @@ export class ColonNameSplitter implements IFieldTransformer {
       }
     }
 
-    // No colon or empty parts — keep as name
+    // No colon or empty parts â€” keep as name
     fields.name = input;
     return { fields, confidence: 0.5, rawValue: value };
   }

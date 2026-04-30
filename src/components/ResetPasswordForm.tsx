@@ -23,7 +23,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Las contraseñas no coinciden");
+      setError("Las contraseÃ±as no coinciden");
       return;
     }
 
@@ -44,7 +44,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Error al restablecer la contraseña");
+        throw new Error(data.error || "Error al restablecer la contraseÃ±a");
       }
 
       setSuccess(true);
@@ -54,7 +54,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         router.push("/login");
       }, 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al restablecer la contraseña");
+      setError(err instanceof Error ? err.message : "Error al restablecer la contraseÃ±a");
     } finally {
       setLoading(false);
     }
@@ -79,19 +79,19 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold mb-4 text-gray-800">¡Contraseña restablecida!</h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-800">Â¡ContraseÃ±a restablecida!</h2>
           <p className="text-gray-600 mb-6">
-            Tu contraseña ha sido restablecida exitosamente. Ya puedes iniciar sesión con tu nueva
-            contraseña.
+            Tu contraseÃ±a ha sido restablecida exitosamente. Ya puedes iniciar sesiÃ³n con tu nueva
+            contraseÃ±a.
           </p>
           <p className="text-sm text-gray-500 mb-6">
-            Serás redirigido al inicio de sesión en unos segundos...
+            SerÃ¡s redirigido al inicio de sesiÃ³n en unos segundos...
           </p>
           <Link
             href="/login"
             className="inline-block w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors text-center"
           >
-            Ir al inicio de sesión
+            Ir al inicio de sesiÃ³n
           </Link>
         </div>
       </div>
@@ -100,8 +100,8 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-2 text-center text-gray-800">Restablecer contraseña</h2>
-      <p className="text-sm text-gray-600 mb-6 text-center">Ingresa tu nueva contraseña</p>
+      <h2 className="text-2xl font-bold mb-2 text-center text-gray-800">Restablecer contraseÃ±a</h2>
+      <p className="text-sm text-gray-600 mb-6 text-center">Ingresa tu nueva contraseÃ±a</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
@@ -110,7 +110,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Nueva contraseña
+            Nueva contraseÃ±a
           </label>
           <input
             id="password"
@@ -119,14 +119,14 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="••••••••"
+            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
             minLength={8}
           />
         </div>
 
         <div>
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-            Confirmar contraseña
+            Confirmar contraseÃ±a
           </label>
           <input
             id="confirmPassword"
@@ -135,18 +135,18 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             value={formData.confirmPassword}
             onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="••••••••"
+            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
             minLength={8}
           />
         </div>
 
         <div className="text-xs text-gray-600 space-y-1">
-          <p>La contraseña debe cumplir con los siguientes requisitos:</p>
+          <p>La contraseÃ±a debe cumplir con los siguientes requisitos:</p>
           <ul className="list-disc list-inside ml-2">
-            <li>Mínimo 8 caracteres</li>
-            <li>Al menos una letra mayúscula</li>
-            <li>Al menos una letra minúscula</li>
-            <li>Al menos un número</li>
+            <li>MÃ­nimo 8 caracteres</li>
+            <li>Al menos una letra mayÃºscula</li>
+            <li>Al menos una letra minÃºscula</li>
+            <li>Al menos un nÃºmero</li>
           </ul>
         </div>
 
@@ -155,13 +155,13 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
           disabled={loading}
           className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
-          {loading ? "Restableciendo..." : "Restablecer contraseña"}
+          {loading ? "Restableciendo..." : "Restablecer contraseÃ±a"}
         </button>
       </form>
 
       <p className="mt-4 text-center text-sm text-gray-600">
         <Link href="/login" className="text-blue-600 hover:text-blue-800 font-medium">
-          Volver al inicio de sesión
+          Volver al inicio de sesiÃ³n
         </Link>
       </p>
     </div>

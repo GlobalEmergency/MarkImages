@@ -3,11 +3,11 @@ export type Locale = (typeof locales)[number];
 export const defaultLocale: Locale = "es";
 
 export const localeNames: Record<Locale, string> = {
-  es: "Español",
+  es: "EspaÃ±ol",
   en: "English",
-  fr: "Français",
+  fr: "FranÃ§ais",
   de: "Deutsch",
-  pt: "Português",
+  pt: "PortuguÃªs",
 };
 
 export const localeRegions: Record<Locale, string> = {

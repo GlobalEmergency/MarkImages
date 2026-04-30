@@ -1,8 +1,8 @@
 /**
  * SharePoint Detection Service (Domain Service)
  *
- * Servicio de dominio para detectar URLs de SharePoint en datos de importación.
- * Analiza los campos de imagen y determina si se requiere autenticación especial.
+ * Servicio de dominio para detectar URLs de SharePoint en datos de importaciÃ³n.
+ * Analiza los campos de imagen y determina si se requiere autenticaciÃ³n especial.
  */
 
 import { AedImportData } from "../value-objects/AedImportData";
@@ -26,13 +26,13 @@ export class SharePointDetectionService {
   ];
 
   /**
-   * Detecta si hay URLs de SharePoint en los registros de importación
+   * Detecta si hay URLs de SharePoint en los registros de importaciÃ³n
    */
   detectSharePointUrls(
     records: AedImportData[],
     mappings: ColumnMapping[]
   ): SharePointDetectionResult {
-    // Identificar qué campos de imagen están mapeados
+    // Identificar quÃ© campos de imagen estÃ¡n mapeados
     const mappedImageFields = this.getMappedImageFields(mappings);
 
     if (mappedImageFields.length === 0) {
@@ -60,7 +60,7 @@ export class SharePointDetectionService {
 
           // Verificar si es URL de SharePoint
           if (isSharePointUrl(url)) {
-            // Agregar a las URLs de muestra (máximo 3)
+            // Agregar a las URLs de muestra (mÃ¡ximo 3)
             if (sharepointUrls.length < 3 && !sharepointUrls.includes(url)) {
               sharepointUrls.push(url);
             }
@@ -85,7 +85,7 @@ export class SharePointDetectionService {
   }
 
   /**
-   * Identifica qué campos de imagen están mapeados
+   * Identifica quÃ© campos de imagen estÃ¡n mapeados
    */
   private getMappedImageFields(mappings: ColumnMapping[]): string[] {
     return mappings

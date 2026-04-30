@@ -1,6 +1,6 @@
 /**
  * Use Case: Descargar imagen desde URL externa y subirla a S3
- * Capa de Aplicación - Orquesta la lógica de negocio
+ * Capa de AplicaciÃ³n - Orquesta la lÃ³gica de negocio
  */
 
 import { IImageDownloader, SharePointAuthConfig } from "@/storage/domain/ports/IImageDownloader";
@@ -32,8 +32,6 @@ export class DownloadAndUploadImageUseCase {
   ) {}
 
   async execute(request: DownloadAndUploadImageRequest): Promise<DownloadAndUploadImageResponse> {
-    console.log(`📥 [DownloadAndUpload] Descargando imagen desde: ${request.url}`);
-
     // 1. Verificar que el downloader soporta esta URL
     if (!this.imageDownloader.supports(request.url)) {
       throw new Error(
@@ -49,10 +47,6 @@ export class DownloadAndUploadImageUseCase {
       maxSizeBytes: request.maxSizeBytes || this.DEFAULT_MAX_SIZE,
     });
 
-    console.log(
-      `✅ [DownloadAndUpload] Imagen descargada: ${downloaded.size} bytes, tipo: ${downloaded.contentType}`
-    );
-
     // 3. Subir a S3 con los IDs correctos para construir el path
     const uploaded = await this.imageStorage.upload({
       buffer: downloaded.buffer,
@@ -62,8 +56,6 @@ export class DownloadAndUploadImageUseCase {
       imageId: request.imageId,
       variant: "original",
     });
-
-    console.log(`📤 [DownloadAndUpload] Imagen subida a S3: ${uploaded.url}`);
 
     return {
       url: uploaded.url,

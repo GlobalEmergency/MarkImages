@@ -1,5 +1,5 @@
 /**
- * External Sync Service — Application Service
+ * External Sync Service â€” Application Service
  *
  * Orchestrates external data source synchronization using BatchEngine
  * from @batchactions/core. Replaces the legacy ExternalSyncProcessor
@@ -15,7 +15,7 @@
  * - NDJSON cache: compressed in sync_ndjson_cache table between chunks (no re-fetch)
  * - Batch duplicate detection (1 query per batch vs 1 per record)
  * - Transactional AED creation (prisma.$transaction in processor)
- * - Proper streaming (AsyncGenerator → NDJSON → BatchEngine)
+ * - Proper streaming (AsyncGenerator â†’ NDJSON â†’ BatchEngine)
  */
 
 import { gzipSync, gunzipSync } from "node:zlib";
@@ -136,7 +136,7 @@ export class ExternalSyncService {
     if (!fieldMappings || Object.keys(fieldMappings).length === 0) {
       throw new Error(
         `La fuente de datos "${dataSource.name}" no tiene configurado el mapeo de campos. ` +
-          `Configure el mapeo antes de ejecutar la sincronización.`
+          `Configure el mapeo antes de ejecutar la sincronizaciÃ³n.`
       );
     }
 
@@ -145,13 +145,9 @@ export class ExternalSyncService {
       dataSource.type as "CKAN_API" | "JSON_FILE" | "REST_API" | "CSV_FILE"
     );
 
-    console.log(`[Sync:${dataSource.name}] Fetching records from ${dataSource.type}...`);
     const { ndjson, totalCount: sourceTotalRecords } = await this.fetchAsNdjson(
       adapter,
       dataSource.config
-    );
-    console.log(
-      `[Sync:${dataSource.name}] Fetched ${sourceTotalRecords} records, NDJSON size: ${(ndjson.length / 1024).toFixed(0)} KB`
     );
 
     // Capture sync start time for disappearance detection
@@ -252,14 +248,9 @@ export class ExternalSyncService {
     let ndjson = await this.getCachedNdjson(jobId);
     let cacheWasMiss = false;
     if (ndjson) {
-      console.log(
-        `[Sync:${syncContext.dataSourceName}] Restored ${(ndjson.length / 1024).toFixed(0)} KB NDJSON from cache (skip re-fetch)`
-      );
     } else {
       cacheWasMiss = true;
-      console.warn(
-        `[Sync:${syncContext.dataSourceName}] Cache miss — re-fetching all records from API...`
-      );
+
       const adapter = DataSourceAdapterFactory.getApiAdapter(
         dataSource.type as "CKAN_API" | "JSON_FILE" | "REST_API" | "CSV_FILE"
       );
@@ -285,7 +276,7 @@ export class ExternalSyncService {
 
     // 3. Restore engine from state store
     // IMPORTANT: batchSize MUST match the value used in startSync. If omitted,
-    // BatchEngine defaults to 100, changing the batch index ↔ record mapping.
+    // BatchEngine defaults to 100, changing the batch index â†” record mapping.
     // This causes records in "completed" batch indices to be silently skipped
     // even though they weren't part of the original completed batches.
     const engine = await BatchEngine.restore(jobId, {
@@ -368,7 +359,7 @@ export class ExternalSyncService {
   /**
    * Fetch all records from an external data source and serialize as NDJSON.
    * This is the bridge between IDataSourceAdapter (AsyncGenerator<ImportRecord>)
-   * and BatchEngine (DataSource → string/Buffer).
+   * and BatchEngine (DataSource â†’ string/Buffer).
    */
   /** Max NDJSON buffer size: 512 MB. Prevents OOM on unexpectedly large sources. */
   private static readonly MAX_NDJSON_BYTES = 512 * 1024 * 1024;
@@ -443,11 +434,9 @@ export class ExternalSyncService {
       count++;
 
       if (count % 1000 === 0) {
-        console.log(`[Sync] Downloaded and normalized ${count} records...`);
       }
     }
 
-    console.log(`[Sync] Total: ${count} records fetched`);
     return { ndjson: lines.join("\n"), totalCount: count };
   }
 
@@ -461,38 +450,15 @@ export class ExternalSyncService {
    */
   private subscribeEvents(engine: BatchEngine, label: string): void {
     engine
-      .on("job:started", (e) => {
-        console.log(
-          `[Sync:${label}] Job ${e.jobId} started — ${e.totalRecords} records in ${e.totalBatches} batches`
-        );
-      })
+      .on("job:started", (e) => {})
       .on("job:progress", (e) => {
         const p = e.progress;
-        console.log(
-          `[Sync:${label}] Progress — ${p.processedRecords}/${p.totalRecords} (${p.percentage}%) ` +
-            `batch ${p.currentBatch}/${p.totalBatches}` +
-            (p.estimatedRemainingMs ? ` ~${Math.round(p.estimatedRemainingMs / 1000)}s left` : "")
-        );
       })
-      .on("batch:completed", (e) => {
-        console.log(
-          `[Sync:${label}] Batch ${e.batchIndex + 1} done — ${e.processedCount}/${e.totalCount} processed, ${e.failedCount} failed`
-        );
-      })
-      .on("record:failed", (e) => {
-        console.warn(`[Sync:${label}] Record ${e.recordIndex} failed: ${e.error}`);
-      })
-      .on("chunk:completed", (e) => {
-        console.log(
-          `[Sync:${label}] Chunk done — ${e.processedRecords} processed, ${e.failedRecords} failed, done=${e.done}`
-        );
-      })
+      .on("batch:completed", (e) => {})
+      .on("record:failed", (e) => {})
+      .on("chunk:completed", (e) => {})
       .on("job:completed", (e) => {
         const s = e.summary;
-        console.log(
-          `[Sync:${label}] Job ${e.jobId} COMPLETED — ` +
-            `${s.processed}/${s.total} records, ${s.failed} failed (${s.elapsedMs}ms)`
-        );
       })
       .on("job:failed", (e) => {
         console.error(`[Sync:${label}] Job ${e.jobId} FAILED: ${e.error}`);
@@ -575,7 +541,7 @@ export class ExternalSyncService {
     // 2. Invalidate all caches after bulk sync
     invalidateAllAedCaches();
 
-    // 3. Disappearance detection — skip for dry runs or if no syncStartTime
+    // 3. Disappearance detection â€” skip for dry runs or if no syncStartTime
     if (dryRun || !syncStartTime) return;
 
     await this.detectDisappearedIdentifiers(dataSourceId, syncStartTime);
@@ -612,10 +578,6 @@ export class ExternalSyncService {
 
       if (disappeared.length === 0) return;
 
-      console.log(
-        `[Sync:${dataSource.name}] Disappearance detection: ${disappeared.length} identifiers not seen in this sync`
-      );
-
       // Mark all disappeared identifiers as no longer current
       await this.prisma.$executeRaw`
         UPDATE aed_external_identifiers
@@ -629,9 +591,6 @@ export class ExternalSyncService {
 
       // If auto_deactivate_missing is NOT enabled, stop here (identifiers are marked but AEDs stay active)
       if (!dataSource.auto_deactivate_missing) {
-        console.log(
-          `[Sync:${dataSource.name}] auto_deactivate_missing=false — identifiers marked as disappeared but AEDs not deactivated`
-        );
         return;
       }
 
@@ -650,13 +609,10 @@ export class ExternalSyncService {
       const aedsToDeactivate = disappearedAedIds.filter((id) => !aedsWithOtherSourcesSet.has(id));
 
       if (aedsToDeactivate.length === 0) {
-        console.log(
-          `[Sync:${dataSource.name}] All disappeared AEDs have other active sources — no deactivations`
-        );
         return;
       }
 
-      // Only deactivate PUBLISHED AEDs (PUBLISHED → INACTIVE is a valid transition)
+      // Only deactivate PUBLISHED AEDs (PUBLISHED â†’ INACTIVE is a valid transition)
       const publishedAeds = await this.prisma.aed.findMany({
         where: {
           id: { in: aedsToDeactivate },
@@ -671,8 +627,8 @@ export class ExternalSyncService {
           const notes = appendInternalNote(
             aed.internal_notes,
             `DEA desaparecido de la fuente "${dataSource.name}". ` +
-              `No se encontró en la última sincronización y no tiene identificadores activos en otras fuentes. ` +
-              `Marcado como INACTIVE automáticamente.`,
+              `No se encontrÃ³ en la Ãºltima sincronizaciÃ³n y no tiene identificadores activos en otras fuentes. ` +
+              `Marcado como INACTIVE automÃ¡ticamente.`,
             "auto_deactivation_disappeared",
             "ExternalSyncService"
           );
@@ -691,7 +647,7 @@ export class ExternalSyncService {
               previousStatus: aed.status,
               newStatus: "INACTIVE",
               modifiedBy: SYSTEM_USER_UUID,
-              reason: `Desaparecido de fuente "${dataSource.name}" — desactivación automática`,
+              reason: `Desaparecido de fuente "${dataSource.name}" â€” desactivaciÃ³n automÃ¡tica`,
             });
           });
           deactivatedCount++;
@@ -710,11 +666,6 @@ export class ExternalSyncService {
           data: { records_deactivated: { increment: deactivatedCount } },
         });
       }
-
-      console.log(
-        `[Sync:${dataSource.name}] Auto-deactivated ${deactivatedCount} AEDs ` +
-          `(${aedsToDeactivate.length} had no other sources, ${publishedAeds.length} were PUBLISHED)`
-      );
     } catch (error) {
       // Non-critical: sync itself succeeded, don't propagate
       console.error(`[Sync] Disappearance detection failed for ${dataSourceId}:`, error);
@@ -812,7 +763,7 @@ export class ExternalSyncService {
       // in completed batches from previous chunks). The BatchEngine's
       // processedRecords only counts records that went through the processor
       // callback, missing records in already-completed batches. Use totalRecords
-      // for the final count so the UI shows 100%.
+
       const processedRecords = done ? totalRecords - failedRecords : progress.processedRecords;
 
       const updateData: Record<string, unknown> = {
@@ -861,20 +812,17 @@ export class ExternalSyncService {
   }
 
   // ============================================================
-  // NDJSON Cache — avoid re-downloading on every resume
+  // NDJSON Cache â€” avoid re-downloading on every resume
   // ============================================================
 
   /**
    * Compress and store NDJSON data in sync_ndjson_cache table.
-   * Typical compression ratio: 5-8x (85 MB NDJSON → ~12 MB gzip).
+   * Typical compression ratio: 5-8x (85 MB NDJSON â†’ ~12 MB gzip).
    */
   private async cacheNdjson(jobId: string, ndjson: string, recordCount: number): Promise<void> {
     try {
       const compressed = gzipSync(Buffer.from(ndjson, "utf-8"), { level: 6 });
-      console.log(
-        `[Sync] Caching NDJSON for job ${jobId}: ` +
-          `${(ndjson.length / 1024 / 1024).toFixed(1)} MB → ${(compressed.length / 1024 / 1024).toFixed(1)} MB gzip`
-      );
+
       await this.prisma.syncNdjsonCache.upsert({
         where: { job_id: jobId },
         create: {
@@ -909,7 +857,6 @@ export class ExternalSyncService {
       const decompressed = gunzipSync(Buffer.from(cached.compressed_data));
       return decompressed.toString("utf-8");
     } catch (error) {
-      console.warn(`[Sync] Failed to read NDJSON cache for ${jobId}:`, error);
       return null;
     }
   }

@@ -7,7 +7,7 @@ import { authRateLimiter } from "@/lib/rate-limit";
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1, "Token es requerido"),
-  password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
+  password: z.string().min(8, "La contraseÃ±a debe tener al menos 8 caracteres"),
 });
 
 export async function POST(request: NextRequest) {
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "El token de recuperación es inválido o ha expirado. Por favor, solicita un nuevo enlace de recuperación.",
+            "El token de recuperaciÃ³n es invÃ¡lido o ha expirado. Por favor, solicita un nuevo enlace de recuperaciÃ³n.",
         },
         { status: 400 }
       );
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         message:
-          "Tu contraseña ha sido restablecida exitosamente. Ya puedes iniciar sesión con tu nueva contraseña.",
+          "Tu contraseÃ±a ha sido restablecida exitosamente. Ya puedes iniciar sesiÃ³n con tu nueva contraseÃ±a.",
       },
       { status: 200 }
     );
@@ -73,6 +73,6 @@ export async function POST(request: NextRequest) {
     }
 
     console.error("Reset password error:", error);
-    return NextResponse.json({ error: "Error al restablecer la contraseña" }, { status: 500 });
+    return NextResponse.json({ error: "Error al restablecer la contraseÃ±a" }, { status: 500 });
   }
 }

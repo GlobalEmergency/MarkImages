@@ -1,28 +1,28 @@
 /**
- * Domain Service: Separa calle + número de un campo de dirección combinado
+ * Domain Service: Separa calle + nÃºmero de un campo de direcciÃ³n combinado
  * Implementa IFieldTransformer
  *
  * Patrones europeos comunes:
- *   "Thys-Vanhamstraat 21"         → street: Thys-Vanhamstraat, number: 21
- *   "Kerkeveldstraat 73/89"        → street: Kerkeveldstraat, number: 73/89
- *   "Rue de la Loi 155"            → street: Rue de la Loi, number: 155
- *   "Avenue Louise 235-245"        → street: Avenue Louise, number: 235-245
- *   "Pl. du Grand Sablon 5A"       → street: Pl. du Grand Sablon, number: 5A
- *   "Calle Mayor, 12"              → street: Calle Mayor, number: 12
+ *   "Thys-Vanhamstraat 21"         â†’ street: Thys-Vanhamstraat, number: 21
+ *   "Kerkeveldstraat 73/89"        â†’ street: Kerkeveldstraat, number: 73/89
+ *   "Rue de la Loi 155"            â†’ street: Rue de la Loi, number: 155
+ *   "Avenue Louise 235-245"        â†’ street: Avenue Louise, number: 235-245
+ *   "Pl. du Grand Sablon 5A"       â†’ street: Pl. du Grand Sablon, number: 5A
+ *   "Calle Mayor, 12"              â†’ street: Calle Mayor, number: 12
  *
- * NO separa si no hay número claro (ej: "Place Royale" → solo streetName)
+ * NO separa si no hay nÃºmero claro (ej: "Place Royale" â†’ solo streetName)
  */
 
 import type { IFieldTransformer, TransformerResult } from "../ports/IFieldTransformer";
 
 /**
  * Match trailing number (with optional letter suffix, range, or bis):
- *   "Straat 21"       → ["Straat", "21"]
- *   "Straat 73/89"    → ["Straat", "73/89"]
- *   "Straat 235-245"  → ["Straat", "235-245"]
- *   "Straat 5A"       → ["Straat", "5A"]
- *   "Straat 12 bis"   → ["Straat", "12 bis"]
- *   "Calle Mayor, 12" → ["Calle Mayor", "12"]
+ *   "Straat 21"       â†’ ["Straat", "21"]
+ *   "Straat 73/89"    â†’ ["Straat", "73/89"]
+ *   "Straat 235-245"  â†’ ["Straat", "235-245"]
+ *   "Straat 5A"       â†’ ["Straat", "5A"]
+ *   "Straat 12 bis"   â†’ ["Straat", "12 bis"]
+ *   "Calle Mayor, 12" â†’ ["Calle Mayor", "12"]
  */
 const ADDRESS_NUMBER_RE = /^(.+?)[,\s]+(\d+[\w]*(?:\s*[-/]\s*\d+[\w]*)?)(?:\s+bis)?$/i;
 
@@ -47,7 +47,7 @@ export class AddressNumberSplitter implements IFieldTransformer {
       return { fields, confidence: 0.9, rawValue: value };
     }
 
-    // No number found — keep as streetName only
+    // No number found â€” keep as streetName only
     fields.streetName = input;
     return { fields, confidence: 0.5, rawValue: value };
   }

@@ -59,7 +59,7 @@ const AuthForm: React.FC = () => {
     try {
       await login(email, password);
       await promptSaveCredentials(email, password);
-    } catch (error) {
+    } catch (_error) {
       const message = error instanceof Error ? error.message : "Error al iniciar sesión";
       presentToast({ message, duration: 3000, color: "danger", position: "top" });
     } finally {
@@ -82,7 +82,7 @@ const AuthForm: React.FC = () => {
     try {
       await register(name, email, password);
       await promptSaveCredentials(email, password);
-    } catch (error) {
+    } catch (_error) {
       const message = error instanceof Error ? error.message : "Error al registrarse";
       presentToast({ message, duration: 3000, color: "danger", position: "top" });
     } finally {
@@ -367,7 +367,7 @@ const ProfileTabPage: React.FC = () => {
                     color: "success",
                     position: "top",
                   });
-                } catch (error) {
+                } catch (_error) {
                   const message =
                     error instanceof Error ? error.message : "Error al eliminar la cuenta";
                   presentToast({

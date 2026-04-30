@@ -77,7 +77,7 @@ export default function Navigation() {
     },
     {
       href: selectedOrganization ? `/org/${selectedOrganization.id}` : "/org",
-      label: "Mi Organización",
+      label: "Mi OrganizaciÃ³n",
       icon: Building2,
       visible: hasOrganizations,
     },
@@ -267,7 +267,7 @@ export default function Navigation() {
                         className="flex items-center space-x-3 px-4 py-3 rounded-lg font-medium text-gray-600 hover:bg-gray-100/80 hover:text-gray-900 transition-all duration-200"
                       >
                         <LogOut className="w-5 h-5" />
-                        <span>Cerrar Sesión</span>
+                        <span>Cerrar SesiÃ³n</span>
                       </button>
                     </>
                   ) : (
@@ -281,7 +281,7 @@ export default function Navigation() {
                         className="flex items-center space-x-3 px-4 py-3 rounded-lg font-medium text-gray-600 hover:bg-gray-100/80 hover:text-gray-900 transition-all duration-200"
                       >
                         <LogIn className="w-5 h-5" />
-                        <span>Iniciar Sesión</span>
+                        <span>Iniciar SesiÃ³n</span>
                       </Link>
                       <Link
                         href="/register"

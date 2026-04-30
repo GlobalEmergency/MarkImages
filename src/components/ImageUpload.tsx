@@ -83,7 +83,7 @@ export default function ImageUpload({
             )}
           </div>
         ) : (
-          // Área de subida
+          // Ãrea de subida
           <div
             onClick={handleClick}
             className={`
@@ -106,7 +106,7 @@ export default function ImageUpload({
                   <p className="text-sm font-medium text-gray-700">
                     Haz clic para subir una imagen
                   </p>
-                  <p className="text-xs text-gray-500">JPG, PNG o WebP (máx. 5MB)</p>
+                  <p className="text-xs text-gray-500">JPG, PNG o WebP (mÃ¡x. 5MB)</p>
                 </div>
               </>
             )}

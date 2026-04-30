@@ -726,10 +726,6 @@ export async function DELETE(
       // No body or invalid JSON — that's fine
     }
 
-    console.log(
-      `🗑️ Admin deleting AED ${id} (${aed.code || aed.name}). Status: ${aed.status}. Reason: ${reason || "N/A"}`
-    );
-
     // Delete AED in a transaction. Cascade handles most relations.
     // Then clean up orphaned location/schedule (they don't cascade).
     await prisma.$transaction(async (tx) => {

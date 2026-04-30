@@ -4,7 +4,7 @@
  *
  * Soporta:
  * - URLs directas de archivos JSON
- * - Extracción de registros desde una ruta configurable (jsonPath)
+ * - ExtracciÃ³n de registros desde una ruta configurable (jsonPath)
  * - Mapeo de campos personalizado
  */
 
@@ -51,12 +51,11 @@ export class JsonFileAdapter implements IDataSourceAdapter {
   private extractRecordsFromPath(data: unknown, jsonPath?: string): Record<string, unknown>[] {
     // Si es directamente un array, devolverlo
     if (Array.isArray(data)) {
-      console.log(`✅ JSON es un array directo con ${data.length} registros`);
       return data;
     }
 
     if (typeof data !== "object" || data === null) {
-      throw new Error("El JSON no es un objeto válido");
+      throw new Error("El JSON no es un objeto vÃ¡lido");
     }
 
     const obj = data as Record<string, unknown>;
@@ -69,13 +68,12 @@ export class JsonFileAdapter implements IDataSourceAdapter {
       for (const part of parts) {
         if (part === "") continue;
         if (typeof current !== "object" || current === null) {
-          throw new Error(`Ruta JSON inválida: no se encontró '${part}' en '${jsonPath}'`);
+          throw new Error(`Ruta JSON invÃ¡lida: no se encontrÃ³ '${part}' en '${jsonPath}'`);
         }
         current = (current as Record<string, unknown>)[part];
       }
 
       if (Array.isArray(current)) {
-        console.log(`✅ Encontrados ${current.length} registros en '${jsonPath}'`);
         return current as Record<string, unknown>[];
       }
 
@@ -88,7 +86,7 @@ export class JsonFileAdapter implements IDataSourceAdapter {
         properties?: Record<string, unknown>;
         geometry?: { type: string; coordinates: number[] };
       }>;
-      console.log(`✅ Detectado GeoJSON con ${features.length} features`);
+
       return features.map((f) => {
         const record = { ...f.properties };
         if (f.geometry?.type === "Point" && Array.isArray(f.geometry.coordinates)) {
@@ -104,15 +102,12 @@ export class JsonFileAdapter implements IDataSourceAdapter {
 
     for (const path of commonPaths) {
       if (obj[path] && Array.isArray(obj[path])) {
-        console.log(
-          `✅ Auto-detectado array en '${path}' con ${(obj[path] as unknown[]).length} registros`
-        );
         return obj[path] as Record<string, unknown>[];
       }
     }
 
     throw new Error(
-      `No se encontró un array de registros. Especifica jsonPath para indicar dónde están los datos. ` +
+      `No se encontrÃ³ un array de registros. Especifica jsonPath para indicar dÃ³nde estÃ¡n los datos. ` +
         `Claves disponibles: ${Object.keys(obj).join(", ")}`
     );
   }
@@ -153,13 +148,11 @@ export class JsonFileAdapter implements IDataSourceAdapter {
     const url = this.getFileUrl(config);
     const fieldMappings = config.fieldMappings || {};
 
-    // Usar caché para evitar descarga doble
+    // Usar cachÃ© para evitar descarga doble
     const data = await this.getCachedData(url);
 
     const records = this.extractRecordsFromPath(data, config.jsonPath);
     const externalIdField = this.resolveExternalIdField(records, config);
-
-    console.log(`📋 Procesando ${records.length} registros, ID field: '${externalIdField}'`);
 
     for (let rowIndex = 0; rowIndex < records.length; rowIndex++) {
       const { record: enriched, mappings } = await enrichRecordIfNeeded(
@@ -170,11 +163,8 @@ export class JsonFileAdapter implements IDataSourceAdapter {
       yield ImportRecord.fromApiRecord(enriched, mappings, rowIndex, externalIdField);
 
       if ((rowIndex + 1) % 1000 === 0) {
-        console.log(`📥 Procesados ${rowIndex + 1}/${records.length} registros...`);
       }
     }
-
-    console.log(`✅ Procesamiento completado: ${records.length} registros`);
 
     // Clear cache after full iteration to free memory
     this.clearCache();
@@ -183,7 +173,7 @@ export class JsonFileAdapter implements IDataSourceAdapter {
   async getRecordCount(config: DataSourceConfig): Promise<number> {
     const url = this.getFileUrl(config);
 
-    // Usar caché para evitar descarga doble
+    // Usar cachÃ© para evitar descarga doble
     const data = await this.getCachedData(url);
 
     const records = this.extractRecordsFromPath(data, config.jsonPath);
@@ -218,14 +208,14 @@ export class JsonFileAdapter implements IDataSourceAdapter {
           field: "fileUrl",
           value: url,
           severity: "CRITICAL",
-          message: "La URL del archivo JSON no es válida",
+          message: "La URL del archivo JSON no es vÃ¡lida",
         });
       }
     }
 
     // jsonPath es opcional - se auto-detecta si no se proporciona
     if (config.jsonPath) {
-      // Validar formato básico del jsonPath
+      // Validar formato bÃ¡sico del jsonPath
       if (!/^(\$\.)?[\w.]+$/.test(config.jsonPath)) {
         issues.push({
           row: 0,
@@ -233,7 +223,7 @@ export class JsonFileAdapter implements IDataSourceAdapter {
           value: config.jsonPath,
           severity: "WARNING",
           message:
-            "El formato de jsonPath puede no ser válido. Usa formato simple como 'data' o 'result.records'",
+            "El formato de jsonPath puede no ser vÃ¡lido. Usa formato simple como 'data' o 'result.records'",
         });
       }
     }
@@ -245,7 +235,7 @@ export class JsonFileAdapter implements IDataSourceAdapter {
     const url = this.getFileUrl(config);
     const fieldMappings = config.fieldMappings || {};
 
-    // Usar caché para evitar descarga doble
+    // Usar cachÃ© para evitar descarga doble
     const data = await this.getCachedData(url);
 
     const records = this.extractRecordsFromPath(data, config.jsonPath).slice(0, limit);
@@ -272,13 +262,13 @@ export class JsonFileAdapter implements IDataSourceAdapter {
       if (validation.hasCriticalErrors()) {
         return {
           success: false,
-          message: validation.criticalErrors[0]?.message || "Error de validación",
+          message: validation.criticalErrors[0]?.message || "Error de validaciÃ³n",
         };
       }
 
       const url = this.getFileUrl(config);
 
-      // Usar caché para evitar descarga doble
+      // Usar cachÃ© para evitar descarga doble
       const data = await this.getCachedData(url);
       const records = this.extractRecordsFromPath(data, config.jsonPath);
 
@@ -287,7 +277,7 @@ export class JsonFileAdapter implements IDataSourceAdapter {
 
       return {
         success: true,
-        message: `Conexión exitosa. ${records.length} registros disponibles.`,
+        message: `ConexiÃ³n exitosa. ${records.length} registros disponibles.`,
         recordCount: records.length,
         sampleFields,
         responseTimeMs: Date.now() - startTime,
@@ -320,7 +310,6 @@ export class JsonFileAdapter implements IDataSourceAdapter {
       return response;
     } catch (error) {
       if (attempt < this.maxRetries) {
-        console.warn(`⚠️ Intento ${attempt}/${this.maxRetries} fallido, reintentando...`);
         await this.delay(this.retryDelayMs * attempt);
         return this.fetchWithRetry(url, attempt + 1);
       }
@@ -333,8 +322,8 @@ export class JsonFileAdapter implements IDataSourceAdapter {
   }
 
   /**
-   * Obtiene datos del JSON con caché intra-operación para evitar descargas
-   * múltiples dentro de la misma invocación (e.g. preview + count).
+   * Obtiene datos del JSON con cachÃ© intra-operaciÃ³n para evitar descargas
+   * mÃºltiples dentro de la misma invocaciÃ³n (e.g. preview + count).
    */
   private async getCachedData(url: string): Promise<unknown> {
     const cached = this.dataCache.get(url);
@@ -342,7 +331,6 @@ export class JsonFileAdapter implements IDataSourceAdapter {
       return cached;
     }
 
-    console.log(`📥 Descargando JSON desde: ${url}`);
     const response = await this.fetchWithRetry(url);
     const data = await response.json();
 
@@ -351,10 +339,9 @@ export class JsonFileAdapter implements IDataSourceAdapter {
   }
 
   /**
-   * Limpia la caché (útil después de una sincronización completa)
+   * Limpia la cachÃ© (Ãºtil despuÃ©s de una sincronizaciÃ³n completa)
    */
   clearCache(): void {
     this.dataCache.clear();
-    console.log(`🧹 Caché limpiada`);
   }
 }

@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     // Verificar que el contenido sea una imagen
     const contentType = imageResponse.headers.get("content-type");
     if (!contentType || !contentType.startsWith("image/")) {
-      return NextResponse.json({ error: "El contenido no es una imagen válida" }, { status: 400 });
+      return NextResponse.json({ error: "El contenido no es una imagen vÃ¡lida" }, { status: 400 });
     }
 
     // Obtener el buffer de la imagen
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Función para verificar si es una URL de SharePoint
+// FunciÃ³n para verificar si es una URL de SharePoint
 function isSharePointUrl(url: string): boolean {
   try {
     const urlObj = new URL(url);

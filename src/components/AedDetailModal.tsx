@@ -70,7 +70,7 @@ export default function AedDetailModal({
     if (aed) {
       trackExternalLink(
         `https://www.google.com/maps/search/?api=1&query=${aed.latitude},${aed.longitude}`,
-        "Cómo llegar",
+        "CÃ³mo llegar",
         "dea_modal"
       );
       onDirectionsClick?.();
@@ -203,7 +203,7 @@ export default function AedDetailModal({
             <div className="flex items-start space-x-3 p-4 rounded-xl bg-gray-50">
               <MapPin className="w-6 h-6 text-blue-500 flex-shrink-0 mt-1" />
               <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 mb-1">Ubicación</h3>
+                <h3 className="font-semibold text-gray-900 mb-1">UbicaciÃ³n</h3>
                 <p className="text-gray-700">
                   {aed.location.street_type} {aed.location.street_name} {aed.location.street_number}
                 </p>
@@ -213,7 +213,7 @@ export default function AedDetailModal({
                 </p>
                 {aed.location.access_instructions && (
                   <p className="text-sm text-gray-600 mt-2 italic">
-                    📍 {aed.location.access_instructions}
+                    ðŸ“ {aed.location.access_instructions}
                   </p>
                 )}
                 <p className="text-xs text-gray-400 mt-2">
@@ -229,7 +229,7 @@ export default function AedDetailModal({
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 mb-1">Horario</h3>
                   {aed.schedule.has_24h_surveillance ? (
-                    <p className="text-gray-700">✅ Vigilancia 24 horas</p>
+                    <p className="text-gray-700">âœ… Vigilancia 24 horas</p>
                   ) : aed.schedule.weekday_opening && aed.schedule.weekday_closing ? (
                     <div className="space-y-0.5">
                       <p className="text-gray-700">
@@ -237,7 +237,7 @@ export default function AedDetailModal({
                       </p>
                       {aed.schedule.saturday_opening && aed.schedule.saturday_closing && (
                         <p className="text-gray-500 text-sm">
-                          Sáb: {aed.schedule.saturday_opening} - {aed.schedule.saturday_closing}
+                          SÃ¡b: {aed.schedule.saturday_opening} - {aed.schedule.saturday_closing}
                         </p>
                       )}
                       {aed.schedule.sunday_opening && aed.schedule.sunday_closing && (
@@ -302,7 +302,7 @@ export default function AedDetailModal({
               onClick={handleDirectionsClick}
             >
               <NavigationIcon className="w-5 h-5" />
-              <span>Cómo llegar</span>
+              <span>CÃ³mo llegar</span>
             </a>
 
             <button

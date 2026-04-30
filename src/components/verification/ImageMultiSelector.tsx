@@ -40,14 +40,14 @@ export default function ImageMultiSelector({
     Array<{ url: string; order: number; type?: AedImageType }>
   >([]);
 
-  // Inicializar estados de las imágenes
+  // Inicializar estados de las imÃ¡genes
   useEffect(() => {
     const initialStates: ImageState[] = images.map((img, index) => ({
       id: img.id,
       url: img.original_url,
       order: img.order ?? index,
       type: img.type,
-      isValid: true, // Por defecto todas son válidas
+      isValid: true, // Por defecto todas son vÃ¡lidas
       loading: true,
       error: false,
       dataUrl: "",
@@ -126,17 +126,17 @@ export default function ImageMultiSelector({
     const deletedImageIds = imageStates.filter((img) => !img.isValid).map((img) => img.id);
 
     if (validImages.length === 0 && newImages.length === 0) {
-      alert("Debes tener al menos una imagen válida o subir una nueva imagen para continuar.");
+      alert("Debes tener al menos una imagen vÃ¡lida o subir una nueva imagen para continuar.");
       return;
     }
 
-    // Validar que todas las imágenes válidas tengan tipo seleccionado
+    // Validar que todas las imÃ¡genes vÃ¡lidas tengan tipo seleccionado
     const imagesWithoutType = validImages.filter((img) => !img.selectedType);
     const newImagesWithoutType = newImages.filter((img) => !img.type);
 
     if (imagesWithoutType.length > 0 || newImagesWithoutType.length > 0) {
       alert(
-        "Todas las imágenes deben tener un tipo asignado. Por favor, selecciona el tipo para cada imagen antes de continuar."
+        "Todas las imÃ¡genes deben tener un tipo asignado. Por favor, selecciona el tipo para cada imagen antes de continuar."
       );
       return;
     }
@@ -156,13 +156,13 @@ export default function ImageMultiSelector({
         newImages: newImages.length > 0 ? newImages : undefined,
       };
 
-      // Await the parent callback — it performs the PATCH + updateStep.
+      // Await the parent callback â€” it performs the PATCH + updateStep.
       // Keep isProcessing=true until the parent finishes so the user sees
       // the spinner the whole time instead of a stale screen.
       await onValidationComplete(result);
     } catch (error) {
       console.error("Error processing validation:", error);
-      // Only reset processing on error — on success the parent will
+      // Only reset processing on error â€” on success the parent will
       // unmount this component by advancing to the next step.
       setIsProcessing(false);
     }
@@ -177,41 +177,41 @@ export default function ImageMultiSelector({
   const newImagesWithoutType = newImages.filter((img) => !img.type).length;
   const totalImagesWithoutType = validImagesWithoutType + newImagesWithoutType;
 
-  // Vista principal: Grid de imágenes (sin modo separado)
+  // Vista principal: Grid de imÃ¡genes (sin modo separado)
   return (
     <div className="space-y-6 w-full">
-      {/* Descripción de acceso */}
+      {/* DescripciÃ³n de acceso */}
       <ObservationsDisplay
         observations={descripcionAcceso}
-        title="Descripción de Acceso"
+        title="DescripciÃ³n de Acceso"
         icon={<Upload className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />}
       />
 
-      {/* Información de validación */}
+      {/* InformaciÃ³n de validaciÃ³n */}
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
         <h4 className="text-md font-semibold text-yellow-800 mb-2">
-          Validar Imágenes ({validCount} de {totalImages} válidas)
+          Validar ImÃ¡genes ({validCount} de {totalImages} vÃ¡lidas)
         </h4>
         <p className="text-yellow-700 text-sm mb-3">
-          Revisa cada imagen y marca las que son válidas. Puedes eliminar las que no sirvan y subir
+          Revisa cada imagen y marca las que son vÃ¡lidas. Puedes eliminar las que no sirvan y subir
           nuevas.
         </p>
         <ul className="text-yellow-700 text-sm space-y-1 list-disc list-inside">
           <li>
-            ✅ <strong>Válida:</strong> La imagen es clara y muestra bien el DEA
+            âœ… <strong>VÃ¡lida:</strong> La imagen es clara y muestra bien el DEA
           </li>
           <li>
-            ❌ <strong>Eliminar:</strong> La imagen es borrosa, incorrecta o no sirve
+            âŒ <strong>Eliminar:</strong> La imagen es borrosa, incorrecta o no sirve
           </li>
           <li>
-            📤 <strong>Subir nuevas:</strong> Agrega imágenes adicionales si es necesario
+            ðŸ“¤ <strong>Subir nuevas:</strong> Agrega imÃ¡genes adicionales si es necesario
           </li>
         </ul>
       </div>
 
-      {/* Grid de imágenes */}
+      {/* Grid de imÃ¡genes */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Imágenes existentes */}
+        {/* ImÃ¡genes existentes */}
         {imageStates.map((img, index) => (
           <div
             key={img.id}
@@ -243,7 +243,7 @@ export default function ImageMultiSelector({
                   img.isValid ? "bg-green-500 text-white" : "bg-red-500 text-white"
                 }`}
               >
-                {img.isValid ? "✓ Válida" : "✗ Eliminada"}
+                {img.isValid ? "âœ“ VÃ¡lida" : "âœ— Eliminada"}
               </div>
             </div>
 
@@ -295,14 +295,16 @@ export default function ImageMultiSelector({
                       </option>
                     ))}
                   </select>
-                  {!img.selectedType && <p className="text-xs text-red-600">⚠️ Tipo requerido</p>}
+                  {!img.selectedType && (
+                    <p className="text-xs text-red-600">âš ï¸ Tipo requerido</p>
+                  )}
                 </div>
               )}
             </div>
           </div>
         ))}
 
-        {/* Nuevas imágenes subidas */}
+        {/* Nuevas imÃ¡genes subidas */}
         {newImages.map((img, index) => (
           <div
             key={`new-${index}`}
@@ -315,7 +317,7 @@ export default function ImageMultiSelector({
                 className="w-full h-full object-cover"
               />
               <div className="absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500 text-white">
-                ✓ Nueva
+                âœ“ Nueva
               </div>
             </div>
             <div className="p-3 bg-gray-50 space-y-2">
@@ -347,7 +349,7 @@ export default function ImageMultiSelector({
                     </option>
                   ))}
                 </select>
-                {!img.type && <p className="text-xs text-red-600">⚠️ Tipo requerido</p>}
+                {!img.type && <p className="text-xs text-red-600">âš ï¸ Tipo requerido</p>}
               </div>
             </div>
           </div>
@@ -359,7 +361,7 @@ export default function ImageMultiSelector({
             <div className="text-center p-6">
               <Upload className="w-16 h-16 text-blue-600 mx-auto mb-3" />
               <p className="text-blue-800 font-semibold mb-2">Subir Nueva Imagen</p>
-              <p className="text-blue-600 text-xs">Haz clic para agregar más imágenes</p>
+              <p className="text-blue-600 text-xs">Haz clic para agregar mÃ¡s imÃ¡genes</p>
             </div>
             <input
               type="file"
@@ -370,9 +372,6 @@ export default function ImageMultiSelector({
                 if (file) {
                   try {
                     // Comprimir la imagen antes de subirla
-                    console.log(
-                      `📸 Subiendo imagen: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`
-                    );
 
                     const compressedUrl = await compressImageFile(file, {
                       maxWidth: 1920,
@@ -400,8 +399,8 @@ export default function ImageMultiSelector({
       {hasNoValidImages && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-700 text-sm">
-            ⚠️ <strong>Atención:</strong> No hay imágenes válidas. Debes marcar al menos una imagen
-            como válida o subir nuevas imágenes para continuar.
+            âš ï¸ <strong>AtenciÃ³n:</strong> No hay imÃ¡genes vÃ¡lidas. Debes marcar al menos una
+            imagen como vÃ¡lida o subir nuevas imÃ¡genes para continuar.
           </p>
         </div>
       )}
@@ -409,13 +408,13 @@ export default function ImageMultiSelector({
       {totalImagesWithoutType > 0 && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-yellow-800 text-sm">
-            ⚠️ <strong>Tipo de imagen requerido:</strong> {totalImagesWithoutType} imagen(es)
+            âš ï¸ <strong>Tipo de imagen requerido:</strong> {totalImagesWithoutType} imagen(es)
             necesitan que selecciones su tipo antes de continuar.
           </p>
         </div>
       )}
 
-      {/* Botones de acción */}
+      {/* Botones de acciÃ³n */}
       <div className="flex flex-col sm:flex-row gap-3">
         <button
           onClick={handleContinue}

@@ -1,8 +1,8 @@
 /**
  * Validate AED Import Use Case
  *
- * Caso de uso para validar una importación de AEDs SIN crear BatchJob.
- * Diseñado para validación previa rápida (< 60s para Vercel).
+ * Caso de uso para validar una importaciÃ³n de AEDs SIN crear BatchJob.
+ * DiseÃ±ado para validaciÃ³n previa rÃ¡pida (< 60s para Vercel).
  * NO persiste nada en base de datos, solo valida.
  */
 
@@ -30,12 +30,12 @@ export class ValidateAedImportUseCase {
     // Limitar registros para Vercel
     const maxRows = Math.min(request.maxRows || 100, this.MAX_ROWS);
 
-    // Función para verificar timeout
+    // FunciÃ³n para verificar timeout
     const checkTimeout = () => {
       return Date.now() - startTime > this.TIMEOUT_MS;
     };
 
-    // Ejecutar validación
+    // Ejecutar validaciÃ³n
     const result = await this.orchestrator.validateRecords({
       filePath: request.filePath,
       mappings: request.mappings,
@@ -46,7 +46,6 @@ export class ValidateAedImportUseCase {
     });
 
     const duration = Date.now() - startTime;
-    console.log(`Validation completed in ${duration}ms`);
 
     return result;
   }

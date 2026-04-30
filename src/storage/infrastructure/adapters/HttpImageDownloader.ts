@@ -1,5 +1,5 @@
 /**
- * Adapter HTTP para descarga de imágenes desde URLs externas
+ * Adapter HTTP para descarga de imÃ¡genes desde URLs externas
  * Capa de Infraestructura - Implementa IImageDownloader
  */
 
@@ -41,7 +41,7 @@ export class HttpImageDownloader implements IImageDownloader {
       Pragma: "no-cache",
     };
 
-    // Añadir autenticación de SharePoint si está disponible
+    // AÃ±adir autenticaciÃ³n de SharePoint si estÃ¡ disponible
     if (sharePointAuth && (sharePointAuth.rtFa || sharePointAuth.fedAuth)) {
       const cookies: string[] = [];
       if (sharePointAuth.rtFa) {
@@ -51,7 +51,6 @@ export class HttpImageDownloader implements IImageDownloader {
         cookies.push(`FedAuth=${sharePointAuth.fedAuth}`);
       }
       headers["Cookie"] = cookies.join("; ");
-      console.log(`🔐 [HttpImageDownloader] Usando autenticación de SharePoint`);
     }
 
     try {
@@ -71,17 +70,17 @@ export class HttpImageDownloader implements IImageDownloader {
       const contentType = response.headers.get("content-type") || "";
       if (!this.isValidImageContentType(contentType)) {
         throw new Error(
-          `Tipo de contenido no válido: ${contentType}. Solo se permiten imágenes: ${this.ALLOWED_CONTENT_TYPES.join(", ")}`
+          `Tipo de contenido no vÃ¡lido: ${contentType}. Solo se permiten imÃ¡genes: ${this.ALLOWED_CONTENT_TYPES.join(", ")}`
         );
       }
 
-      // Verificar tamaño del contenido (si está disponible en headers)
+      // Verificar tamaÃ±o del contenido (si estÃ¡ disponible en headers)
       const contentLength = response.headers.get("content-length");
       if (contentLength) {
         const size = parseInt(contentLength, 10);
         if (size > maxSizeBytes) {
           throw new Error(
-            `Imagen demasiado grande: ${(size / 1024 / 1024).toFixed(2)}MB. Máximo permitido: ${(maxSizeBytes / 1024 / 1024).toFixed(2)}MB`
+            `Imagen demasiado grande: ${(size / 1024 / 1024).toFixed(2)}MB. MÃ¡ximo permitido: ${(maxSizeBytes / 1024 / 1024).toFixed(2)}MB`
           );
         }
       }
@@ -90,10 +89,10 @@ export class HttpImageDownloader implements IImageDownloader {
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      // Verificar tamaño del buffer descargado
+      // Verificar tamaÃ±o del buffer descargado
       if (buffer.length > maxSizeBytes) {
         throw new Error(
-          `Imagen demasiado grande: ${(buffer.length / 1024 / 1024).toFixed(2)}MB. Máximo permitido: ${(maxSizeBytes / 1024 / 1024).toFixed(2)}MB`
+          `Imagen demasiado grande: ${(buffer.length / 1024 / 1024).toFixed(2)}MB. MÃ¡ximo permitido: ${(maxSizeBytes / 1024 / 1024).toFixed(2)}MB`
         );
       }
 
@@ -109,7 +108,7 @@ export class HttpImageDownloader implements IImageDownloader {
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === "TimeoutError" || error.name === "AbortError") {
-          throw new Error(`Timeout al descargar imagen desde ${url} después de ${timeoutMs}ms`);
+          throw new Error(`Timeout al descargar imagen desde ${url} despuÃ©s de ${timeoutMs}ms`);
         }
         throw error;
       }
@@ -130,7 +129,7 @@ export class HttpImageDownloader implements IImageDownloader {
       const segments = pathname.split("/");
       const lastSegment = segments[segments.length - 1];
 
-      // Si el último segmento tiene extensión, usarlo
+      // Si el Ãºltimo segmento tiene extensiÃ³n, usarlo
       if (lastSegment && lastSegment.includes(".")) {
         return lastSegment;
       }
@@ -140,7 +139,7 @@ export class HttpImageDownloader implements IImageDownloader {
       const timestamp = Date.now();
       return `image-${timestamp}.${extension}`;
     } catch {
-      // Fallback: nombre genérico
+      // Fallback: nombre genÃ©rico
       const extension = this.getExtensionFromContentType(contentType);
       return `image-${Date.now()}.${extension}`;
     }

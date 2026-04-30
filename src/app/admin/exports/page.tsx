@@ -1,5 +1,5 @@
 /**
- * Página de administración de exportaciones
+ * PÃ¡gina de administraciÃ³n de exportaciones
  * Permite exportar DEAs a archivos CSV
  */
 
@@ -60,7 +60,7 @@ export default function AdminExportsPage() {
 
     if (!response.ok) {
       const data = await response.json();
-      throw new Error(data.error || "Error al crear exportación");
+      throw new Error(data.error || "Error al crear exportaciÃ³n");
     }
 
     refetchExports();
@@ -116,9 +116,9 @@ export default function AdminExportsPage() {
           </div>
         </div>
 
-        {/* Botón para nueva exportación */}
+        {/* BotÃ³n para nueva exportaciÃ³n */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-1">Nueva Exportación</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-1">Nueva ExportaciÃ³n</h2>
           <p className="text-sm text-gray-600 mb-4">
             Exporta datos de DEAs a CSV con filtros personalizados (estado, ciudad, origen)
           </p>
@@ -127,7 +127,7 @@ export default function AdminExportsPage() {
             className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center space-x-2"
           >
             <Download className="w-5 h-5" />
-            <span>Iniciar Nueva Exportación</span>
+            <span>Iniciar Nueva ExportaciÃ³n</span>
           </button>
         </div>
 
@@ -150,7 +150,7 @@ export default function AdminExportsPage() {
           {exportPagination && exportPagination.totalPages > 1 && (
             <div className="border-t border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between">
               <div className="text-sm text-gray-700">
-                Página {exportPage} de {exportPagination.totalPages}
+                PÃ¡gina {exportPage} de {exportPagination.totalPages}
                 <span className="hidden sm:inline"> ({exportPagination.total} total)</span>
               </div>
 

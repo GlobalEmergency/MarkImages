@@ -1,9 +1,9 @@
 /**
- * BulkImportDuplicateAdapter — Bridges IDuplicateDetector with @batchactions/import
+ * BulkImportDuplicateAdapter â€” Bridges IDuplicateDetector with @batchactions/import
  *
  * Thin adapter that maps:
  *   DuplicateChecker (from @batchactions/import)
- *     → IDuplicateDetector (our domain port)
+ *     â†’ IDuplicateDetector (our domain port)
  *
  * Converts raw field maps from the import pipeline into DuplicateCriteria,
  * delegates to the detector, and maps results back to DuplicateCheckResult.
@@ -32,7 +32,7 @@ export class BulkImportDuplicateAdapter implements DuplicateChecker {
     private readonly options: BulkImportDuplicateAdapterOptions
   ) {}
 
-  /** Single-record check — delegates to detector.check() */
+  /** Single-record check â€” delegates to detector.check() */
   async check(
     fields: Record<string, unknown>,
     _context: ProcessingContext
@@ -42,7 +42,7 @@ export class BulkImportDuplicateAdapter implements DuplicateChecker {
     return this.mapResult(result);
   }
 
-  /** Batch-optimized check — delegates to detector.checkBatch() */
+  /** Batch-optimized check â€” delegates to detector.checkBatch() */
   async checkBatch(
     records: readonly { fields: Record<string, unknown>; context: ProcessingContext }[]
   ): Promise<readonly BulkImportDuplicateResult[]> {
@@ -52,7 +52,7 @@ export class BulkImportDuplicateAdapter implements DuplicateChecker {
   }
 
   /**
-   * Convert raw import fields → DuplicateCriteria.
+   * Convert raw import fields â†’ DuplicateCriteria.
    * Field names follow the import schema (camelCase validated fields).
    */
   private fieldsToCriteria(fields: Record<string, unknown>): DuplicateCriteria {
@@ -75,7 +75,7 @@ export class BulkImportDuplicateAdapter implements DuplicateChecker {
     });
   }
 
-  /** Map DetectionResult → DuplicateCheckResult (the @batchactions interface) */
+  /** Map DetectionResult â†’ DuplicateCheckResult (the @batchactions interface) */
   private mapResult(result: DetectionResult): BulkImportDuplicateResult {
     if (!result.isDuplicate) {
       return { isDuplicate: false };

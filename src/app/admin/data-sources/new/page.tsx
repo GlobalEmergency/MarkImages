@@ -21,22 +21,22 @@ interface ExistingDataSource {
 const SOURCE_ORIGINS = [
   { value: "EXTERNAL_API", label: "API Externa" },
   { value: "HEALTH_API", label: "API de Salud" },
-  { value: "CIVIL_PROTECTION_API", label: "API Protección Civil" },
+  { value: "CIVIL_PROTECTION_API", label: "API ProtecciÃ³n Civil" },
   { value: "FIRE_DEPARTMENT_API", label: "API Bomberos" },
 ];
 
 const COUNTRY_CODES = [
-  { value: "ES", label: "España" },
+  { value: "ES", label: "EspaÃ±a" },
   { value: "FR", label: "Francia" },
   { value: "IT", label: "Italia" },
   { value: "DE", label: "Alemania" },
   { value: "PT", label: "Portugal" },
   { value: "CH", label: "Suiza" },
   { value: "AT", label: "Austria" },
-  { value: "BE", label: "Bélgica" },
+  { value: "BE", label: "BÃ©lgica" },
   { value: "SI", label: "Eslovenia" },
   { value: "GB", label: "Reino Unido" },
-  { value: "NL", label: "Países Bajos" },
+  { value: "NL", label: "PaÃ­ses Bajos" },
   { value: "DK", label: "Dinamarca" },
   { value: "SE", label: "Suecia" },
   { value: "NO", label: "Noruega" },
@@ -45,15 +45,15 @@ const COUNTRY_CODES = [
 const REGION_CODES_BY_COUNTRY: Record<string, Array<{ value: string; label: string }>> = {
   ES: [
     { value: "ES", label: "Nacional" },
-    { value: "ES-AN", label: "Andalucía" },
-    { value: "ES-AR", label: "Aragón" },
+    { value: "ES-AN", label: "AndalucÃ­a" },
+    { value: "ES-AR", label: "AragÃ³n" },
     { value: "ES-AS", label: "Asturias" },
     { value: "ES-IB", label: "Islas Baleares" },
     { value: "ES-CN", label: "Canarias" },
     { value: "ES-CB", label: "Cantabria" },
-    { value: "ES-CL", label: "Castilla y León" },
+    { value: "ES-CL", label: "Castilla y LeÃ³n" },
     { value: "ES-CM", label: "Castilla-La Mancha" },
-    { value: "ES-CT", label: "Cataluña" },
+    { value: "ES-CT", label: "CataluÃ±a" },
     { value: "ES-CE", label: "Ceuta" },
     { value: "ES-EX", label: "Extremadura" },
     { value: "ES-GA", label: "Galicia" },
@@ -61,14 +61,14 @@ const REGION_CODES_BY_COUNTRY: Record<string, Array<{ value: string; label: stri
     { value: "ES-ML", label: "Melilla" },
     { value: "ES-MC", label: "Murcia" },
     { value: "ES-NC", label: "Navarra" },
-    { value: "ES-PV", label: "País Vasco" },
+    { value: "ES-PV", label: "PaÃ­s Vasco" },
     { value: "ES-RI", label: "La Rioja" },
     { value: "ES-VC", label: "Valencia" },
   ],
   FR: [
     { value: "FR", label: "Nacional" },
-    { value: "FR-IDF", label: "Île-de-France" },
-    { value: "FR-ARA", label: "Auvergne-Rhône-Alpes" },
+    { value: "FR-IDF", label: "ÃŽle-de-France" },
+    { value: "FR-ARA", label: "Auvergne-RhÃ´ne-Alpes" },
     { value: "FR-OCC", label: "Occitanie" },
     { value: "FR-NAQ", label: "Nouvelle-Aquitaine" },
     { value: "FR-PDL", label: "Pays de la Loire" },
@@ -77,16 +77,16 @@ const REGION_CODES_BY_COUNTRY: Record<string, Array<{ value: string; label: stri
     { value: "FR-HDF", label: "Hauts-de-France" },
     { value: "FR-NOR", label: "Normandie" },
     { value: "FR-CVL", label: "Centre-Val de Loire" },
-    { value: "FR-BFC", label: "Bourgogne-Franche-Comté" },
-    { value: "FR-PAC", label: "Provence-Alpes-Côte d'Azur" },
+    { value: "FR-BFC", label: "Bourgogne-Franche-ComtÃ©" },
+    { value: "FR-PAC", label: "Provence-Alpes-CÃ´te d'Azur" },
     { value: "FR-COR", label: "Corse" },
   ],
   IT: [
     { value: "IT", label: "Nacional" },
-    { value: "IT-45", label: "Emilia-Romaña" },
-    { value: "IT-25", label: "Lombardía" },
+    { value: "IT-45", label: "Emilia-RomaÃ±a" },
+    { value: "IT-25", label: "LombardÃ­a" },
     { value: "IT-32", label: "Trentino-Alto Adigio" },
-    { value: "IT-34", label: "Véneto" },
+    { value: "IT-34", label: "VÃ©neto" },
     { value: "IT-52", label: "Toscana" },
     { value: "IT-62", label: "Lacio" },
   ],
@@ -94,7 +94,7 @@ const REGION_CODES_BY_COUNTRY: Record<string, Array<{ value: string; label: stri
     { value: "DE", label: "Nacional" },
     { value: "DE-BY", label: "Bavaria" },
     { value: "DE-NW", label: "Nordrhein-Westfalen" },
-    { value: "DE-BW", label: "Baden-Württemberg" },
+    { value: "DE-BW", label: "Baden-WÃ¼rttemberg" },
     { value: "DE-NI", label: "Niedersachsen" },
     { value: "DE-HE", label: "Hessen" },
     { value: "DE-BE", label: "Berlin" },
@@ -132,9 +132,9 @@ const REGION_CODES_BY_COUNTRY: Record<string, Array<{ value: string; label: stri
 };
 
 const PAGINATION_STRATEGIES = [
-  { value: "none", label: "Sin paginación" },
+  { value: "none", label: "Sin paginaciÃ³n" },
   { value: "offset", label: "Offset (offset + limit)" },
-  { value: "page", label: "Página (page + per_page)" },
+  { value: "page", label: "PÃ¡gina (page + per_page)" },
   { value: "cursor", label: "Cursor (cursor + limit)" },
 ];
 
@@ -168,7 +168,7 @@ export default function NewDataSourcePage() {
     paginationCursorResponsePath: "",
     paginationTotalCountPath: "",
     paginationHasMorePath: "",
-    // Común
+    // ComÃºn
     syncFrequency: "MANUAL",
     defaultPublicationMode: "LOCATION_ONLY",
     isActive: true,
@@ -188,7 +188,7 @@ export default function NewDataSourcePage() {
         }
       })
       .catch(() => {
-        // Silently fail — templates are optional
+        // Silently fail â€” templates are optional
       });
   }, []);
 
@@ -257,7 +257,7 @@ export default function NewDataSourcePage() {
     try {
       setLoading(true);
 
-      // Construir el objeto config según el tipo
+      // Construir el objeto config segÃºn el tipo
       let config: Record<string, unknown> = {
         fieldMapping: form.fieldMapping,
       };
@@ -286,7 +286,7 @@ export default function NewDataSourcePage() {
           try {
             config.requestBody = JSON.parse(form.requestBody);
           } catch {
-            setError("El cuerpo de la petición debe ser JSON válido");
+            setError("El cuerpo de la peticiÃ³n debe ser JSON vÃ¡lido");
             return;
           }
         }
@@ -399,7 +399,7 @@ export default function NewDataSourcePage() {
           </Link>
           <h1 className="text-3xl font-bold text-gray-900">Nueva Fuente de Datos</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Configura una nueva fuente de datos externa para importar DEAs automáticamente
+            Configura una nueva fuente de datos externa para importar DEAs automÃ¡ticamente
           </p>
         </div>
 
@@ -407,7 +407,7 @@ export default function NewDataSourcePage() {
         {templates.length > 0 && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <label htmlFor="template" className="block text-sm font-medium text-blue-800 mb-2">
-              Copiar configuración de una fuente existente
+              Copiar configuraciÃ³n de una fuente existente
             </label>
             <select
               id="template"
@@ -451,7 +451,7 @@ export default function NewDataSourcePage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Info */}
           <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Información Básica</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-4">InformaciÃ³n BÃ¡sica</h2>
 
             <div className="space-y-4">
               <div>
@@ -487,7 +487,7 @@ export default function NewDataSourcePage() {
 
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                  Descripción
+                  DescripciÃ³n
                 </label>
                 <textarea
                   id="description"
@@ -495,7 +495,7 @@ export default function NewDataSourcePage() {
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   rows={3}
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Descripción de la fuente de datos..."
+                  placeholder="DescripciÃ³n de la fuente de datos..."
                 />
               </div>
 
@@ -520,7 +520,7 @@ export default function NewDataSourcePage() {
 
                 <div>
                   <label htmlFor="countryCode" className="block text-sm font-medium text-gray-700">
-                    País *
+                    PaÃ­s *
                   </label>
                   <select
                     id="countryCode"
@@ -543,7 +543,7 @@ export default function NewDataSourcePage() {
 
                 <div>
                   <label htmlFor="regionCode" className="block text-sm font-medium text-gray-700">
-                    Región *
+                    RegiÃ³n *
                   </label>
                   <select
                     id="regionCode"
@@ -566,7 +566,7 @@ export default function NewDataSourcePage() {
                     htmlFor="syncFrequency"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    Frecuencia de Sincronización
+                    Frecuencia de SincronizaciÃ³n
                   </label>
                   <select
                     id="syncFrequency"
@@ -586,7 +586,7 @@ export default function NewDataSourcePage() {
                     htmlFor="defaultPublicationMode"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    Modo de Publicación por Defecto
+                    Modo de PublicaciÃ³n por Defecto
                   </label>
                   <select
                     id="defaultPublicationMode"
@@ -595,9 +595,9 @@ export default function NewDataSourcePage() {
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   >
                     <option value="NONE">Ninguno - No publicar</option>
-                    <option value="LOCATION_ONLY">Solo ubicación</option>
-                    <option value="BASIC_INFO">Info básica (ubicación + horario + tipo)</option>
-                    <option value="FULL">Información completa</option>
+                    <option value="LOCATION_ONLY">Solo ubicaciÃ³n</option>
+                    <option value="BASIC_INFO">Info bÃ¡sica (ubicaciÃ³n + horario + tipo)</option>
+                    <option value="FULL">InformaciÃ³n completa</option>
                   </select>
                 </div>
               </div>
@@ -621,7 +621,7 @@ export default function NewDataSourcePage() {
           {form.type === "JSON_FILE" && (
             <div className="bg-white shadow rounded-lg p-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4">
-                Configuración de Archivo JSON
+                ConfiguraciÃ³n de Archivo JSON
               </h2>
 
               <div className="space-y-4">
@@ -653,7 +653,7 @@ export default function NewDataSourcePage() {
                   />
                   <p className="mt-1 text-xs text-gray-500">
                     Propiedad del JSON que contiene el array de registros. Ej: &quot;data&quot;,
-                    &quot;records&quot;, &quot;result.items&quot;. Dejar vacío para auto-detectar.
+                    &quot;records&quot;, &quot;result.items&quot;. Dejar vacÃ­o para auto-detectar.
                   </p>
                 </div>
               </div>
@@ -663,7 +663,7 @@ export default function NewDataSourcePage() {
           {/* CKAN API Configuration */}
           {form.type === "CKAN_API" && (
             <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Configuración de API CKAN</h2>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">ConfiguraciÃ³n de API CKAN</h2>
 
               <div className="space-y-4">
                 <div>
@@ -693,7 +693,7 @@ export default function NewDataSourcePage() {
                     placeholder="fba1b963-3aa3-42d2-8316-1228d2be69c9"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    Identificador único del recurso en el catálogo de datos
+                    Identificador Ãºnico del recurso en el catÃ¡logo de datos
                   </p>
                 </div>
               </div>
@@ -703,7 +703,7 @@ export default function NewDataSourcePage() {
           {/* REST API Configuration */}
           {form.type === "REST_API" && (
             <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Configuración de API REST</h2>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">ConfiguraciÃ³n de API REST</h2>
 
               <div className="space-y-4">
                 <div>
@@ -726,7 +726,7 @@ export default function NewDataSourcePage() {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label htmlFor="method" className="block text-sm font-medium text-gray-700">
-                      Método HTTP
+                      MÃ©todo HTTP
                     </label>
                     <select
                       id="method"
@@ -765,7 +765,7 @@ export default function NewDataSourcePage() {
                       htmlFor="requestBody"
                       className="block text-sm font-medium text-gray-700"
                     >
-                      Cuerpo de la petición (JSON)
+                      Cuerpo de la peticiÃ³n (JSON)
                     </label>
                     <textarea
                       id="requestBody"
@@ -780,7 +780,7 @@ export default function NewDataSourcePage() {
 
                 {/* Pagination */}
                 <div className="border-t pt-4">
-                  <h3 className="text-sm font-medium text-gray-900 mb-3">Paginación</h3>
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">PaginaciÃ³n</h3>
 
                   <div>
                     <label
@@ -807,7 +807,7 @@ export default function NewDataSourcePage() {
                     <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <div>
                         <label className="block text-xs font-medium text-gray-600">
-                          Parámetro de límite
+                          ParÃ¡metro de lÃ­mite
                         </label>
                         <input
                           type="text"
@@ -821,7 +821,7 @@ export default function NewDataSourcePage() {
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-600">
-                          Registros por página
+                          Registros por pÃ¡gina
                         </label>
                         <input
                           type="number"
@@ -837,7 +837,7 @@ export default function NewDataSourcePage() {
                       {form.paginationStrategy === "offset" && (
                         <div>
                           <label className="block text-xs font-medium text-gray-600">
-                            Parámetro de offset
+                            ParÃ¡metro de offset
                           </label>
                           <input
                             type="text"
@@ -854,7 +854,7 @@ export default function NewDataSourcePage() {
                       {form.paginationStrategy === "page" && (
                         <div>
                           <label className="block text-xs font-medium text-gray-600">
-                            Parámetro de página
+                            ParÃ¡metro de pÃ¡gina
                           </label>
                           <input
                             type="text"
@@ -872,7 +872,7 @@ export default function NewDataSourcePage() {
                         <>
                           <div>
                             <label className="block text-xs font-medium text-gray-600">
-                              Parámetro de cursor
+                              ParÃ¡metro de cursor
                             </label>
                             <input
                               type="text"
@@ -928,7 +928,7 @@ export default function NewDataSourcePage() {
               <div>
                 <h2 className="text-lg font-medium text-gray-900">Mapeo de Campos</h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  Campo fuente &rarr; Campo del sistema. Deja vacío si no aplica.
+                  Campo fuente &rarr; Campo del sistema. Deja vacÃ­o si no aplica.
                 </p>
               </div>
               <button
@@ -936,14 +936,14 @@ export default function NewDataSourcePage() {
                 onClick={addFieldMapping}
                 className="text-sm text-blue-600 hover:text-blue-800"
               >
-                + Añadir campo
+                + AÃ±adir campo
               </button>
             </div>
 
             {Object.keys(form.fieldMapping).length === 0 ? (
               <p className="text-sm text-gray-400 italic">
-                Sin mapeo de campos configurado. Pulsa &quot;Añadir campo&quot; para empezar o copia
-                desde una fuente existente.
+                Sin mapeo de campos configurado. Pulsa &quot;AÃ±adir campo&quot; para empezar o
+                copia desde una fuente existente.
               </p>
             ) : (
               <div className="space-y-2">

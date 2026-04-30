@@ -174,7 +174,7 @@ export default function AdminClustersPage() {
           <h1 className="text-3xl font-bold text-gray-900">Cache de Clusters del Mapa</h1>
           <p className="mt-2 text-sm text-gray-600">
             Los clusters pre-computados permiten renderizar el mapa con millones de puntos de forma
-            instantánea. Sin la cache, cada movimiento del mapa requiere una query pesada sobre
+            instantÃ¡nea. Sin la cache, cada movimiento del mapa requiere una query pesada sobre
             todos los DEAs.
           </p>
         </div>
@@ -206,9 +206,9 @@ export default function AdminClustersPage() {
                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
                   />
                 </svg>
-                <h3 className="mt-4 text-lg font-medium text-gray-900">Cache vacía</h3>
+                <h3 className="mt-4 text-lg font-medium text-gray-900">Cache vacÃ­a</h3>
                 <p className="mt-2 text-sm text-gray-500">
-                  El mapa está usando queries en tiempo real, lo que puede ser lento con muchos
+                  El mapa estÃ¡ usando queries en tiempo real, lo que puede ser lento con muchos
                   puntos. Genera la cache para mejorar el rendimiento.
                 </p>
               </div>
@@ -227,7 +227,7 @@ export default function AdminClustersPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Tiempo de generación</p>
+                  <p className="text-sm text-gray-500">Tiempo de generaciÃ³n</p>
                   <p className="text-2xl font-bold text-gray-900">
                     {cacheStatus?.metadata
                       ? `${(cacheStatus.metadata.duration_ms / 1000).toFixed(1)}s`
@@ -235,7 +235,7 @@ export default function AdminClustersPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Última actualización</p>
+                  <p className="text-sm text-gray-500">Ãšltima actualizaciÃ³n</p>
                   <p className="text-lg font-semibold text-gray-900">
                     {cacheStatus?.metadata
                       ? new Date(cacheStatus.metadata.last_regenerated).toLocaleString("es-ES")
@@ -314,7 +314,8 @@ export default function AdminClustersPage() {
                       className="flex items-center justify-between text-sm py-1 px-3 bg-green-50 rounded"
                     >
                       <span className="text-green-800">
-                        Zoom {z.zoomLevel} — {z.clustersGenerated.toLocaleString("es-ES")} clusters
+                        Zoom {z.zoomLevel} â€” {z.clustersGenerated.toLocaleString("es-ES")}{" "}
+                        clusters
                       </span>
                       <span className="text-green-600">{(z.durationMs / 1000).toFixed(1)}s</span>
                     </div>

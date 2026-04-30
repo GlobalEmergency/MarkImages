@@ -1,5 +1,5 @@
 /**
- * Página de administración de importaciones
+ * PÃ¡gina de administraciÃ³n de importaciones
  * Permite importar DEAs desde archivos CSV
  */
 
@@ -125,7 +125,7 @@ export default function AdminImportsPage() {
         </div>
 
         {showWizard ? (
-          /* Wizard de importación */
+          /* Wizard de importaciÃ³n */
           <div className="bg-white rounded-xl shadow-lg p-6">
             <button
               onClick={() => setShowWizard(false)}
@@ -142,18 +142,18 @@ export default function AdminImportsPage() {
           </div>
         ) : (
           <>
-            {/* Botón para nueva importación */}
+            {/* BotÃ³n para nueva importaciÃ³n */}
             <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Nueva Importación</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Nueva ImportaciÃ³n</h2>
               <p className="text-sm text-gray-600 mb-4">
-                Importa datos desde archivos CSV con mapeo de columnas y validación
+                Importa datos desde archivos CSV con mapeo de columnas y validaciÃ³n
               </p>
               <button
                 onClick={() => setShowWizard(true)}
                 className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center space-x-2"
               >
                 <Upload className="w-5 h-5" />
-                <span>Iniciar Nueva Importación</span>
+                <span>Iniciar Nueva ImportaciÃ³n</span>
               </button>
             </div>
 
@@ -177,7 +177,7 @@ export default function AdminImportsPage() {
               {pagination && pagination.totalPages > 1 && (
                 <div className="border-t border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between">
                   <div className="text-sm text-gray-700">
-                    Página {importPage} de {pagination.totalPages}
+                    PÃ¡gina {importPage} de {pagination.totalPages}
                     <span className="hidden sm:inline"> ({pagination.total} total)</span>
                   </div>
 

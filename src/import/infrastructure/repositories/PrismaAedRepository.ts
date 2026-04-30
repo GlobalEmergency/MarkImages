@@ -1,7 +1,7 @@
 /**
  * Prisma AED Repository (Infrastructure)
  *
- * Implementación concreta de IAedRepository usando Prisma.
+ * ImplementaciÃ³n concreta de IAedRepository usando Prisma.
  * Sigue el principio DIP: implementa la interfaz del dominio.
  */
 
@@ -101,13 +101,13 @@ export class PrismaAedRepository implements IAedRepository {
         matchedExternalReference: aed.external_reference,
       };
     } catch {
-      // ID no válido (no es UUID)
+      // ID no vÃ¡lido (no es UUID)
       return null;
     }
   }
 
   // ============================================================
-  // Batch methods — optimized for checkBatch() (single query per field)
+  // Batch methods â€” optimized for checkBatch() (single query per field)
   // ============================================================
 
   async findByIds(ids: string[]): Promise<Map<string, DuplicateCheckResult>> {
@@ -130,8 +130,8 @@ export class PrismaAedRepository implements IAedRepository {
         });
       }
     } catch {
-      // Si algún ID no es UUID válido, Prisma puede fallar;
-      // fallback silencioso (los IDs inválidos simplemente no matchean)
+      // Si algÃºn ID no es UUID vÃ¡lido, Prisma puede fallar;
+      // fallback silencioso (los IDs invÃ¡lidos simplemente no matchean)
     }
 
     return result;

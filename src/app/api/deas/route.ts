@@ -71,13 +71,13 @@ export async function GET(request: NextRequest) {
 
       if (organizationId && !allowedOrgIds.includes(organizationId)) {
         return NextResponse.json(
-          { success: false, error: "No tienes acceso a esta organización" },
+          { success: false, error: "No tienes acceso a esta organizaciÃ³n" },
           { status: 403 }
         );
       }
     }
 
-    // ── Admin global view (no org filter): query Aed table directly ──
+    // â”€â”€ Admin global view (no org filter): query Aed table directly â”€â”€
     // This ensures ALL DEAs are visible, even those without any assignment.
     const useDirectAedQuery = isAdmin && !organizationId && !status && !assignmentType;
 
@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
           id: aed.id,
           name: aed.name,
           code: aed.code,
-          address: addressParts.join(" ") || "Sin dirección",
+          address: addressParts.join(" ") || "Sin direcciÃ³n",
           city: loc?.city_name || null,
           district: loc?.district_name || null,
           postal_code: loc?.postal_code || null,
@@ -175,7 +175,7 @@ export async function GET(request: NextRequest) {
         };
       });
     } else {
-      // ── Organization-scoped view: query via assignments table ──
+      // â”€â”€ Organization-scoped view: query via assignments table â”€â”€
       const whereClause: AedOrganizationAssignmentWhereInput = {};
 
       // Organization filter
@@ -269,7 +269,7 @@ export async function GET(request: NextRequest) {
           id: assignment.aed.id,
           name: assignment.aed.name,
           code: assignment.aed.code,
-          address: addressParts.join(" ") || "Sin dirección",
+          address: addressParts.join(" ") || "Sin direcciÃ³n",
           city: loc?.city_name || null,
           district: loc?.district_name || null,
           postal_code: loc?.postal_code || null,

@@ -13,7 +13,7 @@ interface AddressValidationProps {
 
 // Interfaz completa con campos de AedLocation (v2)
 interface AddressData {
-  // Dirección básica
+  // DirecciÃ³n bÃ¡sica
   street_type?: string;
   street_name?: string;
   street_number?: string;
@@ -24,7 +24,7 @@ interface AddressData {
   longitude?: number;
   coordinates_precision?: string;
 
-  // Geografía
+  // GeografÃ­a
   city_name?: string;
   city_code?: string;
   district_code?: string;
@@ -34,7 +34,7 @@ interface AddressData {
   autonomous_community?: string;
   country?: string;
 
-  // Acceso y ubicación (v2 - simplified)
+  // Acceso y ubicaciÃ³n (v2 - simplified)
   floor?: string;
   location_details?: string;
   access_instructions?: string;
@@ -116,7 +116,7 @@ export default function AddressValidation({
     neighborhood_code: currentAddress?.neighborhood_code,
     neighborhood_name: currentAddress?.neighborhood_name,
     autonomous_community: currentAddress?.autonomous_community || "",
-    country: currentAddress?.country || "España",
+    country: currentAddress?.country || "EspaÃ±a",
     floor: currentAddress?.floor,
     location_details: currentAddress?.location_details || currentAddress?.specific_location || "",
     access_instructions:
@@ -147,7 +147,7 @@ export default function AddressValidation({
           "Avenida",
           "Plaza",
           "Paseo",
-          "Travesía",
+          "TravesÃ­a",
           "Glorieta",
           "Ronda",
           "Camino",
@@ -174,9 +174,9 @@ export default function AddressValidation({
           params.append("postalCode", currentAddress.postal_code);
         }
 
-        // Add country context - default to España only if no country specified
+        // Add country context - default to EspaÃ±a only if no country specified
         // For now we assume Spain, but this could be extended
-        params.append("country", "España");
+        params.append("country", "EspaÃ±a");
 
         const response = await fetch(`/api/geocode?${params.toString()}`);
 
@@ -215,7 +215,7 @@ export default function AddressValidation({
     if (!mapRef.current) return;
     if (!hasCoordinates && !suggestedAddress?.latitude) return;
 
-    // When coordinates changed via marker drag, just update the popup — don't
+    // When coordinates changed via marker drag, just update the popup â€” don't
     // tear down and rebuild the entire map (which causes a visual flash).
     if (dragOriginRef.current) {
       dragOriginRef.current = false;
@@ -223,14 +223,14 @@ export default function AddressValidation({
       if (currentMarkerRef.current && addressForm.latitude && addressForm.longitude) {
         currentMarkerRef.current.setPopupContent(`
           <div style="min-width: 200px;">
-            <b style="color: #dc2626;">🔴 Ubicación Actual</b><br/>
+            <b style="color: #dc2626;">ðŸ”´ UbicaciÃ³n Actual</b><br/>
             <div style="margin-top: 8px; font-size: 12px;">
               ${addressForm.street_type || ""} ${addressForm.street_name || ""} ${addressForm.street_number || ""}<br/>
               <span style="font-family: monospace; color: #666;">
                 Lat: ${addressForm.latitude.toFixed(6)}<br/>
                 Lng: ${addressForm.longitude.toFixed(6)}
               </span><br/>
-              <span style="color: #059669; font-size: 11px;">📍 Posición ajustada manualmente</span>
+              <span style="color: #059669; font-size: 11px;">ðŸ“ PosiciÃ³n ajustada manualmente</span>
             </div>
           </div>
         `);
@@ -286,20 +286,20 @@ export default function AddressValidation({
 
       // Add OpenStreetMap tiles
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "© OpenStreetMap contributors",
+        attribution: "Â© OpenStreetMap contributors",
       }).addTo(map);
 
       // Custom icons
       const redIcon = L.divIcon({
         className: "custom-marker",
-        html: '<div style="background-color: #dc2626; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"><div style="transform: rotate(45deg); margin-top: 4px; margin-left: 8px; color: white; font-weight: bold; font-size: 16px;">📍</div></div>',
+        html: '<div style="background-color: #dc2626; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"><div style="transform: rotate(45deg); margin-top: 4px; margin-left: 8px; color: white; font-weight: bold; font-size: 16px;">ðŸ“</div></div>',
         iconSize: [30, 30],
         iconAnchor: [15, 30],
       });
 
       const blueIcon = L.divIcon({
         className: "custom-marker",
-        html: '<div style="background-color: #2563eb; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"><div style="transform: rotate(45deg); margin-top: 4px; margin-left: 8px; color: white; font-weight: bold; font-size: 16px;">📍</div></div>',
+        html: '<div style="background-color: #2563eb; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"><div style="transform: rotate(45deg); margin-top: 4px; margin-left: 8px; color: white; font-weight: bold; font-size: 16px;">ðŸ“</div></div>',
         iconSize: [30, 30],
         iconAnchor: [15, 30],
       });
@@ -315,7 +315,7 @@ export default function AddressValidation({
 
         currentMarker.bindPopup(`
           <div style="min-width: 200px;">
-            <b style="color: #dc2626;">🔴 Ubicación Actual (BD)</b><br/>
+            <b style="color: #dc2626;">ðŸ”´ UbicaciÃ³n Actual (BD)</b><br/>
             <div style="margin-top: 8px; font-size: 12px;">
               ${addressForm.street_type || ""} ${addressForm.street_name || ""} ${addressForm.street_number || ""}<br/>
               <span style="font-family: monospace; color: #666;">
@@ -351,7 +351,7 @@ export default function AddressValidation({
 
         suggestedMarker.bindPopup(`
           <div style="min-width: 200px;">
-            <b style="color: #2563eb;">🔵 Ubicación Geocoder (${comparisonSource === "google" ? "Google Maps" : "OSM"})</b><br/>
+            <b style="color: #2563eb;">ðŸ”µ UbicaciÃ³n Geocoder (${comparisonSource === "google" ? "Google Maps" : "OSM"})</b><br/>
             <div style="margin-top: 8px; font-size: 12px;">
               ${suggestedAddress.street_type || ""} ${suggestedAddress.street_name || ""} ${suggestedAddress.street_number || ""}<br/>
               <span style="font-family: monospace; color: #666;">
@@ -397,7 +397,7 @@ export default function AddressValidation({
       "Avenida",
       "Plaza",
       "Paseo",
-      "Travesía",
+      "TravesÃ­a",
       "Glorieta",
       "Ronda",
       "Camino",
@@ -482,9 +482,6 @@ export default function AddressValidation({
   };
 
   const validateAddress = async () => {
-    console.log("=== Starting address validation ===");
-    console.log("Address form data:", addressForm);
-
     setLoading(true);
     try {
       setValidated(true);
@@ -497,7 +494,6 @@ export default function AddressValidation({
           : undefined,
       };
 
-      console.log("Validated address:", validatedAddress);
       // Parent calls updateStep which triggers a re-render that unmounts us.
       // Keep loading=true so the spinner stays visible until the step transitions.
       onValidationComplete(validatedAddress);
@@ -547,7 +543,7 @@ export default function AddressValidation({
       );
     }
 
-    // Comparación normal lado a lado (cuando SÍ viene del geocoder)
+    // ComparaciÃ³n normal lado a lado (cuando SÃ viene del geocoder)
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
         <div>
@@ -600,7 +596,7 @@ export default function AddressValidation({
       {/* Main Address Search */}
       <div className="mb-6">
         <label className="block text-lg font-semibold text-gray-900 mb-3">
-          Buscar y verificar dirección del DEA
+          Buscar y verificar direcciÃ³n del DEA
         </label>
         <div className="relative">
           <div className="relative">
@@ -612,7 +608,7 @@ export default function AddressValidation({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => searchResults.length > 0 && setShowResults(true)}
-              placeholder="Escribe la dirección completa (ej: Calle Gran Vía 28, Madrid)"
+              placeholder="Escribe la direcciÃ³n completa (ej: Calle Gran VÃ­a 28, Madrid)"
               className="w-full pl-12 pr-12 py-4 text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all shadow-sm hover:border-gray-400"
               disabled={showingComparison}
             />
@@ -624,7 +620,7 @@ export default function AddressValidation({
                   setShowResults(false);
                 }}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label="Limpiar búsqueda"
+                aria-label="Limpiar bÃºsqueda"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -655,7 +651,7 @@ export default function AddressValidation({
                         </p>
                         {result.address.house_number && (
                           <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
-                            Nº exacto
+                            NÂº exacto
                           </span>
                         )}
                         {result.source === "google" && (
@@ -667,7 +663,7 @@ export default function AddressValidation({
                       <p className="text-sm text-gray-500 truncate">{result.display_name}</p>
                       {!result.address.house_number && (
                         <p className="text-xs text-amber-600 mt-1">
-                          ⚠️ Sin número - ubicación aproximada
+                          âš ï¸ Sin nÃºmero - ubicaciÃ³n aproximada
                         </p>
                       )}
                     </div>
@@ -685,7 +681,7 @@ export default function AddressValidation({
                 No se encontraron resultados
               </p>
               <p className="text-sm text-gray-500">
-                Intenta con otra búsqueda o edita la dirección manualmente
+                Intenta con otra bÃºsqueda o edita la direcciÃ³n manualmente
               </p>
             </div>
           )}
@@ -693,8 +689,8 @@ export default function AddressValidation({
           {/* Search Hint */}
           {!searchQuery && !hasAddress && !showingComparison && (
             <p className="mt-2 text-sm text-gray-500 flex items-center space-x-2">
-              <span>💡</span>
-              <span>Empieza a escribir para ver sugerencias automáticas</span>
+              <span>ðŸ’¡</span>
+              <span>Empieza a escribir para ver sugerencias automÃ¡ticas</span>
             </p>
           )}
         </div>
@@ -704,17 +700,18 @@ export default function AddressValidation({
       {showingComparison && suggestedAddress && (
         <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-blue-900">📍 Comparar Direcciones</h3>
+            <h3 className="text-lg font-semibold text-blue-900">ðŸ“ Comparar Direcciones</h3>
             <button
               onClick={cancelComparison}
               className="text-blue-600 hover:text-blue-700 text-sm font-medium"
             >
-              Cancelar comparación
+              Cancelar comparaciÃ³n
             </button>
           </div>
 
           <p className="text-sm text-blue-800">
-            Selecciona qué dirección deseas usar. Haz clic en los campos sugeridos para aplicarlos.
+            Selecciona quÃ© direcciÃ³n deseas usar. Haz clic en los campos sugeridos para
+            aplicarlos.
           </p>
 
           {/* Quick Actions */}
@@ -724,7 +721,7 @@ export default function AddressValidation({
               className="p-3 rounded-lg border-2 border-red-300 bg-red-50 hover:bg-red-100 transition-colors"
             >
               <div className="text-center">
-                <div className="font-semibold text-red-900 mb-1">🔴 Mantener Actual</div>
+                <div className="font-semibold text-red-900 mb-1">ðŸ”´ Mantener Actual</div>
                 <div className="text-xs text-red-700">Datos en BD</div>
               </div>
             </button>
@@ -734,7 +731,7 @@ export default function AddressValidation({
               className="p-3 rounded-lg border-2 border-blue-500 bg-blue-100 hover:bg-blue-200 transition-colors"
             >
               <div className="text-center">
-                <div className="font-semibold text-blue-900 mb-1">🔵 Usar Sugerido</div>
+                <div className="font-semibold text-blue-900 mb-1">ðŸ”µ Usar Sugerido</div>
                 <div className="text-xs text-blue-700">
                   {comparisonSource === "google" ? "Google Maps" : "OpenStreetMap"}
                 </div>
@@ -745,40 +742,42 @@ export default function AddressValidation({
           {/* Field Comparison */}
           <div className="space-y-3">
             <h4 className="text-sm font-semibold text-blue-900">
-              Comparación Campo por Campo
+              ComparaciÃ³n Campo por Campo
               <span className="ml-2 text-xs font-normal text-blue-700">
                 (Haz clic en un campo sugerido para aplicarlo)
               </span>
             </h4>
 
-            <h5 className="text-xs font-semibold text-blue-800 mt-4 mb-2">📍 Dirección Básica</h5>
-            {renderFieldComparison("Tipo de Vía", "street_type")}
-            {renderFieldComparison("Nombre de Vía", "street_name")}
-            {renderFieldComparison("Número", "street_number")}
-            {renderFieldComparison("Información Adicional", "additional_info")}
+            <h5 className="text-xs font-semibold text-blue-800 mt-4 mb-2">
+              ðŸ“ DirecciÃ³n BÃ¡sica
+            </h5>
+            {renderFieldComparison("Tipo de VÃ­a", "street_type")}
+            {renderFieldComparison("Nombre de VÃ­a", "street_name")}
+            {renderFieldComparison("NÃºmero", "street_number")}
+            {renderFieldComparison("InformaciÃ³n Adicional", "additional_info")}
 
-            <h5 className="text-xs font-semibold text-blue-800 mt-4 mb-2">🌍 Geografía</h5>
-            {renderFieldComparison("Código Postal", "postal_code")}
+            <h5 className="text-xs font-semibold text-blue-800 mt-4 mb-2">ðŸŒ GeografÃ­a</h5>
+            {renderFieldComparison("CÃ³digo Postal", "postal_code")}
             {renderFieldComparison("Ciudad", "city_name")}
             {renderFieldComparison("Distrito", "district_name")}
             {renderFieldComparison("Barrio", "neighborhood_name")}
-            {renderFieldComparison("Comunidad Autónoma", "autonomous_community")}
-            {renderFieldComparison("País", "country")}
+            {renderFieldComparison("Comunidad AutÃ³noma", "autonomous_community")}
+            {renderFieldComparison("PaÃ­s", "country")}
 
             <h5 className="text-xs font-semibold text-blue-800 mt-4 mb-2">
-              🏢 Ubicación Detallada
+              ðŸ¢ UbicaciÃ³n Detallada
             </h5>
             {renderFieldComparison("Piso", "floor", true)}
-            {renderFieldComparison("Ubicación Específica", "location_details", true)}
+            {renderFieldComparison("UbicaciÃ³n EspecÃ­fica", "location_details", true)}
 
-            <h5 className="text-xs font-semibold text-blue-800 mt-4 mb-2">🚪 Acceso</h5>
+            <h5 className="text-xs font-semibold text-blue-800 mt-4 mb-2">ðŸšª Acceso</h5>
             {renderFieldComparison("Instrucciones de Acceso", "access_instructions", true)}
 
             {/* Coordinates - Mejoradas */}
             {(addressForm.latitude || suggestedAddress?.latitude) && (
               <>
                 <h5 className="text-xs font-semibold text-blue-800 mt-4 mb-2">
-                  📡 Coordenadas GPS
+                  ðŸ“¡ Coordenadas GPS
                 </h5>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                   <div>
@@ -882,7 +881,7 @@ export default function AddressValidation({
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-start space-x-3">
               <MapPin className="w-5 h-5 mt-0.5 text-blue-600" />
-              <h3 className="font-semibold text-gray-900">Dirección Seleccionada</h3>
+              <h3 className="font-semibold text-gray-900">DirecciÃ³n Seleccionada</h3>
             </div>
             {!editing && (
               <button
@@ -897,11 +896,11 @@ export default function AddressValidation({
 
           {editing ? (
             <div className="space-y-3">
-              <h5 className="text-xs font-semibold text-gray-700 mb-2">📍 Dirección</h5>
+              <h5 className="text-xs font-semibold text-gray-700 mb-2">ðŸ“ DirecciÃ³n</h5>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tipo de vía
+                    Tipo de vÃ­a
                   </label>
                   <input
                     type="text"
@@ -915,7 +914,7 @@ export default function AddressValidation({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nombre de vía *
+                    Nombre de vÃ­a *
                   </label>
                   <input
                     type="text"
@@ -923,13 +922,13 @@ export default function AddressValidation({
                     onChange={(e) =>
                       setAddressForm((prev) => ({ ...prev, street_name: e.target.value }))
                     }
-                    placeholder="Ej: Gran Vía"
+                    placeholder="Ej: Gran VÃ­a"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Número</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">NÃºmero</label>
                 <input
                   type="text"
                   value={addressForm.street_number}
@@ -942,7 +941,7 @@ export default function AddressValidation({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Información Adicional
+                  InformaciÃ³n Adicional
                 </label>
                 <input
                   type="text"
@@ -955,11 +954,11 @@ export default function AddressValidation({
                 />
               </div>
 
-              <h5 className="text-xs font-semibold text-gray-700 mb-2 mt-4">🌍 Geografía</h5>
+              <h5 className="text-xs font-semibold text-gray-700 mb-2 mt-4">ðŸŒ GeografÃ­a</h5>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Código Postal
+                    CÃ³digo Postal
                   </label>
                   <input
                     type="text"
@@ -987,7 +986,7 @@ export default function AddressValidation({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Comunidad Autónoma
+                    Comunidad AutÃ³noma
                   </label>
                   <input
                     type="text"
@@ -995,26 +994,26 @@ export default function AddressValidation({
                     onChange={(e) =>
                       setAddressForm((prev) => ({ ...prev, autonomous_community: e.target.value }))
                     }
-                    placeholder="Ej: Comunidad de Madrid, Cataluña..."
+                    placeholder="Ej: Comunidad de Madrid, CataluÃ±a..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">País</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">PaÃ­s</label>
                   <input
                     type="text"
-                    value={addressForm.country || "España"}
+                    value={addressForm.country || "EspaÃ±a"}
                     onChange={(e) =>
                       setAddressForm((prev) => ({ ...prev, country: e.target.value }))
                     }
-                    placeholder="Ej: España"
+                    placeholder="Ej: EspaÃ±a"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                   />
                 </div>
               </div>
 
               <h5 className="text-xs font-semibold text-gray-700 mb-2 mt-4">
-                🏢 Ubicación Detallada
+                ðŸ¢ UbicaciÃ³n Detallada
               </h5>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -1023,13 +1022,13 @@ export default function AddressValidation({
                     type="text"
                     value={addressForm.floor || ""}
                     onChange={(e) => setAddressForm((prev) => ({ ...prev, floor: e.target.value }))}
-                    placeholder="Ej: 3º, Planta Baja..."
+                    placeholder="Ej: 3Âº, Planta Baja..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Detalles de Ubicación
+                    Detalles de UbicaciÃ³n
                   </label>
                   <input
                     type="text"
@@ -1037,16 +1036,16 @@ export default function AddressValidation({
                     onChange={(e) =>
                       setAddressForm((prev) => ({ ...prev, location_details: e.target.value }))
                     }
-                    placeholder="Ej: Recepción, Vestíbulo, Junto a la escalera..."
+                    placeholder="Ej: RecepciÃ³n, VestÃ­bulo, Junto a la escalera..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                   />
                 </div>
               </div>
 
-              <h5 className="text-xs font-semibold text-gray-700 mb-2 mt-4">🚪 Acceso</h5>
+              <h5 className="text-xs font-semibold text-gray-700 mb-2 mt-4">ðŸšª Acceso</h5>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Descripción de Acceso
+                  DescripciÃ³n de Acceso
                 </label>
                 <textarea
                   value={addressForm.access_instructions || ""}
@@ -1064,7 +1063,7 @@ export default function AddressValidation({
                   onClick={() => setEditing(false)}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
                 >
-                  ✓ Guardar cambios
+                  âœ“ Guardar cambios
                 </button>
                 <button
                   onClick={() => {
@@ -1095,7 +1094,7 @@ export default function AddressValidation({
                 {addressForm.street_name}
                 {addressForm.street_number && <span> {addressForm.street_number}</span>}
               </p>
-              {/* Geografía */}
+              {/* GeografÃ­a */}
               <div className="text-sm text-gray-600 mt-2 space-y-1">
                 {(addressForm.postal_code || addressForm.city_name) && (
                   <p>
@@ -1117,20 +1116,20 @@ export default function AddressValidation({
               {hasCoordinates ? (
                 <div className="mt-2">
                   <p className="text-xs text-gray-500 font-mono">
-                    📍 {addressForm.latitude!.toFixed(6)}, {addressForm.longitude!.toFixed(6)}
+                    ðŸ“ {addressForm.latitude!.toFixed(6)}, {addressForm.longitude!.toFixed(6)}
                   </p>
                   {currentAddress?.latitude &&
                     currentAddress?.longitude &&
                     (Math.abs(addressForm.latitude! - currentAddress.latitude) > 0.00001 ||
                       Math.abs(addressForm.longitude! - currentAddress.longitude) > 0.00001) && (
                       <p className="text-xs text-green-700 mt-1 font-medium">
-                        ✅ Coordenadas ajustadas manualmente
+                        âœ… Coordenadas ajustadas manualmente
                       </p>
                     )}
                 </div>
               ) : (
                 <p className="text-xs text-yellow-700 mt-2">
-                  ⚠️ No hay coordenadas GPS - Usa el buscador
+                  âš ï¸ No hay coordenadas GPS - Usa el buscador
                 </p>
               )}
             </div>
@@ -1179,7 +1178,7 @@ export default function AddressValidation({
             <MapPin className="w-12 h-12 mx-auto mb-3 text-gray-400" />
             <p className="font-medium text-gray-700 mb-1">Mapa no disponible</p>
             <p className="text-sm">Sin coordenadas GPS.</p>
-            <p className="text-xs mt-2">Usa el buscador para encontrar la ubicación.</p>
+            <p className="text-xs mt-2">Usa el buscador para encontrar la ubicaciÃ³n.</p>
           </div>
         </div>
       )}
@@ -1190,7 +1189,7 @@ export default function AddressValidation({
           <div className="flex items-center space-x-3">
             <CheckCircle className="w-5 h-5 text-green-600" />
             <div>
-              <h4 className="font-semibold text-green-900">Dirección Validada</h4>
+              <h4 className="font-semibold text-green-900">DirecciÃ³n Validada</h4>
               <p className="text-sm text-green-700">Verificada correctamente. Puedes continuar.</p>
             </div>
           </div>
@@ -1202,9 +1201,9 @@ export default function AddressValidation({
           <div className="flex items-start space-x-3">
             <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
             <div className="flex-1">
-              <h4 className="font-semibold text-yellow-900 mb-1">Validación Requerida</h4>
+              <h4 className="font-semibold text-yellow-900 mb-1">ValidaciÃ³n Requerida</h4>
               <p className="text-sm text-yellow-700 mb-3">
-                Verifica que la dirección y ubicación sean correctas antes de continuar.
+                Verifica que la direcciÃ³n y ubicaciÃ³n sean correctas antes de continuar.
               </p>
               <button
                 onClick={validateAddress}
@@ -1233,7 +1232,7 @@ export default function AddressValidation({
               hasCoordinates
                 ? `https://www.google.com/maps?q=${addressForm.latitude},${addressForm.longitude}`
                 : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                    `${addressForm.street_type || ""} ${addressForm.street_name || ""} ${addressForm.street_number || ""} Madrid España`
+                    `${addressForm.street_type || ""} ${addressForm.street_name || ""} ${addressForm.street_number || ""} Madrid EspaÃ±a`
                   )}`
             }
             target="_blank"

@@ -56,8 +56,6 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
   private async resolveFilePath(filePath: string): Promise<string> {
     // Check if it's an S3 URL
     if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
-      console.log(`📥 [AedCsvImportProcessor] Downloading CSV from S3: ${filePath}`);
-
       try {
         // Download file from S3 URL
         const response = await fetch(filePath);
@@ -81,16 +79,12 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
         // Write to temp file
         await fs.promises.writeFile(tempPath, content);
 
-        console.log(
-          `✅ [AedCsvImportProcessor] CSV downloaded to temp file: ${tempPath} (${content.length} bytes)`
-        );
-
         // Store for cleanup later
         this.tempFilePath = tempPath;
 
         return tempPath;
       } catch (error) {
-        console.error(`❌ [AedCsvImportProcessor] Failed to download CSV from S3:`, error);
+        console.error(`âŒ [AedCsvImportProcessor] Failed to download CSV from S3:`, error);
         throw new Error(
           `Failed to download CSV from S3: ${error instanceof Error ? error.message : "Unknown error"}`
         );
@@ -108,13 +102,10 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
     if (this.tempFilePath) {
       try {
         await fs.promises.unlink(this.tempFilePath);
-        console.log(`🗑️ [AedCsvImportProcessor] Temporary file deleted: ${this.tempFilePath}`);
+
         this.tempFilePath = undefined;
       } catch (error) {
-        console.warn(
-          `⚠️ [AedCsvImportProcessor] Failed to delete temp file ${this.tempFilePath}:`,
-          error
-        );
+        /* Ignored */
       }
     }
   }
@@ -240,14 +231,9 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
 
       const endIndex = Math.min(startIndex + chunkSize, records.length);
 
-      console.log(
-        `📋 [AedCsvImportProcessor] Processing records ${startIndex}-${endIndex - 1} of ${records.length}`
-      );
-
       for (let i = startIndex; i < endIndex; i++) {
         // Check timeout
         if (this.isApproachingTimeout(context)) {
-          console.log(`⏰ [AedCsvImportProcessor] Approaching timeout at record ${i}`);
           break;
         }
 
@@ -287,10 +273,6 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
 
       const hasMore = startIndex + processedCount < records.length;
 
-      console.log(
-        `✅ [AedCsvImportProcessor] Processed ${processedCount} records (success: ${successCount}, failed: ${failedCount}, skipped: ${skippedCount}, hasMore: ${hasMore})`
-      );
-
       return {
         processedCount,
         successCount,
@@ -325,7 +307,7 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
         return this.createFailedResult(
           recordRef,
           "MISSING_DATA",
-          "El campo 'nombre' es obligatorio y no puede estar vacío",
+          "El campo 'nombre' es obligatorio y no puede estar vacÃ­o",
           "error",
           rowNumber,
           {
@@ -346,14 +328,14 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
           return this.createFailedResult(
             recordRef,
             "INVALID_COORDINATE",
-            `La latitud "${mappedData.latitude}" no es un número válido`,
+            `La latitud "${mappedData.latitude}" no es un nÃºmero vÃ¡lido`,
             "error",
             rowNumber,
             {
               field: "latitude",
               csvColumn: latMapping?.csvColumn || "latitude",
               value: mappedData.latitude,
-              correctionSuggestion: `Usa formato decimal con punto (ej: 40.4165). Si usas coma, reemplázala por punto.`,
+              correctionSuggestion: `Usa formato decimal con punto (ej: 40.4165). Si usas coma, reemplÃ¡zala por punto.`,
               rowData: record,
             }
           );
@@ -364,7 +346,7 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
           return this.createFailedResult(
             recordRef,
             "INVALID_COORDINATE",
-            `La latitud ${latValue} está fuera del rango válido (-90 a 90)`,
+            `La latitud ${latValue} estÃ¡ fuera del rango vÃ¡lido (-90 a 90)`,
             "error",
             rowNumber,
             {
@@ -385,14 +367,14 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
           return this.createFailedResult(
             recordRef,
             "INVALID_COORDINATE",
-            `La longitud "${mappedData.longitude}" no es un número válido`,
+            `La longitud "${mappedData.longitude}" no es un nÃºmero vÃ¡lido`,
             "error",
             rowNumber,
             {
               field: "longitude",
               csvColumn: lonMapping?.csvColumn || "longitude",
               value: mappedData.longitude,
-              correctionSuggestion: `Usa formato decimal con punto (ej: -3.7038). Si usas coma, reemplázala por punto.`,
+              correctionSuggestion: `Usa formato decimal con punto (ej: -3.7038). Si usas coma, reemplÃ¡zala por punto.`,
               rowData: record,
             }
           );
@@ -403,7 +385,7 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
           return this.createFailedResult(
             recordRef,
             "INVALID_COORDINATE",
-            `La longitud ${lonValue} está fuera del rango válido (-180 a 180)`,
+            `La longitud ${lonValue} estÃ¡ fuera del rango vÃ¡lido (-180 a 180)`,
             "error",
             rowNumber,
             {
@@ -423,14 +405,14 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
         return this.createFailedResult(
           recordRef,
           "INVALID_POSTAL_CODE",
-          `El código postal "${mappedData.postalCode}" debe tener exactamente 5 dígitos`,
+          `El cÃ³digo postal "${mappedData.postalCode}" debe tener exactamente 5 dÃ­gitos`,
           "error",
           rowNumber,
           {
             field: "postalCode",
             csvColumn: pcMapping?.csvColumn || "postalCode",
             value: mappedData.postalCode,
-            correctionSuggestion: `Los códigos postales de Madrid tienen 5 dígitos (ej: 28001, 28042)`,
+            correctionSuggestion: `Los cÃ³digos postales de Madrid tienen 5 dÃ­gitos (ej: 28001, 28042)`,
             rowData: record,
           }
         );
@@ -510,7 +492,7 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
     const code = data.code?.trim();
     const externalRef = data.externalReference?.trim();
 
-    // Si no hay ningún identificador, no podemos verificar duplicados
+    // Si no hay ningÃºn identificador, no podemos verificar duplicados
     if (!id && !code && !externalRef) return outcome;
 
     // ========================================
@@ -537,8 +519,7 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
           };
         }
       } catch (error) {
-        // ID no válido o no es UUID, continuar con otros métodos
-        console.warn(`Invalid ID format: ${id}`, error);
+        // ID no vÃ¡lido o no es UUID, continuar con otros mÃ©todos
       }
     }
 
@@ -600,7 +581,7 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
       }
     }
 
-    // No se encontró ningún duplicado
+    // No se encontrÃ³ ningÃºn duplicado
     return outcome;
   }
 
@@ -721,13 +702,13 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
       // Create AED in transaction
       const createdAed = await tx.aed.create({
         data: {
-          id: aedId, // ← UUID pre-generado para que las imágenes puedan usarlo
+          id: aedId, // â† UUID pre-generado para que las imÃ¡genes puedan usarlo
 
-          // Código e identificadores
+          // CÃ³digo e identificadores
           code: data.code || null,
           external_reference: data.externalReference || null,
 
-          // Datos básicos
+          // Datos bÃ¡sicos
           name: data.proposedName,
           establishment_type: data.establishmentType || null,
 
@@ -743,8 +724,8 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
 
           // Origen y trazabilidad
           source_origin: "CSV_IMPORT",
-          source_details: `Importación CSV: ${config.filePath.split("/").pop()}`,
-          batch_job_id: jobId, // ✅ Asignar batch_job_id para rastreo y recuperación
+          source_details: `ImportaciÃ³n CSV: ${config.filePath.split("/").pop()}`,
+          batch_job_id: jobId, // âœ… Asignar batch_job_id para rastreo y recuperaciÃ³n
 
           // Notas
           public_notes: data.publicNotes || data.freeComment || null,
@@ -761,13 +742,13 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
     // ========================================
     // 5. DOWNLOAD AND UPLOAD IMAGES TO S3 (if image URLs exist)
     // ========================================
-    // Recopilar todas las posibles URLs de imágenes (soporta múltiples nomenclaturas)
+    // Recopilar todas las posibles URLs de imÃ¡genes (soporta mÃºltiples nomenclaturas)
     const potentialImages = [
-      // Nomenclatura específica (tiene prioridad)
+      // Nomenclatura especÃ­fica (tiene prioridad)
       { url: data.photoFrontUrl, type: "FRONT" as const },
       { url: data.photoLocationUrl, type: "LOCATION" as const },
       { url: data.photoAccessUrl, type: "ACCESS" as const },
-      // Nomenclatura genérica (fallback)
+      // Nomenclatura genÃ©rica (fallback)
       { url: data.photo1Url, type: "FRONT" as const },
       { url: data.photo2Url, type: "LOCATION" as const },
       { url: data.photo3Url, type: "CONTEXT" as const },
@@ -795,10 +776,6 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
         try {
           // If use case is available, download and upload to S3
           if (this.downloadAndUploadImageUseCase) {
-            console.log(
-              `📸 [AedCsvImportProcessor] Processing image ${index + 1}/${imageUrls.length} for AED ${aedId}`
-            );
-
             const s3Result = await this.downloadAndUploadImageUseCase.execute({
               url: img.url,
               aedId: aedId,
@@ -808,27 +785,21 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
 
             // Create image record with S3 URL
             // original_url = imagen sin procesar en S3
-            // processed_url = NULL (se llenará durante verificación con marcadores)
+            // processed_url = NULL (se llenarÃ¡ durante verificaciÃ³n con marcadores)
             await this.prisma.aedImage.create({
               data: {
                 id: img.imageId,
                 aed_id: aedId,
                 type: img.type,
                 order: index + 1,
-                original_url: s3Result.url, // ✅ URL en S3 sin procesar
-                processed_url: null, // Se llenará durante verificación
+                original_url: s3Result.url, // âœ… URL en S3 sin procesar
+                processed_url: null, // Se llenarÃ¡ durante verificaciÃ³n
                 is_verified: false,
               },
             });
-
-            console.log(
-              `✅ [AedCsvImportProcessor] Image ${index + 1} uploaded to S3: ${s3Result.url}`
-            );
           } else {
             // Fallback: crear registro con URL original si no hay use case
-            console.warn(
-              `⚠️ [AedCsvImportProcessor] Image download use case not available. Saving original URL for image ${index + 1}`
-            );
+
             await this.prisma.aedImage.create({
               data: {
                 id: img.imageId,
@@ -843,7 +814,7 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
         } catch (error) {
           // Log error but don't fail the entire AED import
           console.error(
-            `❌ [AedCsvImportProcessor] Failed to process image ${index + 1} from ${img.url}:`,
+            `âŒ [AedCsvImportProcessor] Failed to process image ${index + 1} from ${img.url}:`,
             error instanceof Error ? error.message : error
           );
           // Optionally, create a record with original URL as fallback
@@ -858,12 +829,9 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
                 is_verified: false,
               },
             });
-            console.log(
-              `📝 [AedCsvImportProcessor] Created fallback image record with original URL`
-            );
           } catch (fallbackError) {
             console.error(
-              `❌ [AedCsvImportProcessor] Failed to create fallback image record:`,
+              `âŒ [AedCsvImportProcessor] Failed to create fallback image record:`,
               fallbackError
             );
           }
@@ -880,7 +848,7 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
   private parseBoolean(value: string | undefined): boolean {
     if (!value) return false;
     const normalized = value.toLowerCase().trim();
-    return ["true", "1", "sí", "si", "yes", "y", "s"].includes(normalized);
+    return ["true", "1", "sÃ­", "si", "yes", "y", "s"].includes(normalized);
   }
 
   private parseCsvLine(line: string, delimiter: string): string[] {

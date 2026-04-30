@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get("q");
     const city = searchParams.get("city");
     const postalCode = searchParams.get("postalCode");
-    const country = searchParams.get("country") || "España";
+    const country = searchParams.get("country") || "EspaÃ±a";
 
     if (!query) {
       return NextResponse.json({ error: "Query requerida" }, { status: 400 });
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Add country only if not already present in query
-    if (!normalizedQuery.includes("españa") && !normalizedQuery.includes("spain")) {
+    if (!normalizedQuery.includes("espaÃ±a") && !normalizedQuery.includes("spain")) {
       queryParts.push(country);
     }
 

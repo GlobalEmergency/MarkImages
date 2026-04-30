@@ -137,7 +137,7 @@ export class HttpClient implements IHttpClient {
         body: body !== undefined ? JSON.stringify(body) : undefined,
         signal: controller.signal,
       });
-    } catch (err) {
+    } catch (_err) {
       if (err instanceof DOMException && err.name === "AbortError") {
         throw new ApiError(`Tiempo de espera agotado: ${url}`, 0);
       }

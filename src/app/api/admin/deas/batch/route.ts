@@ -20,14 +20,14 @@ export async function DELETE(request: NextRequest) {
 
     if (!Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json(
-        { success: false, error: "Se requiere un array de IDs no vacío" },
+        { success: false, error: "Se requiere un array de IDs no vacÃ­o" },
         { status: 400 }
       );
     }
 
     if (ids.length > MAX_BATCH_SIZE) {
       return NextResponse.json(
-        { success: false, error: `Máximo ${MAX_BATCH_SIZE} DEAs por operación` },
+        { success: false, error: `MÃ¡ximo ${MAX_BATCH_SIZE} DEAs por operaciÃ³n` },
         { status: 400 }
       );
     }
@@ -76,8 +76,6 @@ export async function DELETE(request: NextRequest) {
     const foundIds = aeds.map((a) => a.id);
     const locationIds = [...new Set(aeds.map((a) => a.location_id).filter(Boolean))] as string[];
     const scheduleIds = [...new Set(aeds.map((a) => a.schedule_id).filter(Boolean))] as string[];
-
-    console.log(`🗑️ Admin batch deleting ${aeds.length} AEDs: ${foundIds.join(", ")}`);
 
     await prisma.$transaction(async (tx) => {
       // 1. Delete all AEDs (cascades to images, validations, etc.)

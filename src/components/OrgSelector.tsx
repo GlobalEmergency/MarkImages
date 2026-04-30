@@ -14,7 +14,7 @@ export default function OrgSelector() {
     return null;
   }
 
-  // Si solo tiene una organización, mostrar sin dropdown
+  // Si solo tiene una organizaciÃ³n, mostrar sin dropdown
   if (organizations.length === 1) {
     return (
       <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
@@ -31,7 +31,7 @@ export default function OrgSelector() {
     );
   }
 
-  // Si tiene múltiples organizaciones, mostrar dropdown
+  // Si tiene mÃºltiples organizaciones, mostrar dropdown
   return (
     <div className="relative">
       <button
@@ -60,7 +60,7 @@ export default function OrgSelector() {
           {/* Overlay para cerrar al hacer click fuera */}
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
 
-          {/* Menú dropdown */}
+          {/* MenÃº dropdown */}
           <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50 max-h-[60vh] overflow-y-auto">
             <div className="py-1">
               {organizations.map((org) => {
@@ -88,7 +88,7 @@ export default function OrgSelector() {
                         {org.name}
                       </p>
                       <p className="text-xs text-gray-600 truncate">
-                        {org.type} • {org.role}
+                        {org.type} â€¢ {org.role}
                       </p>
                     </div>
                     {isSelected && <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />}

@@ -6,31 +6,31 @@
  *   "BEZIRK., STRASSE NUMMER  <br>STANDORTNAME"
  *
  * Ejemplos reales:
- *   "10., Computerstraße 4  <br>e-shelter Rechenzentrum"
+ *   "10., ComputerstraÃŸe 4  <br>e-shelter Rechenzentrum"
  *   "15., Friesgasse 4  <br>Schulzentrum Friesgasse"
  *   "1., Stephansplatz 3  <br>Domkirche St. Stephan"
- *   "22., Wagramer Straße 17-19  <br>Donau-City Türme"
+ *   "22., Wagramer StraÃŸe 17-19  <br>Donau-City TÃ¼rme"
  *
  * Produce:
- *   - name: parte tras <br> (nombre real de la ubicación)
+ *   - name: parte tras <br> (nombre real de la ubicaciÃ³n)
  *   - streetName: nombre de la calle
- *   - streetNumber: número
- *   - district: código de distrito (ya disponible en BEZIRK, pero como fallback)
+ *   - streetNumber: nÃºmero
+ *   - district: cÃ³digo de distrito (ya disponible en BEZIRK, pero como fallback)
  */
 
 import type { IFieldTransformer, TransformerResult } from "../ports/IFieldTransformer";
 
 /**
  * Regex para parsear el formato Wien ADRESSE:
- * - Grupo 1: distrito (número con punto opcional)
+ * - Grupo 1: distrito (nÃºmero con punto opcional)
  * - Grupo 2: nombre de la calle
- * - Grupo 3: número (puede incluir rangos como "17-19" o sufijos como "4a")
+ * - Grupo 3: nÃºmero (puede incluir rangos como "17-19" o sufijos como "4a")
  * - Grupo 4: nombre del sitio (tras <br>)
  */
 const WIEN_ADDRESS_RE = /^(\d{1,2})\.,\s*(.+?)\s+(\d+[\w/-]*)\s*(?:<br\s*\/?>)\s*(.+)$/i;
 
 /**
- * Fallback: solo distrito + resto <br> nombre (sin número claro)
+ * Fallback: solo distrito + resto <br> nombre (sin nÃºmero claro)
  */
 const WIEN_SIMPLE_RE = /^(\d{1,2})\.,\s*(.+?)\s*(?:<br\s*\/?>)\s*(.+)$/i;
 
@@ -48,7 +48,7 @@ export class ViennaAddressParser implements IFieldTransformer {
       return { fields, confidence: 0, rawValue: value };
     }
 
-    // Try full pattern: "10., Computerstraße 4  <br>e-shelter Rechenzentrum"
+    // Try full pattern: "10., ComputerstraÃŸe 4  <br>e-shelter Rechenzentrum"
     const fullMatch = input.match(WIEN_ADDRESS_RE);
     if (fullMatch) {
       fields.district = fullMatch[1];
@@ -75,13 +75,13 @@ export class ViennaAddressParser implements IFieldTransformer {
       return { fields, confidence: 0.8, rawValue: value };
     }
 
-    // No match — just clean HTML and use as name
+    // No match â€” just clean HTML and use as name
     fields.name = this.cleanHtml(input);
     return { fields, confidence: 0.3, rawValue: value };
   }
 
   private cleanHtml(text: string): string {
-    let cleaned = text.replace(/<br\s*\/?>/gi, " — ");
+    let cleaned = text.replace(/<br\s*\/?>/gi, " â€” ");
     // Loop to handle nested tags like <scr<script>ipt>
     while (/<[^>]+>/.test(cleaned)) {
       cleaned = cleaned.replace(/<[^>]+>/g, "");

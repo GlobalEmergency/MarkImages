@@ -1,14 +1,14 @@
 /**
- * Adapter: REST API genérico con paginación configurable
+ * Adapter: REST API genÃ©rico con paginaciÃ³n configurable
  * Capa de Infraestructura - Implementa IDataSourceAdapter para APIs REST
  *
- * Soporta tres estrategias de paginación:
+ * Soporta tres estrategias de paginaciÃ³n:
  * - offset: ?offset=100&limit=50 (CKAN, OpenDataSoft)
  * - page: ?page=3&per_page=50 (APIs REST comunes)
  * - cursor: ?cursor=abc123&limit=50 (APIs modernas)
- * - none: sin paginación (respuesta completa en un request)
+ * - none: sin paginaciÃ³n (respuesta completa en un request)
  *
- * Los nombres de parámetros son configurables para adaptarse a cualquier API.
+ * Los nombres de parÃ¡metros son configurables para adaptarse a cualquier API.
  */
 
 import type {
@@ -99,7 +99,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
           field: "apiEndpoint",
           value: config.apiEndpoint,
           severity: "CRITICAL",
-          message: "El endpoint de la API no es una URL válida",
+          message: "El endpoint de la API no es una URL vÃ¡lida",
         });
       }
     }
@@ -112,7 +112,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
           field: "pagination.strategy",
           value: config.pagination.strategy,
           severity: "ERROR",
-          message: `Estrategia de paginación inválida. Valores permitidos: ${validStrategies.join(", ")}`,
+          message: `Estrategia de paginaciÃ³n invÃ¡lida. Valores permitidos: ${validStrategies.join(", ")}`,
         });
       }
 
@@ -122,7 +122,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
           field: "pagination.cursorResponsePath",
           value: "",
           severity: "WARNING",
-          message: "Para paginación por cursor, se recomienda especificar cursorResponsePath",
+          message: "Para paginaciÃ³n por cursor, se recomienda especificar cursorResponsePath",
         });
       }
     }
@@ -166,7 +166,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
       if (validation.hasCriticalErrors()) {
         return {
           success: false,
-          message: validation.criticalErrors[0]?.message || "Error de validación",
+          message: validation.criticalErrors[0]?.message || "Error de validaciÃ³n",
         };
       }
 
@@ -192,7 +192,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
 
       return {
         success: true,
-        message: `Conexión exitosa. ${recordCount} registros disponibles.`,
+        message: `ConexiÃ³n exitosa. ${recordCount} registros disponibles.`,
         recordCount,
         sampleFields,
         responseTimeMs: Date.now() - startTime,
@@ -200,7 +200,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
     } catch (error) {
       return {
         success: false,
-        message: `Error de conexión: ${error instanceof Error ? error.message : "Error desconocido"}`,
+        message: `Error de conexiÃ³n: ${error instanceof Error ? error.message : "Error desconocido"}`,
         responseTimeMs: Date.now() - startTime,
       };
     }
@@ -215,12 +215,9 @@ export class RestApiAdapter implements IDataSourceAdapter {
     config: DataSourceConfig,
     fieldMappings: Record<string, string>
   ): AsyncGenerator<ImportRecord> {
-    console.log(`📥 Fetching all records from: ${endpoint}`);
     const data = await this.fetchJson(endpoint, config);
     const records = this.extractRecords(data, config.responseDataPath);
     const externalIdField = this.resolveExternalIdField(records, config);
-
-    console.log(`📋 Found ${records.length} records, ID field: '${externalIdField}'`);
 
     for (let i = 0; i < records.length; i++) {
       const { record: enriched, mappings } = await enrichRecordIfNeeded(
@@ -230,11 +227,8 @@ export class RestApiAdapter implements IDataSourceAdapter {
       );
       yield ImportRecord.fromApiRecord(enriched, mappings, i, externalIdField);
       if ((i + 1) % 1000 === 0) {
-        console.log(`📥 Processed ${i + 1} records...`);
       }
     }
-
-    console.log(`✅ Finished processing ${records.length} records`);
   }
 
   private async *fetchWithOffsetPagination(
@@ -261,7 +255,6 @@ export class RestApiAdapter implements IDataSourceAdapter {
 
       if (rowIndex === 0 && records.length > 0) {
         const externalIdField = this.resolveExternalIdField(records, config);
-        console.log(`📋 Offset pagination, ID field: '${externalIdField}', page size: ${pageSize}`);
       }
 
       const externalIdField = this.resolveExternalIdField(records, config);
@@ -279,11 +272,8 @@ export class RestApiAdapter implements IDataSourceAdapter {
       offset += pageSize;
 
       if (rowIndex % 1000 === 0) {
-        console.log(`📥 Fetched ${rowIndex} records...`);
       }
     }
-
-    console.log(`✅ Finished fetching ${rowIndex} records (offset pagination)`);
   }
 
   private async *fetchWithPagePagination(
@@ -323,11 +313,8 @@ export class RestApiAdapter implements IDataSourceAdapter {
       page++;
 
       if (rowIndex % 1000 === 0) {
-        console.log(`📥 Fetched ${rowIndex} records...`);
       }
     }
-
-    console.log(`✅ Finished fetching ${rowIndex} records (page pagination)`);
   }
 
   private async *fetchWithCursorPagination(
@@ -373,11 +360,8 @@ export class RestApiAdapter implements IDataSourceAdapter {
       cursor = nextCursor;
 
       if (rowIndex % 1000 === 0) {
-        console.log(`📥 Fetched ${rowIndex} records...`);
       }
     }
-
-    console.log(`✅ Finished fetching ${rowIndex} records (cursor pagination)`);
   }
 
   // ============================================================
@@ -432,9 +416,6 @@ export class RestApiAdapter implements IDataSourceAdapter {
       return await response.json();
     } catch (error) {
       if (attempt < this.maxRetries) {
-        console.warn(
-          `⚠️ REST API request failed (attempt ${attempt}/${this.maxRetries}), retrying...`
-        );
         await this.delay(this.retryDelayMs * attempt);
         return this.fetchWithRetry(url, options, attempt + 1);
       }
@@ -443,7 +424,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
   }
 
   /**
-   * Extrae registros de la respuesta usando responseDataPath o auto-detección
+   * Extrae registros de la respuesta usando responseDataPath o auto-detecciÃ³n
    */
   private extractRecords(data: unknown, responseDataPath?: string): Record<string, unknown>[] {
     if (Array.isArray(data)) return data;
@@ -491,9 +472,6 @@ export class RestApiAdapter implements IDataSourceAdapter {
       }
     }
 
-    console.log(
-      `⚠️ Could not auto-detect records array. Keys: ${Object.keys(obj).slice(0, 5).join(", ")}`
-    );
     return [];
   }
 
@@ -513,7 +491,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
   }
 
   /**
-   * Determina si hay más páginas basándose en la config y los datos
+   * Determina si hay mÃ¡s pÃ¡ginas basÃ¡ndose en la config y los datos
    */
   private checkHasMore(
     data: unknown,

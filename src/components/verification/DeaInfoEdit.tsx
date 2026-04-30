@@ -97,18 +97,18 @@ export default function DeaInfoEdit({ aedId, initialData, onUpdate }: DeaInfoEdi
   const getDisplayCode = () => {
     if (initialData.code) return initialData.code;
     if (initialData.provisional_number) return `#${initialData.provisional_number}`;
-    return "Sin código";
+    return "Sin cÃ³digo";
   };
 
   if (!isEditing) {
     return (
       <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
         <div className="flex items-start justify-between mb-4">
-          <h2 className="text-base sm:text-lg font-semibold text-gray-900">Información del DEA</h2>
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900">InformaciÃ³n del DEA</h2>
           <button
             onClick={() => setIsEditing(true)}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
-            title="Editar información"
+            title="Editar informaciÃ³n"
           >
             <Pencil className="w-4 h-4" />
             <span className="hidden sm:inline">Editar</span>
@@ -117,7 +117,7 @@ export default function DeaInfoEdit({ aedId, initialData, onUpdate }: DeaInfoEdi
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
-            <p className="text-xs sm:text-sm text-gray-500">Código</p>
+            <p className="text-xs sm:text-sm text-gray-500">CÃ³digo</p>
             <p className="font-medium text-gray-900 text-sm sm:text-base">{getDisplayCode()}</p>
           </div>
 
@@ -137,7 +137,7 @@ export default function DeaInfoEdit({ aedId, initialData, onUpdate }: DeaInfoEdi
 
           {initialData.location && (
             <div>
-              <p className="text-xs sm:text-sm text-gray-500">Ubicación</p>
+              <p className="text-xs sm:text-sm text-gray-500">UbicaciÃ³n</p>
               <p className="font-medium text-gray-900 text-sm sm:text-base">
                 {initialData.location.street_type} {initialData.location.street_name}{" "}
                 {initialData.location.street_number}
@@ -159,7 +159,7 @@ export default function DeaInfoEdit({ aedId, initialData, onUpdate }: DeaInfoEdi
 
           {initialData.images_count > 0 && (
             <div>
-              <p className="text-xs sm:text-sm text-gray-500">Imágenes</p>
+              <p className="text-xs sm:text-sm text-gray-500">ImÃ¡genes</p>
               <p className="font-medium text-gray-900 text-sm sm:text-base">
                 {initialData.images_count} imagen(es)
               </p>
@@ -174,7 +174,7 @@ export default function DeaInfoEdit({ aedId, initialData, onUpdate }: DeaInfoEdi
     <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
       <div className="flex items-start justify-between mb-4">
         <h2 className="text-base sm:text-lg font-semibold text-gray-900">
-          Editar Información del DEA
+          Editar InformaciÃ³n del DEA
         </h2>
         <div className="flex items-center gap-2">
           <button
@@ -216,7 +216,7 @@ export default function DeaInfoEdit({ aedId, initialData, onUpdate }: DeaInfoEdi
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Código <span className="text-gray-400">(opcional)</span>
+            CÃ³digo <span className="text-gray-400">(opcional)</span>
           </label>
           <input
             type="text"
@@ -226,7 +226,7 @@ export default function DeaInfoEdit({ aedId, initialData, onUpdate }: DeaInfoEdi
             placeholder="Ej: DEA-001"
           />
           <p className="mt-1 text-xs text-gray-500">
-            Código único del DEA. Si está vacío, se mostrará el número provisional.
+            CÃ³digo Ãºnico del DEA. Si estÃ¡ vacÃ­o, se mostrarÃ¡ el nÃºmero provisional.
           </p>
         </div>
 
@@ -263,11 +263,11 @@ export default function DeaInfoEdit({ aedId, initialData, onUpdate }: DeaInfoEdi
         </div>
 
         <div className="border-t pt-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Información no editable aquí</h3>
+          <h3 className="text-sm font-medium text-gray-700 mb-2">InformaciÃ³n no editable aquÃ­</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             {initialData.location && (
               <div>
-                <p className="text-xs text-gray-500">Ubicación</p>
+                <p className="text-xs text-gray-500">UbicaciÃ³n</p>
                 <p className="text-gray-700">
                   {initialData.location.street_type} {initialData.location.street_name}{" "}
                   {initialData.location.street_number}

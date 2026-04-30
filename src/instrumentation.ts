@@ -1,6 +1,6 @@
 /**
  * Instrumentation for Next.js 16
- * Ejecuta código al iniciar el servidor
+ * Ejecuta cÃ³digo al iniciar el servidor
  * https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
  */
 
@@ -9,8 +9,8 @@ export async function register() {
   const { getServerEnv } = await import("@/lib/env");
   getServerEnv();
 
-  // La recuperación de batch jobs ahora se maneja mediante:
+  // La recuperaciÃ³n de batch jobs ahora se maneja mediante:
   // - POST /api/batch/recover - Recupera jobs con timeout
   // - GET /api/batch/recover - Lista jobs resumibles
-  // No es necesario ejecutar recuperación automática al iniciar
+  // No es necesario ejecutar recuperaciÃ³n automÃ¡tica al iniciar
 }

@@ -1,5 +1,5 @@
 /**
- * RuleRegistry — Configurable registry for rules and interactions
+ * RuleRegistry â€” Configurable registry for rules and interactions
  *
  * Rules evaluate individual criteria; interactions evaluate combinations.
  * The registry allows adding/removing/replacing rules and interactions

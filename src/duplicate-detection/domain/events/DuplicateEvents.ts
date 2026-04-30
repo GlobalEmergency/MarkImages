@@ -1,5 +1,5 @@
 /**
- * DuplicateEvents — Domain events for duplicate detection
+ * DuplicateEvents â€” Domain events for duplicate detection
  *
  * Simple in-process event bus. Subscribers can react to
  * duplicate detection events for logging, metrics, notifications, etc.

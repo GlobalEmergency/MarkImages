@@ -52,7 +52,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       count: number;
     }[];
 
-    // Country pages — one per country with data
+    // Country pages â€” one per country with data
     const countryCodes = new Set(cities.map((c) => c.country_code));
     const countryPages: MetadataRoute.Sitemap = [...countryCodes].map((code) => {
       const country = countryFromCode(code);
@@ -86,7 +86,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       });
     }
 
-    // City pages — deduplicate by URL
+    // City pages â€” deduplicate by URL
     const cityPages: MetadataRoute.Sitemap = [];
     const seenCityUrls = new Set<string>();
     const budget =

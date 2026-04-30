@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!email || !password) {
-      return NextResponse.json({ error: "Email y contraseña son obligatorios" }, { status: 400 });
+      return NextResponse.json({ error: "Email y contraseÃ±a son obligatorios" }, { status: 400 });
     }
 
     // Find user by email
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "Credenciales inválidas" }, { status: 401 });
+      return NextResponse.json({ error: "Credenciales invÃ¡lidas" }, { status: 401 });
     }
 
     // Verify password and check active status
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       : false;
 
     if (!isValidPassword) {
-      return NextResponse.json({ error: "Credenciales inválidas" }, { status: 401 });
+      return NextResponse.json({ error: "Credenciales invÃ¡lidas" }, { status: 401 });
     }
 
     // Update last login
@@ -76,12 +76,12 @@ export async function POST(request: NextRequest) {
     console.error("Login error:", error);
 
     // Return more detailed error in development
-    const errorMessage = error instanceof Error ? error.message : "Error al iniciar sesión";
+    const errorMessage = error instanceof Error ? error.message : "Error al iniciar sesiÃ³n";
     const isDevelopment = process.env.NODE_ENV === "development";
 
     return NextResponse.json(
       {
-        error: "Error al iniciar sesión",
+        error: "Error al iniciar sesiÃ³n",
         ...(isDevelopment && { details: errorMessage }),
       },
       { status: 500 }

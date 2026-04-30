@@ -1,8 +1,8 @@
 /**
  * CSV Parsing Service (Application Service)
  *
- * Servicio de aplicación para leer y parsear archivos CSV.
- * Infraestructura pura, sin lógica de negocio.
+ * Servicio de aplicaciÃ³n para leer y parsear archivos CSV.
+ * Infraestructura pura, sin lÃ³gica de negocio.
  */
 
 import * as fs from "fs";
@@ -66,7 +66,7 @@ export class CsvParsingService {
   }
 
   /**
-   * Parsea una línea CSV respetando comillas
+   * Parsea una lÃ­nea CSV respetando comillas
    */
   private parseLine(line: string, delimiter: string): string[] {
     const result: string[] = [];

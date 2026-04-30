@@ -1,5 +1,5 @@
 /**
- * Hook para gestionar lista de importaciones con polling automático
+ * Hook para gestionar lista de importaciones con polling automÃ¡tico
  */
 
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -74,7 +74,7 @@ export function useImportBatches(options: UseImportBatchesOptions = {}): UseImpo
 
       if (!previousBatch) return; // Nuevo batch, ignorar
 
-      // Detectar si cambió de IN_PROGRESS a COMPLETED/ERRORS/FAILED
+      // Detectar si cambiÃ³ de IN_PROGRESS a COMPLETED/ERRORS/FAILED
       const wasInProgress = previousBatch.status === "IN_PROGRESS";
       const isNowFinished =
         currentBatch.status === "COMPLETED" ||
@@ -82,23 +82,23 @@ export function useImportBatches(options: UseImportBatchesOptions = {}): UseImpo
         currentBatch.status === "FAILED";
 
       if (wasInProgress && isNowFinished) {
-        // Mostrar notificación según el resultado
+        // Mostrar notificaciÃ³n segÃºn el resultado
         if (currentBatch.status === "COMPLETED") {
           toast.success(
-            `✅ Importación "${currentBatch.name}" completada: ${currentBatch.successful_records} registros exitosos`,
+            `âœ… ImportaciÃ³n "${currentBatch.name}" completada: ${currentBatch.successful_records} registros exitosos`,
             {
               duration: 5000,
             }
           );
         } else if (currentBatch.status === "COMPLETED_WITH_ERRORS") {
           toast.error(
-            `⚠️ Importación "${currentBatch.name}" completada con ${currentBatch.failed_records} errores`,
+            `âš ï¸ ImportaciÃ³n "${currentBatch.name}" completada con ${currentBatch.failed_records} errores`,
             {
               duration: 6000,
             }
           );
         } else if (currentBatch.status === "FAILED") {
-          toast.error(`❌ Importación "${currentBatch.name}" falló completamente`, {
+          toast.error(`âŒ ImportaciÃ³n "${currentBatch.name}" fallÃ³ completamente`, {
             duration: 6000,
           });
         }
@@ -120,17 +120,12 @@ export function useImportBatches(options: UseImportBatchesOptions = {}): UseImpo
 
     if (!hasActiveBatches) return;
 
-    console.log(
-      `🔄 Polling active: ${batches.filter((b) => b.status === "IN_PROGRESS" || b.status === "PENDING").length} active batches`
-    );
-
     const interval = setInterval(() => {
       fetchBatches();
     }, refreshInterval);
 
     return () => {
       clearInterval(interval);
-      console.log("🛑 Polling stopped");
     };
   }, [batches, autoRefresh, refreshInterval, fetchBatches]);
 

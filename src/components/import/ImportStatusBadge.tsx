@@ -1,5 +1,5 @@
 /**
- * Badge que muestra el estado de una importación con colores e iconos
+ * Badge que muestra el estado de una importaciÃ³n con colores e iconos
  */
 
 import {
@@ -72,7 +72,7 @@ const statusConfig = {
 } as const;
 
 export default function ImportStatusBadge({ status, showIcon = true }: ImportStatusBadgeProps) {
-  // Código defensivo: usar configuración por defecto si el estado no existe
+  // CÃ³digo defensivo: usar configuraciÃ³n por defecto si el estado no existe
   const config = statusConfig[status] || {
     color: "bg-gray-100 text-gray-800 border-gray-300",
     icon: AlertCircle,
