@@ -161,6 +161,13 @@ export default function Home() {
     }
   };
 
+  // Helper to calculate distance text for AEDs
+  const calculateDistanceText = (aed: NearbyAed) => {
+    return aed.distance < 1
+      ? `${Math.round(aed.distance * 1000)} m`
+      : `${aed.distance.toFixed(1)} km`;
+  };
+
   // Handle when user drags the search location marker
   const handleSearchLocationChange = (location: { lat: number; lng: number }) => {
     setSearchLocation(location);
@@ -434,11 +441,17 @@ export default function Home() {
                 )}
               </form>
 
-              {/* ARIA Live Region for suggestions */}
-              <div aria-live="polite" className="sr-only">
-                {showSuggestions && addressSuggestions.length > 0
-                  ? `${addressSuggestions.length} sugerencias disponibles. Usa las flechas arriba y abajo para navegar.`
-                  : ""}
+              {/* Región viva para lectores de pantalla */}
+              <div aria-live="polite" aria-atomic="true" className="sr-only">
+                {loading
+                  ? "Buscando desfibriladores cercanos..."
+                  : error
+                    ? `Error en la búsqueda: ${error}`
+                    : showResults && nearbyAeds.length > 0
+                      ? `Búsqueda completada. ${nearbyAeds.length} desfibriladores encontrados.`
+                      : showResults && nearbyAeds.length === 0
+                        ? "Búsqueda completada. No se encontraron resultados."
+                        : ""}
               </div>
 
               {/* Address Suggestions Dropdown */}
@@ -507,7 +520,10 @@ export default function Home() {
 
             {/* Error Message */}
             {error && (
-              <div className="mt-2 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2 shadow-lg">
+              <div
+                role="alert"
+                className="mt-2 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2 shadow-lg"
+              >
                 <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-red-800">{error}</p>
               </div>
@@ -543,7 +559,11 @@ export default function Home() {
         {showResults && nearbyAeds.length > 0 && (
           <>
             {/* Desktop: Right Panel */}
-            <div className="hidden md:block absolute top-4 right-4 bottom-4 w-96 z-[1000]">
+            <section
+              role="region"
+              aria-label="Resultados de búsqueda"
+              className="hidden md:block absolute top-4 right-4 bottom-4 w-96 z-[1000]"
+            >
               <div className="bg-white rounded-xl shadow-2xl h-full flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-700">
@@ -569,15 +589,20 @@ export default function Home() {
                       key={aed.id}
                       aed={aed}
                       rank={index + 1}
+                      distanceText={calculateDistanceText(aed)}
                       onClick={() => handleCardClick(aed, index + 1)}
                     />
                   ))}
                 </div>
               </div>
-            </div>
+            </section>
 
             {/* Mobile: Bottom Sheet */}
-            <div className="md:hidden absolute bottom-0 left-0 right-0 z-[1000] max-h-[50vh]">
+            <section
+              role="region"
+              aria-label="Resultados de búsqueda"
+              className="md:hidden absolute bottom-0 left-0 right-0 z-[1000] max-h-[50vh]"
+            >
               <div className="bg-white rounded-t-2xl shadow-2xl overflow-hidden">
                 {/* Handle */}
                 <div className="p-2 flex justify-center">
@@ -607,13 +632,14 @@ export default function Home() {
                       key={aed.id}
                       aed={aed}
                       rank={index + 1}
+                      distanceText={calculateDistanceText(aed)}
                       onClick={() => handleCardClick(aed, index + 1)}
                       compact
                     />
                   ))}
                 </div>
               </div>
-            </div>
+            </section>
           </>
         )}
 
@@ -760,11 +786,13 @@ export default function Home() {
 function NearbyAedCard({
   aed,
   rank,
+  distanceText,
   onClick,
   compact = false,
 }: {
   aed: NearbyAed;
   rank: number;
+  distanceText: string;
   onClick: () => void;
   compact?: boolean;
 }) {
@@ -773,13 +801,13 @@ function NearbyAedCard({
       ? aed.images[0].thumbnail_url || aed.images[0].processed_url || aed.images[0].original_url
       : null;
 
-  const distanceText =
-    aed.distance < 1 ? `${Math.round(aed.distance * 1000)} m` : `${aed.distance.toFixed(1)} km`;
+  const cardAriaLabel = `${rank}º más cercano: ${aed.name}, a ${distanceText}`;
 
   if (compact) {
     return (
       <button
         onClick={onClick}
+        aria-label={cardAriaLabel}
         className="w-full bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-all text-left"
       >
         <div className="flex items-start gap-3">
@@ -814,6 +842,7 @@ function NearbyAedCard({
   return (
     <button
       onClick={onClick}
+      aria-label={cardAriaLabel}
       className="w-full bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all text-left"
     >
       {/* Image or Gradient */}
@@ -865,7 +894,7 @@ function NearbyAedCard({
                 : "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)",
           }}
         >
-          <Navigation className="w-3 h-3" />
+          <Navigation className="w-3 h-3" aria-hidden="true" />
           {distanceText}
         </div>
 
@@ -874,7 +903,7 @@ function NearbyAedCard({
 
         {/* Location */}
         <div className="flex items-start gap-1 text-xs text-gray-600">
-          <MapPin className="w-3 h-3 flex-shrink-0 mt-0.5 text-red-500" />
+          <MapPin className="w-3 h-3 flex-shrink-0 mt-0.5 text-red-500" aria-hidden="true" />
           <p className="line-clamp-2">
             {aed.location.street_type} {aed.location.street_name} {aed.location.street_number}
           </p>
@@ -883,7 +912,7 @@ function NearbyAedCard({
         {/* Schedule */}
         {aed.schedule && (
           <div className="flex items-center gap-1 text-xs text-gray-600">
-            <Clock className="w-3 h-3 flex-shrink-0 text-green-500" />
+            <Clock className="w-3 h-3 flex-shrink-0 text-green-500" aria-hidden="true" />
             <p>
               {aed.schedule.has_24h_surveillance
                 ? "24h"
@@ -897,7 +926,7 @@ function NearbyAedCard({
         {/* Contact */}
         {aed.responsible && aed.responsible.phone && (
           <div className="flex items-center gap-1 text-xs text-gray-600">
-            <Phone className="w-3 h-3 flex-shrink-0 text-blue-500" />
+            <Phone className="w-3 h-3 flex-shrink-0 text-blue-500" aria-hidden="true" />
             <p>{aed.responsible.phone}</p>
           </div>
         )}
