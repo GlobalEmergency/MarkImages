@@ -69,7 +69,7 @@ export class TransformerPipeline {
           if (lastResult.confidence > 0) {
             mergedFields = { ...mergedFields, ...lastResult.fields };
           }
-        } catch (error) {
+        } catch (_error) {
           break; // Parar cadena en error, mantener fallback
         }
       }

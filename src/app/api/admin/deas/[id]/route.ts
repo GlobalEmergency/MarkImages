@@ -718,10 +718,10 @@ export async function DELETE(
     }
 
     // Optional reason from body
-    let reason: string | undefined;
+    let _reason: string | undefined;
     try {
       const body = await request.json();
-      reason = body?.reason;
+      _reason = body?.reason;
     } catch {
       // No body or invalid JSON — that's fine
     }

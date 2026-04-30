@@ -248,6 +248,7 @@ export class ExternalSyncService {
     let ndjson = await this.getCachedNdjson(jobId);
     let cacheWasMiss = false;
     if (ndjson) {
+      // Cache hit (no action)
     } else {
       cacheWasMiss = true;
 
@@ -434,6 +435,7 @@ export class ExternalSyncService {
       count++;
 
       if (count % 1000 === 0) {
+        // Heartbeat for large files (no action)
       }
     }
 
@@ -450,15 +452,23 @@ export class ExternalSyncService {
    */
   private subscribeEvents(engine: BatchEngine, label: string): void {
     engine
-      .on("job:started", (e) => {})
-      .on("job:progress", (e) => {
-        const p = e.progress;
+      .on("job:started", (_e) => {
+        // No action
       })
-      .on("batch:completed", (e) => {})
-      .on("record:failed", (e) => {})
-      .on("chunk:completed", (e) => {})
+      .on("job:progress", (e) => {
+        const _p = e.progress;
+      })
+      .on("batch:completed", (_e) => {
+        // No action
+      })
+      .on("record:failed", (_e) => {
+        // No action
+      })
+      .on("chunk:completed", (_e) => {
+        // No action
+      })
       .on("job:completed", (e) => {
-        const s = e.summary;
+        const _s = e.summary;
       })
       .on("job:failed", (e) => {
         console.error(`[Sync:${label}] Job ${e.jobId} FAILED: ${e.error}`);
@@ -856,7 +866,7 @@ export class ExternalSyncService {
 
       const decompressed = gunzipSync(Buffer.from(cached.compressed_data));
       return decompressed.toString("utf-8");
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }

@@ -104,7 +104,7 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
         await fs.promises.unlink(this.tempFilePath);
 
         this.tempFilePath = undefined;
-      } catch (error) {
+      } catch (_error) {
         /* Ignored */
       }
     }
@@ -518,7 +518,7 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
             matchedExternalReference: existingById.external_reference,
           };
         }
-      } catch (error) {
+      } catch (_error) {
         // ID no vÃ¡lido o no es UUID, continuar con otros mÃ©todos
       }
     }

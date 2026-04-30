@@ -163,6 +163,7 @@ export class JsonFileAdapter implements IDataSourceAdapter {
       yield ImportRecord.fromApiRecord(enriched, mappings, rowIndex, externalIdField);
 
       if ((rowIndex + 1) % 1000 === 0) {
+        // Heartbeat (no action)
       }
     }
 

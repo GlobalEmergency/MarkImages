@@ -86,6 +86,7 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
     const { records, errors } = this.csvParser.parseToRecords(text, config.csvDelimiter);
 
     if (errors.length > 0) {
+      // Non-critical parsing errors (no action)
     }
 
     this.dataCache.set(url, records);
@@ -113,6 +114,7 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
         yield ImportRecord.fromApiRecord(enriched, mappings, i, externalIdField);
 
         if ((i + 1) % 1000 === 0) {
+          // Heartbeat (no action)
         }
       }
     } else {

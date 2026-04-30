@@ -72,7 +72,7 @@ export class DuplicateDetectionService {
             };
           }
         }
-      } catch (error) {
+      } catch (_error) {
         // ID no vÃ¡lido o no es UUID, continuar con otros mÃ©todos
       }
     }

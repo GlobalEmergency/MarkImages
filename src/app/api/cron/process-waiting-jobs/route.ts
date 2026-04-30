@@ -123,6 +123,7 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
       });
 
       if (dueSyncs.length > 0) {
+        // Log or notify about scheduled syncs starting (no action)
       }
 
       for (const ds of dueSyncs) {
@@ -296,13 +297,13 @@ async function processWaitingJobs(request: NextRequest): Promise<NextResponse> {
         }
 
         const lastResult = results[results.length - 1];
-        const duration = Date.now() - jobStartTime;
+        const _duration = Date.now() - jobStartTime;
 
         if (!lastResult.hasMore) {
           // Regenerate cluster cache after import/sync jobs complete
           if (engine === "bulkimport" || engine === "externalsync") {
             try {
-              const cacheResult = await regenerateClusterCache();
+              const _cacheResult = await regenerateClusterCache();
             } catch (cacheError) {
               console.error(`[CACHE] [Cron] Error regenerating cluster cache:`, cacheError);
             }

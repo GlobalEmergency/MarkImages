@@ -70,6 +70,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       await processVerificationImages(imagesToProcess);
 
     if (processingErrors.length > 0) {
+      // Individual processing errors are handled in final result (no action)
     }
 
     // ── Upload images to S3 (network I/O — outside transaction) ──────
@@ -240,7 +241,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const allErrors = [...processingErrors, ...uploadErrors];
     if (allErrors.length > 0) {
+      // Errors will be returned as warnings (no action)
     } else {
+      // Success (no action)
     }
 
     invalidateAedCaches(id);

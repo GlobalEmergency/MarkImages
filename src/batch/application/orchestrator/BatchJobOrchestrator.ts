@@ -294,7 +294,9 @@ export class BatchJobOrchestrator {
 
       job.updateProgress(progress);
     } else if (createdCount === currentProgress) {
+      // Progress is already correct (no action)
     } else {
+      // createdCount < currentProgress (unlikely, but no action)
     }
   }
 
@@ -312,15 +314,15 @@ export class BatchJobOrchestrator {
 
     let currentIndex = startIndex;
     let totalProcessed = 0;
-    let totalSuccess = 0;
+    let _totalSuccess = 0;
     let totalFailed = 0;
     let hasMore = true;
     let shouldContinue = true;
-    let chunkCount = 0;
+    let _chunkCount = 0;
 
     // Process multiple chunks until timeout or completion
     while (hasMore && shouldContinue && Date.now() < effectiveTimeout.getTime()) {
-      chunkCount++;
+      _chunkCount++;
       const chunkStartTime = Date.now();
 
       const chunkResult = await this.processSingleChunk(
@@ -332,7 +334,7 @@ export class BatchJobOrchestrator {
 
       // Accumulate results
       totalProcessed += chunkResult.processedCount;
-      totalSuccess += chunkResult.successCount;
+      _totalSuccess += chunkResult.successCount;
       totalFailed += chunkResult.failedCount;
       hasMore = chunkResult.hasMore;
       shouldContinue = chunkResult.shouldContinue;

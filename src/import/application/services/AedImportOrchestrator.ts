@@ -219,7 +219,7 @@ export class AedImportOrchestrator {
 
         // Log de progreso cada 10 registros
         if ((i + 1) % 10 === 0) {
-          const elapsed = Date.now() - startTime;
+          const _elapsed = Date.now() - startTime;
         }
       }
 

@@ -179,7 +179,7 @@ class AedLookupCache {
           this.byIdentifier.set(ei.external_identifier, aed);
         }
       }
-    } catch (error) {
+    } catch (_error) {
       /* Ignored */
     }
 
@@ -394,6 +394,7 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
             coordMatch.external_reference !== externalId &&
             coordMatch.data_source_id === dataSourceId
           ) {
+            // Same source, same coords, different ID -> distinct devices (no action)
           } else if (!externalId) {
             // No coords + no externalId â†’ flag as suspected duplicate
 
@@ -437,9 +438,9 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
       // Attach to record for processor
       if (existingAed) {
         // Log the match reason for debugging
-        const matchReason =
+        const _matchReason =
           (existingAed as ExistingAedRow & { _matchReason?: string })._matchReason || "unknown";
-        const isCrossSource = !!(
+        const _isCrossSource = !!(
           existingAed.data_source_id && existingAed.data_source_id !== dataSourceId
         );
 

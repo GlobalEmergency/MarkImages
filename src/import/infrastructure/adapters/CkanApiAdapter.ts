@@ -163,6 +163,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
       yield ImportRecord.fromApiRecord(enriched, mappings, rowIndex, externalIdField);
 
       if ((rowIndex + 1) % 1000 === 0) {
+        // Heartbeat (no action)
       }
     }
   }
@@ -209,6 +210,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
 
       // Log de progreso cada 1000 registros
       if (rowIndex % 1000 === 0) {
+        // Heartbeat (no action)
       }
     }
   }
@@ -299,6 +301,7 @@ export class CkanApiAdapter implements IDataSourceAdapter {
 
       // Log first record sample for debugging
       if (keys.length > 0) {
+        // Sample for debugging (no action)
       }
     }
 

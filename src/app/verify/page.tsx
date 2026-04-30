@@ -298,7 +298,7 @@ export default function VerifyPage() {
         throw new Error(errorData.error || "Error al eliminar DEAs");
       }
 
-      const result = await response.json();
+      const _result = await response.json();
 
       // Exit selection mode and refresh list
       exitSelectionMode();

@@ -71,6 +71,7 @@ export class ParseCsvPreviewUseCase {
       // Validar que todas las filas tengan el mismo nÃºmero de columnas
       const invalidRows = sampleRows.filter((row) => row.length !== headers.length);
       if (invalidRows.length > 0) {
+        // Log or handle inconsistent rows (no action)
       }
 
       // Crear preview

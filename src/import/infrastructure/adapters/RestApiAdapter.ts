@@ -227,6 +227,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
       );
       yield ImportRecord.fromApiRecord(enriched, mappings, i, externalIdField);
       if ((i + 1) % 1000 === 0) {
+        // Heartbeat (no action)
       }
     }
   }
@@ -254,7 +255,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
       const records = this.extractRecords(data, config.responseDataPath);
 
       if (rowIndex === 0 && records.length > 0) {
-        const externalIdField = this.resolveExternalIdField(records, config);
+        const _externalIdField = this.resolveExternalIdField(records, config);
       }
 
       const externalIdField = this.resolveExternalIdField(records, config);
@@ -272,6 +273,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
       offset += pageSize;
 
       if (rowIndex % 1000 === 0) {
+        // Heartbeat (no action)
       }
     }
   }
@@ -313,6 +315,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
       page++;
 
       if (rowIndex % 1000 === 0) {
+        // Heartbeat (no action)
       }
     }
   }
@@ -360,6 +363,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
       cursor = nextCursor;
 
       if (rowIndex % 1000 === 0) {
+        // Heartbeat (no action)
       }
     }
   }
