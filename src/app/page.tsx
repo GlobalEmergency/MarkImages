@@ -366,6 +366,25 @@ export default function Home() {
     }
   };
 
+  // Global Escape key listener to close panels and modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (modalOpen) {
+          handleCloseModal("escape");
+        } else if (showResults) {
+          handleClearSearch();
+        } else if (showSuggestions) {
+          setShowSuggestions(false);
+          setActiveSuggestionIndex(-1);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [modalOpen, showResults, showSuggestions]);
+
   return (
     <>
       {/* Smart App Banner for mobile users */}
@@ -568,10 +587,10 @@ export default function Home() {
                 {/* Header */}
                 <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-700">
                   <div className="text-white">
-                    <h3 className="font-bold text-lg">
+                    <h2 className="font-bold text-lg">
                       {nearbyAeds.length} DEA{nearbyAeds.length !== 1 ? "s" : ""} encontrado
                       {nearbyAeds.length !== 1 ? "s" : ""}
-                    </h3>
+                    </h2>
                     <p className="text-sm text-blue-100">Ordenados por distancia</p>
                   </div>
                   <button
@@ -612,9 +631,9 @@ export default function Home() {
                 {/* Header */}
                 <div className="px-4 pb-3 flex items-center justify-between border-b border-gray-200">
                   <div>
-                    <h3 className="font-bold text-lg text-gray-900">
+                    <h2 className="font-bold text-lg text-gray-900">
                       {nearbyAeds.length} DEA{nearbyAeds.length !== 1 ? "s" : ""}
-                    </h3>
+                    </h2>
                     <p className="text-sm text-gray-600">Ordenados por distancia</p>
                   </div>
                   <button
@@ -666,7 +685,7 @@ export default function Home() {
       </div>
 
       {/* Info Section - After the map */}
-      <div className="bg-gradient-to-br from-gray-50 to-gray-100">
+      <div id="main-content" className="bg-gradient-to-br from-gray-50 to-gray-100 outline-none">
         <div className="container mx-auto px-4 py-16 space-y-16">
           {/* About Section */}
           <section className="max-w-4xl mx-auto">
