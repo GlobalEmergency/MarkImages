@@ -67,6 +67,7 @@ export default function Home() {
   const [addressSuggestions, setAddressSuggestions] = useState<GeocodingResult[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
 
   const {
     trackSearch,
@@ -100,6 +101,7 @@ export default function Home() {
         const data: GeocodingResult[] = await response.json();
         setAddressSuggestions(data.slice(0, 5)); // Limit to 5 suggestions
         setShowSuggestions(true);
+        setActiveSuggestionIndex(-1);
       }
     } catch (err) {
       console.error("Error fetching suggestions:", err);
@@ -116,6 +118,7 @@ export default function Home() {
       } else {
         setAddressSuggestions([]);
         setShowSuggestions(false);
+        setActiveSuggestionIndex(-1);
       }
     }, 500);
 
@@ -174,12 +177,40 @@ export default function Home() {
     setAddress(suggestion.display_name);
     setShowSuggestions(false);
     setAddressSuggestions([]);
+    setActiveSuggestionIndex(-1);
 
     // Immediately search for DEAs at this location
     const lat = parseFloat(suggestion.lat);
     const lng = parseFloat(suggestion.lon);
     setSearchLocation({ lat, lng });
     await searchNearbyAeds(lat, lng);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || addressSuggestions.length === 0) return;
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setActiveSuggestionIndex((prev) =>
+          prev < addressSuggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setActiveSuggestionIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        break;
+      case "Enter":
+        if (activeSuggestionIndex >= 0) {
+          e.preventDefault();
+          handleSuggestionClick(addressSuggestions[activeSuggestionIndex], activeSuggestionIndex);
+        }
+        break;
+      case "Escape":
+        setShowSuggestions(false);
+        setActiveSuggestionIndex(-1);
+        break;
+    }
   };
 
   const handleFindNearestByGeolocation = async () => {
@@ -308,6 +339,7 @@ export default function Home() {
     setSearchLocation(null);
     setError(null);
     setAddress("");
+    setActiveSuggestionIndex(-1);
   };
 
   const handleMapMarkerClick = async (aed: { id: string; code: string; name: string }) => {
@@ -369,9 +401,19 @@ export default function Home() {
                   onFocus={() => {
                     if (addressSuggestions.length > 0) setShowSuggestions(true);
                   }}
+                  onKeyDown={handleKeyDown}
                   disabled={loading}
                   className="flex-1 outline-none text-gray-900 placeholder-gray-400 text-sm disabled:opacity-50"
                   autoComplete="off"
+                  role="combobox"
+                  aria-expanded={showSuggestions && addressSuggestions.length > 0}
+                  aria-autocomplete="list"
+                  aria-controls="address-suggestions-list"
+                  aria-haspopup="listbox"
+                  aria-activedescendant={
+                    activeSuggestionIndex >= 0 ? `suggestion-${activeSuggestionIndex}` : undefined
+                  }
+                  aria-label="Buscar dirección para localizar desfibriladores"
                 />
                 {loadingSuggestions && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
                 {address && !loadingSuggestions && (
@@ -382,7 +424,9 @@ export default function Home() {
                       setAddress("");
                       setShowSuggestions(false);
                       setAddressSuggestions([]);
+                      setActiveSuggestionIndex(-1);
                     }}
+                    aria-label="Limpiar búsqueda"
                     className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                   >
                     <X className="w-4 h-4 text-gray-400" />
@@ -390,26 +434,50 @@ export default function Home() {
                 )}
               </form>
 
+              {/* ARIA Live Region for suggestions */}
+              <div aria-live="polite" className="sr-only">
+                {showSuggestions && addressSuggestions.length > 0
+                  ? `${addressSuggestions.length} sugerencias disponibles. Usa las flechas arriba y abajo para navegar.`
+                  : ""}
+              </div>
+
               {/* Address Suggestions Dropdown */}
               {showSuggestions && addressSuggestions.length > 0 && (
-                <div className="border-t border-gray-200 max-h-64 overflow-y-auto">
+                <ul
+                  id="address-suggestions-list"
+                  role="listbox"
+                  aria-label="Sugerencias de direcciones"
+                  className="border-t border-gray-200 max-h-64 overflow-y-auto"
+                >
                   {addressSuggestions.map((suggestion, index) => (
-                    <button
+                    <li
                       key={index}
-                      type="button"
-                      onClick={() => handleSuggestionClick(suggestion, index)}
-                      className="w-full p-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-2"
+                      id={`suggestion-${index}`}
+                      role="option"
+                      aria-selected={index === activeSuggestionIndex}
                     >
-                      <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900 truncate">{suggestion.display_name}</p>
-                        {suggestion.address.city && (
-                          <p className="text-xs text-gray-500 mt-0.5">{suggestion.address.city}</p>
-                        )}
-                      </div>
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSuggestionClick(suggestion, index)}
+                        className={`w-full p-3 text-left transition-colors flex items-start gap-2 ${
+                          index === activeSuggestionIndex ? "bg-gray-100" : "hover:bg-gray-50"
+                        }`}
+                      >
+                        <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-900 truncate">
+                            {suggestion.display_name}
+                          </p>
+                          {suggestion.address.city && (
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {suggestion.address.city}
+                            </p>
+                          )}
+                        </div>
+                      </button>
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
 
               {/* Geolocation Button - Visible on Desktop */}
@@ -417,6 +485,7 @@ export default function Home() {
                 <button
                   onClick={handleFindNearestByGeolocation}
                   disabled={loading}
+                  aria-label="Usar mi ubicación actual"
                   className="w-full p-3 flex items-center gap-3 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
                 >
                   {loading ? (
@@ -453,6 +522,7 @@ export default function Home() {
           <button
             onClick={handleFindNearestByGeolocation}
             disabled={loading}
+            aria-label="Usar mi ubicación actual"
             className="bg-blue-600 text-white rounded-full shadow-2xl p-4 flex items-center gap-3 hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
           >
             {loading ? (
