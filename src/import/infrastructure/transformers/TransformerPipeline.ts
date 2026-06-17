@@ -61,7 +61,6 @@ export class TransformerPipeline {
       for (const name of names) {
         const transformer = this.registry.get(name);
         if (!transformer) {
-          console.warn(`⚠️ Transformer '${name}' no registrado, ignorando`);
           continue;
         }
 
@@ -70,10 +69,7 @@ export class TransformerPipeline {
           if (lastResult.confidence > 0) {
             mergedFields = { ...mergedFields, ...lastResult.fields };
           }
-        } catch (error) {
-          console.warn(
-            `⚠️ Transformer '${name}' falló para campo '${sourceField}': ${error instanceof Error ? error.message : error}`
-          );
+        } catch (_error) {
           break; // Parar cadena en error, mantener fallback
         }
       }

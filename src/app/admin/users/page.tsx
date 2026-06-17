@@ -53,8 +53,8 @@ export default function UsersPage() {
 
       setUsers(data.data);
       setError(null);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error al cargar usuarios");
     } finally {
       setLoading(false);
     }
@@ -114,7 +114,7 @@ export default function UsersPage() {
             href="/admin"
             className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-block"
           >
-            ← Volver al panel
+            â† Volver al panel
           </Link>
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
           <p className="mt-2 text-sm text-gray-600">
@@ -244,7 +244,7 @@ export default function UsersPage() {
                       <div>Registrado: {new Date(user.created_at).toLocaleDateString()}</div>
                       {user.last_login_at && (
                         <div className="mt-1">
-                          Último acceso: {new Date(user.last_login_at).toLocaleDateString()}
+                          Ãšltimo acceso: {new Date(user.last_login_at).toLocaleDateString()}
                         </div>
                       )}
                     </div>

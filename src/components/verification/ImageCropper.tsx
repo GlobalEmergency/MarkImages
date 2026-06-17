@@ -173,7 +173,7 @@ export default function ImageCropper({
           onRetry: (attempt, maxRetries) => {
             setRetryAttempt(attempt);
             if (attempt === maxRetries) {
-              setLoadingState(`Último intento... (${attempt}/${maxRetries})`);
+              setLoadingState(`Ãšltimo intento... (${attempt}/${maxRetries})`);
             } else {
               setLoadingState(`Reintentando... (${attempt}/${maxRetries})`);
             }
@@ -202,16 +202,6 @@ export default function ImageCropper({
         finalWidth = img.width;
         finalHeight = img.height;
 
-        console.log("=== CARGA DE IMAGEN EN FRONTEND ===");
-        console.log("Dimensiones naturales (archivo físico):", {
-          width: img.naturalWidth,
-          height: img.naturalHeight,
-        });
-        console.log("Dimensiones visuales (post-EXIF):", {
-          width: finalWidth,
-          height: finalHeight,
-        });
-
         // Configurar canvas con las dimensiones correctas
         canvas.width = finalWidth;
         canvas.height = finalHeight;
@@ -236,19 +226,13 @@ export default function ImageCropper({
           // Notificar crop inicial
           onCropChange(initialCrop);
 
-          console.log("✅ Imagen cargada con orientación correcta:", {
-            dimensions: { width: finalWidth, height: finalHeight },
-            initialCrop,
-            scale,
-          });
-
           // Guardar referencia de la imagen corregida
           imageRef.current = correctedImg;
         };
 
         correctedImg.src = canvas.toDataURL("image/jpeg", 0.95);
       } catch (error) {
-        console.error("❌ Error loading image:", error);
+        console.error("âŒ Error loading image:", error);
         setLoadingState("Error al cargar la imagen");
         // Fallback: intentar con la función legacy
         const { loadImageWithProxy } = await import("@/utils/imageLoader");
@@ -700,11 +684,10 @@ export default function ImageCropper({
           (blob) => {
             if (blob) {
               const url = URL.createObjectURL(blob);
-              console.log("✅ Imagen recortada generada:", url);
-              console.log(`   Dimensiones: ${cropArea.width}x${cropArea.height}px`);
+
               resolve(url);
             } else {
-              console.error("❌ Error generando blob de imagen recortada");
+              console.error("âŒ Error generando blob de imagen recortada");
               resolve(undefined);
             }
           },
@@ -713,7 +696,7 @@ export default function ImageCropper({
         );
       });
     } catch (error) {
-      console.error("❌ Error generando imagen recortada:", error);
+      console.error("âŒ Error generando imagen recortada:", error);
       return undefined;
     }
   };
@@ -784,9 +767,9 @@ export default function ImageCropper({
 
       {imageLoaded && (
         <div className="text-sm text-gray-600 text-center max-w-md px-4">
-          <p className="mb-1">Arrastra para mover • Usa cualquier esquina para redimensionar</p>
+          <p className="mb-1">Arrastra para mover â€¢ Usa cualquier esquina para redimensionar</p>
           <p>
-            Tamaño: {Math.round(cropArea.width)} × {Math.round(cropArea.height)} px (mín:{" "}
+            Tamaño: {Math.round(cropArea.width)} Ã— {Math.round(cropArea.height)} px (mín:{" "}
             {Math.round(Math.min(imageDimensions.width, imageDimensions.height) * 0.5)}px)
           </p>
         </div>

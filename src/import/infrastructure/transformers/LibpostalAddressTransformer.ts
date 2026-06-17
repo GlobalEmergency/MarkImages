@@ -39,17 +39,17 @@ const PREFIX_STREET_TYPES = [
   "CARRETERA",
   "COSTANILLA",
   "TRAVESIA",
-  "TRAVESÍA",
+  "TRAVESÃA",
   "GLORIETA",
-  "URBANIZACIÓN",
+  "URBANIZACIÃ“N",
   "URBANIZACION",
-  "POLÍGONO",
+  "POLÃGONO",
   "POLIGONO",
   "AVENIDA",
   "ALAMEDA",
   "BULEVAR",
   "CALLEJON",
-  "CALLEJÓN",
+  "CALLEJÃ“N",
   "CAMINO",
   "PASAJE",
   "PARQUE",
@@ -70,13 +70,13 @@ const PREFIX_STREET_TYPES = [
   "AVINGUDA", // Avenida
   "PASSEIG", // Paseo
   "CARRER", // Calle
-  "PLAÇA", // Plaza
-  "CAMÍ", // Camino
+  "PLAÃ‡A", // Plaza
+  "CAMÃ", // Camino
   "CAMI", // Camino (sin acento)
   // === Gallego ===
   "ESTRADA", // Carretera
   "PRAZA", // Plaza
-  "RÚA", // Calle
+  "RÃšA", // Calle
   "RUA", // Calle (sin acento)
   // === Abreviaturas ===
   "CTRA",
@@ -154,9 +154,6 @@ export class LibpostalAddressTransformer implements IFieldTransformer {
 
       // Primera llamada exitosa → log disponibilidad
       if (!this.hasLoggedAvailability) {
-        console.log(
-          `✅ libpostal-address: servicio disponible en ${LIBPOSTAL_HOST}:${LIBPOSTAL_PORT}`
-        );
         this.hasLoggedAvailability = true;
         this.hasLoggedUnavailability = false;
       }
@@ -237,11 +234,6 @@ export class LibpostalAddressTransformer implements IFieldTransformer {
     this.circuitOpenedAt = Date.now();
 
     if (!this.hasLoggedUnavailability) {
-      console.warn(
-        `⚠️ libpostal-address: servicio NO disponible en ${LIBPOSTAL_HOST}:${LIBPOSTAL_PORT}. ` +
-          `Las direcciones se guardarán en bruto (fallback). ` +
-          `Se reintentará en ${CIRCUIT_BREAKER_COOLDOWN_MS / 1000 / 60} minutos.`
-      );
       this.hasLoggedUnavailability = true;
       this.hasLoggedAvailability = false;
     }
@@ -258,7 +250,7 @@ export class LibpostalAddressTransformer implements IFieldTransformer {
     if (elapsed >= CIRCUIT_BREAKER_COOLDOWN_MS) {
       // Cooldown expirado → cerrar circuito, dejar que reintente
       this.circuitOpen = false;
-      console.log(`🔄 libpostal-address: reintentando conexión tras cooldown...`);
+
       return false;
     }
 
@@ -324,7 +316,7 @@ export class LibpostalAddressTransformer implements IFieldTransformer {
   }
 
   /**
-   * Separa tipo de vía del nombre usando diccionario multilingüe.
+   * Separa tipo de vía del nombre usando diccionario multilingÃ¼e.
    *
    * Soporta dos patrones:
    * - Prefijo (castellano/catalán/gallego): "CALLE Gran Vía" → streetType="Calle"

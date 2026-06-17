@@ -127,8 +127,6 @@ export class CkanApiAdapter implements IDataSourceAdapter {
     fieldMappings: Record<string, string>,
     config: DataSourceConfig
   ): AsyncGenerator<ImportRecord> {
-    console.log(`📥 Fetching records from direct JSON URL: ${url}`);
-
     const response = await fetch(url, {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(this.fetchTimeoutMs),
@@ -155,9 +153,6 @@ export class CkanApiAdapter implements IDataSourceAdapter {
     }
 
     const externalIdField = this.resolveExternalIdField(records, config);
-    console.log(
-      `📋 Found ${records.length} records, using '${externalIdField}' as external ID field`
-    );
 
     for (let rowIndex = 0; rowIndex < records.length; rowIndex++) {
       const { record: enriched, mappings } = await enrichRecordIfNeeded(
@@ -168,11 +163,9 @@ export class CkanApiAdapter implements IDataSourceAdapter {
       yield ImportRecord.fromApiRecord(enriched, mappings, rowIndex, externalIdField);
 
       if ((rowIndex + 1) % 1000 === 0) {
-        console.log(`📥 Processed ${rowIndex + 1} records...`);
+        // Heartbeat (no action)
       }
     }
-
-    console.log(`✅ Finished processing ${records.length} records from direct JSON`);
   }
 
   /**
@@ -217,11 +210,9 @@ export class CkanApiAdapter implements IDataSourceAdapter {
 
       // Log de progreso cada 1000 registros
       if (rowIndex % 1000 === 0) {
-        console.log(`📥 Fetched ${rowIndex} records from CKAN API...`);
+        // Heartbeat (no action)
       }
     }
-
-    console.log(`✅ Finished fetching ${rowIndex} records from CKAN API`);
   }
 
   async getRecordCount(config: DataSourceConfig): Promise<number> {
@@ -258,11 +249,8 @@ export class CkanApiAdapter implements IDataSourceAdapter {
    * Soporta múltiples formatos: CKAN API, JSON directo, GeoJSON
    */
   private extractRecordsFromJson(data: unknown): Record<string, unknown>[] {
-    console.log("🔍 Extracting records from JSON data...");
-
     // Raw array
     if (Array.isArray(data)) {
-      console.log(`✅ Found direct array with ${data.length} records`);
       return data;
     }
 
@@ -275,25 +263,21 @@ export class CkanApiAdapter implements IDataSourceAdapter {
           ? (obj.result as Record<string, unknown>)
           : null;
       if (result?.records && Array.isArray(result.records)) {
-        console.log(`✅ Found CKAN result.records format with ${result.records.length} records`);
         return result.records as Record<string, unknown>[];
       }
 
       // Direct data array
       if (obj.data && Array.isArray(obj.data)) {
-        console.log(`✅ Found data array with ${obj.data.length} records`);
         return obj.data;
       }
 
       // Direct records array
       if (obj.records && Array.isArray(obj.records)) {
-        console.log(`✅ Found records array with ${obj.records.length} records`);
         return obj.records;
       }
 
       // GeoJSON format: { features: [{ properties: {...}, geometry: {...} }] }
       if (obj.features && Array.isArray(obj.features)) {
-        console.log(`✅ Found GeoJSON features with ${obj.features.length} records`);
         interface GeoJsonFeature {
           properties: Record<string, unknown>;
           geometry?: {
@@ -314,18 +298,13 @@ export class CkanApiAdapter implements IDataSourceAdapter {
 
       // Check if it might be a serialized JSON string
       const keys = Object.keys(obj);
-      console.log(
-        `⚠️ Unknown JSON structure. Keys: ${keys.slice(0, 5).join(", ")}${keys.length > 5 ? "..." : ""}`
-      );
 
       // Log first record sample for debugging
       if (keys.length > 0) {
-        console.log("📋 First key sample:", keys[0]);
-        console.log("📋 First value sample:", JSON.stringify(obj[keys[0]]).substring(0, 200));
+        // Sample for debugging (no action)
       }
     }
 
-    console.log("❌ No valid records array found in JSON data");
     return [];
   }
 
@@ -571,9 +550,6 @@ export class CkanApiAdapter implements IDataSourceAdapter {
       return (await response.json()) as CkanResponse;
     } catch (error) {
       if (attempt < this.maxRetries) {
-        console.warn(
-          `⚠️ CKAN API request failed (attempt ${attempt}/${this.maxRetries}), retrying...`
-        );
         await this.delay(this.retryDelayMs * attempt);
         return this.fetchWithRetry(url, attempt + 1);
       }

@@ -45,8 +45,7 @@ export class ValidateAedImportUseCase {
       checkTimeout,
     });
 
-    const duration = Date.now() - startTime;
-    console.log(`Validation completed in ${duration}ms`);
+    const _duration = Date.now() - startTime;
 
     return result;
   }

@@ -16,6 +16,4 @@ root.render(
 setupGlobalErrorHandlers(crashReporter);
 
 // Initialize crash reporting (fire-and-forget, non-blocking)
-crashReporter.initialize().catch((err) => {
-  console.warn("Failed to initialize crash reporter:", err);
-});
+crashReporter.initialize().catch(() => {});

@@ -41,10 +41,10 @@ export default function AdminDeasPage() {
                 label: "Validación Coordenadas",
                 options: [
                   { value: "all", label: "Todas" },
-                  { value: "INVALID", label: "⚠️ Inválidas (revisar)" },
-                  { value: "NEEDS_VALIDATION", label: "🔍 Necesitan validación" },
+                  { value: "INVALID", label: "âš ï¸ Inválidas (revisar)" },
+                  { value: "NEEDS_VALIDATION", label: "ðŸ” Necesitan validación" },
                   { value: "VALID", label: "✅ Válidas" },
-                  { value: "NO_COMPARISON", label: "❓ Sin comparar" },
+                  { value: "NO_COMPARISON", label: "â“ Sin comparar" },
                 ],
               },
               {

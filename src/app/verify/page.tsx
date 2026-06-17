@@ -252,7 +252,7 @@ export default function VerifyPage() {
     router.push(`/verify/${aedId}`);
   };
 
-  // ── Batch selection helpers ──
+  // â”€â”€ Batch selection helpers â”€â”€
   const canBatchDelete = isAdmin && filterType === "rejected";
 
   const toggleSelection = (id: string) => {
@@ -298,8 +298,7 @@ export default function VerifyPage() {
         throw new Error(errorData.error || "Error al eliminar DEAs");
       }
 
-      const result = await response.json();
-      console.log(`✅ ${result.deleted} DEAs eliminados`);
+      const _result = await response.json();
 
       // Exit selection mode and refresh list
       exitSelectionMode();
@@ -526,13 +525,13 @@ export default function VerifyPage() {
           <div className="text-center py-12">
             <div className="text-gray-400 text-6xl mb-4">
               {searchTerm
-                ? "🔍"
+                ? "ðŸ”"
                 : filterType === "rejected"
-                  ? "✨"
+                  ? "âœ¨"
                   : filterType === "never_verified"
                     ? "✅"
                     : filterType === "requires_attention"
-                      ? "👍"
+                      ? "ðŸ‘"
                       : "🎉"}
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -738,7 +737,7 @@ export default function VerifyPage() {
       <ConfirmDialog
         isOpen={showDeleteDialog}
         title="Eliminar DEAs permanentemente"
-        message={`¿Estás seguro de que deseas eliminar ${selectedIds.size} DEA${selectedIds.size !== 1 ? "s" : ""} descartado${selectedIds.size !== 1 ? "s" : ""}? Esta acción no se puede deshacer.`}
+        message={`Â¿Estás seguro de que deseas eliminar ${selectedIds.size} DEA${selectedIds.size !== 1 ? "s" : ""} descartado${selectedIds.size !== 1 ? "s" : ""}? Esta acción no se puede deshacer.`}
         confirmText={`Eliminar ${selectedIds.size} DEA${selectedIds.size !== 1 ? "s" : ""}`}
         cancelText="Cancelar"
         confirmColor="red"

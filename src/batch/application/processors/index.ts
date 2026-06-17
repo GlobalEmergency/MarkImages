@@ -50,6 +50,4 @@ export function initializeProcessors(prisma: PrismaClient): void {
     JobType.AED_JSON_EXPORT,
     new AedExportProcessor(prisma) // Same processor, different config
   );
-
-  console.log("✅ Batch processors initialized:", registry.getRegisteredTypes());
 }

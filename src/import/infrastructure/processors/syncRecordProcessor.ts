@@ -6,7 +6,7 @@
  *
  * Business logic ported from ExternalSyncProcessor:
  * - 3-tier duplicate detection (external_ref → coordinates → skip)
- * - 4 merge scenarios (isMerging × isAutomaticSync)
+ * - 4 merge scenarios (isMerging Ã— isAutomaticSync)
  * - Verified AED protection
  * - Code protection (existing codes are never overwritten)
  * - Audit trail via internal_notes and AedFieldChange

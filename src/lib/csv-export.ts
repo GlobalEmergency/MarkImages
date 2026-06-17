@@ -228,7 +228,7 @@ export function aedsToCsv(aeds: AedExportData[]): string {
     "neighborhood",
     "latitude",
     "longitude",
-    "¿opening 24/7?",
+    "Â¿opening 24/7?",
     "opening Mon-Fri",
     "closing Mon-Fri",
     "opening Sat",
@@ -278,7 +278,7 @@ export function aedsToCsv(aeds: AedExportData[]): string {
       aed.location?.neighborhood_name ?? "", // neighborhood
       aed.latitude ?? "", // latitude
       aed.longitude ?? "", // longitude
-      aed.schedule?.has_24h_surveillance ? "SÍ" : "NO", // ¿opening 24/7?
+      aed.schedule?.has_24h_surveillance ? "SÃ" : "NO", // Â¿opening 24/7?
       aed.schedule?.weekday_opening ?? "", // opening Mon-Fri
       aed.schedule?.weekday_closing ?? "", // closing Mon-Fri
       aed.schedule?.saturday_opening ?? "", // opening Sat
@@ -362,7 +362,7 @@ export function createCsvBlob(csvContent: string): Blob {
 }
 
 /**
- * Convierte un array de AEDs a formato CSV compatible con IMPORTACIÓN
+ * Convierte un array de AEDs a formato CSV compatible con IMPORTACIÃ“N
  * Usa el mismo formato de 58 columnas que la plantilla de importación
  * Usa punto y coma (;) como separador para compatibilidad con Excel
  */
@@ -402,7 +402,7 @@ export function aedsToImportFormatCsv(aeds: AedImportFormatData[]): string {
     "Hora de CIERRE los sábados",
     "Hora de APERTURA los domingos",
     "Hora de CIERRE los domingos",
-    "¿Tiene vigilante 24 horas al día que pueda facilitar el desfibrilador en caso necesario aunque esté cerrado?",
+    "Â¿Tiene vigilante 24 horas al día que pueda facilitar el desfibrilador en caso necesario aunque esté cerrado?",
     "Acceso restringido",
     "Festivos como día laborable",
     "Cerrado en festivos",
@@ -495,7 +495,7 @@ export function aedsToImportFormatCsv(aeds: AedImportFormatData[]): string {
       aed.schedule?.saturday_closing ?? "", // Hora de CIERRE los sábados
       aed.schedule?.sunday_opening ?? "", // Hora de APERTURA los domingos
       aed.schedule?.sunday_closing ?? "", // Hora de CIERRE los domingos
-      aed.schedule?.has_24h_surveillance ? "Sí" : "No", // ¿Tiene vigilante 24h?
+      aed.schedule?.has_24h_surveillance ? "Sí" : "No", // Â¿Tiene vigilante 24h?
       aed.schedule?.has_restricted_access ? "Sí" : "No", // Acceso restringido
       aed.schedule?.holidays_as_weekday ? "Sí" : "No", // Festivos como día laborable
       aed.schedule?.closed_on_holidays ? "Sí" : "No", // Cerrado en festivos

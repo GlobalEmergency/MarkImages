@@ -215,12 +215,9 @@ export class RestApiAdapter implements IDataSourceAdapter {
     config: DataSourceConfig,
     fieldMappings: Record<string, string>
   ): AsyncGenerator<ImportRecord> {
-    console.log(`📥 Fetching all records from: ${endpoint}`);
     const data = await this.fetchJson(endpoint, config);
     const records = this.extractRecords(data, config.responseDataPath);
     const externalIdField = this.resolveExternalIdField(records, config);
-
-    console.log(`📋 Found ${records.length} records, ID field: '${externalIdField}'`);
 
     for (let i = 0; i < records.length; i++) {
       const { record: enriched, mappings } = await enrichRecordIfNeeded(
@@ -230,11 +227,9 @@ export class RestApiAdapter implements IDataSourceAdapter {
       );
       yield ImportRecord.fromApiRecord(enriched, mappings, i, externalIdField);
       if ((i + 1) % 1000 === 0) {
-        console.log(`📥 Processed ${i + 1} records...`);
+        // Heartbeat (no action)
       }
     }
-
-    console.log(`✅ Finished processing ${records.length} records`);
   }
 
   private async *fetchWithOffsetPagination(
@@ -260,8 +255,7 @@ export class RestApiAdapter implements IDataSourceAdapter {
       const records = this.extractRecords(data, config.responseDataPath);
 
       if (rowIndex === 0 && records.length > 0) {
-        const externalIdField = this.resolveExternalIdField(records, config);
-        console.log(`📋 Offset pagination, ID field: '${externalIdField}', page size: ${pageSize}`);
+        const _externalIdField = this.resolveExternalIdField(records, config);
       }
 
       const externalIdField = this.resolveExternalIdField(records, config);
@@ -279,11 +273,9 @@ export class RestApiAdapter implements IDataSourceAdapter {
       offset += pageSize;
 
       if (rowIndex % 1000 === 0) {
-        console.log(`📥 Fetched ${rowIndex} records...`);
+        // Heartbeat (no action)
       }
     }
-
-    console.log(`✅ Finished fetching ${rowIndex} records (offset pagination)`);
   }
 
   private async *fetchWithPagePagination(
@@ -323,11 +315,9 @@ export class RestApiAdapter implements IDataSourceAdapter {
       page++;
 
       if (rowIndex % 1000 === 0) {
-        console.log(`📥 Fetched ${rowIndex} records...`);
+        // Heartbeat (no action)
       }
     }
-
-    console.log(`✅ Finished fetching ${rowIndex} records (page pagination)`);
   }
 
   private async *fetchWithCursorPagination(
@@ -373,11 +363,9 @@ export class RestApiAdapter implements IDataSourceAdapter {
       cursor = nextCursor;
 
       if (rowIndex % 1000 === 0) {
-        console.log(`📥 Fetched ${rowIndex} records...`);
+        // Heartbeat (no action)
       }
     }
-
-    console.log(`✅ Finished fetching ${rowIndex} records (cursor pagination)`);
   }
 
   // ============================================================
@@ -432,9 +420,6 @@ export class RestApiAdapter implements IDataSourceAdapter {
       return await response.json();
     } catch (error) {
       if (attempt < this.maxRetries) {
-        console.warn(
-          `⚠️ REST API request failed (attempt ${attempt}/${this.maxRetries}), retrying...`
-        );
         await this.delay(this.retryDelayMs * attempt);
         return this.fetchWithRetry(url, options, attempt + 1);
       }
@@ -491,9 +476,6 @@ export class RestApiAdapter implements IDataSourceAdapter {
       }
     }
 
-    console.log(
-      `⚠️ Could not auto-detect records array. Keys: ${Object.keys(obj).slice(0, 5).join(", ")}`
-    );
     return [];
   }
 

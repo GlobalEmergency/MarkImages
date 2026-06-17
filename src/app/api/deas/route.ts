@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // ── Admin global view (no org filter): query Aed table directly ──
+    // â”€â”€ Admin global view (no org filter): query Aed table directly â”€â”€
     // This ensures ALL DEAs are visible, even those without any assignment.
     const useDirectAedQuery = isAdmin && !organizationId && !status && !assignmentType;
 
@@ -175,7 +175,7 @@ export async function GET(request: NextRequest) {
         };
       });
     } else {
-      // ── Organization-scoped view: query via assignments table ──
+      // â”€â”€ Organization-scoped view: query via assignments table â”€â”€
       const whereClause: AedOrganizationAssignmentWhereInput = {};
 
       // Organization filter

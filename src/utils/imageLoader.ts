@@ -68,7 +68,7 @@ function attemptImageLoad(url: string, useCrossOrigin: boolean = true): Promise<
 
     img.onload = () => resolve(img);
     img.onerror = (error) => {
-      console.error("❌ Error loading image:", {
+      console.error("âŒ Error loading image:", {
         url,
         useCrossOrigin,
         error,
@@ -111,29 +111,19 @@ export async function loadImageWithRetry(
     useProxyFallback = true,
   } = options;
 
-  console.log("🖼️  Iniciando carga de imagen:", {
-    src,
-    maxRetries,
-    initialDelay,
-    useCacheBusting,
-    useProxyFallback,
-  });
-
   // Intento 1: Carga directa
   try {
-    console.log("📥 Intento 1: Carga directa");
     const image = await attemptImageLoad(src, true);
-    console.log("✅ Imagen cargada exitosamente en el primer intento");
+
     return { image, attempts: 1, usedProxy: false };
-  } catch (error) {
-    console.warn("⚠️  Intento 1 falló:", error);
+  } catch {
+    /* Ignored */
   }
 
   // Intentos 2-N: Reintentos con backoff exponencial y cache-busting
   for (let attempt = 2; attempt <= maxRetries; attempt++) {
     const delay = initialDelay * Math.pow(2, attempt - 2); // Backoff exponencial
 
-    console.log(`⏳ Esperando ${delay}ms antes del intento ${attempt}...`);
     await sleep(delay);
 
     // Notificar al UI sobre el reintento
@@ -145,15 +135,10 @@ export async function loadImageWithRetry(
       // Construir URL con cache-busting si está habilitado
       const url = useCacheBusting ? addCacheBusting(src) : src;
 
-      console.log(
-        `📥 Intento ${attempt}: Carga con ${useCacheBusting ? "cache-busting" : "URL original"}`
-      );
       const image = await attemptImageLoad(url, true);
-      console.log(`✅ Imagen cargada exitosamente en el intento ${attempt}`);
-      return { image, attempts: attempt, usedProxy: false };
-    } catch (error) {
-      console.warn(`⚠️  Intento ${attempt} falló:`, error);
 
+      return { image, attempts: attempt, usedProxy: false };
+    } catch {
       // Si es el último intento y no hay fallback, lanzar error
       if (attempt === maxRetries && !useProxyFallback) {
         throw new Error(`No se pudo cargar la imagen después de ${maxRetries} intentos`);
@@ -163,18 +148,15 @@ export async function loadImageWithRetry(
 
   // Fallback: Intentar con el proxy si está habilitado
   if (useProxyFallback && isS3Url(src)) {
-    console.log("🔄 Todos los intentos directos fallaron. Intentando con proxy...");
-
     try {
       const proxiedUrl = getProxiedImageUrl(src);
-      console.log("📥 Intento con proxy:", proxiedUrl);
 
       // El proxy no necesita crossOrigin ya que es same-origin
       const image = await attemptImageLoad(proxiedUrl, false);
-      console.log("✅ Imagen cargada exitosamente a través del proxy");
+
       return { image, attempts: maxRetries + 1, usedProxy: true };
     } catch (error) {
-      console.error("❌ Falló incluso con el proxy:", error);
+      console.error("âŒ Falló incluso con el proxy:", error);
       throw new Error(
         `No se pudo cargar la imagen ni con el proxy después de ${maxRetries} intentos`
       );

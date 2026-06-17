@@ -147,7 +147,7 @@ export default function DuplicatesPage() {
               onClick={() => router.push("/verify")}
               className="text-blue-600 hover:text-blue-700 font-medium"
             >
-              ← Volver a Verificación
+              â† Volver a Verificación
             </button>
           </div>
 
@@ -183,7 +183,7 @@ export default function DuplicatesPage() {
                     </p>
                   </div>
                   <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                    <span className="text-xl font-bold text-gray-700">📄</span>
+                    <span className="text-xl font-bold text-gray-700">ðŸ“„</span>
                   </div>
                 </div>
               </div>
@@ -253,7 +253,7 @@ export default function DuplicatesPage() {
           <div className="text-center py-12 bg-white rounded-lg shadow-sm">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              ¡No hay posibles duplicados!
+              Â¡No hay posibles duplicados!
             </h3>
             <p className="text-gray-600">Todos los DEAs están en buen estado</p>
           </div>
@@ -356,7 +356,7 @@ export default function DuplicatesPage() {
                   disabled={!pagination.hasPreviousPage}
                   className="px-4 py-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 transition-colors"
                 >
-                  ← Anterior
+                  â† Anterior
                 </button>
 
                 <div className="flex items-center px-4 py-2 bg-white rounded-lg shadow-sm">

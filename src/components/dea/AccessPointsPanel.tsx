@@ -29,7 +29,7 @@ const LocationPickerMap = dynamic(() => import("@/components/LocationPickerMap")
   loading: () => <div className="h-48 bg-gray-100 rounded-lg animate-pulse" />,
 });
 
-// ── Types ───────────────────────────────────────────────────────────
+// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface AccessPointImage {
   id: string;
@@ -93,7 +93,7 @@ interface AccessPointsPanelProps {
   onRefresh: () => void;
 }
 
-// ── Constants ───────────────────────────────────────────────────────
+// â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const ACCESS_POINT_TYPES = [
   { value: "PEDESTRIAN", label: "Peatonal", icon: Footprints },
@@ -138,7 +138,7 @@ const EMPTY_FORM: NewAccessPointData = {
   can_deliver_to_entrance: false,
 };
 
-// ── Helpers ─────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function getTypeInfo(type: string) {
   return ACCESS_POINT_TYPES.find((t) => t.value === type) || ACCESS_POINT_TYPES[4];
@@ -148,7 +148,7 @@ function getRestrictionInfo(type: string) {
   return RESTRICTION_TYPES.find((t) => t.value === type) || RESTRICTION_TYPES[0];
 }
 
-// ── Component ───────────────────────────────────────────────────────
+// â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function AccessPointsPanel({
   aedId,
@@ -167,7 +167,7 @@ export default function AccessPointsPanel({
   const inputClass =
     "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm";
 
-  // ── API calls ──
+  // â”€â”€ API calls â”€â”€
 
   const handleCreate = useCallback(async () => {
     setError(null);
@@ -219,7 +219,7 @@ export default function AccessPointsPanel({
 
   const handleDelete = useCallback(
     async (apId: string) => {
-      if (!confirm("¿Eliminar este punto de acceso?")) return;
+      if (!confirm("Â¿Eliminar este punto de acceso?")) return;
       setDeleting(apId);
       try {
         const res = await fetch(`/api/admin/deas/${aedId}/access-points/${apId}`, {
@@ -257,7 +257,7 @@ export default function AccessPointsPanel({
     [aedId, onRefresh]
   );
 
-  // ── Render ──
+  // â”€â”€ Render â”€â”€
 
   return (
     <div className="space-y-6">
@@ -274,7 +274,7 @@ export default function AccessPointsPanel({
         </div>
       )}
 
-      {/* ── Existing Access Points ── */}
+      {/* â”€â”€ Existing Access Points â”€â”€ */}
       {accessPoints.length === 0 && !showForm && (
         <div className="text-center py-12">
           <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -345,7 +345,8 @@ export default function AccessPointsPanel({
                   )}
                   {ap.floor_difference != null && ap.floor_difference !== 0 && (
                     <span>
-                      {ap.floor_difference > 0 ? "↑" : "↓"} {Math.abs(ap.floor_difference)} planta
+                      {ap.floor_difference > 0 ? "â†‘" : "â†“"} {Math.abs(ap.floor_difference)}{" "}
+                      planta
                       {Math.abs(ap.floor_difference) !== 1 ? "s" : ""}
                       {ap.has_elevator ? " (ascensor)" : ""}
                     </span>
@@ -515,7 +516,7 @@ export default function AccessPointsPanel({
                 </div>
 
                 <p className="text-xs text-gray-400">
-                  Creado: {new Date(ap.created_at).toLocaleString("es-ES")} · Coords:{" "}
+                  Creado: {new Date(ap.created_at).toLocaleString("es-ES")} Â· Coords:{" "}
                   {ap.latitude.toFixed(6)}, {ap.longitude.toFixed(6)}
                 </p>
               </div>
@@ -524,7 +525,7 @@ export default function AccessPointsPanel({
         );
       })}
 
-      {/* ── Add Access Point Form ── */}
+      {/* â”€â”€ Add Access Point Form â”€â”€ */}
       {showForm && (
         <div className="bg-white rounded-lg border border-blue-200 p-6 space-y-4">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">

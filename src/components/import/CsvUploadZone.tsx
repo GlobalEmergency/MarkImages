@@ -147,7 +147,7 @@ export default function CsvUploadZone({ onUploadStart }: CsvUploadZoneProps) {
 
     const batchId = await uploadCsv(selectedFile, batchName);
     if (batchId) {
-      toast.success("🚀 Importación iniciada correctamente");
+      toast.success("ðŸš€ Importación iniciada correctamente");
       onUploadStart(batchId);
       // Limpiar formulario
       handleRemove();

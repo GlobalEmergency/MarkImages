@@ -55,8 +55,8 @@ export default function OrganizationsPage() {
 
       setOrganizations(data.data);
       setError(null);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error al cargar organizaciones");
     } finally {
       setLoading(false);
     }
@@ -109,7 +109,7 @@ export default function OrganizationsPage() {
                 href="/admin"
                 className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-block"
               >
-                ← Volver al panel
+                â† Volver al panel
               </Link>
               <h1 className="text-3xl font-bold text-gray-900">Gestión de Organizaciones</h1>
               <p className="mt-2 text-sm text-gray-600">

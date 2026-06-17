@@ -31,7 +31,7 @@ export interface CsvRowData {
   "Hora de CIERRE los sábados": string;
   "Hora de APERTURA los domingos": string;
   "Hora de CIERRE los domingos": string;
-  "¿Tiene vigilante 24 horas al día que pueda facilitar el desfibrilador en caso necesario aunque esté cerrado?": string;
+  "Â¿Tiene vigilante 24 horas al día que pueda facilitar el desfibrilador en caso necesario aunque esté cerrado?": string;
   "Foto 1": string;
   "Foto 2": string;
 
@@ -161,7 +161,7 @@ export class CsvRow {
 
   get has24hSurveillance(): boolean {
     const value = this.data[
-      "¿Tiene vigilante 24 horas al día que pueda facilitar el desfibrilador en caso necesario aunque esté cerrado?"
+      "Â¿Tiene vigilante 24 horas al día que pueda facilitar el desfibrilador en caso necesario aunque esté cerrado?"
     ]
       ?.toLowerCase()
       .trim();

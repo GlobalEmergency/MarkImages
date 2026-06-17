@@ -179,19 +179,11 @@ class AedLookupCache {
           this.byIdentifier.set(ei.external_identifier, aed);
         }
       }
-    } catch (error) {
-      console.warn(
-        `[SyncHooks] Failed to load external identifiers (non-critical):`,
-        error instanceof Error ? error.message : error
-      );
+    } catch (_error) {
+      /* Ignored */
     }
 
     this.loaded = true;
-
-    console.log(
-      `[SyncHooks] Pre-loaded ${owned.length} existing AEDs for data source ${this.dataSourceId} ` +
-        `(${this.byExternalRef.size} with external_reference, ${this.byIdentifier.size} from identifiers table)`
-    );
   }
 
   findByExternalRef(ref: string): ExistingAedRow | undefined {
@@ -348,9 +340,6 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
         const syntheticId = generateSyntheticExternalId(record.name as string | null, lat, lng);
         externalId = syntheticId;
         record = { ...record, externalId: syntheticId };
-        console.log(
-          `[SyncHooks] Generated synthetic ID: ${syntheticId} for "${record.name || "?"}"`
-        );
       }
 
       // Strategy 1: by external reference (includes synthetic IDs)
@@ -372,10 +361,7 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
 
           if (canCheckDistance && distance > MAX_EXTREF_DISTANCE_M) {
             // Same external_reference but different location → source reused the code
-            console.log(
-              `[SyncHooks] EXTREF MISMATCH: "${record.name}" (${externalId}) matched "${extRefMatch.name}" ` +
-                `but ${Math.round(distance)}m apart — flagging, not merging`
-            );
+
             return {
               ...record,
               _suspectedDuplicate: {
@@ -408,16 +394,10 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
             coordMatch.external_reference !== externalId &&
             coordMatch.data_source_id === dataSourceId
           ) {
-            console.log(
-              `[SyncHooks] Same-source, same coords, different IDs — distinct devices: ` +
-                `"${record.name}" (${externalId}) vs "${coordMatch.name}" (${coordMatch.external_reference})`
-            );
+            // Same source, same coords, different ID -> distinct devices (no action)
           } else if (!externalId) {
             // No coords + no externalId → flag as suspected duplicate
-            console.log(
-              `[SyncHooks] Suspected duplicate (coords, no ID): ` +
-                `"${record.name || "?"}" near "${coordMatch.name}" (${coordMatch.id})`
-            );
+
             return {
               ...record,
               _suspectedDuplicate: {
@@ -442,10 +422,6 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
               (existingAed as ExistingAedRow & { _matchReason?: string })._matchReason =
                 "duplicate_detector";
             } else {
-              console.log(
-                `[SyncHooks] Suspected duplicate (detector): ` +
-                  `"${record.name || "?"}" near "${globalMatch.name}" (${globalMatch.id})`
-              );
               return {
                 ...record,
                 _suspectedDuplicate: {
@@ -462,15 +438,12 @@ export function createSyncHooks(options: SyncHooksOptions): SyncHooksResult {
       // Attach to record for processor
       if (existingAed) {
         // Log the match reason for debugging
-        const matchReason =
+        const _matchReason =
           (existingAed as ExistingAedRow & { _matchReason?: string })._matchReason || "unknown";
-        const isCrossSource = !!(
+        const _isCrossSource = !!(
           existingAed.data_source_id && existingAed.data_source_id !== dataSourceId
         );
-        console.log(
-          `[SyncHooks] Match: "${record.name || record.externalId}" → AED ${existingAed.id} ` +
-            `(${existingAed.name}) via ${matchReason}${isCrossSource ? " [CROSS-SOURCE]" : ""}`
-        );
+
         return { ...record, _existingAed: existingAed };
       }
 

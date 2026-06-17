@@ -93,9 +93,7 @@ export class AedImportOrchestrator {
       );
 
       if (sharePointInfo.detected) {
-        console.log(`🔍 SharePoint detectado en campos: ${sharePointInfo.imageFields.join(", ")}`);
-        console.log(`📸 URLs de muestra (${sharePointInfo.sampleUrls.length}):`);
-        sharePointInfo.sampleUrls.forEach((url) => console.log(`  - ${url}`));
+        // Log detected SharePoint URLs if needed
       }
 
       // 4. Validar cada registro
@@ -118,7 +116,6 @@ export class AedImportOrchestrator {
       for (let i = 0; i < mappedRecords.length; i++) {
         // Check timeout si está configurado
         if (checkTimeout && checkTimeout()) {
-          console.warn(`Validation timeout at record ${i + 1}`);
           break;
         }
 
@@ -222,10 +219,7 @@ export class AedImportOrchestrator {
 
         // Log de progreso cada 10 registros
         if ((i + 1) % 10 === 0) {
-          const elapsed = Date.now() - startTime;
-          console.log(
-            `Validated ${i + 1}/${mappedRecords.length} records in ${elapsed}ms (${Math.round(elapsed / (i + 1))}ms/record)`
-          );
+          const _elapsed = Date.now() - startTime;
         }
       }
 

@@ -101,7 +101,7 @@ export default function ImportPreviewTable({ previewRecords }: ImportPreviewTabl
                 <ul className="space-y-1">
                   {record.errors.map((error, idx) => (
                     <li key={idx} className="text-sm text-red-700">
-                      • {error.field ? `${error.field}: ` : ""}
+                      â€¢ {error.field ? `${error.field}: ` : ""}
                       {error.message}
                     </li>
                   ))}
@@ -142,7 +142,7 @@ export default function ImportPreviewTable({ previewRecords }: ImportPreviewTabl
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4">
         <h3 className="text-lg font-bold text-white flex items-center space-x-2">
-          <span>👁️</span>
+          <span>ðŸ‘ï¸</span>
           <span>Preview de Registros</span>
         </h3>
         <p className="text-sm text-blue-100 mt-1">

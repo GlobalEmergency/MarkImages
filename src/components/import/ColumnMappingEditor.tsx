@@ -69,7 +69,7 @@ export default function ColumnMappingEditor({
   );
 
   // Filtrar columnas según término de búsqueda
-  // 🔧 MEJORADO: También filtra columnas completamente vacías
+  // ðŸ”§ MEJORADO: También filtra columnas completamente vacías
   const filteredMappingStates = useMemo(() => {
     // Primero filtrar columnas vacías
     const nonEmptyStates = mappingStates.filter((state) => {

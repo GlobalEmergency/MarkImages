@@ -200,9 +200,9 @@ The CI pipeline has a `migration-safety` job that automatically flags destructiv
 | Maps       | Leaflet + MarkerCluster        | Interactive AED visualization             |
 | CI/CD      | GitHub Actions, Vercel         | Automated testing, building, deployment   |
 
-## Questions?
+## Código de Conducta
 
-Open a [Discussion](https://github.com/GlobalEmergency/DeaMap/discussions) or comment on any issue. We're happy to help you get started.
+Este proyecto y todos sus participantes se rigen por nuestro [Código de Conducta](CODE_OF_CONDUCT.md). Al participar, se espera que mantengas este estándar. Por favor, reporta cualquier comportamiento inaceptable a [info@globalemergency.online](mailto:info@globalemergency.online).
 
 ---
 

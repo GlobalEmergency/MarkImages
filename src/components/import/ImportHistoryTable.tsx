@@ -179,14 +179,14 @@ export default function ImportHistoryTable({
                     {batch.status !== "PENDING" && (
                       <>
                         <div className="flex items-center space-x-2">
-                          <span className="text-green-600">✓</span>
+                          <span className="text-green-600">âœ“</span>
                           <span className="text-green-600 font-medium">
                             {batch.successful_records}
                           </span>
                         </div>
                         {batch.failed_records > 0 && (
                           <div className="flex items-center space-x-2">
-                            <span className="text-red-600">✗</span>
+                            <span className="text-red-600">âœ—</span>
                             <span className="text-red-600 font-medium">{batch.failed_records}</span>
                           </div>
                         )}

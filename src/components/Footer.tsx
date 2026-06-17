@@ -114,7 +114,7 @@ export default function Footer() {
               Condiciones de Uso
             </Link>
           </div>
-          <p className="text-center">© 2024-2026 DeaMap - Salvando vidas juntos</p>
+          <p className="text-center">Â© 2024-2026 DeaMap - Salvando vidas juntos</p>
         </div>
       </div>
     </footer>

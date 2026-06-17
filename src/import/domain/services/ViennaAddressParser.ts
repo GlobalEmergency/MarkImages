@@ -6,10 +6,10 @@
  *   "BEZIRK., STRASSE NUMMER  <br>STANDORTNAME"
  *
  * Ejemplos reales:
- *   "10., Computerstraße 4  <br>e-shelter Rechenzentrum"
+ *   "10., ComputerstraÃŸe 4  <br>e-shelter Rechenzentrum"
  *   "15., Friesgasse 4  <br>Schulzentrum Friesgasse"
  *   "1., Stephansplatz 3  <br>Domkirche St. Stephan"
- *   "22., Wagramer Straße 17-19  <br>Donau-City Türme"
+ *   "22., Wagramer StraÃŸe 17-19  <br>Donau-City TÃ¼rme"
  *
  * Produce:
  *   - name: parte tras <br> (nombre real de la ubicación)
@@ -48,7 +48,7 @@ export class ViennaAddressParser implements IFieldTransformer {
       return { fields, confidence: 0, rawValue: value };
     }
 
-    // Try full pattern: "10., Computerstraße 4  <br>e-shelter Rechenzentrum"
+    // Try full pattern: "10., ComputerstraÃŸe 4  <br>e-shelter Rechenzentrum"
     const fullMatch = input.match(WIEN_ADDRESS_RE);
     if (fullMatch) {
       fields.district = fullMatch[1];

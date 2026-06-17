@@ -52,7 +52,7 @@ export class SharePointImageDownloader implements IImageDownloader {
           validateStatus: (status) => status >= 200 && status < 400, // Aceptar redirects
         });
 
-        // 🔍 VALIDACIÓN 1: Detectar redirecciones a páginas de login
+        // ðŸ” VALIDACIÃ“N 1: Detectar redirecciones a páginas de login
         const finalUrl = response.request?.res?.responseUrl || response.config.url || url;
         if (this.isLoginPage(finalUrl)) {
           throw new Error(
@@ -64,7 +64,7 @@ export class SharePointImageDownloader implements IImageDownloader {
         const buffer = Buffer.from(response.data);
         const contentType = response.headers["content-type"] || "";
 
-        // 🔍 VALIDACIÓN 2: Verificar que el Content-Type sea de imagen
+        // ðŸ” VALIDACIÃ“N 2: Verificar que el Content-Type sea de imagen
         if (!this.isImageContentType(contentType)) {
           throw new Error(
             `Respuesta inválida de SharePoint: Content-Type="${contentType}" (esperado: image/*). ` +
@@ -72,7 +72,7 @@ export class SharePointImageDownloader implements IImageDownloader {
           );
         }
 
-        // 🔍 VALIDACIÓN 3: Verificar tamaño mínimo (evitar respuestas HTML pequeñas)
+        // ðŸ” VALIDACIÃ“N 3: Verificar tamaño mínimo (evitar respuestas HTML pequeñas)
         if (buffer.length < this.MIN_IMAGE_SIZE) {
           throw new Error(
             `Imagen demasiado pequeña (${buffer.length} bytes). ` +
@@ -80,7 +80,7 @@ export class SharePointImageDownloader implements IImageDownloader {
           );
         }
 
-        // 🔍 VALIDACIÓN 4: Verificar magic bytes de imagen (primeros bytes del archivo)
+        // ðŸ” VALIDACIÃ“N 4: Verificar magic bytes de imagen (primeros bytes del archivo)
         if (!this.hasValidImageSignature(buffer)) {
           const preview = buffer.slice(0, 100).toString("utf-8", 0, 50).trim();
           throw new Error(
@@ -328,8 +328,7 @@ export class SharePointImageDownloader implements IImageDownloader {
             contentType,
           },
         };
-      } catch (headError) {
-        console.warn("HEAD request falló, intentando GET completo:", headError);
+      } catch (_headError) {
         // Si HEAD falla, intentar GET completo
         const getResponse = await axios.get(testImageUrl, {
           ...config,

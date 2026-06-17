@@ -60,7 +60,7 @@ export const AED_STATUS_CONFIG: Record<AedStatus, AedStatusInfo> = {
   },
 };
 
-// ── Helpers ──────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /** Get singular label for a status ("Borrador", "Publicado", etc.) */
 export function getStatusLabel(status: string): string {
@@ -72,7 +72,7 @@ export function getStatusColor(status: string): string {
   return AED_STATUS_CONFIG[status as AedStatus]?.color ?? "bg-gray-100 text-gray-800";
 }
 
-// ── Pre-built filter options ────────────────────────────────────────
+// â”€â”€ Pre-built filter options â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /** All status options with "Todos" — for admin dropdowns */
 export const AED_STATUS_FILTER_OPTIONS_ALL = [

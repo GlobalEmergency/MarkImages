@@ -35,7 +35,7 @@ export interface ParsedObservations {
     photo2Url?: string;
 
     // Other fields
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -99,7 +99,7 @@ export function formatDistrictInfo(data?: ParsedObservations["data"]): string | 
 /**
  * Get all "other" fields not explicitly handled
  */
-export function getOtherFields(data?: ParsedObservations["data"]): Record<string, any> {
+export function getOtherFields(data?: ParsedObservations["data"]): Record<string, unknown> {
   if (!data) return {};
 
   const knownFields = new Set([
@@ -123,7 +123,7 @@ export function getOtherFields(data?: ParsedObservations["data"]): Record<string
     "photo2Url",
   ]);
 
-  const otherFields: Record<string, any> = {};
+  const otherFields: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(data)) {
     if (!knownFields.has(key) && value !== null && value !== undefined && value !== "") {

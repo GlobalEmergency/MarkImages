@@ -14,9 +14,9 @@ import type { AedStatus } from "./aed-status-config";
 // ---------------------------------------------------------------------------
 // An AED is publicly visible when:
 //   1. status = 'PUBLISHED'  (approved by a reviewer)
-//   2. publication_mode ≠ 'NONE'  (owner opted into some level of visibility)
+//   2. publication_mode â‰  'NONE'  (owner opted into some level of visibility)
 //
-// ⚠️  Do NOT add `published_at IS NOT NULL` — most imported AEDs lack that
+// âš ï¸  Do NOT add `published_at IS NOT NULL` — most imported AEDs lack that
 //     timestamp.  The `status` field is the canonical publication gate.
 // ---------------------------------------------------------------------------
 

@@ -41,8 +41,6 @@ export async function POST(request: NextRequest) {
     const buffer = new Uint8Array(arrayBuffer);
     await fs.writeFile(filePath, buffer);
 
-    console.log(`📁 Preview file saved: ${filePath}`);
-
     // Parsear CSV y generar preview
     const parseUseCase = new ParseCsvPreviewUseCase();
     const parseResult = await parseUseCase.execute({

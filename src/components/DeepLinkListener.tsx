@@ -11,7 +11,7 @@ import { trackEventDirect, AnalyticsCategory } from "@/hooks/useAnalytics";
  *   - https://deamap.es/open?source=emerkit   (Universal Link - iOS)
  *   - deamap://open?source=emerkit            (Custom scheme - Android)
  *
- * …this component fires a GA4 event so we can track the source.
+ * â€¦this component fires a GA4 event so we can track the source.
  *
  * On the web (non-Capacitor) this is a no-op.
  */

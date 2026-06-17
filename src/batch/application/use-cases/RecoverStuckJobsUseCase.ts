@@ -113,8 +113,6 @@ export class RecoverStuckJobsUseCase {
             timeSinceLastHeartbeat,
             recoveredAt: new Date().toISOString(),
           });
-
-          console.log(`[RecoverStuckJobs] Recovered job ${job.id} (${job.name})`);
         } catch (error) {
           console.error(`[RecoverStuckJobs] Failed to recover job ${job.id}:`, error);
           // Continue with next job

@@ -131,8 +131,8 @@ export default function OrganizationDetailPage() {
         setMembers(data.data.members);
       }
       setError(null);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error al cargar la organización");
     } finally {
       setLoading(false);
     }
@@ -219,8 +219,8 @@ export default function OrganizationDetailPage() {
       setIsEditing(false);
       setSuccessMessage("Organización actualizada correctamente");
       setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error al actualizar la organización");
     } finally {
       setSaving(false);
     }
@@ -247,8 +247,8 @@ export default function OrganizationDetailPage() {
       }
 
       router.push("/admin/organizations");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error al eliminar la organización");
     }
   };
 
@@ -294,8 +294,8 @@ export default function OrganizationDetailPage() {
       fetchOrganization();
       setSuccessMessage("Miembro añadido correctamente");
       setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error al añadir miembro");
     }
   };
 
@@ -319,8 +319,8 @@ export default function OrganizationDetailPage() {
       fetchOrganization();
       setSuccessMessage("Miembro eliminado correctamente");
       setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error al eliminar miembro");
     }
   };
 
@@ -348,8 +348,8 @@ export default function OrganizationDetailPage() {
       fetchMembers();
       setSuccessMessage("Rol actualizado correctamente");
       setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error al actualizar rol");
     }
   };
 

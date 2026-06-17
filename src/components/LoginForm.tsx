@@ -82,7 +82,7 @@ export default function LoginForm() {
               className="text-xs text-blue-600 hover:text-blue-800"
               onClick={() => trackAuthClick("forgot_password")}
             >
-              ¿Olvidaste tu contraseña?
+              Â¿Olvidaste tu contraseña?
             </Link>
           </div>
           <input
@@ -93,7 +93,7 @@ export default function LoginForm() {
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             onFocus={() => trackFormFieldFocus("login", "password")}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="••••••••"
+            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
           />
         </div>
 
@@ -107,7 +107,7 @@ export default function LoginForm() {
       </form>
 
       <p className="mt-4 text-center text-sm text-gray-600">
-        ¿No tienes cuenta?{" "}
+        Â¿No tienes cuenta?{" "}
         <Link
           href="/register"
           className="text-blue-600 hover:text-blue-800 font-medium"

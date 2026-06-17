@@ -45,7 +45,7 @@ export class ParseCsvPreviewUseCase {
       const headerLine = lines[0]!;
       const rawHeaders = this.parseRow(headerLine, delimiter);
 
-      // 🔧 FIX: Filtrar headers vacíos y limpiar espacios
+      // ðŸ”§ FIX: Filtrar headers vacíos y limpiar espacios
       const headers = rawHeaders.map((h) => h.trim()).filter((h) => h.length > 0);
 
       if (headers.length === 0) {
@@ -61,7 +61,7 @@ export class ParseCsvPreviewUseCase {
       const totalRows = dataLines.length;
       const sampleLines = dataLines.slice(0, sampleSize);
 
-      // 🔧 FIX: Normalizar filas al mismo número de columnas que headers válidos
+      // ðŸ”§ FIX: Normalizar filas al mismo número de columnas que headers válidos
       const sampleRows = sampleLines.map((line) => {
         const rawRow = this.parseRow(line, delimiter);
         // Tomar solo las mismas columnas que headers válidos
@@ -71,9 +71,7 @@ export class ParseCsvPreviewUseCase {
       // Validar que todas las filas tengan el mismo número de columnas
       const invalidRows = sampleRows.filter((row) => row.length !== headers.length);
       if (invalidRows.length > 0) {
-        console.warn(
-          `⚠️ Se encontraron ${invalidRows.length} filas con número incorrecto de columnas en la muestra`
-        );
+        // Log or handle inconsistent rows (no action)
       }
 
       // Crear preview
@@ -95,7 +93,7 @@ export class ParseCsvPreviewUseCase {
 
   /**
    * Parsea una línea del CSV respetando comillas y delimitadores
-   * 🔧 MEJORADO: Maneja correctamente delimitadores finales y columnas vacías
+   * ðŸ”§ MEJORADO: Maneja correctamente delimitadores finales y columnas vacías
    */
   private parseRow(line: string, delimiter: string): string[] {
     const result: string[] = [];
@@ -127,7 +125,7 @@ export class ParseCsvPreviewUseCase {
       }
     }
 
-    // 🔧 FIX: Solo agregar el último campo si tiene contenido o si se inició un campo
+    // ðŸ”§ FIX: Solo agregar el último campo si tiene contenido o si se inició un campo
     const trimmedLast = current.trim();
     if (trimmedLast.length > 0 || fieldStarted) {
       result.push(trimmedLast);

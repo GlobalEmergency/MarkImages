@@ -290,7 +290,7 @@ export default function ImagePairSelector({
           {!newImage1Url && !newImage2Url && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <p className="text-yellow-700 text-sm">
-                ⚠️ Debes subir al menos una imagen para continuar
+                âš ï¸ Debes subir al menos una imagen para continuar
               </p>
             </div>
           )}
@@ -301,7 +301,7 @@ export default function ImagePairSelector({
     return (
       <div className="space-y-6 w-full">
         <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
-          <div className="text-red-600 text-xl mb-4">⚠️ Sin Imágenes</div>
+          <div className="text-red-600 text-xl mb-4">âš ï¸ Sin Imágenes</div>
           <p className="text-red-700 mb-4">Este DEA no tiene imágenes disponibles para procesar.</p>
           <div className="flex flex-col gap-3 max-w-md mx-auto">
             {onUploadNewImages && (
@@ -309,7 +309,7 @@ export default function ImagePairSelector({
                 onClick={() => setUploadMode(true)}
                 className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
-                📤 Subir Nuevas Imágenes
+                ðŸ“¤ Subir Nuevas Imágenes
               </button>
             )}
             <button
@@ -356,7 +356,7 @@ export default function ImagePairSelector({
             ) : imageError ? (
               <div className="w-full max-w-md aspect-square flex items-center justify-center bg-red-50 rounded-lg shadow-md border border-red-200">
                 <div className="text-center p-8">
-                  <p className="text-red-600 font-medium mb-2">⚠️ Error al cargar</p>
+                  <p className="text-red-600 font-medium mb-2">âš ï¸ Error al cargar</p>
                   <p className="text-sm text-red-500">No se pudo cargar la imagen</p>
                 </div>
               </div>
@@ -496,7 +496,7 @@ export default function ImagePairSelector({
         {!newImage1Url && !newImage2Url && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-yellow-700 text-sm">
-              ⚠️ Debes subir al menos una imagen para continuar
+              âš ï¸ Debes subir al menos una imagen para continuar
             </p>
           </div>
         )}
@@ -601,7 +601,7 @@ export default function ImagePairSelector({
             disabled={isProcessing || isLoading}
             className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            🔄 Intercambiar Imágenes
+            ðŸ”„ Intercambiar Imágenes
           </button>
         </div>
 
@@ -628,7 +628,7 @@ export default function ImagePairSelector({
             disabled={isProcessing || isLoading}
             className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            ❌ Ambas Inválidas
+            âŒ Ambas Inválidas
           </button>
           {onUploadNewImages && (
             <button
@@ -636,7 +636,7 @@ export default function ImagePairSelector({
               disabled={isProcessing || isLoading}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              📤 Subir Nuevas Imágenes
+              ðŸ“¤ Subir Nuevas Imágenes
             </button>
           )}
         </div>

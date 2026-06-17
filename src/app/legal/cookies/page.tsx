@@ -13,12 +13,12 @@ export default function CookiePolicyPage() {
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-sm p-6 sm:p-10">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Política de Cookies</h1>
-        <p className="text-sm text-gray-500 mb-8">Última actualización: 4 de marzo de 2026</p>
+        <p className="text-sm text-gray-500 mb-8">Ãšltima actualización: 4 de marzo de 2026</p>
 
         <div className="prose prose-gray max-w-none space-y-6 text-gray-700 text-sm leading-relaxed">
           <section>
             <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">
-              1. ¿Qué son las cookies?
+              1. Â¿Qué son las cookies?
             </h2>
             <p>
               Las cookies son pequeños archivos de texto que se almacenan en tu dispositivo cuando
@@ -169,7 +169,7 @@ export default function CookiePolicyPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">
-              6. ¿Cómo gestionar las cookies?
+              6. Â¿Cómo gestionar las cookies?
             </h2>
             <p>
               Puedes controlar y eliminar las cookies a través de la configuración de tu navegador.

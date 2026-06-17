@@ -92,13 +92,13 @@ export function useImportBatches(options: UseImportBatchesOptions = {}): UseImpo
           );
         } else if (currentBatch.status === "COMPLETED_WITH_ERRORS") {
           toast.error(
-            `⚠️ Importación "${currentBatch.name}" completada con ${currentBatch.failed_records} errores`,
+            `âš ï¸ Importación "${currentBatch.name}" completada con ${currentBatch.failed_records} errores`,
             {
               duration: 6000,
             }
           );
         } else if (currentBatch.status === "FAILED") {
-          toast.error(`❌ Importación "${currentBatch.name}" falló completamente`, {
+          toast.error(`âŒ Importación "${currentBatch.name}" falló completamente`, {
             duration: 6000,
           });
         }
@@ -120,17 +120,12 @@ export function useImportBatches(options: UseImportBatchesOptions = {}): UseImpo
 
     if (!hasActiveBatches) return;
 
-    console.log(
-      `🔄 Polling active: ${batches.filter((b) => b.status === "IN_PROGRESS" || b.status === "PENDING").length} active batches`
-    );
-
     const interval = setInterval(() => {
       fetchBatches();
     }, refreshInterval);
 
     return () => {
       clearInterval(interval);
-      console.log("🛑 Polling stopped");
     };
   }, [batches, autoRefresh, refreshInterval, fetchBatches]);
 

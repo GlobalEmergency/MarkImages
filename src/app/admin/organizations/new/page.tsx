@@ -89,8 +89,8 @@ export default function NewOrganizationPage() {
       }
 
       router.push("/admin/organizations");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error al crear la organización");
     } finally {
       setLoading(false);
     }
@@ -114,7 +114,7 @@ export default function NewOrganizationPage() {
             href="/admin/organizations"
             className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-block"
           >
-            ← Volver a Organizaciones
+            â† Volver a Organizaciones
           </Link>
           <h1 className="text-3xl font-bold text-gray-900">Nueva Organización</h1>
           <p className="mt-2 text-sm text-gray-600">

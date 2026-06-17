@@ -102,7 +102,7 @@ export async function sendPasswordResetEmail({
                 <tr>
                   <td style="padding: 30px; background-color: #f8f9fa; border-top: 1px solid #e9ecef; border-radius: 0 0 8px 8px;">
                     <p style="margin: 0; color: #999999; font-size: 12px; text-align: center;">
-                      © ${new Date().getFullYear()} DeaMap. Todos los derechos reservados.
+                      Â© ${new Date().getFullYear()} DeaMap. Todos los derechos reservados.
                     </p>
                   </td>
                 </tr>
@@ -127,7 +127,7 @@ Este enlace expirará en 1 hora por razones de seguridad.
 
 Si no solicitaste restablecer tu contraseña, por favor ignora este correo.
 
-© ${new Date().getFullYear()} DeaMap. Todos los derechos reservados.
+Â© ${new Date().getFullYear()} DeaMap. Todos los derechos reservados.
   `;
 
   const command = new SendEmailCommand({

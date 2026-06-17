@@ -56,8 +56,6 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
   private async resolveFilePath(filePath: string): Promise<string> {
     // Check if it's an S3 URL
     if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
-      console.log(`📥 [AedCsvImportProcessor] Downloading CSV from S3: ${filePath}`);
-
       try {
         // Download file from S3 URL
         const response = await fetch(filePath);
@@ -81,16 +79,12 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
         // Write to temp file
         await fs.promises.writeFile(tempPath, content);
 
-        console.log(
-          `✅ [AedCsvImportProcessor] CSV downloaded to temp file: ${tempPath} (${content.length} bytes)`
-        );
-
         // Store for cleanup later
         this.tempFilePath = tempPath;
 
         return tempPath;
       } catch (error) {
-        console.error(`❌ [AedCsvImportProcessor] Failed to download CSV from S3:`, error);
+        console.error(`âŒ [AedCsvImportProcessor] Failed to download CSV from S3:`, error);
         throw new Error(
           `Failed to download CSV from S3: ${error instanceof Error ? error.message : "Unknown error"}`
         );
@@ -108,13 +102,10 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
     if (this.tempFilePath) {
       try {
         await fs.promises.unlink(this.tempFilePath);
-        console.log(`🗑️ [AedCsvImportProcessor] Temporary file deleted: ${this.tempFilePath}`);
+
         this.tempFilePath = undefined;
-      } catch (error) {
-        console.warn(
-          `⚠️ [AedCsvImportProcessor] Failed to delete temp file ${this.tempFilePath}:`,
-          error
-        );
+      } catch (_error) {
+        /* Ignored */
       }
     }
   }
@@ -240,14 +231,9 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
 
       const endIndex = Math.min(startIndex + chunkSize, records.length);
 
-      console.log(
-        `📋 [AedCsvImportProcessor] Processing records ${startIndex}-${endIndex - 1} of ${records.length}`
-      );
-
       for (let i = startIndex; i < endIndex; i++) {
         // Check timeout
         if (this.isApproachingTimeout(context)) {
-          console.log(`⏰ [AedCsvImportProcessor] Approaching timeout at record ${i}`);
           break;
         }
 
@@ -286,10 +272,6 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
       }
 
       const hasMore = startIndex + processedCount < records.length;
-
-      console.log(
-        `✅ [AedCsvImportProcessor] Processed ${processedCount} records (success: ${successCount}, failed: ${failedCount}, skipped: ${skippedCount}, hasMore: ${hasMore})`
-      );
 
       return {
         processedCount,
@@ -536,9 +518,8 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
             matchedExternalReference: existingById.external_reference,
           };
         }
-      } catch (error) {
+      } catch (_error) {
         // ID no válido o no es UUID, continuar con otros métodos
-        console.warn(`Invalid ID format: ${id}`, error);
       }
     }
 
@@ -721,7 +702,7 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
       // Create AED in transaction
       const createdAed = await tx.aed.create({
         data: {
-          id: aedId, // ← UUID pre-generado para que las imágenes puedan usarlo
+          id: aedId, // â† UUID pre-generado para que las imágenes puedan usarlo
 
           // Código e identificadores
           code: data.code || null,
@@ -795,10 +776,6 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
         try {
           // If use case is available, download and upload to S3
           if (this.downloadAndUploadImageUseCase) {
-            console.log(
-              `📸 [AedCsvImportProcessor] Processing image ${index + 1}/${imageUrls.length} for AED ${aedId}`
-            );
-
             const s3Result = await this.downloadAndUploadImageUseCase.execute({
               url: img.url,
               aedId: aedId,
@@ -820,15 +797,9 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
                 is_verified: false,
               },
             });
-
-            console.log(
-              `✅ [AedCsvImportProcessor] Image ${index + 1} uploaded to S3: ${s3Result.url}`
-            );
           } else {
             // Fallback: crear registro con URL original si no hay use case
-            console.warn(
-              `⚠️ [AedCsvImportProcessor] Image download use case not available. Saving original URL for image ${index + 1}`
-            );
+
             await this.prisma.aedImage.create({
               data: {
                 id: img.imageId,
@@ -843,7 +814,7 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
         } catch (error) {
           // Log error but don't fail the entire AED import
           console.error(
-            `❌ [AedCsvImportProcessor] Failed to process image ${index + 1} from ${img.url}:`,
+            `âŒ [AedCsvImportProcessor] Failed to process image ${index + 1} from ${img.url}:`,
             error instanceof Error ? error.message : error
           );
           // Optionally, create a record with original URL as fallback
@@ -858,12 +829,9 @@ export class AedCsvImportProcessor extends BaseBatchJobProcessor<AedCsvImportCon
                 is_verified: false,
               },
             });
-            console.log(
-              `📝 [AedCsvImportProcessor] Created fallback image record with original URL`
-            );
           } catch (fallbackError) {
             console.error(
-              `❌ [AedCsvImportProcessor] Failed to create fallback image record:`,
+              `âŒ [AedCsvImportProcessor] Failed to create fallback image record:`,
               fallbackError
             );
           }

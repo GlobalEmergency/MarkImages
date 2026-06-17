@@ -4,6 +4,7 @@ import {
   createSyncStats,
 } from "@/import/infrastructure/processors/syncRecordProcessor";
 import { createMockPrisma, createMockContext } from "./helpers/mockPrisma";
+import type { PrismaClient } from "@/generated/client/client";
 
 // ============================================================
 // Helpers
@@ -38,7 +39,7 @@ function makeProcessor(
 ) {
   const stats = createSyncStats();
   const processor = createSyncRecordProcessor({
-    prisma: prisma as any,
+    prisma: prisma as unknown as PrismaClient,
     dataSourceId: DS_ID,
     sourceOrigin: "EXTERNAL_API",
     syncFrequency: "MANUAL",

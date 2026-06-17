@@ -122,7 +122,7 @@ export default function SharePointCookiesValidator({
       if (result.valid) {
         toast.success("✅ Cookies válidas");
       } else {
-        toast.error("❌ Cookies inválidas");
+        toast.error("âŒ Cookies inválidas");
       }
     } catch (error) {
       const errorResult: ValidationResult = {
@@ -144,7 +144,7 @@ export default function SharePointCookiesValidator({
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-            <span className="text-2xl">🔐</span>
+            <span className="text-2xl">ðŸ”</span>
           </div>
           <div>
             <h3 className="text-lg font-bold text-gray-900">Validación de Cookies de SharePoint</h3>
@@ -183,16 +183,16 @@ export default function SharePointCookiesValidator({
               {!validationResult.valid && validationResult.details && (
                 <div className="mt-2 text-xs text-red-700 space-y-1">
                   {validationResult.details.statusCode && (
-                    <p>• Status Code: {validationResult.details.statusCode}</p>
+                    <p>â€¢ Status Code: {validationResult.details.statusCode}</p>
                   )}
                   {validationResult.details.redirectedToLogin && (
-                    <p>• Redirigido a página de login</p>
+                    <p>â€¢ Redirigido a página de login</p>
                   )}
                   {validationResult.details.contentType && (
-                    <p>• Content-Type: {validationResult.details.contentType}</p>
+                    <p>â€¢ Content-Type: {validationResult.details.contentType}</p>
                   )}
                   {validationResult.details.error && (
-                    <p>• Error: {validationResult.details.error}</p>
+                    <p>â€¢ Error: {validationResult.details.error}</p>
                   )}
                 </div>
               )}
@@ -200,7 +200,7 @@ export default function SharePointCookiesValidator({
               {/* Mensaje de ayuda si las cookies son inválidas */}
               {!validationResult.valid && (
                 <div className="mt-3 p-3 bg-white border border-red-200 rounded text-sm">
-                  <p className="font-medium text-red-900 mb-2">¿Cómo solucionar?</p>
+                  <p className="font-medium text-red-900 mb-2">Â¿Cómo solucionar?</p>
                   <ol className="list-decimal list-inside space-y-1 text-red-800">
                     <li>Abre SharePoint en tu navegador e inicia sesión</li>
                     <li>
@@ -249,7 +249,7 @@ export default function SharePointCookiesValidator({
           onClick={() => setShowCookiesInput(!showCookiesInput)}
           className="text-sm text-blue-600 hover:text-blue-800 font-medium mb-2 flex items-center space-x-1"
         >
-          <span>{showCookiesInput ? "▼" : "▶"}</span>
+          <span>{showCookiesInput ? "â–¼" : "â–¶"}</span>
           <span>Validar con cookies personalizadas (sin modificar .env)</span>
         </button>
 
@@ -266,7 +266,7 @@ export default function SharePointCookiesValidator({
                 className="w-full h-24 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
               />
               <p className="mt-1 text-xs text-gray-500">
-                💡 <strong>Tip:</strong> En DevTools → Application → Cookies, haz clic derecho en
+                ðŸ’¡ <strong>Tip:</strong> En DevTools → Application → Cookies, haz clic derecho en
                 cualquier cookie → "Show Requests with this Cookie" → Copia el valor completo de
                 "Cookie" del header
               </p>
@@ -278,9 +278,9 @@ export default function SharePointCookiesValidator({
                 <p className="text-sm font-medium text-green-900 mb-2">✅ Cookies detectadas:</p>
                 <div className="text-xs text-green-800 space-y-1 font-mono">
                   {parsedCookies.FedAuth && (
-                    <p>• FedAuth: {parsedCookies.FedAuth.substring(0, 50)}...</p>
+                    <p>â€¢ FedAuth: {parsedCookies.FedAuth.substring(0, 50)}...</p>
                   )}
-                  {parsedCookies.rtFa && <p>• rtFa: {parsedCookies.rtFa.substring(0, 50)}...</p>}
+                  {parsedCookies.rtFa && <p>â€¢ rtFa: {parsedCookies.rtFa.substring(0, 50)}...</p>}
                 </div>
               </div>
             )}
@@ -289,7 +289,7 @@ export default function SharePointCookiesValidator({
             {cookiesInput && !parsedCookies && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-sm font-medium text-red-900">
-                  ❌ No se detectaron FedAuth o rtFa en el texto pegado
+                  âŒ No se detectaron FedAuth o rtFa en el texto pegado
                 </p>
                 <p className="text-xs text-red-700 mt-1">
                   Asegúrate de copiar las cookies en formato:
@@ -346,8 +346,8 @@ export default function SharePointCookiesValidator({
         {validationResult && (
           <span className="text-sm text-gray-600">
             {validationResult.valid
-              ? "✓ Listo para importar"
-              : "✗ Actualiza las cookies antes de importar"}
+              ? "âœ“ Listo para importar"
+              : "âœ— Actualiza las cookies antes de importar"}
           </span>
         )}
       </div>

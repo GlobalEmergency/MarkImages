@@ -113,6 +113,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <JsonLd />
       </head>
       <body className="font-sans antialiased flex flex-col min-h-screen">
+        <a href="#main-content" className="skip-link">
+          Saltar al contenido principal
+        </a>
         <GoogleTagManagerBody />
         <AuthProvider>
           <OrganizationProvider>

@@ -77,8 +77,6 @@ export async function DELETE(request: NextRequest) {
     const locationIds = [...new Set(aeds.map((a) => a.location_id).filter(Boolean))] as string[];
     const scheduleIds = [...new Set(aeds.map((a) => a.schedule_id).filter(Boolean))] as string[];
 
-    console.log(`🗑️ Admin batch deleting ${aeds.length} AEDs: ${foundIds.join(", ")}`);
-
     await prisma.$transaction(async (tx) => {
       // 1. Delete all AEDs (cascades to images, validations, etc.)
       await tx.aed.deleteMany({ where: { id: { in: foundIds } } });

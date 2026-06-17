@@ -80,7 +80,7 @@ function getDatabaseUrl(): string {
     return parsed.toString();
   } catch {
     // If URL parsing fails, fall back to original
-    console.warn("Failed to parse DATABASE_URL for branch routing, using default");
+
     return baseUrl;
   }
 }

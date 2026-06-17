@@ -57,7 +57,7 @@ export async function regenerateProcessedImage(
   return canvas.toDataURL("image/jpeg", 0.92);
 }
 
-// ── Internal helpers ──
+// â”€â”€ Internal helpers â”€â”€
 
 function applyCrop(sourceCanvas: HTMLCanvasElement, crop: CropData): HTMLCanvasElement {
   const cropped = document.createElement("canvas");

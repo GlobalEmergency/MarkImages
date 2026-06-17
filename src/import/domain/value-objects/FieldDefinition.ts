@@ -77,7 +77,7 @@ export const REQUIRED_FIELDS: FieldDefinition[] = [
       "portal",
       "numero de la via",
       "street number",
-      "nº",
+      "nÂº",
       "number", // Inglés
       "building number", // Inglés
     ],
@@ -709,7 +709,7 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "has24hSurveillance",
-    label: "¿Vigilancia 24h?",
+    label: "Â¿Vigilancia 24h?",
     required: false,
     type: "boolean",
     description: "Si tiene vigilancia 24 horas",
@@ -729,7 +729,7 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "hasRestrictedAccess",
-    label: "¿Acceso restringido?",
+    label: "Â¿Acceso restringido?",
     required: false,
     type: "boolean",
     description: "Si el acceso está restringido",
@@ -744,7 +744,7 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "holidaysAsWeekday",
-    label: "¿Festivos como entre semana?",
+    label: "Â¿Festivos como entre semana?",
     required: false,
     type: "boolean",
     description: "Si en festivos tiene el horario de entre semana",
@@ -759,7 +759,7 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "closedOnHolidays",
-    label: "¿Cerrado en festivos?",
+    label: "Â¿Cerrado en festivos?",
     required: false,
     type: "boolean",
     description: "Si cierra en días festivos",
@@ -772,7 +772,7 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "closedInAugust",
-    label: "¿Cerrado en agosto?",
+    label: "Â¿Cerrado en agosto?",
     required: false,
     type: "boolean",
     description: "Si cierra en agosto",
@@ -981,7 +981,7 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
   },
   {
     key: "requiresAttention",
-    label: "¿Requiere atención?",
+    label: "Â¿Requiere atención?",
     required: false,
     type: "boolean",
     description: "Si el registro requiere revisión",
@@ -1119,7 +1119,7 @@ export const OPTIONAL_FIELDS: FieldDefinition[] = [
       "serial",
       "serial number",
       "serie",
-      "nº serie",
+      "nÂº serie",
     ],
   },
   {

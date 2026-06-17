@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { ImportRecord } from "@/import/domain/value-objects/ImportRecord";
+import type { ColumnMapping } from "@/import/domain/value-objects/ColumnMapping";
 
 // ============================================================
 // Factory helpers
@@ -467,8 +468,8 @@ describe("ImportRecord", () => {
       const rec = ImportRecord.fromCsvRow(
         { Nombre: "Test", Extra: "ignored", Calle: "Mayor" },
         [
-          { csvColumnName: "Nombre", systemFieldKey: "proposedName" } as any,
-          { csvColumnName: "Calle", systemFieldKey: "streetName" } as any,
+          { csvColumnName: "Nombre", systemFieldKey: "proposedName" } as ColumnMapping,
+          { csvColumnName: "Calle", systemFieldKey: "streetName" } as ColumnMapping,
         ],
         0
       );
@@ -480,7 +481,7 @@ describe("ImportRecord", () => {
     it("fromCsvRow trims whitespace from values", () => {
       const rec = ImportRecord.fromCsvRow(
         { Name: "  Hospital Central  " },
-        [{ csvColumnName: "Name", systemFieldKey: "proposedName" } as any],
+        [{ csvColumnName: "Name", systemFieldKey: "proposedName" } as ColumnMapping],
         0
       );
       expect(rec.name).toBe("Hospital Central");
@@ -490,8 +491,8 @@ describe("ImportRecord", () => {
       const rec = ImportRecord.fromCsvRow(
         { Name: "", City: "   " },
         [
-          { csvColumnName: "Name", systemFieldKey: "proposedName" } as any,
-          { csvColumnName: "City", systemFieldKey: "city" } as any,
+          { csvColumnName: "Name", systemFieldKey: "proposedName" } as ColumnMapping,
+          { csvColumnName: "City", systemFieldKey: "city" } as ColumnMapping,
         ],
         0
       );

@@ -3,7 +3,7 @@
  * Implementa IFieldTransformer
  *
  * Convierte <br>, <br/>, <br /> en " | " y elimina el resto de tags.
- * Útil para fuentes como Wien donde campos de texto contienen HTML.
+ * Ãštil para fuentes como Wien donde campos de texto contienen HTML.
  */
 
 import type { IFieldTransformer, TransformerResult } from "../ports/IFieldTransformer";

@@ -79,7 +79,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold mb-4 text-gray-800">¡Contraseña restablecida!</h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-800">Â¡Contraseña restablecida!</h2>
           <p className="text-gray-600 mb-6">
             Tu contraseña ha sido restablecida exitosamente. Ya puedes iniciar sesión con tu nueva
             contraseña.
@@ -119,7 +119,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="••••••••"
+            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
             minLength={8}
           />
         </div>
@@ -135,7 +135,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             value={formData.confirmPassword}
             onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="••••••••"
+            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
             minLength={8}
           />
         </div>

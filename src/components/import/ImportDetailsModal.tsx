@@ -334,11 +334,11 @@ export default function ImportDetailsModal({ batchId, isOpen, onClose }: ImportD
                   <Ban className="w-6 h-6 text-red-600" />
                 </div>
 
-                <h3 className="text-lg font-bold text-gray-900 mb-2">¿Cancelar importación?</h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Â¿Cancelar importación?</h3>
 
                 <p className="text-sm text-gray-600 mb-6">
                   Esta acción detendrá la importación actual. Los registros ya procesados se
-                  mantendrán, pero el resto no se importará. ¿Estás seguro?
+                  mantendrán, pero el resto no se importará. Â¿Estás seguro?
                 </p>
 
                 <div className="flex space-x-3">

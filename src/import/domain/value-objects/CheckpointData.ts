@@ -18,7 +18,7 @@ export interface CheckpointData {
   batchId: string;
 
   /**
-   * Índice del registro en la fuente (0-based)
+   * Ãndice del registro en la fuente (0-based)
    */
   recordIndex: number;
 
@@ -83,7 +83,7 @@ export interface CheckpointStats {
   skipped: number;
 
   /**
-   * Último índice procesado
+   * Ãšltimo índice procesado
    */
   lastIndex: number;
 

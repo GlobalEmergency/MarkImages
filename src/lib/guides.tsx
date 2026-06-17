@@ -17,8 +17,8 @@ export interface Guide {
 export const GUIDES: Guide[] = [
   {
     slug: "que-es-un-dea",
-    title: "¿Qué es un DEA? Guía completa sobre desfibriladores",
-    metaTitle: "¿Qué es un DEA? Guía completa sobre desfibriladores automáticos",
+    title: "Â¿Qué es un DEA? Guía completa sobre desfibriladores",
+    metaTitle: "Â¿Qué es un DEA? Guía completa sobre desfibriladores automáticos",
     description:
       "Descubre qué es un desfibrilador externo automático (DEA), cómo funciona, quién puede usarlo y por qué es vital en emergencias cardíacas. Guía completa actualizada.",
     keywords: [
@@ -32,17 +32,17 @@ export const GUIDES: Guide[] = [
     relatedCity: "madrid",
     faq: [
       {
-        question: "¿Puede cualquier persona usar un DEA?",
+        question: "Â¿Puede cualquier persona usar un DEA?",
         answer:
           "Sí. Los DEA están diseñados para ser usados por cualquier persona, incluso sin formación médica. El dispositivo da instrucciones de voz paso a paso y solo administra la descarga si detecta un ritmo cardíaco que lo necesita. En España, la legislación varía por comunidad autónoma, pero en una emergencia vital, cualquier persona puede y debe usarlo.",
       },
       {
-        question: "¿Cuánto cuesta un desfibrilador DEA?",
+        question: "Â¿Cuánto cuesta un desfibrilador DEA?",
         answer:
-          "El precio de un DEA varía entre 800 € y 2.500 € dependiendo del modelo y fabricante. Los modelos más habituales en espacios públicos en España (como Philips HeartStart, Zoll AED 3 o LIFEPAK CR2) cuestan entre 1.200 € y 1.800 €. Además hay que sumar el mantenimiento anual (parches y batería).",
+          "El precio de un DEA varía entre 800 â‚¬ y 2.500 â‚¬ dependiendo del modelo y fabricante. Los modelos más habituales en espacios públicos en España (como Philips HeartStart, Zoll AED 3 o LIFEPAK CR2) cuestan entre 1.200 â‚¬ y 1.800 â‚¬. Además hay que sumar el mantenimiento anual (parches y batería).",
       },
       {
-        question: "¿Cuál es la diferencia entre un DEA y un DESA?",
+        question: "Â¿Cuál es la diferencia entre un DEA y un DESA?",
         answer:
           "DEA (Desfibrilador Externo Automático) y DESA (Desfibrilador Externo Semiautomático) son prácticamente lo mismo. La diferencia es que el DEA administra la descarga automáticamente cuando detecta fibrilación, mientras que el DESA requiere que el usuario pulse un botón. En la práctica, la mayoría de dispositivos instalados en España son DESA, aunque coloquialmente se les llama DEA.",
       },
@@ -56,7 +56,7 @@ export const GUIDES: Guide[] = [
           controlada para restablecer el ritmo normal del corazón.
         </p>
 
-        <h2>¿Cómo funciona un desfibrilador?</h2>
+        <h2>Â¿Cómo funciona un desfibrilador?</h2>
         <p>
           El DEA funciona en tres pasos sencillos que el propio dispositivo guía mediante
           instrucciones de voz:
@@ -77,7 +77,7 @@ export const GUIDES: Guide[] = [
           </li>
         </ol>
 
-        <h2>¿Por qué son tan importantes los DEA?</h2>
+        <h2>Â¿Por qué son tan importantes los DEA?</h2>
         <p>
           En España se producen aproximadamente <strong>30.000 paradas cardíacas al año</strong>{" "}
           fuera del ámbito hospitalario. La tasa de supervivencia sin desfibrilación temprana es
@@ -93,7 +93,7 @@ export const GUIDES: Guide[] = [
           muerte.
         </p>
 
-        <h2>¿Dónde se encuentran los DEA?</h2>
+        <h2>Â¿Dónde se encuentran los DEA?</h2>
         <p>Los DEA se instalan habitualmente en:</p>
         <ul>
           <li>Centros comerciales y grandes superficies</li>
@@ -142,17 +142,17 @@ export const GUIDES: Guide[] = [
     modifiedAt: "2026-04-13",
     faq: [
       {
-        question: "¿Puedo hacer daño a alguien usando un DEA?",
+        question: "Â¿Puedo hacer daño a alguien usando un DEA?",
         answer:
           "No. El DEA solo administra una descarga si detecta un ritmo cardíaco que lo necesita (fibrilación ventricular o taquicardia ventricular sin pulso). Si el corazón tiene un ritmo normal o está en asistolia, el dispositivo NO descargará aunque se pulse el botón. Es imposible hacer daño con un DEA usado correctamente.",
       },
       {
-        question: "¿Necesito formación para usar un DEA?",
+        question: "Â¿Necesito formación para usar un DEA?",
         answer:
           "No es imprescindible. Los DEA están diseñados para ser usados por personas sin formación médica. El dispositivo da instrucciones de voz claras. Sin embargo, se recomienda hacer un curso de primeros auxilios y RCP para estar mejor preparado. Muchos ayuntamientos y Cruz Roja ofrecen cursos gratuitos.",
       },
       {
-        question: "¿Qué hago si el DEA dice 'descarga no recomendada'?",
+        question: "Â¿Qué hago si el DEA dice 'descarga no recomendada'?",
         answer:
           "Significa que el ritmo cardíaco de la víctima no requiere descarga en ese momento. Debes continuar con las compresiones torácicas (RCP) y seguir las instrucciones del DEA. El dispositivo volverá a analizar el ritmo cada 2 minutos y recomendará descarga si es necesario.",
       },
@@ -264,17 +264,17 @@ export const GUIDES: Guide[] = [
     modifiedAt: "2026-04-13",
     faq: [
       {
-        question: "¿Es obligatorio tener un desfibrilador en mi negocio?",
+        question: "Â¿Es obligatorio tener un desfibrilador en mi negocio?",
         answer:
           "Depende de la comunidad autónoma y del tipo de establecimiento. La mayoría de comunidades obligan a instalar DEA en: instalaciones deportivas con aforo superior a 500 personas, centros comerciales grandes, estaciones de transporte, y edificios públicos. Consulta la normativa específica de tu comunidad autónoma.",
       },
       {
-        question: "¿Qué multa hay por no tener desfibrilador si es obligatorio?",
+        question: "Â¿Qué multa hay por no tener desfibrilador si es obligatorio?",
         answer:
-          "Las sanciones varían por comunidad autónoma. En general, las multas por no disponer de un DEA obligatorio oscilan entre 3.000 € y 600.000 € según la gravedad. Cataluña y Andalucía son de las comunidades con sanciones más severas. Además de la multa, puede haber responsabilidad civil en caso de fallecimiento.",
+          "Las sanciones varían por comunidad autónoma. En general, las multas por no disponer de un DEA obligatorio oscilan entre 3.000 â‚¬ y 600.000 â‚¬ según la gravedad. Cataluña y Andalucía son de las comunidades con sanciones más severas. Además de la multa, puede haber responsabilidad civil en caso de fallecimiento.",
       },
       {
-        question: "¿Necesito registrar mi desfibrilador?",
+        question: "Â¿Necesito registrar mi desfibrilador?",
         answer:
           "Sí, en la mayoría de comunidades autónomas es obligatorio registrar el DEA ante la autoridad sanitaria competente. Además, puedes registrarlo gratuitamente en DeaMap para que sea localizable por cualquier persona en caso de emergencia.",
       },
@@ -295,7 +295,7 @@ export const GUIDES: Guide[] = [
           normativa, que en muchos casos va más allá del marco estatal.
         </p>
 
-        <h2>¿Dónde es obligatorio instalar un DEA?</h2>
+        <h2>Â¿Dónde es obligatorio instalar un DEA?</h2>
         <p>
           Aunque varía por comunidad, los espacios donde más frecuentemente se exige la instalación
           de un DEA son:
@@ -305,7 +305,7 @@ export const GUIDES: Guide[] = [
             <strong>Instalaciones deportivas</strong> con aforo superior a 500 personas
           </li>
           <li>
-            <strong>Centros comerciales</strong> de más de 2.500 m²
+            <strong>Centros comerciales</strong> de más de 2.500 mÂ²
           </li>
           <li>
             <strong>Estaciones de transporte</strong> (tren, metro, aeropuerto)
@@ -327,13 +327,13 @@ export const GUIDES: Guide[] = [
         <p>
           Decreto 22/2012. Obligatorio en instalaciones deportivas, centros comerciales, centros de
           trabajo de más de 250 personas y establecimientos de ocio con aforo superior a 500.
-          Requiere formación acreditada. Sanciones de hasta 600.000 €.
+          Requiere formación acreditada. Sanciones de hasta 600.000 â‚¬.
         </p>
 
         <h3>Cataluña</h3>
         <p>
           Decreto 151/2012. Una de las normativas más exigentes. Obligatorio en centros comerciales
-          de más de 2.500 m², estaciones de transporte, instalaciones deportivas y centros
+          de más de 2.500 mÂ², estaciones de transporte, instalaciones deportivas y centros
           educativos. Se exige formación de 8 horas. Registro obligatorio.
         </p>
 
@@ -405,19 +405,19 @@ export const GUIDES: Guide[] = [
     modifiedAt: "2026-04-13",
     faq: [
       {
-        question: "¿Qué significa que un espacio esté cardioprotegido?",
+        question: "Â¿Qué significa que un espacio esté cardioprotegido?",
         answer:
           "Un espacio cardioprotegido es aquel que dispone de al menos un desfibrilador externo automático (DEA), personal formado en su uso y RCP, señalización adecuada, y un plan de mantenimiento del dispositivo. Algunos espacios obtienen además una certificación oficial de cardioprotección.",
       },
       {
-        question: "¿Cuántos desfibriladores necesita mi empresa?",
+        question: "Â¿Cuántos desfibriladores necesita mi empresa?",
         answer:
           "La recomendación general es que un DEA esté accesible en menos de 3 minutos desde cualquier punto del espacio. En edificios de varias plantas, esto suele implicar un DEA cada 2-3 plantas. En superficies grandes (centros comerciales, polígonos), se recomienda un DEA cada 200-300 metros de distancia recorrida.",
       },
       {
-        question: "¿Cuánto cuesta cardioproteger un espacio?",
+        question: "Â¿Cuánto cuesta cardioproteger un espacio?",
         answer:
-          "El coste depende del tamaño del espacio y el número de DEA necesarios. Un DEA cuesta entre 1.200 € y 1.800 €, la vitrina entre 150 € y 400 €, la señalización unos 50-100 €, y la formación entre 50 € y 150 € por persona. El mantenimiento anual (parches + revisión) ronda los 200-300 € por dispositivo.",
+          "El coste depende del tamaño del espacio y el número de DEA necesarios. Un DEA cuesta entre 1.200 â‚¬ y 1.800 â‚¬, la vitrina entre 150 â‚¬ y 400 â‚¬, la señalización unos 50-100 â‚¬, y la formación entre 50 â‚¬ y 150 â‚¬ por persona. El mantenimiento anual (parches + revisión) ronda los 200-300 â‚¬ por dispositivo.",
       },
     ],
     content: () => (
@@ -429,7 +429,7 @@ export const GUIDES: Guide[] = [
           pueden salvar vidas en los primeros minutos críticos.
         </p>
 
-        <h2>¿Por qué cardioproteger tu espacio?</h2>
+        <h2>Â¿Por qué cardioproteger tu espacio?</h2>
         <p>
           Las paradas cardíacas pueden ocurrir en cualquier lugar y momento. En España, se producen
           aproximadamente <strong>30.000 paradas cardíacas extrahospitalarias al año</strong>. La

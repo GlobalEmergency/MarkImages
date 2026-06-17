@@ -201,10 +201,10 @@ export default function ImageMultiSelector({
             ✅ <strong>Válida:</strong> La imagen es clara y muestra bien el DEA
           </li>
           <li>
-            ❌ <strong>Eliminar:</strong> La imagen es borrosa, incorrecta o no sirve
+            âŒ <strong>Eliminar:</strong> La imagen es borrosa, incorrecta o no sirve
           </li>
           <li>
-            📤 <strong>Subir nuevas:</strong> Agrega imágenes adicionales si es necesario
+            ðŸ“¤ <strong>Subir nuevas:</strong> Agrega imágenes adicionales si es necesario
           </li>
         </ul>
       </div>
@@ -243,7 +243,7 @@ export default function ImageMultiSelector({
                   img.isValid ? "bg-green-500 text-white" : "bg-red-500 text-white"
                 }`}
               >
-                {img.isValid ? "✓ Válida" : "✗ Eliminada"}
+                {img.isValid ? "âœ“ Válida" : "âœ— Eliminada"}
               </div>
             </div>
 
@@ -295,7 +295,9 @@ export default function ImageMultiSelector({
                       </option>
                     ))}
                   </select>
-                  {!img.selectedType && <p className="text-xs text-red-600">⚠️ Tipo requerido</p>}
+                  {!img.selectedType && (
+                    <p className="text-xs text-red-600">âš ï¸ Tipo requerido</p>
+                  )}
                 </div>
               )}
             </div>
@@ -315,7 +317,7 @@ export default function ImageMultiSelector({
                 className="w-full h-full object-cover"
               />
               <div className="absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500 text-white">
-                ✓ Nueva
+                âœ“ Nueva
               </div>
             </div>
             <div className="p-3 bg-gray-50 space-y-2">
@@ -347,7 +349,7 @@ export default function ImageMultiSelector({
                     </option>
                   ))}
                 </select>
-                {!img.type && <p className="text-xs text-red-600">⚠️ Tipo requerido</p>}
+                {!img.type && <p className="text-xs text-red-600">âš ï¸ Tipo requerido</p>}
               </div>
             </div>
           </div>
@@ -370,9 +372,6 @@ export default function ImageMultiSelector({
                 if (file) {
                   try {
                     // Comprimir la imagen antes de subirla
-                    console.log(
-                      `📸 Subiendo imagen: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`
-                    );
 
                     const compressedUrl = await compressImageFile(file, {
                       maxWidth: 1920,
@@ -400,8 +399,8 @@ export default function ImageMultiSelector({
       {hasNoValidImages && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-700 text-sm">
-            ⚠️ <strong>Atención:</strong> No hay imágenes válidas. Debes marcar al menos una imagen
-            como válida o subir nuevas imágenes para continuar.
+            âš ï¸ <strong>Atención:</strong> No hay imágenes válidas. Debes marcar al menos una
+            imagen como válida o subir nuevas imágenes para continuar.
           </p>
         </div>
       )}
@@ -409,7 +408,7 @@ export default function ImageMultiSelector({
       {totalImagesWithoutType > 0 && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-yellow-800 text-sm">
-            ⚠️ <strong>Tipo de imagen requerido:</strong> {totalImagesWithoutType} imagen(es)
+            âš ï¸ <strong>Tipo de imagen requerido:</strong> {totalImagesWithoutType} imagen(es)
             necesitan que selecciones su tipo antes de continuar.
           </p>
         </div>

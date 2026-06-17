@@ -49,7 +49,7 @@ const DAY_RANGES: Array<{ pattern: RegExp; dayType: ParsedBlock["dayType"] }> = 
   { pattern: /(?:^|\b)(?:L\s*-\s*S|LUNES\s+A\s+SABADOS?)(?:\b|$)/i, dayType: "all" },
   // DE MARTES/MIERCOLES/JUEVES A DOMINGO (misc compound ranges → "all")
   {
-    pattern: /(?:^|\b)(?:DE\s+)?(?:MARTES|MIERCOLES|MIÉRCOLES|JUEVES)\s+A\s+DOMINGO(?:\b|$)/i,
+    pattern: /(?:^|\b)(?:DE\s+)?(?:MARTES|MIERCOLES|MIÃ‰RCOLES|JUEVES)\s+A\s+DOMINGO(?:\b|$)/i,
     dayType: "all",
   },
   // L-V, LUNES A VIERNES
@@ -228,7 +228,7 @@ export class SpanishScheduleParser implements IFieldTransformer {
    */
   private parseBlock(block: string): ParsedBlock | null {
     // Skip blocks that are clearly non-parseable
-    if (/SEGUN|SEGÚN|DEPENDE|NECESIDAD|PARTIDO|CERRADO(?:\s+EN)/i.test(block)) {
+    if (/SEGUN|SEGÃšN|DEPENDE|NECESIDAD|PARTIDO|CERRADO(?:\s+EN)/i.test(block)) {
       return null;
     }
 

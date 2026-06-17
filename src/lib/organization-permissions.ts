@@ -5,6 +5,7 @@
  */
 
 import { prisma } from "@/lib/db";
+import type { AssignmentStatus, AssignmentType } from "@/generated/client/client";
 
 /**
  * Check if user can view an AED
@@ -259,7 +260,7 @@ export async function getAedsForUserOrganizations(
   const assignments = await prisma.aedOrganizationAssignment.findMany({
     where: {
       organization_id: { in: orgIds },
-      status: filters?.status ? { in: filters.status as any } : undefined,
+      status: filters?.status ? { in: filters.status as AssignmentStatus[] } : undefined,
     },
     include: {
       aed: {
@@ -305,7 +306,7 @@ export async function checkAssignmentConflict(
   const existing = await prisma.aedOrganizationAssignment.findFirst({
     where: {
       aed_id: aedId,
-      assignment_type: assignmentType as any,
+      assignment_type: assignmentType as AssignmentType,
       status: "ACTIVE",
     },
     include: {

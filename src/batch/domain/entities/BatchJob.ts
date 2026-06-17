@@ -316,7 +316,7 @@ export class BatchJob {
    */
   fail(error?: string): void {
     const previousStatus = this.data.status;
-    console.error(`❌ [BatchJob] Marking job ${this.data.id} as FAILED`, {
+    console.error(`âŒ [BatchJob] Marking job ${this.data.id} as FAILED`, {
       previousStatus,
       newStatus: JobStatus.FAILED,
       reason: error || "(no reason provided)",

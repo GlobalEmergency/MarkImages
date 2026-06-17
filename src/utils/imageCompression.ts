@@ -105,10 +105,6 @@ export async function compressImageDataUrl(
             compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
             const newSizeInMB = (compressedDataUrl.length * 0.75) / (1024 * 1024);
 
-            console.log(
-              `🔄 Intento ${attempts + 1}: Calidad ${quality.toFixed(2)}, Tamaño: ${newSizeInMB.toFixed(2)}MB`
-            );
-
             if (newSizeInMB <= opts.maxSizeMB) {
               break;
             }
@@ -116,11 +112,6 @@ export async function compressImageDataUrl(
             attempts++;
           }
         }
-
-        const finalSizeInMB = (compressedDataUrl.length * 0.75) / (1024 * 1024);
-        console.log(
-          `✅ Imagen comprimida: ${width}x${height}, Calidad: ${quality.toFixed(2)}, Tamaño: ${finalSizeInMB.toFixed(2)}MB`
-        );
 
         resolve(compressedDataUrl);
       } catch (error) {

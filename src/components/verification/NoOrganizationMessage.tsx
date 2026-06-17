@@ -24,15 +24,15 @@ export default function NoOrganizationMessage() {
             <h3 className="text-sm font-semibold text-gray-900 mb-2">Para acceder necesitas:</h3>
             <ul className="text-sm text-gray-700 space-y-2 text-left">
               <li className="flex items-start gap-2">
-                <span className="text-amber-600 mt-0.5">•</span>
+                <span className="text-amber-600 mt-0.5">â€¢</span>
                 <span>Ser miembro de una organización (ej: Protección Civil)</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-amber-600 mt-0.5">•</span>
+                <span className="text-amber-600 mt-0.5">â€¢</span>
                 <span>Tener permisos de verificación activados</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-amber-600 mt-0.5">•</span>
+                <span className="text-amber-600 mt-0.5">â€¢</span>
                 <span>Que la organización tenga DEAs asignados</span>
               </li>
             </ul>

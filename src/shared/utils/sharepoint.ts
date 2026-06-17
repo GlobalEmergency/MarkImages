@@ -25,8 +25,8 @@ const SHAREPOINT_DOMAINS = ["sharepoint.com", "sharepoint-df.com"] as const;
  * - ✅ "company-my.sharepoint.com" → true
  * - ✅ "microsoft.sharepoint.com" → true (ends with .sharepoint.com)
  * - ✅ "sharepoint.com" → true (exact match)
- * - ❌ "fakesharepoint.com" → false
- * - ❌ "notsharepoint.com.evil.com" → false
+ * - âŒ "fakesharepoint.com" → false
+ * - âŒ "notsharepoint.com.evil.com" → false
  *
  * @param url - URL completa a verificar
  * @returns true si la URL pertenece a un dominio de SharePoint

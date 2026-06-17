@@ -53,7 +53,7 @@ export default function DeaImageProcessor({
   const [croppedUrl, setCroppedUrl] = useState<string | null>(null);
   const [blurredUrl, setBlurredUrl] = useState<string | null>(null);
 
-  // ── Step handlers ──
+  // â”€â”€ Step handlers â”€â”€
 
   const handleCropComplete = useCallback((crop: CropData, croppedImageUrl?: string) => {
     setCropData(crop);

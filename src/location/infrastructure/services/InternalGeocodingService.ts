@@ -26,6 +26,27 @@ interface InternalGeocodeResponse {
   source: "google" | "osm";
 }
 
+interface GoogleGeocodeResponse {
+  status: string;
+  error_message?: string;
+  results: GoogleGeocodeResult[];
+}
+
+interface GoogleGeocodeResult {
+  formatted_address: string;
+  address_components: Array<{
+    long_name: string;
+    short_name: string;
+    types: string[];
+  }>;
+  geometry: {
+    location: {
+      lat: number;
+      lng: number;
+    };
+  };
+}
+
 export class InternalGeocodingService implements IGeocodingService {
   private readonly baseUrl: string;
 
@@ -40,7 +61,6 @@ export class InternalGeocodingService implements IGeocodingService {
     try {
       // Validar que la dirección no esté vacía o sea solo "España"
       if (!address || address.trim() === "" || address.trim() === "España") {
-        console.warn(`[InternalGeocodingService] Invalid or empty address: "${address}"`);
         return null;
       }
 
@@ -55,14 +75,17 @@ export class InternalGeocodingService implements IGeocodingService {
       const results: InternalGeocodeResponse[] = await response.json();
 
       if (!results || results.length === 0) {
-        console.warn(`[InternalGeocodingService] No results for address: ${address}`);
         return null;
       }
 
       // Tomar el primer resultado (el más relevante)
       return this.mapToGeocodingResult(results[0]);
-    } catch (error) {
-      console.error(`[InternalGeocodingService] Error geocoding address:`, error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(`[InternalGeocodingService] Error geocoding address: ${error.message}`);
+      } else {
+        console.error(`[InternalGeocodingService] Error geocoding address:`, error);
+      }
       return null;
     }
   }
@@ -73,9 +96,6 @@ export class InternalGeocodingService implements IGeocodingService {
       const googleApiKey = process.env.GOOGLE_MAPS_API_KEY;
 
       if (!googleApiKey) {
-        console.warn(
-          "[InternalGeocodingService] Google Maps API key not configured. Reverse geocoding unavailable."
-        );
         return null;
       }
 
@@ -87,18 +107,19 @@ export class InternalGeocodingService implements IGeocodingService {
         return null;
       }
 
-      const data = await response.json();
+      const data: GoogleGeocodeResponse = await response.json();
 
       if (data.status !== "OK" || !data.results || data.results.length === 0) {
-        console.warn(
-          `[InternalGeocodingService] No reverse geocoding results for: ${latitude}, ${longitude}. Status: ${data.status}, Error: ${data.error_message || "N/A"}`
-        );
         return null;
       }
 
       return this.mapGoogleResultToGeocodingResult(data.results[0]);
-    } catch (error) {
-      console.error(`[InternalGeocodingService] Error in reverse geocoding:`, error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(`[InternalGeocodingService] Error in reverse geocoding: ${error.message}`);
+      } else {
+        console.error(`[InternalGeocodingService] Error in reverse geocoding:`, error);
+      }
       return null;
     }
   }
@@ -122,21 +143,20 @@ export class InternalGeocodingService implements IGeocodingService {
     };
   }
 
-  private mapGoogleResultToGeocodingResult(googleResult: any): GeocodingResult {
+  private mapGoogleResultToGeocodingResult(googleResult: GoogleGeocodeResult): GeocodingResult {
     const components = googleResult.address_components || [];
 
-    const streetNumber = components.find((c: any) => c.types.includes("street_number"))?.long_name;
-    const route = components.find((c: any) => c.types.includes("route"))?.long_name;
-    const postalCode = components.find((c: any) => c.types.includes("postal_code"))?.long_name;
-    const locality =
-      components.find((c: any) => c.types.includes("locality"))?.long_name ||
-      components.find((c: any) => c.types.includes("administrative_area_level_2"))?.long_name;
+    const getComponent = (type: string) =>
+      components.find((c) => c.types.includes(type))?.long_name;
+
+    const streetNumber = getComponent("street_number");
+    const route = getComponent("route");
+    const postalCode = getComponent("postal_code");
+    const locality = getComponent("locality") || getComponent("administrative_area_level_2");
 
     // Extraer distrito y barrio de Google (administrative_area_level_3, administrative_area_level_4)
-    const district = components.find((c: any) =>
-      c.types.includes("administrative_area_level_3")
-    )?.long_name;
-    const neighborhood = components.find((c: any) => c.types.includes("neighborhood"))?.long_name;
+    const district = getComponent("administrative_area_level_3");
+    const neighborhood = getComponent("neighborhood");
 
     const address: GeocodingAddress = {
       street_name: route,

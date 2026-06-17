@@ -10,7 +10,6 @@ export class NoOpCrashReporter implements ICrashReporter {
 
   async recordException(message: string, options?: RecordExceptionOptions): Promise<void> {
     void options;
-    console.warn("[CrashReporter] Non-fatal exception:", message);
   }
 
   async log(message: string): Promise<void> {

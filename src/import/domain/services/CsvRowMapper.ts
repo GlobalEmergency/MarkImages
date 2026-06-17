@@ -1,6 +1,6 @@
 /**
  * Domain Service: Mapea datos raw del CSV a DynamicCsvRow
- * Esta es la lógica ÚNICA compartida entre validación e importación
+ * Esta es la lógica ÃšNICA compartida entre validación e importación
  * Capa de Dominio
  */
 

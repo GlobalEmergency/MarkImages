@@ -40,13 +40,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // structured verification completions.
     const previousStatus = validation.aed.status;
 
-    console.log("🔄 Iniciando procesamiento de imágenes...");
-
     // Extraer datos de procesamiento
     const validationData = validation.data as any;
     const processedImages: ProcessedImageData[] = validationData?.processed_images || [];
-
-    console.log(`📋 Imágenes a procesar: ${processedImages.length}`);
 
     // Procesar cada imagen
     const imagesToProcess: ImageToProcess[] = [];
@@ -56,7 +52,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const imageRecord = validation.aed.images.find((img) => img.id === processedImg.image_id);
 
       if (!imageRecord) {
-        console.warn(`⚠️ Imagen ${processedImg.image_id} no encontrada en BD`);
         continue;
       }
 
@@ -75,12 +70,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       await processVerificationImages(imagesToProcess);
 
     if (processingErrors.length > 0) {
-      console.warn(
-        `⚠️ ${processingErrors.length} imagen(es) con errores de procesamiento:`,
-        processingErrors
-      );
+      // Individual processing errors are handled in final result (no action)
     }
-    console.log(`✅ ${processedBuffers.size} imágenes procesadas correctamente`);
 
     // ── Upload images to S3 (network I/O — outside transaction) ──────
     const imageUpdates: Array<{
@@ -96,8 +87,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
       try {
         const extension = extractExtension(imageRecord.original_url);
-
-        console.log(`☁️ Descargando y re-subiendo imagen original ${imageId}...`);
 
         // Descargar imagen original
         const originalResponse = await fetch(imageRecord.original_url);
@@ -116,19 +105,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           prefix: id,
         });
 
-        console.log(`✅ Imagen original ${imageId} re-subida: ${newOriginalUrl}`);
-
         // Subir imagen procesada
         const processedKey = buildImageKey(id, imageId, "processed", extension);
-        console.log(`☁️ Subiendo imagen procesada ${imageId} a S3...`);
+
         const processedUrl = await uploadToS3({
           buffer: processedBuffer,
           filename: processedKey,
           contentType: "image/jpeg",
           prefix: id,
         });
-
-        console.log(`✅ Imagen ${imageId} subida: ${processedUrl}`);
 
         imageUpdates.push({ imageId, newOriginalUrl, processedUrl });
       } catch (error) {
@@ -256,9 +241,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const allErrors = [...processingErrors, ...uploadErrors];
     if (allErrors.length > 0) {
-      console.warn(`⚠️ Verificación completada con ${allErrors.length} advertencia(s):`, allErrors);
+      // Errors will be returned as warnings (no action)
     } else {
-      console.log("🎉 Verificación completada exitosamente");
+      // Success (no action)
     }
 
     invalidateAedCaches(id);

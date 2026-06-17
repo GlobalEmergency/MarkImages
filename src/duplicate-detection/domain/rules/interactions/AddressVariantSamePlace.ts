@@ -9,7 +9,7 @@
  *   - AddressMatchRule NOT matched (neither exact nor fuzzy)
  *   - ProximityRule matched (any tier)
  *   - EstablishmentType is compatible: same type OR one/both sides missing type data
- *     (missing type ≠ different type — absence of data shouldn't block detection)
+ *     (missing type â‰  different type — absence of data shouldn't block detection)
  *
  * Effect: +15 points bonus
  */

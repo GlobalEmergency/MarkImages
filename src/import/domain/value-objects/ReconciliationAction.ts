@@ -209,7 +209,7 @@ export class ReconciliationAction {
   }
 
   // ============================================
-  // MÉTODOS DE CONSULTA
+  // MÃ‰TODOS DE CONSULTA
   // ============================================
 
   /**
@@ -269,7 +269,7 @@ export class ReconciliationAction {
   }
 
   // ============================================
-  // SERIALIZACIÓN
+  // SERIALIZACIÃ“N
   // ============================================
 
   /**

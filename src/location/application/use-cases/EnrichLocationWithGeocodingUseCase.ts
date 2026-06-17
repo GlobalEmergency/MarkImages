@@ -58,8 +58,6 @@ export class EnrichLocationWithGeocodingUseCase {
   ) {}
 
   async execute(input: EnrichLocationInput): Promise<EnrichLocationOutput> {
-    console.log(`[EnrichLocationUseCase] Starting enrichment for location: ${input.locationId}`);
-
     // 1. Leer ubicación actual
     const location = await this.prisma.aedLocation.findUnique({
       where: { id: input.locationId },
@@ -74,9 +72,6 @@ export class EnrichLocationWithGeocodingUseCase {
       input.forceEnrich || !location.postal_code || !location.city_name || !location.district_name;
 
     if (!needsEnrichment) {
-      console.log(
-        `[EnrichLocationUseCase] Location ${input.locationId} already has complete data. Skipping.`
-      );
       return {
         locationId: input.locationId,
         enriched: false,
@@ -94,23 +89,16 @@ export class EnrichLocationWithGeocodingUseCase {
     // 3. Las coordenadas originales pueden tener formato incorrecto
     if (input.rawAddress) {
       // Estrategia 1: Forward geocoding desde dirección (más confiable)
-      console.log(
-        `[EnrichLocationUseCase] Using forward geocoding with address: ${input.rawAddress}`
-      );
+
       geocodingResult = await this.geocodingService.geocodeAddress(input.rawAddress);
     } else if (input.originalCoords) {
       // Estrategia 2: Reverse geocoding como fallback
-      console.log(
-        `[EnrichLocationUseCase] Using reverse geocoding with coords: ${input.originalCoords.latitude}, ${input.originalCoords.longitude}`
-      );
+
       geocodingResult = await this.geocodingService.reverseGeocode(
         input.originalCoords.latitude,
         input.originalCoords.longitude
       );
     } else {
-      console.warn(
-        `[EnrichLocationUseCase] No coordinates or address provided for location ${input.locationId}`
-      );
       return {
         locationId: input.locationId,
         enriched: false,
@@ -120,7 +108,6 @@ export class EnrichLocationWithGeocodingUseCase {
     }
 
     if (!geocodingResult) {
-      console.warn(`[EnrichLocationUseCase] No geocoding results for location ${input.locationId}`);
       return {
         locationId: input.locationId,
         enriched: false,
@@ -135,20 +122,12 @@ export class EnrichLocationWithGeocodingUseCase {
       geocodingResult.coordinates
     );
 
-    console.log(
-      `[EnrichLocationUseCase] Coordinate validation: ${coordinateValidation.status} (${coordinateValidation.reason})`
-    );
-
     // 5. Actualizar ubicación con datos enriquecidos
     const fieldsUpdated = await this.updateLocation(
       input.locationId,
       location,
       geocodingResult,
       coordinateValidation
-    );
-
-    console.log(
-      `[EnrichLocationUseCase] Location ${input.locationId} enriched. Fields updated: ${fieldsUpdated.join(", ")}`
     );
 
     return {

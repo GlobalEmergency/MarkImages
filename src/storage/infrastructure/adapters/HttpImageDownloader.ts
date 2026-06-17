@@ -51,7 +51,6 @@ export class HttpImageDownloader implements IImageDownloader {
         cookies.push(`FedAuth=${sharePointAuth.fedAuth}`);
       }
       headers["Cookie"] = cookies.join("; ");
-      console.log(`🔐 [HttpImageDownloader] Usando autenticación de SharePoint`);
     }
 
     try {

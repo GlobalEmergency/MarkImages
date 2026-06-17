@@ -31,7 +31,7 @@ export class GetAedsWithClustersUseCase {
   async execute(request: GetAedsWithClustersRequest): Promise<ClusteredAedsResponse> {
     const { bounds, zoom, strategy } = request;
 
-    // Decisión: ¿Aplicar clustering o devolver individuales?
+    // Decisión: Â¿Aplicar clustering o devolver individuales?
     if (strategy.clusteringEnabled && strategy.clusterGridSize !== null) {
       // Obtener clusters + marcadores individuales
       const result = await this.clusteringService.calculateClusters({
@@ -81,7 +81,7 @@ export class GetAedsWithClustersUseCase {
       return "individual markers";
     }
 
-    const gridKm = (strategy.clusterGridSize || 0) * 111; // Aproximación 1° ≈ 111km
+    const gridKm = (strategy.clusterGridSize || 0) * 111; // Aproximación 1Â° â‰ˆ 111km
     return `clustered (grid ~${gridKm.toFixed(1)}km, min ${strategy.minClusterSize} DEAs)`;
   }
 }

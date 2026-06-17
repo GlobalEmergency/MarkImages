@@ -72,9 +72,8 @@ export class DuplicateDetectionService {
             };
           }
         }
-      } catch (error) {
+      } catch (_error) {
         // ID no válido o no es UUID, continuar con otros métodos
-        console.warn(`Invalid ID format during duplicate check: ${id}`, error);
       }
     }
 

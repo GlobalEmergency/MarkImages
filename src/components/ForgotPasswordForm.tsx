@@ -78,7 +78,7 @@ export default function ForgotPasswordForm() {
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-2 text-center text-gray-800">
-        ¿Olvidaste tu contraseña?
+        Â¿Olvidaste tu contraseña?
       </h2>
       <p className="text-sm text-gray-600 mb-6 text-center">
         Ingresa tu email y te enviaremos instrucciones para restablecer tu contraseña.

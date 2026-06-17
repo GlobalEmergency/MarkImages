@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Resume Import API — Dual-mode
  *
  * POST /api/import/[id]/resume - Resume/continue a waiting or interrupted import
@@ -28,8 +28,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const user = await requireAuth(request);
     const { id } = await params;
-
-    console.log(`📥 [Import Resume] Resuming import ${id} by user ${user.userId}`);
 
     // Leer metadata del job para determinar el motor
     const job = await prisma.batchJob.findUnique({
@@ -96,12 +94,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
       const hasMore = !result.chunk.done;
 
-      console.log(
-        `✅ [Import Resume] BulkImport ${id} resumed: ` +
-          `${result.progress.processedRecords}/${result.progress.totalRecords} records ` +
-          `(${hasMore ? "more pending" : "completed"})`
-      );
-
       return NextResponse.json({
         success: true,
         progress: {
@@ -151,11 +143,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         { status }
       );
     }
-
-    console.log(
-      `✅ [Import Resume] Legacy import ${id} resumed: ` +
-        `${result.job?.progress.processedRecords}/${result.job?.progress.totalRecords} records`
-    );
 
     return NextResponse.json({
       success: true,

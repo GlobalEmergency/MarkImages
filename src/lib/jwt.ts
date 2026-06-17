@@ -44,10 +44,7 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
       return null;
     }
     return { userId, email, role } as JWTPayload;
-  } catch (error) {
-    if (process.env.NODE_ENV === "development") {
-      console.warn("JWT verification failed:", error instanceof Error ? error.message : "unknown");
-    }
+  } catch {
     return null;
   }
 }

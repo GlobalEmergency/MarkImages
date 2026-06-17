@@ -213,7 +213,7 @@ export default function AedDetailModal({
                 </p>
                 {aed.location.access_instructions && (
                   <p className="text-sm text-gray-600 mt-2 italic">
-                    📍 {aed.location.access_instructions}
+                    ðŸ“ {aed.location.access_instructions}
                   </p>
                 )}
                 <p className="text-xs text-gray-400 mt-2">

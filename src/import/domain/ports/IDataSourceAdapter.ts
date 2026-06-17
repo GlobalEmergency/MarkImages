@@ -164,7 +164,7 @@ export interface IDataSourceAdapter {
 
   /**
    * Obtiene el número total de registros sin descargarlos
-   * Útil para mostrar progreso y estimar tiempo
+   * Ãštil para mostrar progreso y estimar tiempo
    *
    * @param config Configuración de la fuente
    * @returns Número total de registros

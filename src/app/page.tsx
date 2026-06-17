@@ -67,6 +67,7 @@ export default function Home() {
   const [addressSuggestions, setAddressSuggestions] = useState<GeocodingResult[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
 
   const {
     trackSearch,
@@ -100,6 +101,7 @@ export default function Home() {
         const data: GeocodingResult[] = await response.json();
         setAddressSuggestions(data.slice(0, 5)); // Limit to 5 suggestions
         setShowSuggestions(true);
+        setActiveSuggestionIndex(-1);
       }
     } catch (err) {
       console.error("Error fetching suggestions:", err);
@@ -116,6 +118,7 @@ export default function Home() {
       } else {
         setAddressSuggestions([]);
         setShowSuggestions(false);
+        setActiveSuggestionIndex(-1);
       }
     }, 500);
 
@@ -158,6 +161,13 @@ export default function Home() {
     }
   };
 
+  // Helper to calculate distance text for AEDs
+  const calculateDistanceText = (aed: NearbyAed) => {
+    return aed.distance < 1
+      ? `${Math.round(aed.distance * 1000)} m`
+      : `${aed.distance.toFixed(1)} km`;
+  };
+
   // Handle when user drags the search location marker
   const handleSearchLocationChange = (location: { lat: number; lng: number }) => {
     setSearchLocation(location);
@@ -174,12 +184,40 @@ export default function Home() {
     setAddress(suggestion.display_name);
     setShowSuggestions(false);
     setAddressSuggestions([]);
+    setActiveSuggestionIndex(-1);
 
     // Immediately search for DEAs at this location
     const lat = parseFloat(suggestion.lat);
     const lng = parseFloat(suggestion.lon);
     setSearchLocation({ lat, lng });
     await searchNearbyAeds(lat, lng);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || addressSuggestions.length === 0) return;
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setActiveSuggestionIndex((prev) =>
+          prev < addressSuggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setActiveSuggestionIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        break;
+      case "Enter":
+        if (activeSuggestionIndex >= 0) {
+          e.preventDefault();
+          handleSuggestionClick(addressSuggestions[activeSuggestionIndex], activeSuggestionIndex);
+        }
+        break;
+      case "Escape":
+        setShowSuggestions(false);
+        setActiveSuggestionIndex(-1);
+        break;
+    }
   };
 
   const handleFindNearestByGeolocation = async () => {
@@ -308,6 +346,7 @@ export default function Home() {
     setSearchLocation(null);
     setError(null);
     setAddress("");
+    setActiveSuggestionIndex(-1);
   };
 
   const handleMapMarkerClick = async (aed: { id: string; code: string; name: string }) => {
@@ -326,6 +365,25 @@ export default function Home() {
       console.error("Error fetching AED details:", error);
     }
   };
+
+  // Global Escape key listener to close panels and modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (modalOpen) {
+          handleCloseModal("escape");
+        } else if (showResults) {
+          handleClearSearch();
+        } else if (showSuggestions) {
+          setShowSuggestions(false);
+          setActiveSuggestionIndex(-1);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [modalOpen, showResults, showSuggestions]);
 
   return (
     <>
@@ -369,9 +427,19 @@ export default function Home() {
                   onFocus={() => {
                     if (addressSuggestions.length > 0) setShowSuggestions(true);
                   }}
+                  onKeyDown={handleKeyDown}
                   disabled={loading}
                   className="flex-1 outline-none text-gray-900 placeholder-gray-400 text-sm disabled:opacity-50"
                   autoComplete="off"
+                  role="combobox"
+                  aria-expanded={showSuggestions && addressSuggestions.length > 0}
+                  aria-autocomplete="list"
+                  aria-controls="address-suggestions-list"
+                  aria-haspopup="listbox"
+                  aria-activedescendant={
+                    activeSuggestionIndex >= 0 ? `suggestion-${activeSuggestionIndex}` : undefined
+                  }
+                  aria-label="Buscar dirección para localizar desfibriladores"
                 />
                 {loadingSuggestions && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
                 {address && !loadingSuggestions && (
@@ -382,7 +450,9 @@ export default function Home() {
                       setAddress("");
                       setShowSuggestions(false);
                       setAddressSuggestions([]);
+                      setActiveSuggestionIndex(-1);
                     }}
+                    aria-label="Limpiar búsqueda"
                     className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                   >
                     <X className="w-4 h-4 text-gray-400" />
@@ -390,26 +460,56 @@ export default function Home() {
                 )}
               </form>
 
+              {/* Región viva para lectores de pantalla */}
+              <div aria-live="polite" aria-atomic="true" className="sr-only">
+                {loading
+                  ? "Buscando desfibriladores cercanos..."
+                  : error
+                    ? `Error en la búsqueda: ${error}`
+                    : showResults && nearbyAeds.length > 0
+                      ? `Búsqueda completada. ${nearbyAeds.length} desfibriladores encontrados.`
+                      : showResults && nearbyAeds.length === 0
+                        ? "Búsqueda completada. No se encontraron resultados."
+                        : ""}
+              </div>
+
               {/* Address Suggestions Dropdown */}
               {showSuggestions && addressSuggestions.length > 0 && (
-                <div className="border-t border-gray-200 max-h-64 overflow-y-auto">
+                <ul
+                  id="address-suggestions-list"
+                  role="listbox"
+                  aria-label="Sugerencias de direcciones"
+                  className="border-t border-gray-200 max-h-64 overflow-y-auto"
+                >
                   {addressSuggestions.map((suggestion, index) => (
-                    <button
+                    <li
                       key={index}
-                      type="button"
-                      onClick={() => handleSuggestionClick(suggestion, index)}
-                      className="w-full p-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-2"
+                      id={`suggestion-${index}`}
+                      role="option"
+                      aria-selected={index === activeSuggestionIndex}
                     >
-                      <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900 truncate">{suggestion.display_name}</p>
-                        {suggestion.address.city && (
-                          <p className="text-xs text-gray-500 mt-0.5">{suggestion.address.city}</p>
-                        )}
-                      </div>
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSuggestionClick(suggestion, index)}
+                        className={`w-full p-3 text-left transition-colors flex items-start gap-2 ${
+                          index === activeSuggestionIndex ? "bg-gray-100" : "hover:bg-gray-50"
+                        }`}
+                      >
+                        <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-900 truncate">
+                            {suggestion.display_name}
+                          </p>
+                          {suggestion.address.city && (
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {suggestion.address.city}
+                            </p>
+                          )}
+                        </div>
+                      </button>
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
 
               {/* Geolocation Button - Visible on Desktop */}
@@ -417,6 +517,7 @@ export default function Home() {
                 <button
                   onClick={handleFindNearestByGeolocation}
                   disabled={loading}
+                  aria-label="Usar mi ubicación actual"
                   className="w-full p-3 flex items-center gap-3 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
                 >
                   {loading ? (
@@ -438,7 +539,10 @@ export default function Home() {
 
             {/* Error Message */}
             {error && (
-              <div className="mt-2 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2 shadow-lg">
+              <div
+                role="alert"
+                className="mt-2 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2 shadow-lg"
+              >
                 <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-red-800">{error}</p>
               </div>
@@ -453,6 +557,7 @@ export default function Home() {
           <button
             onClick={handleFindNearestByGeolocation}
             disabled={loading}
+            aria-label="Usar mi ubicación actual"
             className="bg-blue-600 text-white rounded-full shadow-2xl p-4 flex items-center gap-3 hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
           >
             {loading ? (
@@ -473,15 +578,19 @@ export default function Home() {
         {showResults && nearbyAeds.length > 0 && (
           <>
             {/* Desktop: Right Panel */}
-            <div className="hidden md:block absolute top-4 right-4 bottom-4 w-96 z-[1000]">
+            <section
+              role="region"
+              aria-label="Resultados de búsqueda"
+              className="hidden md:block absolute top-4 right-4 bottom-4 w-96 z-[1000]"
+            >
               <div className="bg-white rounded-xl shadow-2xl h-full flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-700">
                   <div className="text-white">
-                    <h3 className="font-bold text-lg">
+                    <h2 className="font-bold text-lg">
                       {nearbyAeds.length} DEA{nearbyAeds.length !== 1 ? "s" : ""} encontrado
                       {nearbyAeds.length !== 1 ? "s" : ""}
-                    </h3>
+                    </h2>
                     <p className="text-sm text-blue-100">Ordenados por distancia</p>
                   </div>
                   <button
@@ -499,15 +608,20 @@ export default function Home() {
                       key={aed.id}
                       aed={aed}
                       rank={index + 1}
+                      distanceText={calculateDistanceText(aed)}
                       onClick={() => handleCardClick(aed, index + 1)}
                     />
                   ))}
                 </div>
               </div>
-            </div>
+            </section>
 
             {/* Mobile: Bottom Sheet */}
-            <div className="md:hidden absolute bottom-0 left-0 right-0 z-[1000] max-h-[50vh]">
+            <section
+              role="region"
+              aria-label="Resultados de búsqueda"
+              className="md:hidden absolute bottom-0 left-0 right-0 z-[1000] max-h-[50vh]"
+            >
               <div className="bg-white rounded-t-2xl shadow-2xl overflow-hidden">
                 {/* Handle */}
                 <div className="p-2 flex justify-center">
@@ -517,9 +631,9 @@ export default function Home() {
                 {/* Header */}
                 <div className="px-4 pb-3 flex items-center justify-between border-b border-gray-200">
                   <div>
-                    <h3 className="font-bold text-lg text-gray-900">
+                    <h2 className="font-bold text-lg text-gray-900">
                       {nearbyAeds.length} DEA{nearbyAeds.length !== 1 ? "s" : ""}
-                    </h3>
+                    </h2>
                     <p className="text-sm text-gray-600">Ordenados por distancia</p>
                   </div>
                   <button
@@ -537,13 +651,14 @@ export default function Home() {
                       key={aed.id}
                       aed={aed}
                       rank={index + 1}
+                      distanceText={calculateDistanceText(aed)}
                       onClick={() => handleCardClick(aed, index + 1)}
                       compact
                     />
                   ))}
                 </div>
               </div>
-            </div>
+            </section>
           </>
         )}
 
@@ -570,7 +685,7 @@ export default function Home() {
       </div>
 
       {/* Info Section - After the map */}
-      <div className="bg-gradient-to-br from-gray-50 to-gray-100">
+      <div id="main-content" className="bg-gradient-to-br from-gray-50 to-gray-100 outline-none">
         <div className="container mx-auto px-4 py-16 space-y-16">
           {/* About Section */}
           <section className="max-w-4xl mx-auto">
@@ -586,7 +701,7 @@ export default function Home() {
 
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-white rounded-xl p-6 shadow-lg">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">¿Qué es DeaMap?</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Â¿Qué es DeaMap?</h3>
                 <p className="text-gray-700 leading-relaxed mb-3">
                   DeaMap es una plataforma colaborativa que permite localizar desfibriladores (DEAs)
                   cercanos en caso de emergencia cardíaca. Contamos con cobertura en España y planes
@@ -614,7 +729,7 @@ export default function Home() {
               </div>
 
               <div className="bg-white rounded-xl p-6 shadow-lg">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">¿Cómo funciona?</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Â¿Cómo funciona?</h3>
                 <p className="text-gray-700 leading-relaxed">
                   Utiliza la búsqueda por ubicación o dirección para encontrar los DEAs más cercanos
                   a ti. Cada DEA incluye información detallada sobre su ubicación, horarios de
@@ -623,7 +738,7 @@ export default function Home() {
               </div>
 
               <div className="bg-white rounded-xl p-6 shadow-lg">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">¿Por qué es importante?</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Â¿Por qué es importante?</h3>
                 <p className="text-gray-700 leading-relaxed">
                   En una emergencia cardíaca, cada segundo cuenta. Tener acceso rápido a un
                   desfibrilador puede salvar vidas. DeaMap facilita encontrar el equipo más cercano
@@ -659,7 +774,7 @@ export default function Home() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="text-center">
                   <MapPin className="w-8 h-8 mx-auto mb-3" />
-                  <p className="text-4xl font-bold mb-2">🇪🇸</p>
+                  <p className="text-4xl font-bold mb-2">ðŸ‡ªðŸ‡¸</p>
                   <p className="text-lg font-semibold">España</p>
                   <p className="text-sm text-blue-100 mt-1">Cobertura nacional</p>
                 </div>
@@ -671,7 +786,7 @@ export default function Home() {
                 </div>
                 <div className="text-center">
                   <Navigation className="w-8 h-8 mx-auto mb-3" />
-                  <p className="text-4xl font-bold mb-2">🇪🇺</p>
+                  <p className="text-4xl font-bold mb-2">ðŸ‡ªðŸ‡º</p>
                   <p className="text-lg font-semibold">Europa</p>
                   <p className="text-sm text-blue-100 mt-1">Próximamente</p>
                 </div>
@@ -690,11 +805,13 @@ export default function Home() {
 function NearbyAedCard({
   aed,
   rank,
+  distanceText,
   onClick,
   compact = false,
 }: {
   aed: NearbyAed;
   rank: number;
+  distanceText: string;
   onClick: () => void;
   compact?: boolean;
 }) {
@@ -703,13 +820,13 @@ function NearbyAedCard({
       ? aed.images[0].thumbnail_url || aed.images[0].processed_url || aed.images[0].original_url
       : null;
 
-  const distanceText =
-    aed.distance < 1 ? `${Math.round(aed.distance * 1000)} m` : `${aed.distance.toFixed(1)} km`;
+  const cardAriaLabel = `${rank}Âº más cercano: ${aed.name}, a ${distanceText}`;
 
   if (compact) {
     return (
       <button
         onClick={onClick}
+        aria-label={cardAriaLabel}
         className="w-full bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-all text-left"
       >
         <div className="flex items-start gap-3">
@@ -744,6 +861,7 @@ function NearbyAedCard({
   return (
     <button
       onClick={onClick}
+      aria-label={cardAriaLabel}
       className="w-full bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all text-left"
     >
       {/* Image or Gradient */}
@@ -795,7 +913,7 @@ function NearbyAedCard({
                 : "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)",
           }}
         >
-          <Navigation className="w-3 h-3" />
+          <Navigation className="w-3 h-3" aria-hidden="true" />
           {distanceText}
         </div>
 
@@ -804,7 +922,7 @@ function NearbyAedCard({
 
         {/* Location */}
         <div className="flex items-start gap-1 text-xs text-gray-600">
-          <MapPin className="w-3 h-3 flex-shrink-0 mt-0.5 text-red-500" />
+          <MapPin className="w-3 h-3 flex-shrink-0 mt-0.5 text-red-500" aria-hidden="true" />
           <p className="line-clamp-2">
             {aed.location.street_type} {aed.location.street_name} {aed.location.street_number}
           </p>
@@ -813,12 +931,12 @@ function NearbyAedCard({
         {/* Schedule */}
         {aed.schedule && (
           <div className="flex items-center gap-1 text-xs text-gray-600">
-            <Clock className="w-3 h-3 flex-shrink-0 text-green-500" />
+            <Clock className="w-3 h-3 flex-shrink-0 text-green-500" aria-hidden="true" />
             <p>
               {aed.schedule.has_24h_surveillance
                 ? "24h"
                 : aed.schedule.weekday_opening && aed.schedule.weekday_closing
-                  ? `L-V: ${aed.schedule.weekday_opening}-${aed.schedule.weekday_closing}${aed.schedule.saturday_opening && aed.schedule.saturday_closing ? ` · S: ${aed.schedule.saturday_opening}-${aed.schedule.saturday_closing}` : ""}${aed.schedule.sunday_opening && aed.schedule.sunday_closing ? ` · D: ${aed.schedule.sunday_opening}-${aed.schedule.sunday_closing}` : ""}`
+                  ? `L-V: ${aed.schedule.weekday_opening}-${aed.schedule.weekday_closing}${aed.schedule.saturday_opening && aed.schedule.saturday_closing ? ` Â· S: ${aed.schedule.saturday_opening}-${aed.schedule.saturday_closing}` : ""}${aed.schedule.sunday_opening && aed.schedule.sunday_closing ? ` Â· D: ${aed.schedule.sunday_opening}-${aed.schedule.sunday_closing}` : ""}`
                   : "Horario no especificado"}
             </p>
           </div>
@@ -827,7 +945,7 @@ function NearbyAedCard({
         {/* Contact */}
         {aed.responsible && aed.responsible.phone && (
           <div className="flex items-center gap-1 text-xs text-gray-600">
-            <Phone className="w-3 h-3 flex-shrink-0 text-blue-500" />
+            <Phone className="w-3 h-3 flex-shrink-0 text-blue-500" aria-hidden="true" />
             <p>{aed.responsible.phone}</p>
           </div>
         )}

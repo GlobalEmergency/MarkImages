@@ -200,7 +200,7 @@ export interface AedChangeProposal {
   proposed_at: Date;
 
   change_type: ProposalChangeType;
-  proposed_changes: Record<string, any>; // JSON
+  proposed_changes: Record<string, unknown>; // JSON
   attached_images: string[];
 
   status: ProposalStatus;
@@ -355,7 +355,7 @@ export interface CreateVerificationRequest {
 export interface CreateChangeProposalRequest {
   aed_id: string;
   change_type: ProposalChangeType;
-  proposed_changes: Record<string, any>;
+  proposed_changes: Record<string, unknown>;
   attached_images?: string[];
 }
 

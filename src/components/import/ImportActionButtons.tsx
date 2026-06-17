@@ -91,7 +91,7 @@ export default function ImportActionButtons({
             </button>
           ) : (
             <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-1.5">
-              <span className="text-xs text-red-800 font-medium hidden sm:inline">¿Seguro?</span>
+              <span className="text-xs text-red-800 font-medium hidden sm:inline">Â¿Seguro?</span>
               <div className="flex gap-1">
                 <button
                   onClick={handleCancelConfirm}

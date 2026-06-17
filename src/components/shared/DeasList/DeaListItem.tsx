@@ -66,7 +66,7 @@ export function DeaListItem({ dea, adminMode = false }: DeaListItemProps) {
       <div className="mb-3 md:mb-0">
         <p className="text-sm text-gray-600 line-clamp-2 md:line-clamp-1">
           {dea.address}
-          {dea.city && ` • ${dea.city}`}
+          {dea.city && ` â€¢ ${dea.city}`}
         </p>
       </div>
 

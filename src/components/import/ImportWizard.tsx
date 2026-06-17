@@ -54,10 +54,10 @@ export default function ImportWizard({
   const needsOrgSelection = !isGlobalAdmin && organizations.length > 0;
 
   const steps = [
-    { id: "upload", label: "Subir CSV", icon: "📤" },
-    { id: "preview", label: "Preview", icon: "👁️" },
-    { id: "mapping", label: "Mapear Columnas", icon: "🔗" },
-    { id: "validation", label: "Validación", icon: "✓" },
+    { id: "upload", label: "Subir CSV", icon: "ðŸ“¤" },
+    { id: "preview", label: "Preview", icon: "ðŸ‘ï¸" },
+    { id: "mapping", label: "Mapear Columnas", icon: "ðŸ”—" },
+    { id: "validation", label: "Validación", icon: "âœ“" },
   ];
 
   const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
@@ -98,7 +98,7 @@ export default function ImportWizard({
   const handleValidationComplete = (validation: any) => {
     setSessionData((prev: any) => ({ ...prev, validation }));
     if (!(validation.validation?.isValid && validation.summary?.errors === 0)) {
-      toast.error("❌ Hay errores que deben corregirse antes de importar");
+      toast.error("âŒ Hay errores que deben corregirse antes de importar");
     }
   };
 
@@ -125,7 +125,7 @@ export default function ImportWizard({
     localStorage.setItem(importKey, "true");
 
     try {
-      toast.loading("🚀 Iniciando importación...", { id: "import-start" });
+      toast.loading("ðŸš€ Iniciando importación...", { id: "import-start" });
 
       // Llamar al API para iniciar la importación
       const response = await fetch("/api/import", {
@@ -476,7 +476,7 @@ function ValidationStep({
               >
                 {validationResult.validation?.isValid && validationResult.summary?.errors === 0
                   ? "✅ Validación exitosa"
-                  : "❌ Se encontraron errores"}
+                  : "âŒ Se encontraron errores"}
               </h3>
               <p
                 className={`text-sm ${
@@ -550,7 +550,7 @@ function ValidationStep({
                     </>
                   ) : (
                     <>
-                      <span className="text-2xl">🚀</span>
+                      <span className="text-2xl">ðŸš€</span>
                       <span>Iniciar Importación</span>
                     </>
                   )}
@@ -599,7 +599,7 @@ function FileUploadZone({ onFileSelect }: { onFileSelect: (file: File) => void }
       />
       <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center space-y-4">
         <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-          <span className="text-4xl">📤</span>
+          <span className="text-4xl">ðŸ“¤</span>
         </div>
         <div>
           <p className="text-lg font-medium text-gray-700">Arrastra tu archivo CSV aquí</p>

@@ -88,7 +88,7 @@ export default function OrgSelector() {
                         {org.name}
                       </p>
                       <p className="text-xs text-gray-600 truncate">
-                        {org.type} • {org.role}
+                        {org.type} â€¢ {org.role}
                       </p>
                     </div>
                     {isSelected && <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />}

@@ -127,7 +127,7 @@ export default function SharePointCookiesModal({
           onCookiesValidated(parsedCookies);
         }, 1000);
       } else {
-        toast.error("❌ Cookies inválidas");
+        toast.error("âŒ Cookies inválidas");
       }
     } catch (error) {
       const errorResult: ValidationResult = {
@@ -156,7 +156,7 @@ export default function SharePointCookiesModal({
         <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <span className="text-2xl">🔐</span>
+              <span className="text-2xl">ðŸ”</span>
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">
@@ -185,7 +185,7 @@ export default function SharePointCookiesModal({
               <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-blue-900 mb-2">
-                  ¿Por qué necesitamos las cookies?
+                  Â¿Por qué necesitamos las cookies?
                 </p>
                 <p className="text-sm text-blue-800">
                   Tu CSV contiene enlaces a imágenes almacenadas en SharePoint. Para poder
@@ -218,7 +218,7 @@ export default function SharePointCookiesModal({
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-5">
               <div className="flex items-start space-x-3 mb-3">
                 <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
-                  <span className="text-2xl">🖼️</span>
+                  <span className="text-2xl">ðŸ–¼ï¸</span>
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-gray-900 mb-1">
@@ -237,7 +237,7 @@ export default function SharePointCookiesModal({
                 rel="noopener noreferrer"
                 className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02] mb-3"
               >
-                <span>🔗 Abrir imagen en SharePoint</span>
+                <span>ðŸ”— Abrir imagen en SharePoint</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
@@ -260,7 +260,7 @@ export default function SharePointCookiesModal({
           {/* Instrucciones */}
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <p className="text-sm font-medium text-gray-900 mb-3">
-              📋 Cómo obtener las cookies de SharePoint:
+              ðŸ“‹ Cómo obtener las cookies de SharePoint:
             </p>
             <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
               <li>Abre SharePoint en tu navegador e inicia sesión</li>
@@ -294,7 +294,7 @@ export default function SharePointCookiesModal({
               disabled={isValidating || (validationResult?.valid ?? false)}
             />
             <p className="mt-2 text-xs text-gray-500">
-              💡 <strong>Tip:</strong> Solo se extraerán las cookies FedAuth y rtFa, las demás se
+              ðŸ’¡ <strong>Tip:</strong> Solo se extraerán las cookies FedAuth y rtFa, las demás se
               ignorarán
             </p>
           </div>
@@ -305,9 +305,9 @@ export default function SharePointCookiesModal({
               <p className="text-sm font-medium text-green-900 mb-2">✅ Cookies detectadas:</p>
               <div className="text-xs text-green-800 space-y-1 font-mono">
                 {parsedCookies.FedAuth && (
-                  <p>• FedAuth: {parsedCookies.FedAuth.substring(0, 50)}...</p>
+                  <p>â€¢ FedAuth: {parsedCookies.FedAuth.substring(0, 50)}...</p>
                 )}
-                {parsedCookies.rtFa && <p>• rtFa: {parsedCookies.rtFa.substring(0, 50)}...</p>}
+                {parsedCookies.rtFa && <p>â€¢ rtFa: {parsedCookies.rtFa.substring(0, 50)}...</p>}
               </div>
             </div>
           )}
@@ -316,7 +316,7 @@ export default function SharePointCookiesModal({
           {cookiesInput && !parsedCookies && !validationResult && (
             <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-sm font-medium text-red-900">
-                ❌ No se detectaron FedAuth o rtFa en el texto pegado
+                âŒ No se detectaron FedAuth o rtFa en el texto pegado
               </p>
               <p className="text-xs text-red-700 mt-1">
                 Asegúrate de copiar las cookies en formato:{" "}
@@ -353,16 +353,16 @@ export default function SharePointCookiesModal({
                   {!validationResult.valid && validationResult.details && (
                     <div className="mt-2 text-xs text-red-700 space-y-1">
                       {validationResult.details.statusCode && (
-                        <p>• Status Code: {validationResult.details.statusCode}</p>
+                        <p>â€¢ Status Code: {validationResult.details.statusCode}</p>
                       )}
                       {validationResult.details.redirectedToLogin && (
-                        <p>• Redirigido a página de login</p>
+                        <p>â€¢ Redirigido a página de login</p>
                       )}
                       {validationResult.details.contentType && (
-                        <p>• Content-Type: {validationResult.details.contentType}</p>
+                        <p>â€¢ Content-Type: {validationResult.details.contentType}</p>
                       )}
                       {validationResult.details.error && (
-                        <p>• Error: {validationResult.details.error}</p>
+                        <p>â€¢ Error: {validationResult.details.error}</p>
                       )}
                     </div>
                   )}
@@ -395,7 +395,7 @@ export default function SharePointCookiesModal({
             ) : validationResult?.valid ? (
               <>
                 <CheckCircle className="w-5 h-5" />
-                <span>Validado ✓</span>
+                <span>Validado âœ“</span>
               </>
             ) : (
               <span>Validar Cookies</span>

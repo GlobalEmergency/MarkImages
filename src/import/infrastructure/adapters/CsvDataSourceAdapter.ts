@@ -78,7 +78,6 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
     const cached = this.dataCache.get(url);
     if (cached) return cached;
 
-    console.log(`📥 Descargando CSV desde: ${url}`);
     const response = await this.fetchWithRetry(url);
     const text = config.encoding
       ? new TextDecoder(config.encoding).decode(await response.arrayBuffer())
@@ -87,13 +86,9 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
     const { records, errors } = this.csvParser.parseToRecords(text, config.csvDelimiter);
 
     if (errors.length > 0) {
-      console.warn(
-        `⚠️ ${errors.length} errores de parseo CSV (primeros 3):`,
-        errors.slice(0, 3).map((e) => e.message)
-      );
+      // Non-critical parsing errors (no action)
     }
 
-    console.log(`📊 CSV parseado: ${records.length} registros`);
     this.dataCache.set(url, records);
     return records;
   }
@@ -110,8 +105,6 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
       const fieldMappings = config.fieldMappings || {};
       const externalIdField = this.resolveExternalIdField(records, config);
 
-      console.log(`📋 Procesando ${records.length} registros CSV, ID field: '${externalIdField}'`);
-
       for (let i = 0; i < records.length; i++) {
         const { record: enriched, mappings } = await enrichRecordIfNeeded(
           records[i],
@@ -121,7 +114,7 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
         yield ImportRecord.fromApiRecord(enriched, mappings, i, externalIdField);
 
         if ((i + 1) % 1000 === 0) {
-          console.log(`📥 Procesados ${i + 1}/${records.length} registros...`);
+          // Heartbeat (no action)
         }
       }
     } else {
@@ -131,7 +124,6 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
       }
     }
 
-    console.log(`✅ Procesamiento CSV completado: ${records.length} registros`);
     this.clearCache();
   }
 
@@ -314,7 +306,6 @@ export class CsvDataSourceAdapter implements IDataSourceAdapter {
       return response;
     } catch (error) {
       if (attempt < this.maxRetries) {
-        console.warn(`⚠️ Intento ${attempt}/${this.maxRetries} fallido, reintentando...`);
         await new Promise((r) => setTimeout(r, this.retryDelayMs * attempt));
         return this.fetchWithRetry(url, attempt + 1);
       }

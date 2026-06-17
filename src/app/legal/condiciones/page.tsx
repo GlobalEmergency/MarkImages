@@ -13,7 +13,7 @@ export default function TermsOfServicePage() {
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-sm p-6 sm:p-10">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Condiciones de Uso</h1>
-        <p className="text-sm text-gray-500 mb-8">Última actualización: 4 de marzo de 2026</p>
+        <p className="text-sm text-gray-500 mb-8">Ãšltima actualización: 4 de marzo de 2026</p>
 
         <div className="prose prose-gray max-w-none space-y-6 text-gray-700 text-sm leading-relaxed">
           <section>

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AED Record Processor — @batchactions/import RecordProcessorFn
  *
  * Función callback que procesa un registro validado y crea las entidades

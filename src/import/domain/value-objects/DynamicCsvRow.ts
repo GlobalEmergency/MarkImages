@@ -144,7 +144,7 @@ export class DynamicCsvRow {
   }
 
   // ============================================
-  // IMÁGENES Y DESCRIPCIÓN
+  // IMÁGENES Y DESCRIPCIÃ“N
   // ============================================
 
   get photo1Url(): string | null {

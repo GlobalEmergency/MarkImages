@@ -66,7 +66,7 @@ const SINGLE_DAY_RE = /\b(Mo|Di|Mi|Do|Fr|Sa|So)\b/gi;
 const PATTERN_24H = /(?:24\s*[-/]\s*365|rund\s+um\s+die\s+uhr|24\s*h|24\s*stunden|durchgehend)/i;
 
 /** Unavailable patterns */
-const PATTERN_UNAVAILABLE = /nicht\s+erreichbar|geschlossen|kein\s+zugang|nicht\s+zug[äa]nglich/i;
+const PATTERN_UNAVAILABLE = /nicht\s+erreichbar|geschlossen|kein\s+zugang|nicht\s+zug[Ã¤a]nglich/i;
 
 export class GermanScheduleParser implements IFieldTransformer {
   readonly name = "german-schedule";

@@ -235,7 +235,7 @@ export default function AdminClustersPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Última actualización</p>
+                  <p className="text-sm text-gray-500">Ãšltima actualización</p>
                   <p className="text-lg font-semibold text-gray-900">
                     {cacheStatus?.metadata
                       ? new Date(cacheStatus.metadata.last_regenerated).toLocaleString("es-ES")

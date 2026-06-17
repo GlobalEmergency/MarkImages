@@ -101,7 +101,6 @@ export default function VerifyPage({ params }: VerifyPageProps) {
 
   const fetchVerificationData = async () => {
     try {
-      console.log("=== Fetching verification data ===");
       const response = await fetch(`/api/verify/${resolvedParams.id}`);
 
       if (!response.ok) {
@@ -112,12 +111,8 @@ export default function VerifyPage({ params }: VerifyPageProps) {
       }
 
       const responseData = await response.json();
-      console.log("=== Verification data received ===");
-      console.log("Current step from API:", responseData.current_step);
-      console.log("Full response data:", responseData);
 
       setData(responseData);
-      console.log("=== State updated with new data ===");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");
     } finally {
@@ -348,9 +343,6 @@ export default function VerifyPage({ params }: VerifyPageProps) {
 
   const renderStepContent = () => {
     if (!data) return null;
-
-    console.log("=== Rendering step content ===");
-    console.log("Current step:", data.current_step);
 
     const stepConfig = VERIFICATION_STEPS_CONFIG[data.current_step];
 

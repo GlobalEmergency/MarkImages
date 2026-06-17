@@ -69,7 +69,7 @@ export default function NewSimpleDeaPage() {
     scheduleDescription: "",
   });
 
-  // ── Hooks ─────────────────────────────────────────────────────
+  // â”€â”€ Hooks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const handlePositionObtained = useCallback((lat: number, lng: number) => {
     setFormData((prev) => ({
@@ -121,7 +121,7 @@ export default function NewSimpleDeaPage() {
     }
   }, [formData, formStarted, trackFormStart]);
 
-  // ── Handlers ──────────────────────────────────────────────────
+  // â”€â”€ Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -195,14 +195,14 @@ export default function NewSimpleDeaPage() {
     router.push("/");
   };
 
-  // ── Derived state ─────────────────────────────────────────────
+  // â”€â”€ Derived state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const hasCoords = !!(formData.latitude && formData.longitude);
   const hasAddress = !!(formData.street && formData.city);
   const canProceedToStep2 = hasCoords || hasAddress;
   const canSubmit = formData.name.trim().length >= 2;
 
-  // ── Render ────────────────────────────────────────────────────
+  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -243,14 +243,14 @@ export default function NewSimpleDeaPage() {
           </div>
         )}
 
-        {/* ── STEP 1: Location ─────────────────────────────── */}
+        {/* â”€â”€ STEP 1: Location â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {step === 1 && (
           <div className="space-y-5">
             <div className="text-center mb-2">
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100 mb-3">
                 <MapPin className="w-6 h-6 text-emerald-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">¿Dónde está el DEA?</h2>
+              <h2 className="text-xl font-bold text-gray-900">Â¿Dónde está el DEA?</h2>
               <p className="text-sm text-gray-500 mt-1">
                 Usa tu ubicación actual o marca el punto en el mapa
               </p>
@@ -315,7 +315,7 @@ export default function NewSimpleDeaPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Nº</label>
+                  <label className="block text-xs text-gray-500 mb-1">NÂº</label>
                   <input
                     type="text"
                     name="number"
@@ -377,7 +377,7 @@ export default function NewSimpleDeaPage() {
           </div>
         )}
 
-        {/* ── STEP 2: Details ──────────────────────────────── */}
+        {/* â”€â”€ STEP 2: Details â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {step === 2 && (
           <div className="space-y-5">
             <div className="text-center mb-2">
@@ -572,7 +572,7 @@ export default function NewSimpleDeaPage() {
                 <div className="px-4 pb-4 space-y-3 border-t border-gray-100 pt-3">
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">
-                      ¿Cómo se accede al DEA?
+                      Â¿Cómo se accede al DEA?
                     </label>
                     <textarea
                       name="accessDescription"
@@ -677,7 +677,7 @@ export default function NewSimpleDeaPage() {
         )}
       </div>
 
-      {/* ── Success Modal ────────────────────────────────────── */}
+      {/* â”€â”€ Success Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {showSuccess && (
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-modal-backdrop p-4"
@@ -702,7 +702,7 @@ export default function NewSimpleDeaPage() {
               </svg>
             </div>
 
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">¡Gracias por tu aporte!</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">Â¡Gracias por tu aporte!</h2>
 
             <p className="text-gray-500 mb-6 leading-relaxed">
               El DEA ha sido registrado y está pendiente de verificación.{" "}

@@ -6,8 +6,8 @@
  * con la ubicación específica del DEA, separados por ":"
  *
  * Ejemplos reales (Santa Cruz de Tenerife):
- *   "EL CORTE INGLÉS TENERIFE: Reserva"
- *     → name: EL CORTE INGLÉS TENERIFE, specificLocation: Reserva
+ *   "EL CORTE INGLÃ‰S TENERIFE: Reserva"
+ *     → name: EL CORTE INGLÃ‰S TENERIFE, specificLocation: Reserva
  *   "C.C. MERIDIANO: Planta galería, junto a plaza de Cortefiel"
  *     → name: C.C. MERIDIANO, specificLocation: Planta galería, junto a plaza de Cortefiel
  *   "BANCO DE ESPAÑA: Entrada instalaciones"

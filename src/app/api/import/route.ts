@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Import Batches API
  *
  * GET /api/import - List import batches (filtered by AED_CSV_IMPORT type)
@@ -229,7 +229,6 @@ export async function POST(request: NextRequest) {
     );
 
     if (!isPathSafe) {
-      console.warn(`🚫 [Import] Rejected unsafe filePath: ${filePath} (resolved: ${resolvedPath})`);
       return NextResponse.json(
         { error: "filePath debe estar dentro del directorio temporal" },
         { status: 400 }
@@ -237,7 +236,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Upload CSV file to S3 for persistent storage
-    console.log(`ðŸ“¤ [Import] Uploading CSV to S3: ${filePath}`);
 
     let s3Url: string;
     let fileSize: number;
@@ -260,13 +258,8 @@ export async function POST(request: NextRequest) {
         prefix: "batch-jobs/csv-imports",
       });
 
-      console.log(
-        `âœ… [Import] CSV uploaded to S3: ${s3Url} (${fileSize} bytes, hash: ${fileHash.substring(0, 8)}...)`
-      );
-
       // Clean up temporary file
       await fs.unlink(filePath);
-      console.log(`ðŸ—‘ï¸ [Import] Temporary file deleted: ${filePath}`);
     } catch (error) {
       console.error(`âŒ [Import] Failed to upload CSV to S3:`, error);
       return NextResponse.json(
@@ -275,7 +268,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Preparar auth SharePoint si se proporcionÃ³
+    // Preparar auth SharePoint si se proporcionó
     const sharePointAuth = sharepointCookies
       ? {
           fedAuth: sharepointCookies.FedAuth || "",
@@ -283,8 +276,7 @@ export async function POST(request: NextRequest) {
         }
       : undefined;
 
-    // Iniciar importaciÃ³n con @batchactions/import â€” procesa primer chunk inline
-    console.log(`ðŸš€ [Import] Starting import with @batchactions/import for ${fileName}`);
+    // Iniciar importación con @batchactions/import — procesa primer chunk inline
 
     const service = getBulkImportService();
     const result = await service.startImport({
@@ -319,12 +311,6 @@ export async function POST(request: NextRequest) {
 
     const hasMore = !result.chunk.done;
 
-    console.log(
-      `ðŸ“‹ [Import] Job ${result.jobId} â€” first chunk processed: ` +
-        `${result.progress.processedRecords}/${result.progress.totalRecords} records ` +
-        `(${hasMore ? "more chunks pending" : "completed"})`
-    );
-
     return NextResponse.json({
       success: true,
       batchId: result.jobId,
@@ -341,14 +327,14 @@ export async function POST(request: NextRequest) {
         hasMore,
       },
       message: hasMore
-        ? "Primer lote procesado. Los siguientes se procesarÃ¡n automÃ¡ticamente."
-        : "ImportaciÃ³n completada.",
+        ? "Primer lote procesado. Los siguientes se procesarán automáticamente."
+        : "Importación completada.",
     });
   } catch (error) {
     console.error("Error creating import batch:", error);
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Error al crear la importaciÃ³n",
+        error: error instanceof Error ? error.message : "Error al crear la importación",
       },
       { status: 500 }
     );

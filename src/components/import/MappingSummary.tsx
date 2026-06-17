@@ -41,7 +41,7 @@ export default function MappingSummary({ summary }: MappingSummaryProps) {
           )}
           <div>
             <h3 className="font-bold text-gray-900">
-              {canProceed ? "¡Listo para continuar!" : "Mapeo incompleto"}
+              {canProceed ? "Â¡Listo para continuar!" : "Mapeo incompleto"}
             </h3>
             <p className="text-sm text-gray-600">
               {canProceed

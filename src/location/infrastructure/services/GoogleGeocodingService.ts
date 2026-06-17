@@ -41,13 +41,11 @@ export class GoogleGeocodingService implements IGeocodingService {
   constructor(apiKey?: string) {
     this.apiKey = apiKey || process.env.GOOGLE_MAPS_API_KEY || "";
 
-    if (!this.apiKey) {
-      console.warn("[GoogleGeocodingService] ⚠️ No API key provided. Geocoding will not work.");
-    } else {
+    if (this.apiKey) {
       // Log que el servicio está configurado (sin mostrar la key completa)
       const maskedKey =
         this.apiKey.substring(0, 8) + "..." + this.apiKey.substring(this.apiKey.length - 4);
-      console.log(`[GoogleGeocodingService] ✅ Initialized with API key: ${maskedKey}`);
+      console.log(`[GoogleGeocodingService] Initialized with key: ${maskedKey}`);
     }
   }
 
@@ -63,13 +61,10 @@ export class GoogleGeocodingService implements IGeocodingService {
     try {
       // Validate address
       if (!address || address.trim() === "" || address.trim() === "España") {
-        console.warn(`[GoogleGeocodingService] Invalid or empty address: "${address}"`);
         return null;
       }
 
       const url = `${this.baseUrl}?address=${encodeURIComponent(address)}&key=${this.apiKey}&language=es&region=es`;
-
-      console.log(`[GoogleGeocodingService] Geocoding address: ${address}`);
 
       const response = await fetch(url);
 
@@ -83,9 +78,7 @@ export class GoogleGeocodingService implements IGeocodingService {
       const data: GoogleGeocodeResponse = await response.json();
 
       if (data.status !== "OK") {
-        if (data.status === "ZERO_RESULTS") {
-          console.warn(`[GoogleGeocodingService] No results for address: ${address}`);
-        } else {
+        if (data.status !== "ZERO_RESULTS") {
           console.error(
             `[GoogleGeocodingService] API error: ${data.status} - ${data.error_message || "Unknown error"}`
           );
@@ -94,14 +87,10 @@ export class GoogleGeocodingService implements IGeocodingService {
       }
 
       if (!data.results || data.results.length === 0) {
-        console.warn(`[GoogleGeocodingService] Empty results for address: ${address}`);
         return null;
       }
 
       const result = this.mapGoogleResult(data.results[0]);
-      console.log(
-        `[GoogleGeocodingService] Found: ${result.formatted_address} (${result.coordinates.latitude}, ${result.coordinates.longitude})`
-      );
 
       return result;
     } catch (error) {
@@ -122,8 +111,6 @@ export class GoogleGeocodingService implements IGeocodingService {
     try {
       const url = `${this.baseUrl}?latlng=${latitude},${longitude}&key=${this.apiKey}&language=es&region=es`;
 
-      console.log(`[GoogleGeocodingService] Reverse geocoding: ${latitude}, ${longitude}`);
-
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -136,11 +123,7 @@ export class GoogleGeocodingService implements IGeocodingService {
       const data: GoogleGeocodeResponse = await response.json();
 
       if (data.status !== "OK") {
-        if (data.status === "ZERO_RESULTS") {
-          console.warn(
-            `[GoogleGeocodingService] No results for coordinates: ${latitude}, ${longitude}`
-          );
-        } else {
+        if (data.status !== "ZERO_RESULTS") {
           console.error(
             `[GoogleGeocodingService] API error: ${data.status} - ${data.error_message || "Unknown error"}`
           );
@@ -149,9 +132,6 @@ export class GoogleGeocodingService implements IGeocodingService {
       }
 
       if (!data.results || data.results.length === 0) {
-        console.warn(
-          `[GoogleGeocodingService] Empty results for coordinates: ${latitude}, ${longitude}`
-        );
         return null;
       }
 

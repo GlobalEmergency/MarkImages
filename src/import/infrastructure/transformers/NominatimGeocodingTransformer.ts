@@ -91,9 +91,6 @@ export class NominatimGeocodingTransformer implements IFieldTransformer {
 
       // Primera llamada exitosa → log disponibilidad
       if (!this.hasLoggedAvailability) {
-        console.log(
-          `✅ nominatim-geocode: servicio disponible en ${NOMINATIM_HOST}:${NOMINATIM_PORT}`
-        );
         this.hasLoggedAvailability = true;
         this.hasLoggedUnavailability = false;
       }
@@ -102,7 +99,7 @@ export class NominatimGeocodingTransformer implements IFieldTransformer {
     } catch (error) {
       // Service unavailable → abrir circuit breaker
       console.error(
-        `❌ nominatim-geocode: error al geocodificar "${address}":`,
+        `âŒ nominatim-geocode: error al geocodificar "${address}":`,
         error instanceof Error ? error.message : error
       );
       this.openCircuit();
@@ -321,11 +318,6 @@ export class NominatimGeocodingTransformer implements IFieldTransformer {
     this.circuitOpenedAt = Date.now();
 
     if (!this.hasLoggedUnavailability) {
-      console.warn(
-        `⚠️ nominatim-geocode: servicio NO disponible en ${NOMINATIM_HOST}:${NOMINATIM_PORT}. ` +
-          `Los registros se guardarán sin coordenadas (fallback). ` +
-          `Se reintentará en ${CIRCUIT_BREAKER_COOLDOWN_MS / 1000 / 60} minutos.`
-      );
       this.hasLoggedUnavailability = true;
       this.hasLoggedAvailability = false;
     }
@@ -341,7 +333,7 @@ export class NominatimGeocodingTransformer implements IFieldTransformer {
     const elapsed = Date.now() - this.circuitOpenedAt;
     if (elapsed >= CIRCUIT_BREAKER_COOLDOWN_MS) {
       this.circuitOpen = false;
-      console.log(`🔄 nominatim-geocode: reintentando conexión tras cooldown...`);
+
       return false;
     }
 

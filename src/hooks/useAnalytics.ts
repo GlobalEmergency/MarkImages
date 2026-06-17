@@ -75,8 +75,7 @@ export function useAnalytics() {
     if (!isGtagAvailable()) {
       // Silently skip - GA is blocked or unavailable
       // Optionally log in development:
-      // if (process.env.NODE_ENV === "development") {
-      //   console.debug("[Analytics] GA not available, skipping event:", event.action);
+
       // }
       return;
     }
@@ -96,7 +95,7 @@ export function useAnalytics() {
   }, []);
 
   // =====================
-  // EVENTOS DE NAVEGACIÓN
+  // EVENTOS DE NAVEGACIÃ“N
   // =====================
 
   const trackNavClick = useCallback(
@@ -158,7 +157,7 @@ export function useAnalytics() {
   );
 
   // =====================
-  // EVENTOS DE BÚSQUEDA
+  // EVENTOS DE BÃšSQUEDA
   // =====================
 
   const trackSearch = useCallback(

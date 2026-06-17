@@ -111,7 +111,6 @@ export default function OrgMembersPage({ params }: { params: Promise<{ orgId: st
         <button
           className="p-3 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors active:scale-95 shadow-lg"
           onClick={() => {
-            // TODO: Implement add member functionality
             alert("Funcionalidad próximamente disponible");
           }}
         >

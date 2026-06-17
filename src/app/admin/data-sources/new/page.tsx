@@ -67,8 +67,8 @@ const REGION_CODES_BY_COUNTRY: Record<string, Array<{ value: string; label: stri
   ],
   FR: [
     { value: "FR", label: "Nacional" },
-    { value: "FR-IDF", label: "Île-de-France" },
-    { value: "FR-ARA", label: "Auvergne-Rhône-Alpes" },
+    { value: "FR-IDF", label: "ÃŽle-de-France" },
+    { value: "FR-ARA", label: "Auvergne-RhÃ´ne-Alpes" },
     { value: "FR-OCC", label: "Occitanie" },
     { value: "FR-NAQ", label: "Nouvelle-Aquitaine" },
     { value: "FR-PDL", label: "Pays de la Loire" },
@@ -78,7 +78,7 @@ const REGION_CODES_BY_COUNTRY: Record<string, Array<{ value: string; label: stri
     { value: "FR-NOR", label: "Normandie" },
     { value: "FR-CVL", label: "Centre-Val de Loire" },
     { value: "FR-BFC", label: "Bourgogne-Franche-Comté" },
-    { value: "FR-PAC", label: "Provence-Alpes-Côte d'Azur" },
+    { value: "FR-PAC", label: "Provence-Alpes-CÃ´te d'Azur" },
     { value: "FR-COR", label: "Corse" },
   ],
   IT: [
@@ -94,7 +94,7 @@ const REGION_CODES_BY_COUNTRY: Record<string, Array<{ value: string; label: stri
     { value: "DE", label: "Nacional" },
     { value: "DE-BY", label: "Bavaria" },
     { value: "DE-NW", label: "Nordrhein-Westfalen" },
-    { value: "DE-BW", label: "Baden-Württemberg" },
+    { value: "DE-BW", label: "Baden-WÃ¼rttemberg" },
     { value: "DE-NI", label: "Niedersachsen" },
     { value: "DE-HE", label: "Hessen" },
     { value: "DE-BE", label: "Berlin" },

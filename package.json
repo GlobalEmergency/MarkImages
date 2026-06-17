@@ -1,6 +1,6 @@
 {
   "name": "deamap",
-  "version": "2.0.0",
+  "version": "2.1.3",
   "private": true,
   "prisma": {
     "seed": "tsx prisma/seed.ts"

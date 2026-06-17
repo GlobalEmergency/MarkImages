@@ -31,7 +31,7 @@ function enqueueThrottle(): Promise<void> {
 export interface ReverseGeocodeResult {
   /** ISO 3166-1 alpha-2 country code (e.g., "ES", "FR", "DE") */
   countryCode: string;
-  /** First-level admin division (e.g., "Comunidad de Madrid", "Île-de-France") */
+  /** First-level admin division (e.g., "Comunidad de Madrid", "ÃŽle-de-France") */
   adminLevel1: string | null;
   /** City, town, or village name */
   city: string | null;
