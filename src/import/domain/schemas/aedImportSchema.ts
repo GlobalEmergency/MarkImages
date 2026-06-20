@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AED Import Schema for @batchactions/import
  *
  * Define la estructura de validaciÃ³n de los campos de importaciÃ³n de DEAs.
@@ -13,6 +13,7 @@ import {
   OPTIONAL_FIELDS,
   type FieldDefinition,
 } from "../value-objects/FieldDefinition";
+import { getTranslation as t } from "@/lib/i18n";
 
 // ============================================================
 // Custom validators reutilizables
@@ -28,9 +29,9 @@ function validatePostalCode(value: unknown): ValidationFieldResult {
   if (str.length !== 5 || !/^\d{5}$/.test(str)) {
     return {
       valid: false,
-      message: `El cÃ³digo postal "${str}" debe tener exactamente 5 dÃ­gitos numÃ©ricos`,
+      message: t("import_validation.invalid_postal_code"),
       severity: "warning",
-      suggestion: "Los cÃ³digos postales espaÃ±oles tienen 5 dÃ­gitos (ej: 28001, 28042)",
+      suggestion: t("import_validation.invalid_postal_code"),
       metadata: { value: str, expectedFormat: "DDDDD" },
     };
   }
@@ -50,19 +51,18 @@ function validateLatitude(value: unknown): ValidationFieldResult {
   if (isNaN(num)) {
     return {
       valid: false,
-      message: `La latitud "${str}" no es un nÃºmero vÃ¡lido`,
+      message: t("import_validation.invalid_latitude"),
       severity: "error",
-      suggestion:
-        "Usa formato decimal con punto (ej: 40.4165). Si usas coma, se convertirÃ¡ automÃ¡ticamente.",
+      suggestion: t("import_validation.invalid_latitude"),
     };
   }
 
   if (num < -90 || num > 90) {
     return {
       valid: false,
-      message: `La latitud ${num} estÃ¡ fuera del rango vÃ¡lido (-90 a 90)`,
+      message: t("import_validation.invalid_latitude"),
       severity: "error",
-      suggestion: "Para Madrid, la latitud debe estar cerca de 40.4",
+      suggestion: t("import_validation.invalid_latitude"),
       metadata: { value: num, min: -90, max: 90 },
     };
   }
@@ -83,19 +83,18 @@ function validateLongitude(value: unknown): ValidationFieldResult {
   if (isNaN(num)) {
     return {
       valid: false,
-      message: `La longitud "${str}" no es un nÃºmero vÃ¡lido`,
+      message: t("import_validation.invalid_longitude"),
       severity: "error",
-      suggestion:
-        "Usa formato decimal con punto (ej: -3.7038). Si usas coma, se convertirÃ¡ automÃ¡ticamente.",
+      suggestion: t("import_validation.invalid_longitude"),
     };
   }
 
   if (num < -180 || num > 180) {
     return {
       valid: false,
-      message: `La longitud ${num} estÃ¡ fuera del rango vÃ¡lido (-180 a 180)`,
+      message: t("import_validation.invalid_longitude"),
       severity: "error",
-      suggestion: "Para Madrid, la longitud debe estar cerca de -3.7",
+      suggestion: t("import_validation.invalid_longitude"),
       metadata: { value: num, min: -180, max: 180 },
     };
   }
@@ -113,9 +112,9 @@ function validateTimeFormat(value: unknown): ValidationFieldResult {
   if (!/^([01]?\d|2[0-3]):[0-5]\d$/.test(str)) {
     return {
       valid: false,
-      message: `"${str}" no tiene formato de hora vÃ¡lido (HH:MM)`,
+      message: t("import_validation.invalid_time"),
       severity: "warning",
-      suggestion: "Usa formato 24h (ej: 09:00, 18:30, 22:00)",
+      suggestion: t("import_validation.invalid_time"),
     };
   }
 
@@ -130,19 +129,19 @@ function validateName(value: unknown): ValidationFieldResult {
 
   if (str.length < 3) {
     return {
-      valid: true, // No bloquear, solo warning
-      message: `El nombre "${str}" es demasiado corto (mÃ­nimo 3 caracteres recomendado)`,
+      valid: true,
+      message: t("import_validation.name_too_short"),
       severity: "warning",
-      suggestion: "Proporciona un nombre mÃ¡s descriptivo",
+      suggestion: t("import_validation.name_too_short"),
     };
   }
 
   if (str.length > 255) {
     return {
       valid: false,
-      message: "El nombre es demasiado largo (mÃ¡ximo 255 caracteres)",
+      message: t("import_validation.name_too_long"),
       severity: "error",
-      suggestion: "Acorta el nombre del establecimiento",
+      suggestion: t("import_validation.name_too_long"),
     };
   }
 
@@ -160,9 +159,9 @@ function validateEmail(value: unknown): ValidationFieldResult {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str)) {
     return {
       valid: false,
-      message: `"${str}" no tiene un formato de email vÃ¡lido`,
+      message: t("import_validation.invalid_email"),
       severity: "warning",
-      suggestion: "Verifica el formato del email (ej: ejemplo@dominio.com)",
+      suggestion: t("import_validation.invalid_email"),
     };
   }
 
@@ -178,9 +177,9 @@ function validateUrl(value: unknown): ValidationFieldResult {
 
   const invalidUrlResult: ValidationFieldResult = {
     valid: false,
-    message: `"${str}" no es una URL válida`,
+    message: t("import_validation.invalid_url"),
     severity: "warning",
-    suggestion: "Las URLs deben comenzar con http:// o https://",
+    suggestion: t("import_validation.invalid_url"),
   };
 
   const isSharePointHost = (hostname: string): boolean => {
@@ -230,10 +229,10 @@ function validateBoolean(value: unknown): ValidationFieldResult {
 
   if (!validValues.includes(str)) {
     return {
-      valid: true, // No bloquear, solo warning
-      message: `"${value}" podrÃ­a no ser un valor booleano reconocido`,
+      valid: true,
+      message: t("import_validation.invalid_boolean"),
       severity: "warning",
-      suggestion: 'Usa "SÃ­"/"No", "true"/"false" o "1"/"0"',
+      suggestion: t("import_validation.invalid_boolean"),
     };
   }
 

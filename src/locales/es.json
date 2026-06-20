@@ -1,0 +1,64 @@
+{
+  "common": {
+    "app_name": "DeaMap",
+    "loading": "Cargando...",
+    "searching": "Buscando...",
+    "error_searching": "Error al buscar DEAs",
+    "use_my_location": "Usar mi ubicación",
+    "more_info": "Más información",
+    "meters_short": "m",
+    "kilometers_short": "km"
+  },
+  "home": {
+    "loading_map": "Cargando mapa...",
+    "sr_title": "Mapa de Desfibriladores (DEA) — Encuentra el más cercano en España y en todo el mundo",
+    "search_placeholder": "Buscar dirección...",
+    "error_empty_address": "Por favor, introduce una dirección",
+    "error_no_results": "No se encontraron DEAs cerca de esta ubicación en un radio de 10 km.",
+    "error_geocode": "Error al buscar la dirección",
+    "error_address_not_found": "No se encontró la dirección. Intenta con otra más específica.",
+    "error_geolocation_unavailable": "La geolocalización no está disponible en tu navegador",
+    "error_geolocation_denied": "Necesitas permitir el acceso a tu ubicación.",
+    "error_geolocation_error": "No se pudo determinar tu ubicación.",
+    "error_geolocation_timeout": "Tiempo de espera agotado.",
+    "results_count_one": "{{count}} DEA encontrado",
+    "results_count_other": "{{count}} DEAs encontrados",
+    "sorted_by_distance": "Ordenados por distancia",
+    "about": {
+      "title": "Sobre DeaMap",
+      "subtitle": "El mapa colaborativo de desfibriladores más completo de España",
+      "what_is_title": "¿Qué es DeaMap?",
+      "what_is_text": "DeaMap es una plataforma colaborativa que permite localizar desfibriladores (DEAs) cercanos en caso de emergencia cardíaca. Contamos con cobertura en España y planes de expansión a nivel europeo.",
+      "developed_by": "Proyecto desarrollado por",
+      "organization_desc": ", organización dedicada a mejorar la respuesta ante emergencias.",
+      "how_it_works_title": "¿Cómo funciona?",
+      "how_it_works_text": "Utiliza la búsqueda por ubicación o dirección para encontrar los DEAs más cercanos a ti. Cada DEA incluye información detallada sobre su ubicación, horarios de acceso y datos de contacto.",
+      "why_important_title": "¿Por qué es importante?",
+      "why_important_text": "En una emergencia cardíaca, cada segundo cuenta. Tener acceso rápido a un desfibrilador puede salvar vidas. DeaMap facilita encontrar el equipo más cercano cuando más se necesita.",
+      "collaborate_title": "Colabora con nosotros",
+      "collaborate_text": "Si conoces la ubicación de un DEA que no está en el mapa, puedes agregarlo fácilmente.",
+      "add_dea_button": "Agregar un DEA"
+    },
+    "coverage": {
+      "title": "Nuestra Cobertura",
+      "spain": "España",
+      "national_coverage": "Cobertura nacional",
+      "available": "Disponible",
+      "permanent_access": "Acceso permanente",
+      "europe": "Europa",
+      "coming_soon": "Próximamente"
+    }
+  },
+  "import_validation": {
+    "invalid_latitude": "La latitud es inv\u00E1lida. Debe ser un n\u00FAmero decimal entre -90 y 90 (ej: 40.4165).",
+    "invalid_longitude": "La longitud es inv\u00E1lida. Debe ser un n\u00FAmero decimal entre -180 y 180 (ej: -3.7038).",
+    "invalid_postal_code": "El c\u00F3digo postal es incorrecto. Para Espa\u00F1a, deben ser exactamente 5 d\u00EDgitos (ej: 28001).",
+    "invalid_email": "El formato del correo electr\u00F3nico no es v\u00E1lido (ejemplo correcto: contacto@empresa.com).",
+    "invalid_url": "El formato del enlace web no es v\u00E1lido (debe empezar por http:// o https://).",
+    "invalid_time": "El formato de hora no es v\u00E1lido. Usa el formato 24h HH:MM (ej: 09:00, 18:30).",
+    "name_too_short": "El nombre es demasiado corto. Se recomienda un m\u00EDnimo de 3 caracteres.",
+    "name_too_long": "El nombre es demasiado largo. El m\u00E1ximo son 255 caracteres.",
+    "invalid_boolean": "El valor no se reconoce como s\u00ED o no. Usa 'S\u00ED', 'No', 'true' o 'false'.",
+    "generic_error": "Error de validaci\u00F3n en este campo."
+  }
+}

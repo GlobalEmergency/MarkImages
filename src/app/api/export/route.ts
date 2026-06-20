@@ -151,6 +151,8 @@ export async function POST(request: NextRequest) {
         filters: body.filters ?? {},
         fields: body.fields ?? [],
         includeImages: body.includeImages ?? false,
+        useImportFormat: body.useImportFormat || body.filters?.useImportFormat || false,
+        delimiter: body.delimiter || ";",
         format,
         // Default values
         chunkSize: 500,

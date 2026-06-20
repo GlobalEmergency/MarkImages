@@ -23,6 +23,7 @@ export default function ExportDialog({ isOpen, onClose, onExport }: ExportDialog
   const [cityName, setCityName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [useImportFormat, setUseImportFormat] = useState(false);
 
   const statusOptions = AED_STATUS_OPTIONS;
 
@@ -59,6 +60,8 @@ export default function ExportDialog({ isOpen, onClose, onExport }: ExportDialog
       if (cityName.trim()) {
         filters.cityName = cityName.trim();
       }
+
+      filters.useImportFormat = useImportFormat;
 
       await onExport(name || "Exportación de DEAs", filters);
 
@@ -191,6 +194,26 @@ export default function ExportDialog({ isOpen, onClose, onExport }: ExportDialog
               disabled={loading}
             />
             <p className="text-xs text-gray-500 mt-1">Filtra los DEAs por nombre de ciudad</p>
+          </div>
+
+          {/* Opción de formato de importación */}
+          <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <input
+              type="checkbox"
+              id="useImportFormat"
+              checked={useImportFormat}
+              onChange={(e) => setUseImportFormat(e.target.checked)}
+              className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
+              disabled={loading}
+            />
+            <label htmlFor="useImportFormat" className="cursor-pointer">
+              <span className="block text-sm font-bold text-gray-900">
+                Formato de Importación (Completo)
+              </span>
+              <span className="block text-xs text-gray-500">
+                Exporta las 58 columnas compatibles con la plantilla de carga masiva.
+              </span>
+            </label>
           </div>
 
           {/* Info box */}
