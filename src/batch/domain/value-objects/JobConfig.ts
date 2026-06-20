@@ -72,12 +72,15 @@ export interface AedExportConfig extends BaseJobConfig {
     organizationId?: string;
     regionCode?: string;
     cityCode?: string;
+    cityName?: string; // Added for UI consistency
     dateFrom?: Date;
     dateTo?: Date;
   };
   fields: string[];
   includeImages: boolean;
   format: "csv" | "json";
+  useImportFormat?: boolean; // Habilita el formato full de 58 columnas
+  delimiter?: string; // Permite separador personalizado (por defecto ';')
   outputPath?: string;
 }
 

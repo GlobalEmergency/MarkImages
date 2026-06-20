@@ -16,34 +16,19 @@ import {
   AedExportConfig,
 } from "@/batch/domain";
 import { BatchJob } from "@/batch/domain/entities";
-import { PrismaClient, AedStatus } from "@/generated/client/client";
+import { PrismaClient, AedStatus, Prisma } from "@/generated/client/client";
 import * as fs from "fs";
 import * as path from "path";
+import { aedsToCsv, aedsToImportFormatCsv } from "@/lib/csv-export";
 
-interface AedRecord {
-  id: string;
-  name: string;
-  code: string | null;
-  status: string;
-  latitude: number | null;
-  longitude: number | null;
-  establishmentType: string | null;
-  location: {
-    streetName: string | null;
-    streetNumber: string | null;
-    postalCode: string | null;
-    cityName: string | null;
-    cityCode: string | null;
-    districtName: string | null;
-  } | null;
-  createdAt: Date;
-}
+// We will use the types from csv-export directly
+import { AedImportFormatData, AedExportData } from "@/lib/csv-export";
 
 export class AedExportProcessor extends BaseBatchJobProcessor<AedExportConfig> {
   readonly jobType = JobType.AED_CSV_EXPORT;
 
   private aedIds: string[] = [];
-  private exportedRecords: AedRecord[] = [];
+  private exportedRecords: (AedImportFormatData | AedExportData)[] = [];
   private outputPath: string = "";
 
   constructor(private readonly prisma: PrismaClient) {
@@ -121,34 +106,31 @@ export class AedExportProcessor extends BaseBatchJobProcessor<AedExportConfig> {
     const chunkIds = this.aedIds.slice(startIndex, endIndex);
 
     // Fetch AEDs in batch
+    // Fetch AEDs in batch with ALL necessary relations for deep fetch
     const aeds = await this.prisma.aed.findMany({
       where: { id: { in: chunkIds } },
       include: {
         location: true,
+        schedule: true,
+        responsible: true,
+        images: {
+          orderBy: { order: "asc" },
+          take: 6,
+        },
       },
     });
 
     for (const aed of aeds) {
       try {
-        const record: AedRecord = {
-          id: aed.id,
-          name: aed.name,
-          code: aed.code,
-          status: aed.status,
-          latitude: aed.latitude,
-          longitude: aed.longitude,
-          establishmentType: aed.establishment_type,
-          location: aed.location
-            ? {
-                streetName: aed.location.street_name,
-                streetNumber: aed.location.street_number,
-                postalCode: aed.location.postal_code,
-                cityName: aed.location.city_name,
-                cityCode: aed.location.city_code,
-                districtName: aed.location.district_name,
-              }
-            : null,
-          createdAt: aed.created_at,
+        // Prepare the record to be compatible with AedImportFormatData/AedExportData
+        const record = {
+          ...aed,
+          // Map relationships to match the expected structure if necessary
+          // Note: Prisma objects already have snake_case fields that match csv-export.ts expectations
+          images: aed.images.map((img) => ({
+            url: img.processed_url || img.original_url,
+            sequence: img.order,
+          })),
         };
 
         this.exportedRecords.push(record);
@@ -201,7 +183,7 @@ export class AedExportProcessor extends BaseBatchJobProcessor<AedExportConfig> {
       if (config.format === "json") {
         await this.writeJsonFile();
       } else {
-        await this.writeCsvFile(config.fields);
+        await this.writeCsvFile(job);
       }
 
       // Get file stats
@@ -233,73 +215,23 @@ export class AedExportProcessor extends BaseBatchJobProcessor<AedExportConfig> {
     fs.writeFileSync(this.outputPath, content, "utf-8");
   }
 
-  private async writeCsvFile(fields?: string[]): Promise<void> {
-    const allFields =
-      fields && fields.length > 0
-        ? fields
-        : [
-            "id",
-            "name",
-            "code",
-            "status",
-            "latitude",
-            "longitude",
-            "establishmentType",
-            "streetName",
-            "streetNumber",
-            "postalCode",
-            "cityName",
-            "cityCode",
-            "districtName",
-            "createdAt",
-          ];
+  private async writeCsvFile(job: BatchJob): Promise<void> {
+    const config = job.config as AedExportConfig;
+    const useImportFormat = config?.useImportFormat || false;
 
-    // Write header
-    const header = allFields.join(";");
-    let content = header + "\n";
+    let csvContent = "";
 
-    // Write records
-    for (const record of this.exportedRecords) {
-      const values = allFields.map((field) => {
-        let value: unknown;
-
-        if (
-          field.startsWith("location.") ||
-          [
-            "streetName",
-            "streetNumber",
-            "postalCode",
-            "cityName",
-            "cityCode",
-            "districtName",
-          ].includes(field)
-        ) {
-          const locationField = field.replace("location.", "");
-          value = record.location?.[locationField as keyof typeof record.location];
-        } else {
-          value = record[field as keyof AedRecord];
-        }
-
-        if (value === null || value === undefined) {
-          return "";
-        }
-
-        if (value instanceof Date) {
-          return value.toISOString();
-        }
-
-        const strValue = String(value);
-        // Escape quotes and wrap in quotes if contains delimiter
-        if (strValue.includes(";") || strValue.includes('"') || strValue.includes("\n")) {
-          return `"${strValue.replace(/"/g, '""')}"`;
-        }
-        return strValue;
-      });
-
-      content += values.join(";") + "\n";
+    if (useImportFormat) {
+      csvContent = aedsToImportFormatCsv(this.exportedRecords as AedImportFormatData[]);
+    } else {
+      // If custom fields are specified, we might need a different approach,
+      // but for now we follow the plan to use the central utility.
+      csvContent = aedsToCsv(this.exportedRecords as AedExportData[]);
     }
 
-    fs.writeFileSync(this.outputPath, content, "utf-8");
+    // Add UTF-8 BOM for Excel compatibility
+    const BOM = "\uFEFF";
+    fs.writeFileSync(this.outputPath, BOM + csvContent, "utf-8");
   }
 
   async cleanup(_job: BatchJob): Promise<void> {
@@ -317,11 +249,14 @@ export class AedExportProcessor extends BaseBatchJobProcessor<AedExportConfig> {
           some: { organization_id: filters.organizationId },
         },
       }),
-      ...(filters.regionCode && {
-        location: { city_code: { startsWith: filters.regionCode } },
-      }),
-      ...(filters.cityCode && {
-        location: { city_code: filters.cityCode },
+      ...((filters.cityCode || filters.cityName || filters.regionCode) && {
+        location: {
+          ...(filters.cityCode && { city_code: filters.cityCode }),
+          ...(filters.cityName && {
+            city_name: { contains: filters.cityName, mode: Prisma.QueryMode.insensitive },
+          }),
+          ...(filters.regionCode && { city_code: { startsWith: filters.regionCode } }),
+        },
       }),
       ...(filters.dateFrom && {
         created_at: { gte: filters.dateFrom },

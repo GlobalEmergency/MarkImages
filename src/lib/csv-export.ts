@@ -2,7 +2,7 @@
  * Utilidad para exportar datos de AED a formato CSV con UTF-8
  */
 
-interface AedExportData {
+export interface AedExportData {
   provisional_number?: number | null;
   code?: string | null;
   establishment_type?: string | null;
@@ -42,7 +42,7 @@ interface AedExportData {
  * Interfaz completa para exportación en formato de importación
  * Incluye TODOS los campos del CSV de importación simplificado
  */
-interface AedImportFormatData {
+export interface AedImportFormatData {
   id?: string | null;
   sequence?: number | null;
   provisional_number?: number | null;

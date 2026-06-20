@@ -15,6 +15,7 @@ import {
 import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { getTranslation } from "@/lib/i18n";
 
 import AedDetailModal from "@/components/AedDetailModal";
 import {
@@ -33,7 +34,7 @@ const MapView = dynamic(() => import("@/components/MapView"), {
     <div className="w-full h-full flex items-center justify-center bg-gray-100">
       <div className="text-center">
         <MapPin className="w-12 h-12 animate-pulse mx-auto text-blue-600 mb-4" />
-        <p className="text-gray-700 font-medium">Cargando mapa...</p>
+        <p className="text-gray-700 font-medium">{getTranslation("home.loading_map")}</p>
       </div>
     </div>
   ),
@@ -56,6 +57,7 @@ interface GeocodingResult {
 }
 
 export default function Home() {
+  const t = getTranslation;
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -135,7 +137,7 @@ export default function Home() {
       );
 
       if (!nearbyResponse.ok) {
-        throw new Error("Error al buscar DEAs cercanos");
+        throw new Error(t("common.error_searching"));
       }
 
       const nearbyData = await nearbyResponse.json();
@@ -143,16 +145,16 @@ export default function Home() {
       if (nearbyData.success && nearbyData.data) {
         setNearbyAeds(nearbyData.data);
         if (nearbyData.data.length === 0) {
-          setError("No se encontraron DEAs cerca de esta ubicación en un radio de 10 km.");
+          setError(t("home.error_no_results"));
         } else {
           appPrompt.trigger("search_results", 2000);
         }
       } else {
-        throw new Error(nearbyData.message || "Error al buscar DEAs");
+        throw new Error(nearbyData.message || t("common.error_searching"));
       }
     } catch (err) {
       console.error("Error searching nearby:", err);
-      setError(err instanceof Error ? err.message : "Error al buscar DEAs");
+      setError(err instanceof Error ? err.message : t("common.error_searching"));
     } finally {
       setLoading(false);
     }
@@ -192,7 +194,7 @@ export default function Home() {
     try {
       // Get user's location
       if (!navigator.geolocation) {
-        throw new Error("La geolocalización no está disponible en tu navegador");
+        throw new Error(t("home.error_geolocation_unavailable"));
       }
 
       const position = await new Promise<{
@@ -224,18 +226,18 @@ export default function Home() {
         if (geoError.code === 1) {
           // PERMISSION_DENIED
           trackGeolocationRequest("denied");
-          setError("Necesitas permitir el acceso a tu ubicación.");
+          setError(t("home.error_geolocation_denied"));
         } else if (geoError.code === 2) {
           // POSITION_UNAVAILABLE
           trackGeolocationRequest("error");
-          setError("No se pudo determinar tu ubicación.");
+          setError(t("home.error_geolocation_error"));
         } else {
           trackGeolocationRequest("error");
-          setError("Tiempo de espera agotado.");
+          setError(t("home.error_geolocation_timeout"));
         }
       } else {
         trackGeolocationRequest("error");
-        setError(err instanceof Error ? err.message : "Error al buscar DEAs.");
+        setError(err instanceof Error ? err.message : t("common.error_searching"));
       }
       setLoading(false);
     }
@@ -245,7 +247,7 @@ export default function Home() {
     e.preventDefault();
 
     if (!address.trim()) {
-      setError("Por favor, introduce una dirección");
+      setError(t("home.error_empty_address"));
       return;
     }
 
@@ -260,13 +262,13 @@ export default function Home() {
       const geocodeResponse = await fetch(`/api/geocode?q=${encodeURIComponent(address)}`);
 
       if (!geocodeResponse.ok) {
-        throw new Error("Error al buscar la dirección");
+        throw new Error(t("home.error_geocode"));
       }
 
       const geocodeData: GeocodingResult[] = await geocodeResponse.json();
 
       if (!geocodeData || geocodeData.length === 0) {
-        throw new Error("No se encontró la dirección. Intenta con otra más específica.");
+        throw new Error(t("home.error_address_not_found"));
       }
 
       // Use the first result
@@ -280,7 +282,7 @@ export default function Home() {
       await searchNearbyAeds(lat, lng);
     } catch (err) {
       console.error("Error searching by address:", err);
-      setError(err instanceof Error ? err.message : "Error al buscar por dirección");
+      setError(err instanceof Error ? err.message : t("home.error_geocode"));
       setLoading(false);
     }
   };
@@ -342,9 +344,7 @@ export default function Home() {
 
       {/* Fullscreen Map Section */}
       <div className="relative w-full h-[calc(100vh-56px)]">
-        <h1 className="sr-only">
-          Mapa de Desfibriladores (DEA) — Encuentra el más cercano en España y en todo el mundo
-        </h1>
+        <h1 className="sr-only">{t("home.sr_title")}</h1>
         <MapView
           onAedClick={handleMapMarkerClick}
           searchLocation={searchLocation}
@@ -363,7 +363,7 @@ export default function Home() {
                 <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
                 <input
                   type="text"
-                  placeholder="Buscar dirección..."
+                  placeholder={t("home.search_placeholder")}
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   onFocus={() => {
@@ -422,14 +422,18 @@ export default function Home() {
                   {loading ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin text-blue-600 flex-shrink-0" />
-                      <span className="text-sm font-medium text-gray-700">Buscando...</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        {t("common.searching")}
+                      </span>
                     </>
                   ) : (
                     <>
                       <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
                         <Navigation className="w-4 h-4 text-white" />
                       </div>
-                      <span className="text-sm font-medium text-gray-900">Usar mi ubicación</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        {t("common.use_my_location")}
+                      </span>
                     </>
                   )}
                 </button>
@@ -458,12 +462,12 @@ export default function Home() {
             {loading ? (
               <>
                 <Loader2 className="w-6 h-6 animate-spin" />
-                <span className="text-sm font-medium pr-2">Buscando...</span>
+                <span className="text-sm font-medium pr-2">{t("common.searching")}</span>
               </>
             ) : (
               <>
                 <Navigation className="w-6 h-6" />
-                <span className="text-sm font-medium pr-2">Usar mi ubicación</span>
+                <span className="text-sm font-medium pr-2">{t("common.use_my_location")}</span>
               </>
             )}
           </button>
@@ -479,10 +483,16 @@ export default function Home() {
                 <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-700">
                   <div className="text-white">
                     <h3 className="font-bold text-lg">
-                      {nearbyAeds.length} DEA{nearbyAeds.length !== 1 ? "s" : ""} encontrado
-                      {nearbyAeds.length !== 1 ? "s" : ""}
+                      {t(
+                        nearbyAeds.length === 1
+                          ? "home.results_count_one"
+                          : "home.results_count_other",
+                        {
+                          count: nearbyAeds.length,
+                        }
+                      )}
                     </h3>
-                    <p className="text-sm text-blue-100">Ordenados por distancia</p>
+                    <p className="text-sm text-blue-100">{t("home.sorted_by_distance")}</p>
                   </div>
                   <button
                     onClick={handleClearSearch}
@@ -518,9 +528,16 @@ export default function Home() {
                 <div className="px-4 pb-3 flex items-center justify-between border-b border-gray-200">
                   <div>
                     <h3 className="font-bold text-lg text-gray-900">
-                      {nearbyAeds.length} DEA{nearbyAeds.length !== 1 ? "s" : ""}
+                      {t(
+                        nearbyAeds.length === 1
+                          ? "home.results_count_one"
+                          : "home.results_count_other",
+                        {
+                          count: nearbyAeds.length,
+                        }
+                      )}
                     </h3>
-                    <p className="text-sm text-gray-600">Ordenados por distancia</p>
+                    <p className="text-sm text-gray-600">{t("home.sorted_by_distance")}</p>
                   </div>
                   <button
                     onClick={handleClearSearch}
@@ -552,7 +569,7 @@ export default function Home() {
           <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-[999] pointer-events-none">
             <div className="flex flex-col items-center gap-2 text-white drop-shadow-lg">
               <span className="text-sm font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
-                Más información
+                {t("common.more_info")}
               </span>
               <ChevronDown className="w-6 h-6 animate-bounce" />
             </div>
@@ -578,22 +595,18 @@ export default function Home() {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-red-600 rounded-full mb-4">
                 <Heart className="w-8 h-8 text-white" />
               </div>
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">Sobre DeaMap</h2>
-              <p className="text-xl text-gray-600">
-                El mapa colaborativo de desfibriladores más completo de España
-              </p>
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">{t("home.about.title")}</h2>
+              <p className="text-xl text-gray-600">{t("home.about.subtitle")}</p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-white rounded-xl p-6 shadow-lg">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">¿Qué es DeaMap?</h3>
-                <p className="text-gray-700 leading-relaxed mb-3">
-                  DeaMap es una plataforma colaborativa que permite localizar desfibriladores (DEAs)
-                  cercanos en caso de emergencia cardíaca. Contamos con cobertura en España y planes
-                  de expansión a nivel europeo.
-                </p>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  {t("home.about.what_is_title")}
+                </h3>
+                <p className="text-gray-700 leading-relaxed mb-3">{t("home.about.what_is_text")}</p>
                 <p className="text-sm text-gray-600">
-                  Proyecto desarrollado por{" "}
+                  {t("home.about.developed_by")}{" "}
                   <a
                     href="https://www.globalemergency.online/proyectos/deamap"
                     target="_blank"
@@ -609,41 +622,40 @@ export default function Home() {
                   >
                     Global Emergency
                   </a>
-                  , organización dedicada a mejorar la respuesta ante emergencias.
+                  {t("home.about.organization_desc")}
                 </p>
               </div>
 
               <div className="bg-white rounded-xl p-6 shadow-lg">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">¿Cómo funciona?</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  {t("home.about.how_it_works_title")}
+                </h3>
+                <p className="text-gray-700 leading-relaxed">{t("home.about.how_it_works_text")}</p>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-lg">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  {t("home.about.why_important_title")}
+                </h3>
                 <p className="text-gray-700 leading-relaxed">
-                  Utiliza la búsqueda por ubicación o dirección para encontrar los DEAs más cercanos
-                  a ti. Cada DEA incluye información detallada sobre su ubicación, horarios de
-                  acceso y datos de contacto.
+                  {t("home.about.why_important_text")}
                 </p>
               </div>
 
               <div className="bg-white rounded-xl p-6 shadow-lg">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">¿Por qué es importante?</h3>
-                <p className="text-gray-700 leading-relaxed">
-                  En una emergencia cardíaca, cada segundo cuenta. Tener acceso rápido a un
-                  desfibrilador puede salvar vidas. DeaMap facilita encontrar el equipo más cercano
-                  cuando más se necesita.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-xl p-6 shadow-lg">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Colabora con nosotros</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  {t("home.about.collaborate_title")}
+                </h3>
                 <p className="text-gray-700 leading-relaxed mb-3">
-                  Si conoces la ubicación de un DEA que no está en el mapa, puedes agregarlo
-                  fácilmente.
+                  {t("home.about.collaborate_text")}
                 </p>
                 <Link
                   href="/dea/new"
                   className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
-                  onClick={() => trackNavClick("Agregar un DEA", "/dea/new")}
+                  onClick={() => trackNavClick(t("home.about.add_dea_button"), "/dea/new")}
                 >
                   <MapPin className="w-4 h-4" />
-                  Agregar un DEA
+                  {t("home.about.add_dea_button")}
                 </Link>
               </div>
             </div>
@@ -655,25 +667,29 @@ export default function Home() {
           {/* Stats Section */}
           <section className="max-w-4xl mx-auto">
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 shadow-2xl text-white">
-              <h2 className="text-3xl font-bold mb-8 text-center">Nuestra Cobertura</h2>
+              <h2 className="text-3xl font-bold mb-8 text-center">{t("home.coverage.title")}</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="text-center">
                   <MapPin className="w-8 h-8 mx-auto mb-3" />
                   <p className="text-4xl font-bold mb-2">🇪🇸</p>
-                  <p className="text-lg font-semibold">España</p>
-                  <p className="text-sm text-blue-100 mt-1">Cobertura nacional</p>
+                  <p className="text-lg font-semibold">{t("home.coverage.spain")}</p>
+                  <p className="text-sm text-blue-100 mt-1">
+                    {t("home.coverage.national_coverage")}
+                  </p>
                 </div>
                 <div className="text-center">
                   <Heart className="w-8 h-8 mx-auto mb-3" />
                   <p className="text-4xl font-bold mb-2">24/7</p>
-                  <p className="text-lg font-semibold">Disponible</p>
-                  <p className="text-sm text-blue-100 mt-1">Acceso permanente</p>
+                  <p className="text-lg font-semibold">{t("home.coverage.available")}</p>
+                  <p className="text-sm text-blue-100 mt-1">
+                    {t("home.coverage.permanent_access")}
+                  </p>
                 </div>
                 <div className="text-center">
                   <Navigation className="w-8 h-8 mx-auto mb-3" />
                   <p className="text-4xl font-bold mb-2">🇪🇺</p>
-                  <p className="text-lg font-semibold">Europa</p>
-                  <p className="text-sm text-blue-100 mt-1">Próximamente</p>
+                  <p className="text-lg font-semibold">{t("home.coverage.europe")}</p>
+                  <p className="text-sm text-blue-100 mt-1">{t("home.coverage.coming_soon")}</p>
                 </div>
               </div>
             </div>
@@ -704,7 +720,9 @@ function NearbyAedCard({
       : null;
 
   const distanceText =
-    aed.distance < 1 ? `${Math.round(aed.distance * 1000)} m` : `${aed.distance.toFixed(1)} km`;
+    aed.distance < 1
+      ? `${Math.round(aed.distance * 1000)} ${getTranslation("common.meters_short")}`
+      : `${aed.distance.toFixed(1)} ${getTranslation("common.kilometers_short")}`;
 
   if (compact) {
     return (

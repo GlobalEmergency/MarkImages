@@ -16,6 +16,10 @@ export interface ExportFilters {
   sourceOrigin?: string;
   importBatchId?: string;
   cityName?: string;
+  cityCode?: string;
+  regionCode?: string;
+  organizationId?: string;
+  useImportFormat?: boolean;
 }
 
 export interface ExportBatchInfo {
