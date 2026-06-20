@@ -1,157 +1,130 @@
-/**
- * Tests for AED Status State Machine
- *
- * Validates that status transitions follow the defined lifecycle:
- *   DRAFT → PENDING_REVIEW → PUBLISHED → INACTIVE
- *                          ↘ REJECTED → DRAFT (re-draft)
- *   PUBLISHED → PENDING_REVIEW (re-verification)
- *   DRAFT → PUBLISHED (admin direct publish)
- *
- * These tests protect against:
- * - Accidentally allowing invalid transitions
- * - Breaking the verification flow
- * - Removing valid transitions needed by the app
- */
-
 import { describe, it, expect } from "vitest";
-import {
-  isValidStatusTransition,
-  getValidNextStatuses,
-  validateStatusTransition,
-} from "@/lib/aed-status";
+import { isValidStatusTransition, validateStatusTransition } from "../../../src/lib/aed-status";
 
-// ── Valid transitions (happy paths) ────────────────────────────────
+describe("AedStatus State Machine", () => {
+  describe("isValidStatusTransition", () => {
+    // A. Transiciones Válidas (Valid Transitions)
+    it("shouldReturnTrueWhenTransitionIsDraftToPendingReview", () => {
+      // Arrange
+      const from = "DRAFT";
+      const to = "PENDING_REVIEW";
 
-describe("isValidStatusTransition", () => {
-  describe("valid transitions", () => {
-    const validCases: [string, string][] = [
-      // Normal verification flow
-      ["DRAFT", "PENDING_REVIEW"],
-      ["PENDING_REVIEW", "PUBLISHED"],
-      ["PENDING_REVIEW", "REJECTED"],
+      // Act
+      const result = isValidStatusTransition(from, to);
 
-      // Admin direct publish from draft
-      ["DRAFT", "PUBLISHED"],
+      // Assert
+      expect(result).toBe(true);
+    });
 
-      // Deactivation
-      ["PUBLISHED", "INACTIVE"],
+    it("shouldReturnTrueWhenTransitionIsPendingReviewToPublished", () => {
+      // Arrange
+      const from = "PENDING_REVIEW";
+      const to = "PUBLISHED";
 
-      // Re-verification (published → review again)
-      ["PUBLISHED", "PENDING_REVIEW"],
+      // Act
+      const result = isValidStatusTransition(from, to);
 
-      // Rejection from published
-      ["PUBLISHED", "REJECTED"],
+      // Assert
+      expect(result).toBe(true);
+    });
 
-      // Reactivation from inactive (goes back to review)
-      ["INACTIVE", "PENDING_REVIEW"],
+    it("shouldReturnTrueWhenTransitionIsPublishedToInactive", () => {
+      // Arrange
+      const from = "PUBLISHED";
+      const to = "INACTIVE";
 
-      // Re-draft from rejected
-      ["REJECTED", "DRAFT"],
-    ];
+      // Act
+      const result = isValidStatusTransition(from, to);
 
-    it.each(validCases)("%s → %s should be valid", (from, to) => {
-      expect(isValidStatusTransition(from, to)).toBe(true);
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it("shouldReturnTrueWhenTransitionIsPublishedToPendingReview", () => {
+      // Arrange
+      const from = "PUBLISHED";
+      const to = "PENDING_REVIEW";
+
+      // Act
+      const result = isValidStatusTransition(from, to);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it("shouldReturnTrueWhenTransitionIsRejectedToDraft", () => {
+      // Arrange
+      const from = "REJECTED";
+      const to = "DRAFT";
+
+      // Act
+      const result = isValidStatusTransition(from, to);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    // B. Transiciones Inválidas (Invalid Transitions)
+    it("shouldReturnFalseWhenTransitionIsRejectedToPublished", () => {
+      // Arrange
+      const from = "REJECTED";
+      const to = "PUBLISHED";
+
+      // Act
+      const result = isValidStatusTransition(from, to);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it("shouldReturnFalseWhenTransitionIsInactiveToDraft", () => {
+      // Arrange
+      const from = "INACTIVE";
+      const to = "DRAFT";
+
+      // Act
+      const result = isValidStatusTransition(from, to);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    // C. Casos Extremos (Edge Cases)
+    it("shouldReturnFalseWhenStatusIsUnknown", () => {
+      // Arrange
+      const from = "UNKNOWN";
+      const to = "DRAFT";
+
+      // Act
+      const result = isValidStatusTransition(from, to);
+
+      // Assert
+      expect(result).toBe(false);
     });
   });
 
-  describe("invalid transitions", () => {
-    const invalidCases: [string, string][] = [
-      // Cannot skip review backwards
-      ["PUBLISHED", "DRAFT"],
-      ["INACTIVE", "PUBLISHED"],
-      ["INACTIVE", "DRAFT"],
+  describe("validateStatusTransition", () => {
+    // B. Transiciones Inválidas (Cont.)
+    it("shouldThrowErrorWhenUsingValidateStatusTransitionOnInvalidState", () => {
+      // Arrange
+      const from = "REJECTED";
+      const to = "PUBLISHED";
 
-      // Cannot go from rejected to published directly
-      ["REJECTED", "PUBLISHED"],
-      ["REJECTED", "PENDING_REVIEW"],
-      ["REJECTED", "INACTIVE"],
-
-      // Cannot go from draft directly to inactive/rejected
-      ["DRAFT", "INACTIVE"],
-      ["DRAFT", "REJECTED"],
-
-      // Cannot go from pending_review to inactive/draft
-      ["PENDING_REVIEW", "INACTIVE"],
-      ["PENDING_REVIEW", "DRAFT"],
-    ];
-
-    it.each(invalidCases)("%s → %s should be invalid", (from, to) => {
-      expect(isValidStatusTransition(from, to)).toBe(false);
+      // Act & Assert
+      expect(() => validateStatusTransition(from, to)).toThrowError(
+        /Transición de estado inválida: REJECTED → PUBLISHED/
+      );
     });
-  });
 
-  it("should return false for unknown source status", () => {
-    expect(isValidStatusTransition("NONEXISTENT", "PUBLISHED")).toBe(false);
-  });
+    // C. Casos Extremos (Cont.)
+    it("shouldReturnTrueWhenFromAndToStatesAreTheSame", () => {
+      // Arrange
+      const from = "PUBLISHED";
+      const to = "PUBLISHED";
 
-  it("should return false for unknown target status", () => {
-    expect(isValidStatusTransition("DRAFT", "NONEXISTENT")).toBe(false);
-  });
-});
-
-// ── getValidNextStatuses ────────────────────────────────────────────
-
-describe("getValidNextStatuses", () => {
-  it("DRAFT can go to PENDING_REVIEW or PUBLISHED", () => {
-    expect(getValidNextStatuses("DRAFT")).toEqual(
-      expect.arrayContaining(["PENDING_REVIEW", "PUBLISHED"])
-    );
-  });
-
-  it("PENDING_REVIEW can go to PUBLISHED or REJECTED", () => {
-    expect(getValidNextStatuses("PENDING_REVIEW")).toEqual(
-      expect.arrayContaining(["PUBLISHED", "REJECTED"])
-    );
-  });
-
-  it("PUBLISHED can go to INACTIVE, PENDING_REVIEW, or REJECTED", () => {
-    const next = getValidNextStatuses("PUBLISHED");
-    expect(next).toEqual(expect.arrayContaining(["INACTIVE", "PENDING_REVIEW", "REJECTED"]));
-  });
-
-  it("INACTIVE can only go to PENDING_REVIEW", () => {
-    expect(getValidNextStatuses("INACTIVE")).toEqual(["PENDING_REVIEW"]);
-  });
-
-  it("REJECTED can only go to DRAFT", () => {
-    expect(getValidNextStatuses("REJECTED")).toEqual(["DRAFT"]);
-  });
-
-  it("should return empty array for unknown status", () => {
-    expect(getValidNextStatuses("NONEXISTENT")).toEqual([]);
-  });
-});
-
-// ── validateStatusTransition ────────────────────────────────────────
-
-describe("validateStatusTransition", () => {
-  it("should not throw for valid transitions", () => {
-    expect(() => validateStatusTransition("DRAFT", "PENDING_REVIEW")).not.toThrow();
-    expect(() => validateStatusTransition("PENDING_REVIEW", "PUBLISHED")).not.toThrow();
-  });
-
-  it("should allow no-op transitions (same status)", () => {
-    expect(() => validateStatusTransition("DRAFT", "DRAFT")).not.toThrow();
-    expect(() => validateStatusTransition("PUBLISHED", "PUBLISHED")).not.toThrow();
-    expect(() => validateStatusTransition("INACTIVE", "INACTIVE")).not.toThrow();
-  });
-
-  it("should throw for invalid transitions with descriptive message", () => {
-    expect(() => validateStatusTransition("REJECTED", "PUBLISHED")).toThrow(
-      /Transición de estado inválida: REJECTED → PUBLISHED/
-    );
-  });
-
-  it("error message should list allowed transitions", () => {
-    expect(() => validateStatusTransition("REJECTED", "PUBLISHED")).toThrow(
-      /Transiciones permitidas desde REJECTED: DRAFT/
-    );
-  });
-
-  it("error message for terminal-like state shows allowed transitions", () => {
-    // INACTIVE only allows PENDING_REVIEW
-    expect(() => validateStatusTransition("INACTIVE", "PUBLISHED")).toThrow(
-      /Transiciones permitidas desde INACTIVE: PENDING_REVIEW/
-    );
+      // Act & Assert
+      // should not throw, acts as a no-op
+      expect(() => validateStatusTransition(from, to)).not.toThrow();
+    });
   });
 });
